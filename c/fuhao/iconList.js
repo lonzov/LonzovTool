@@ -132,4 +132,5 @@ const iconNames = [
     'E10B',
     'E10C',
     'E10D',
+    'a0a',
 ];
