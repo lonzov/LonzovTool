@@ -362,14 +362,12 @@
             if (typeof iconNames !== 'undefined' && Array.isArray(iconNames)) {
                 iconsData = iconNames.map(name => {
                     if (name === 'a0a') {
-                        // 特殊处理：a + null + a
                         return {
                             fileName: 'a0a.gif',
                             codePointHex: 'a0a',
                             character: 'a\u0000a'
                         };
                     } else {
-                        // 原有逻辑：单码点 PUA
                         const cp = parseInt(name, 16);
                         return {
                             fileName: name + CONFIG.fileExtension,
@@ -401,7 +399,6 @@
                 img.src = CONFIG.iconPath + icon.fileName;
                 img.alt = `Unicode: ${icon.codePointHex}`;
                 img.loading = 'lazy';
-
                 img.addEventListener('load', function () {
                     this.classList.add('loaded');
                     this.parentElement.classList.add('image-loaded');
@@ -461,55 +458,58 @@
             const clickY = event.clientY;
 
             let copyText = '';
-
             if (currentCopyMode === CONFIG.copyModes.CHARACTER) {
                 copyText = character;
             } else if (currentCopyMode === CONFIG.copyModes.CODEPOINT) {
                 if (codePointHex === 'a0a') {
-                    copyText = '\\u0061\\u0000\\u0061';  // 注意：双反斜杠 → 最终复制出 \u0061\u0000\u0061
+                    copyText = '\\u0061\\u0000\\u0061';
                 } else {
-                    // 安全转换：先 parseInt 再 padStart，防止 '0000'→'0'→'0' 而非 '0000'
                     const num = parseInt(codePointHex, 16);
-                    if (isNaN(num) || num < 0 || num > 0x10FFFF) {
-                        console.warn('无效 Unicode 码点:', codePointHex);
-                        return;
-                    }
+                    if (isNaN(num)) return;
                     copyText = `\\u${num.toString(16).padStart(4, '0').toUpperCase()}`;
                 }
             }
 
-            if (!copyText) return;
+            if (copyText === '') return;
             copyToClipboard(copyText, clickX, clickY);
         }
 
-        function copyToClipboard(text, x, y) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.setAttribute('readonly', '');
-            textarea.style.position = 'absolute';
-            textarea.style.left = '-9999px';
-            textarea.style.top = '-9999px';
-            document.body.appendChild(textarea);
-            textarea.select();
-
+        async function copyToClipboard(text, x, y) {
             let success = false;
-            try {
-                success = document.execCommand('copy');
-            } catch (err) {
-                success = false;
+
+            if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+                try {
+                    const uint8 = new TextEncoder().encode(text);
+                    const blob = new Blob([uint8], { type: 'text/plain;charset=utf-8' });
+                    const item = new ClipboardItem({ 'text/plain': blob });
+                    await navigator.clipboard.write([item]);
+                    success = true;
+                } catch (err) {
+                    console.warn('高级复制失败:', err.message);
+                }
             }
-            document.body.removeChild(textarea);
+
+            if (!success) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.setAttribute('readonly', '');
+                textarea.style.position = 'absolute';
+                textarea.style.left = '-9999px';
+                textarea.style.top = '-9999px';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    success = document.execCommand('copy');
+                } catch (err) {
+                    success = false;
+                }
+                document.body.removeChild(textarea);
+            }
 
             if (success) {
                 showMessage('复制成功', true, { x, y });
             } else {
-                navigator.clipboard.writeText(text)
-                    .then(() => {
-                        showMessage('复制成功', true, { x, y });
-                    })
-                    .catch(() => {
-                        showMessage('复制失败，请手动复制', false, { x, y });
-                    });
+                showMessage('你的系统/浏览器不支持U+0000', false, { x, y });
             }
         }
 
@@ -522,7 +522,6 @@
             if (!isSuccess) message.classList.add('error');
             message.textContent = text;
             document.body.appendChild(message);
-
             message.style.left = (position.x + 15) + 'px';
             message.style.top = (position.y + 15) + 'px';
 
@@ -532,7 +531,7 @@
                 setTimeout(() => {
                     if (message.parentNode) message.parentNode.removeChild(message);
                 }, 300);
-            }, 1000);
+            }, 1500);
         }
     </script>
 </body>
