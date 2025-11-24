@@ -149,13 +149,13 @@
         const IOSmodal_undate = {
             title: "近期更新",
             id: "v1_update_1109",
-            version: "202511090000",
+            version: "202511240000",
             forceShow: false,
             content: `
-                        <p>[+] 重磅更新！T显可视化编辑器<br>燃尽了，教程视频过几天发<br>[+] 新分类“社区论坛”</p>
-                        <p><strong>·</strong> 新卡片：T显可视化编辑器、CBerGit、基岩版开发wiki</p>
+                        <p>[+] T显可视化编辑器教程视频已发布<br>[+] AI助手beta版已发布</p>
+                        <p><strong>·</strong> 新卡片：Minecraft艺术</p>
                         <p><strong>·</strong> 建议/反馈请加Q群: 587984701</p>
-                        <p>公告编辑时间: 11-09</p>
+                        <p>公告编辑时间: 11-24</p>
                     `,
             buttons: [
                 { text: "更新日志", style: "gray", action: "open_link", url: "https://blog.lonzov.top/posts/tool-update/#202510" },
@@ -183,6 +183,27 @@
             showModal(IOSmodal_survey);
             showModal(IOSmodal_undate);
         });
+
+        const IOSmodal_ai_link = {
+            title: "AI助手",
+            id: "ai_commander",
+            version: "202511240000",
+            forceShow: true,
+            content: `
+                    <p>注意：当前版本为 beta 测试版，还有很多不完善的地方<br>如有问题请带图反馈</p>
+                    <p style="margin:0;font-size:13px;color:#666;line-height:1.4">目前知识库只有常用指令，等待进一步完善<br>ps：整理太费事了qwq到时候我恐怕都能倒背wiki了</p>
+                    <p>请选择打开方式：</p>
+                    `,
+            buttons: [
+                { text: "豆包", style: "blue", action: "open_link", url: "https://doubao.com/bot/gwZ4RSpF" },
+                { text: "扣子", style: "blue", action: "open_link", url: "https://www.coze.cn/s/oo65B0_BEhY/" },
+                { text: "返回", style: "gray", action: "close" },
+            ]
+        };
+
+        function showSurveyModal() {
+            showModal(IOSmodal_ai_link);
+        }
 
         const currentTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', currentTheme);
@@ -248,7 +269,7 @@
                 <i class="fa-solid fa-circle-info"></i> 关于
             </a>
             <a href="https://afdian.com/a/lonzov" class="menu-item" target="_blank">
-                <i class="fa-solid fa-hand-holding-heart"></i> 赞赏
+                <i class="fa-solid fa-hand-holding-heart"></i> 打赏
             </a>
             <a href="https://qm.qq.com/q/hjTqUyIKEo" class="menu-item" target="_blank">
                 <i class="fa-brands fa-qq"></i> QQ群
@@ -258,6 +279,9 @@
             </a>
             <a href="https://f.kdocs.cn/g/JfmI2Ch8/" class="menu-item" target="_blank">
                 <i class="fa-solid fa-clipboard-list"></i> 问卷
+            </a>
+            <a href="javascript:void(0)" onclick="showSurveyModal()" class="menu-item">
+                <i class="fa-solid fa-robot"></i> ai 助手
             </a>
             <!-- a href="./down/小舟工具箱.html" class="menu-item" target="_blank">
                 <i class="fab fa-android"></i> 下载
