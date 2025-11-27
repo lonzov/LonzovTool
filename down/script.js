@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const manualDownloadCard = document.getElementById('manualDownloadCard');
 
     // API
-    const API_BASE_URL = 'http://www.722shop.top:6401/parser';
+    const API_BASE_URL = 'https://lz.qaiu.top/parser';
 
     // 根据配置初始化值和控制显示
     let isQuickCardNeeded = false;
