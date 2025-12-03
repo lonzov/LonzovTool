@@ -34,10 +34,9 @@
       z-index: 9998;
       opacity: 0;
       transition: opacity 0.3s ease;
-      backdrop-filter: blur(2px);
+      backdrop-filter: blur(4px);
     }
-
-    /* 弹窗容器：居中 + 毛玻璃 + 圆角 */
+    /* 弹窗容器：居中 + 毛玻璃 + 圆角 + 细描边 */
     .ios-modal-container {
       position: fixed;
       top: 50%;
@@ -45,22 +44,23 @@
       transform: translate(-50%, -50%);
       min-width: 300px;
       max-width: 520px;
-      background: rgba(255, 255, 255, 0.78);
-      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.71);
+      backdrop-filter: blur(9.1px);
       border-radius: 18px;
+      border: 1px solid rgba(0, 0, 0, 0.2); /* 容器描边 */
       z-index: 9999;
       opacity: 0;
       transition: opacity 0.15s ease;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 4px 50px rgba(0, 0, 0, 0.40);
       overflow: hidden;
       font-family: 'Misa', 'PingFang SC', 'HarmonyOS Sans SC', sans-serif;
     }
-
     /* 深色模式 */
     [data-theme="dark"] .ios-modal-container {
-      background: rgba(30, 30, 30, 0.85);
+      background: rgba(23, 24, 26, 0.78);
+      border-color: rgba(255, 255, 255, 0.08); /* 容器描边 */
+      box-shadow: 0 4px 50px rgba(0, 0, 0, 0.66);
     }
-
     /* 标题区域 */
     .ios-modal-title {
       padding: 12px 24px 12px;
@@ -70,20 +70,17 @@
       color: #dfefffff;
       position: relative;
     }
-
     /* 标题装饰 */
     .ios-modal-title::after {
       content: '';
       margin-left: -0.9em;
       pointer-events: none;
     }
-
     /* 标题动态字间距 */
     .ios-title-spacing-small2 { letter-spacing: 0em; }   /* 5+ 字 */
     .ios-title-spacing-small  { letter-spacing: 0.1em; } /* 4 字 */
     .ios-title-spacing-medium { letter-spacing: 0.7em; } /* 3 字 */
     .ios-title-spacing-large  { letter-spacing: 1em; }   /* 1~2 字 */
-
     /* 内容区域 */
     .ios-modal-content {
       padding: 0 24px;
@@ -94,28 +91,27 @@
       overflow-y: auto;
       line-height: 1.5;
     }
-
     /* 内容中的段落 */
     .ios-modal-content p {
       margin-top: 0 !important;
       margin-bottom: 8.5px !important;
     }
-
     [data-theme="dark"] .ios-modal-content {
       color: #EEE;
     }
-
     /* 底部按钮栏 */
     .ios-modal-footer {
       display: flex;
-      border-top: 1px solid rgba(0, 0, 0, 0.1);
-      margin-top: 10px;
+      border-top: 1px solid rgba(0, 0, 0, 0.2);
+      margin-top: 0;
     }
-
+    [data-theme="dark"] .ios-modal-footer {
+      border-top-color: rgba(255, 255, 255, 0.08);
+    }
     /* 按钮基础样式 */
     .ios-modal-button {
       flex: 1;
-      padding: 9px 10px;
+      padding: 12px 10px;
       text-align: center;
       font-size: 16px;
       font-weight: 600;
@@ -125,9 +121,9 @@
       cursor: pointer;
       position: relative;
       line-height: 1.2;
+      outline: none;
     }
-
-    /* 按钮分割线：非最后一个按钮右侧加细线 */
+    /* 按钮分割线 */
     .ios-modal-button:not(:last-child)::after {
       content: '';
       position: absolute;
@@ -135,10 +131,32 @@
       top: 0;
       height: 100%;
       width: 1px;
-      background: rgba(0, 0, 0, 0.1);
+      background: rgba(0, 0, 0, 0.2);
     }
-
-    /* 按钮颜色变体 */
+    [data-theme="dark"] .ios-modal-button:not(:last-child)::after {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    /* 按钮hover样式 */
+    .ios-modal-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(120, 120, 128, 0.12);
+      opacity: 0;
+      border-radius: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+    }
+    [data-theme="dark"] .ios-modal-button::before {
+      background-color: rgba(120, 120, 126, 0.06);
+    }
+    .ios-modal-button:hover::before {
+      opacity: 1;
+    }
+    /* 按钮文字颜色变体 */
     .ios-button-red  { color: #FF3B30 !important; }
     .ios-button-gray { color: #8E8E93 !important; }
   `;
