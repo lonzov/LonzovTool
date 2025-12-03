@@ -45,8 +45,8 @@
       min-width: 300px;
       max-width: 520px;
       background: rgba(255, 255, 255, 0.71);
-      backdrop-filter: blur(9.1px);
-      border-radius: 18px;
+      backdrop-filter: blur(12.5px);
+      border-radius: 22px;
       border: 1px solid rgba(0, 0, 0, 0.2); /* 容器描边 */
       z-index: 9999;
       opacity: 0;
@@ -57,7 +57,7 @@
     }
     /* 深色模式 */
     [data-theme="dark"] .ios-modal-container {
-      background: rgba(23, 24, 26, 0.78);
+      background: rgba(23, 24, 26, 0.85);
       border-color: rgba(255, 255, 255, 0.08); /* 容器描边 */
       box-shadow: 0 4px 50px rgba(0, 0, 0, 0.66);
     }
