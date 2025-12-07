@@ -1,0 +1,40 @@
+{
+  "background_color": "#1f2b38",
+  "description": "Minecraft指令工具箱，你需要的这里都有",
+  "dir": "auto",
+  "display": "standalone",
+  "name": "小舟工具箱",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "小舟工具箱",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "icon/android/android-launchericon-512-512.png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "icon/android/android-launchericon-192-192.png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon/android/android-launchericon-144-144.png",
+      "sizes": "144x144"
+    },
+    {
+      "src": "icon/android/android-launchericon-96-96.png",
+      "sizes": "96x96"
+    },
+    {
+      "src": "icon/android/android-launchericon-72-72.png",
+      "sizes": "72x72"
+    },
+    {
+      "src": "icon/android/android-launchericon-48-48.png",
+      "sizes": "48x48"
+    }
+  ],
+  "id": "com.lonzovtool.app",
+  "lang": "zh"
+}
