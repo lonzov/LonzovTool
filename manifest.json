@@ -2,7 +2,7 @@
   "background_color": "#1f2b38",
   "description": "Minecraft指令工具箱，你需要的这里都有",
   "dir": "auto",
-  "display": "standalone",
+  "display": "fullscreen",
   "name": "小舟工具箱",
   "orientation": "any",
   "scope": "/",
