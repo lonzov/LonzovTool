@@ -19,7 +19,7 @@
       }, 100);
 
       try {
-        alert('请关闭本弹窗，继续操作');
+        alert('欢迎使用「小舟工具箱」\n点击“确定”开始使用');
         blocked = true;
         clearTimeout(timeoutId);
         resolve(performance.now() - start > 150);
