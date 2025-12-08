@@ -1,6 +1,6 @@
 {
   "background_color": "#1f2b38",
-  "description": "Minecraft指令工具箱，你需要的这里都有",
+  "description": "Minecraft基岩版指令工具箱，让复杂变简单",
   "dir": "auto",
   "display": "fullscreen",
   "name": "小舟工具箱",
@@ -8,7 +8,7 @@
   "scope": "/",
   "short_name": "小舟工具箱",
   "start_url": "/",
-  "theme_color": "#ffffff",
+  "theme_color": "#38393C",
   "icons": [
     {
       "src": "icon/android/android-launchericon-512-512.png",

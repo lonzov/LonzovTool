@@ -150,14 +150,14 @@
     <script>
         const IOSmodal_undate = {
             title: "近期更新",
-            id: "v1_update_1109",
-            version: "202512030000",
+            id: "v1_update_1208",
+            version: "202512080000",
             forceShow: false,
             content: `
-                        <p>[+] T显可视化编辑器教程视频已发布<br>[+] AI助手beta版已发布(入口在顶部三横菜单中)</p>
-                        <p><strong>·</strong> 新卡片：Minecraft艺术</p>
+                        <p>[+] AI助手beta版已发布(入口在顶部三横菜单中)<br>[+] 现在可以把网站安装到桌面啦~(顶部三横菜单中)</p>
+                        <p><strong>·</strong> 新卡片：无</p>
                         <p><strong>·</strong> 建议/反馈请加Q群: 587984701</p>
-                        <p>公告编辑时间: 11-24</p>
+                        <p style="margin:0;font-size:13px;color:#666;line-height:1.4">公告编辑时间: 12-08</p>
                     `,
             buttons: [
                 { text: "更新日志", style: "gray", action: "open_link", url: "https://blog.lonzov.top/posts/tool-update/#202510" },
@@ -166,7 +166,7 @@
             ]
         };
 
-        const IOSmodal_survey = {
+        /* const IOSmodal_survey = {
             title: "问卷",
             id: "survey_1114",
             version: "202511210000",
@@ -179,10 +179,10 @@
                 { text: "填写问卷", style: "", action: "open_link", url: "https://f.kdocs.cn/g/JfmI2Ch8/" },
                 { text: "关闭", style: "red", action: "close" },
             ]
-        };
+        }; */
 
         document.addEventListener('DOMContentLoaded', function () {
-            showModal(IOSmodal_survey);
+            // showModal(IOSmodal_survey);
             showModal(IOSmodal_undate);
         });
 
@@ -279,15 +279,15 @@
             <a href="https://blog.lonzov.top/" class="menu-item" target="_blank">
                 <i class="fa-solid fa-blog"></i> 博客
             </a>
-            <a href="https://f.kdocs.cn/g/JfmI2Ch8/" class="menu-item" target="_blank">
+            <!--a href="https://f.kdocs.cn/g/JfmI2Ch8/" class="menu-item" target="_blank">
                 <i class="fa-solid fa-clipboard-list"></i> 问卷
-            </a>
+            </a-->
             <a href="javascript:void(0)" onclick="showSurveyModal()" class="menu-item">
                 <i class="fa-solid fa-robot"></i> ai 助手
             </a>
-            <!-- a href="./down/小舟工具箱.html" class="menu-item" target="_blank">
-                <i class="fab fa-android"></i> 下载
-            </a -->
+            <a href="#" id="pwa-install-trigger" class="menu-item">
+                <i class="fa-solid fa-download"></i> 安装
+            </a>
         </div>
     </div>
     <main class="container">
@@ -334,6 +334,136 @@
                     .catch(err => console.error('SW failed:', err));
             });
         }
+
+        (function () {
+            'use strict';
+
+            let deferredPrompt = null;
+
+            // 检测是否已作为 PWA 安装运行
+            function isPWAInstalled() {
+                return (
+                    window.matchMedia('(display-mode: standalone)').matches ||
+                    window.navigator.standalone === true
+                );
+            }
+
+            // 更新按钮为已安装状态
+            function markAsInstalled() {
+                const btn = document.getElementById('pwa-install-trigger');
+                if (!btn) return;
+
+                btn.innerHTML = '<i class="fa-solid fa-square-check"></i> 已安装';
+                btn.style.opacity = '0.6';
+                btn.style.pointerEvents = 'none';
+                btn.style.cursor = 'default';
+            }
+
+            // 安装失败弹窗
+            function showInstallFailedModal(reason = 'unknown') {
+                let title = '安装失败';
+                let content = '';
+                let buttons = [];
+
+                switch (reason) {
+                    case 'user-dismissed':
+                        content = '<p>您在安装弹窗中选择了“取消”。</p>' +
+                            '<p>请再次点击按钮，并在弹出窗口中点击<strong>“确认安装”</strong>完成操作。</p>';
+                        buttons = [{ text: '好的', style: "gray", action: 'close' }];
+                        break;
+
+                    case 'ios-manual':
+                        content = '<p>iOS 系统需要手动添加到主屏幕：<br>· 点击 Safari 底部的 <i class="fa-solid fa-share-nodes"></i> 分享按钮<br>· 在菜单中找到并点击 <strong>“添加到主屏幕”</strong><br>· 点击右上角 <strong>“添加”</strong> 即可完成</p>' +
+                            '<p>完成后，桌面上会出现本应用图标</p>';
+                        buttons = [{ text: '好的', style: "gray", action: 'close' }];
+                        break;
+
+                    default:
+                        content = '<p>当前设备或浏览器暂时无法自动安装。</p>' +
+                                '<p>您可以尝试：<br>· 使用 <strong>Chrome、Edge </strong>或<strong>系统自带的浏览器</strong><br>· 刷新页面重试</p>' +
+                                '<p>仍不成功？您可以尝试下方的“安卓下载”</p>';
+
+                        
+                        buttons = [
+                            { text: "安卓下载", style: "", action: "open_link", url: "https://o.o3o.ren/SknQMk" },
+                            { text: '好的', style: "gray", action: 'close' }
+                        ];
+                        break;
+                }
+
+                showModal({
+                    id: 'pwa_install_fail_v2',
+                    version: '2.0',
+                    title: title,
+                    titleColor: 'default',
+                    content: content,
+                    buttons: buttons,
+                    forceShow: true
+                });
+            }
+
+            // 点击处理函数
+            function onInstallClick(event) {
+                event.preventDefault();
+
+                if (isPWAInstalled()) return;
+                // iOS 直接触发引导弹窗（不尝试 deferredPrompt）
+                if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                    showInstallFailedModal('ios-manual');
+                    return;
+                }
+
+                // 非iOS：尝试触发安装
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choice) => {
+                        deferredPrompt = null;
+                        if (choice.outcome === 'accepted') {
+                            markAsInstalled();
+                        } else {
+                            // 用户点击取消
+                            showInstallFailedModal('user-dismissed');
+                        }
+                    }).catch(() => {
+                        // 极端情况：prompt 调用失败（如无 secure context）
+                        showInstallFailedModal('browser-no-support');
+                    });
+                } else {
+                    // deferredPrompt 未捕获 → 条件不满足（无 SW / manifest / 未交互等）
+                    showInstallFailedModal();
+                }
+            }
+
+            // 初始化
+            function initPWAInstallButton() {
+                const btn = document.getElementById('pwa-install-trigger');
+                if (!btn) return;
+
+                // 绑定点击
+                btn.addEventListener('click', onInstallClick);
+
+                // 页面加载时检查是否已安装
+                if (isPWAInstalled()) {
+                    markAsInstalled();
+                }
+            }
+
+            // 等待 DOM 加载
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initPWAInstallButton);
+            } else {
+                initPWAInstallButton();
+            }
+
+            // 监听 beforeinstallprompt（用于非 iOS）
+            window.addEventListener('beforeinstallprompt', (e) => {
+                if (!/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                    e.preventDefault();
+                    deferredPrompt = e;
+                }
+            });
+
+        })();
     </script>
 </body>
 </html>

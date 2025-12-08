@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'v2.0.1';
-const CACHE_NAME = `my-app-cache-${CACHE_VERSION}`;
+const CACHE_VERSION = 'v2.0.2';
+const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
   '/',
@@ -7,6 +7,17 @@ const CORE_ASSETS = [
   '/style.css',
   '/index.js',
   '/c/conver.css',
+  '/c/execute/index.html',
+  '/c/execute/script.js',
+  '/c/fuhao/index.html',
+  '/c/fuhao/iconList.js',
+  '/c/qjzh/index.html',
+  '/c/qjzh/script.js',
+  '/c/raw-json/index.html',
+  '/c/raw-json/script.js',
+  '/c/raw-json/style.css',
+  '/c/tr/index.html',
+  '/c/tr/script.js',
   '/404.html',
   '/modal.js',
   '/manifest.json'
@@ -25,7 +36,7 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames
-          .filter(name => name.startsWith('my-app-cache-') && name !== CACHE_NAME)
+          .filter(name => name.startsWith('lonzovtool-cache-') && name !== CACHE_NAME)
           .map(name => caches.delete(name))
       );
     }).then(() => self.clients.claim())
