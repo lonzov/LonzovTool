@@ -1,21 +1,26 @@
-const CACHE_VERSION = 'v2.2.7';
+const CACHE_VERSION = 'v2.3.7';
 const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
   '/',
   '/index.html',
-  '/style.css',
   '/index.js',
+  '/style.css',
   '/c/conver.css',
+  '/c/execute/',
   '/c/execute/index.html',
   '/c/execute/script.js',
+  '/c/fuhao/',
   '/c/fuhao/index.html',
   '/c/fuhao/iconList.js',
+  '/c/qjzh/',
   '/c/qjzh/index.html',
   '/c/qjzh/script.js',
+  '/c/raw-json/',
   '/c/raw-json/index.html',
   '/c/raw-json/script.js',
   '/c/raw-json/style.css',
+  '/c/tr/',
   '/c/tr/index.html',
   '/c/tr/script.js',
   '/404.html',
@@ -41,9 +46,18 @@ self.addEventListener('activate', event => {
           .filter(name => name.startsWith('lonzovtool-cache-') && name !== CACHE_NAME)
           .map(name => caches.delete(name))
       );
-    }).then(() => self.clients.claim())
-    .then(() => {
+    }).then(() => {
+      // 激活后立即强制所有客户端使用新的SW
+      return self.clients.claim();
+    }).then(() => {
       console.log('SW activate: claimed clients, current cache:', CACHE_NAME);
+      // 通知所有客户端刷新页面以获取最新内容
+      return self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          // 发送消息让页面刷新
+          client.postMessage({ type: 'UPDATE_AVAILABLE' });
+        });
+      });
     })
   );
 });
@@ -54,55 +68,35 @@ self.addEventListener('fetch', event => {
 
   const request = event.request;
 
-  // 导航请求（HTML 页面）
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request).then(networkResponse => {
-        // 只缓存有效响应（200）或 opaque（跨域允许）响应
-        if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
-          // 仅缓存同源请求，避免将第三方脚本或分析脚本写入缓存
-          try {
-            const reqOrigin = new URL(request.url).origin;
-            if (reqOrigin === self.location.origin) {
-              const responseClone = networkResponse.clone();
-              caches.open(CACHE_NAME).then(cache => {
-                cache.put(request, responseClone).catch(err => console.warn('Cache put failed for navigation:', err));
-              });
-            }
-          } catch (e) {
-            console.warn('Caching skipped (bad url):', e);
-          }
-        }
-        return networkResponse;
-      }).catch(() => caches.match(request).then(cached => cached || caches.match('/offline.html')))
-    );
-    return;
-  }
-
-  // 其他静态资源：cache-first, 同时后台尝试更新缓存
+  // 对所有请求使用网络优先策略，失败时回退到缓存
   event.respondWith(
-    caches.match(request).then(cachedResponse => {
-      const networkFetch = fetch(request).then(networkResponse => {
-        if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
-          try {
-            const reqOrigin = new URL(request.url).origin;
-            if (reqOrigin === self.location.origin) {
-              const clone = networkResponse.clone();
-              caches.open(CACHE_NAME).then(cache => {
-                cache.put(request, clone).catch(err => console.warn('Cache put failed:', err));
-              });
-            }
-          } catch (e) {
-            console.warn('Caching skipped (bad url):', e);
+    fetch(request).then(networkResponse => {
+      // 网络请求成功则更新缓存
+      if (networkResponse && networkResponse.status === 200) {
+        try {
+          const reqOrigin = new URL(request.url).origin;
+          if (reqOrigin === self.location.origin) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, clone).catch(err => console.warn('Cache put failed:', err));
+            });
           }
+        } catch (e) {
+          console.warn('Caching skipped (bad url):', e);
         }
-        return networkResponse;
-      }).catch(() => {
-        // 如果网络失败且已有缓存则返回缓存，否则抛出以让上游处理
-        return cachedResponse || Promise.reject('network-failed');
+      }
+      return networkResponse;
+    }).catch(() => {
+      // 网络请求失败时返回缓存
+      return caches.match(request).then(cached => {
+        if (cached) return cached;
+        // 如果是导航请求且没有缓存，则返回离线页面
+        if (request.mode === 'navigate') {
+          return caches.match('/offline.html');
+        }
+        // 其他请求在无缓存时返回错误
+        throw new Error('Network request failed and no cached resource available.');
       });
-
-      return cachedResponse || networkFetch;
     })
   );
 });

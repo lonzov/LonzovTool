@@ -341,6 +341,14 @@
                 console.log('navigator.serviceWorker controllerchange -> reloading');
                 window.location.reload();
             });
+
+            // 监听来自 Service Worker 的消息
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data && event.data.type === 'UPDATE_AVAILABLE') {
+                    console.log('Update available, reloading page to get fresh content...');
+                    window.location.reload();
+                }
+            });
         }
 
         (function () {
