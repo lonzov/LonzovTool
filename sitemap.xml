@@ -7,18 +7,6 @@
         <priority>1.0</priority>
     </url>
     <url>
-        <loc>https://tool.lonzov.top/dr/</loc>
-        <lastmod>2025-10-19</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    <url>
-        <loc>https://tool.lonzov.top/dr/pro</loc>
-        <lastmod>2025-09-21</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    <url>
         <loc>https://tool.lonzov.top/nohello/</loc>
         <lastmod>2025-09-19</lastmod>
         <changefreq>never</changefreq>
