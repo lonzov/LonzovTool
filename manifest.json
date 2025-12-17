@@ -2,7 +2,7 @@
   "background_color": "#1f2b38",
   "description": "Minecraft基岩版指令工具箱，让复杂变简单",
   "dir": "auto",
-  "display": "fullscreen",
+  "display": "standalone",
   "name": "小舟工具箱",
   "orientation": "any",
   "scope": "/",
@@ -12,11 +12,13 @@
   "icons": [
     {
       "src": "icon/android/android-launchericon-512-512.png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     },
     {
       "src": "icon/android/android-launchericon-192-192.png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "icon/android/android-launchericon-144-144.png",
