@@ -254,6 +254,9 @@
         if (btn.action === 'close') {
           // 关闭动作：记录版本 + 关闭当前弹窗
           handleButtonAction(btn.action, btn.url, config.id, config.version, modalId);
+        } else if (btn.action === 'custom' && btn.customAction) {
+          // 自定义动作：触发自定义事件
+          executeCustomAction(btn.customAction);
         } else {
           // 其他动作：跳转 / 关闭页面（不记录版本）
           executeButtonAction(btn.action, btn.url);
@@ -367,6 +370,17 @@
         document.body.removeChild(container);
       }
     }, 300); // 与 CSS transition 时长一致
+  }
+
+  // 执行自定义动作
+  function executeCustomAction(customAction) {
+    if (customAction && customAction.type) {
+      // 触发自定义事件
+      const event = new CustomEvent('sw_modal_action', {
+        detail: customAction
+      });
+      window.dispatchEvent(event);
+    }
   }
 
   // 暴露高级 API（供外部调用）
