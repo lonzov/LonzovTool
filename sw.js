@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.2.5';
+const CACHE_VERSION = 'v2.2.7';
 const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
@@ -112,7 +112,7 @@ self.addEventListener('message', event => {
   if (!event.data) return;
   console.log('SW message received:', event.data);
 
-  if (event.data === 'SKIP_WAITING') {
+  if (event.data === 'SKIP_WAITING' || (event.data && event.data.type === 'SKIP_WAITING')) {
     console.log('SW will skipWaiting() now');
     self.skipWaiting();
   }

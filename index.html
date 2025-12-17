@@ -525,8 +525,8 @@
                     version: newVersion,
                     forceShow: true,
                     content: `
-                        <p>[+] AI助手beta版已发布(入口在顶部三横菜单中)<br>[+] 现在可以把网站安装到桌面啦~(顶部三横菜单中)</p>
-                        <p><strong>·</strong> 新卡片：无</p>
+                        <p>[+] 离线操作优化</p>
+                        <p><strong>·</strong> 新卡片：站长能帮你干点啥</p>
                         <p><strong>·</strong> 建议/反馈请加Q群: <a href="https://qm.qq.com/q/dgYFOtx4Qg" target="_blank" style="color:var(--text-color);">587984701</a></p>
                         <p style="font-size:14px;color:#666;margin-top:10px;">当前版本: ${currentVersion} → 最新版本: ${newVersion}</p>
                     `,
@@ -577,15 +577,16 @@
 
                     // 发送 SKIP_WAITING 消息给 Service Worker
                     if (reg && reg.waiting) {
-                        reg.waiting.postMessage('SKIP_WAITING');
-
                         // 监听控制器变化以刷新页面
                         let controllerChangeListener = function() {
                             console.log('Service Worker 控制器已变更，刷新页面...');
+                            navigator.serviceWorker.removeEventListener('controllerchange', controllerChangeListener);
                             window.location.reload();
                         };
 
                         navigator.serviceWorker.addEventListener('controllerchange', controllerChangeListener);
+
+                        reg.waiting.postMessage('SKIP_WAITING');
 
                         // 设置超时处理
                         setTimeout(() => {
@@ -595,6 +596,9 @@
                             // 如果还没刷新，直接刷新页面
                             window.location.reload();
                         }, 10000); // 10秒超时
+                    } else if (reg && reg.active) {
+                        // 如果没有waiting状态的worker但有active的，则直接刷新
+                        window.location.reload();
                     }
                 }
             });
