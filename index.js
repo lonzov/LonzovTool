@@ -22,7 +22,7 @@ const cardsData = [
     { title: "苦力怕论坛<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "最大的基岩版中文资源、交流论坛之一", categories:["forum"], link: "https://klpbbs.com/", newtap:true },
     { title: "MineBBS<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "简洁好用的交流讨论和资源分享平台", categories:["forum"], link: "https://www.minebbs.com/", newtap:true },
     { title: "CBerGit<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "国内首个 MC 指令托管和研发交流平台", categories:["forum"], link: "https://cbergit.com/", newtap:true },
-    { title: "网易版导入", description: "站长自营无坑", categories:["resource"], link: "./dr/", newtap:true },
+    { title: "站长能帮你干点啥", description: "站长接什么？", categories:["resource"], link: "./about/1", newtap:true },
     { title: "安卓基岩版下载<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "《优质的境外下载站》", categories:["resource"], link: "https://mcapks.net/", newtap:true },
     { title: "安卓基岩版下载2<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "MineBBS论坛的下载站", categories:["resource"], link: "https://mc.minebbs.com/", newtap:true },
     { title: "MT管理器-mc语法包", description: "指令语法高亮，压缩包里有具体使用说明", categories:["resource"], link: "./down/mc语法包", newtap:true },
