@@ -1,0 +1,386 @@
+<!DOCTYPE html><html lang="zh-CN" style="--bg-primary: #121212; --bg-secondary: #1e1e1e; --text-primary: #e0e0e0; --text-secondary: #a0a0a0; --border-color: #333333; --shadow-color: rgba(0, 0, 0, 0.3); --accent-color: #3d8bfd;"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐私政策 - 小舟工具箱</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <style>
+        /* 样式将通过JavaScript添加 */
+    </style>
+<style>:root { --bg-primary: #ffffff; --bg-secondary: #f8f9fa; --text-primary: #212529; --text-secondary: #495057; --border-color: #dee2e6; --shadow-color: rgba(0, 0, 0, 0.1); --accent-color: #0d6efd; --transition-time: 0.5s; }
+.dark-mode { --bg-primary: #121212; --bg-secondary: #1e1e1e; --text-primary: #e0e0e0; --text-secondary: #a0a0a0; --border-color: #333333; --shadow-color: rgba(0, 0, 0, 0.3); --accent-color: #3d8bfd; }
+* { box-sizing: border-box; margin: 0px; padding: 0px; transition: background-color var(--transition-time), 
+                        color var(--transition-time),
+                        border-color var(--transition-time),
+                        box-shadow var(--transition-time); }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif; background-color: var(--bg-primary); color: var(--text-primary); line-height: 1.6; transition: background-color var(--transition-time); }
+.container { max-width: 1200px; margin: 0px auto; padding: 20px; }
+header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+h1, h2, h3, h4, h5, h6 { transition: color var(--transition-time); }
+h1 { font-size: 2rem; font-weight: 600; }
+footer { text-align: center; color: rgb(119, 119, 119); padding-top: 30px; font-size: 1rem; }
+footer a { color: rgb(119, 119, 119); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+.theme-btn-container { display: inline-block; vertical-align: middle; transform: scale(0.33); transform-origin: right center; position: relative; right: 10px; width: 100px; height: 40px; overflow: visible; }
+.upload-container { text-align: center; padding: 40px 20px; border: 2px dashed var(--border-color); border-radius: 12px; margin-bottom: 30px; background-color: var(--bg-secondary); cursor: pointer; transition: all var(--transition-time); }
+.upload-container:hover { border-color: var(--accent-color); background-color: rgba(13, 110, 253, 0.05); }
+.upload-container.drag-over { background-color: rgba(13, 110, 253, 0.1); border-color: var(--accent-color); }
+.upload-icon { font-size: 3rem; margin-bottom: 15px; color: var(--text-secondary); transition: color var(--transition-time); }
+.upload-text h2 { margin-bottom: 10px; font-weight: 500; transition: color var(--transition-time); }
+.upload-text p { color: var(--text-secondary); margin-bottom: 20px; transition: color var(--transition-time); }
+.file-input { display: none; }
+.upload-btn { background-color: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: background-color var(--transition-time); }
+.upload-btn:hover { background-color: rgb(11, 94, 215); }
+.export-btn { background-color: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: all var(--transition-time); position: relative; margin-right: 10px; }
+.export-btn:hover { background-color: rgba(13, 110, 253, 0.1); border-color: var(--accent-color); }
+.export-menu { position: absolute; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 5px; box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 10px; padding: 8px 0px; z-index: 10; display: none; min-width: 120px; }
+.export-menu-item { padding: 8px 15px; cursor: pointer; font-size: 0.9rem; transition: background-color 0.2s; }
+.export-menu-item:hover { background-color: rgba(13, 110, 253, 0.1); }
+.export-menu-item:not(:last-child) { border-bottom: 1px solid var(--border-color); }
+.preview-container { display: none; background-color: var(--bg-secondary); border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px var(--shadow-color); margin-bottom: 30px; transition: background-color var(--transition-time); }
+.preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); transition: border-color var(--transition-time); }
+.preview-content { min-height: 300px; overflow: auto; font-size: 1.1rem; line-height: 1.7; transition: color var(--transition-time); }
+.preview-content h1 { font-size: 2.5rem; margin: 1.5rem 0px; padding-bottom: 0.3rem; border-bottom: 0.5px solid var(--border-color); position: relative; }
+.preview-content h1::after { content: ""; position: absolute; bottom: -3px; left: 0px; width: 50px; height: 2px; background: var(--accent-color); }
+.preview-content h2 { font-size: 2rem; margin: 1.3rem 0px; padding-bottom: 0.3rem; border-bottom: 0.5px solid var(--border-color); }
+.preview-content h3 { font-size: 1.75rem; margin: 1.1rem 0px; }
+.preview-content p { margin: 1rem 0px; transition: color var(--transition-time); }
+.preview-content ul, .preview-content ol { padding-left: 2em; margin: 1rem 0px; transition: color var(--transition-time); }
+.preview-content ul { list-style-type: disc; }
+.preview-content ol { list-style-type: decimal; }
+.preview-content li { margin-bottom: 0.5em; position: relative; transition: color var(--transition-time); }
+.preview-content a { color: var(--accent-color); text-decoration: none; transition: color var(--transition-time); }
+.preview-content a:hover { text-decoration: underline; }
+.preview-content pre { background-color: rgba(0, 0, 0, 0.05); padding: 15px; border-radius: 6px; overflow: auto; margin: 1.2rem 0px; transition: background-color var(--transition-time); }
+.preview-content code { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.95rem; transition: background-color var(--transition-time); white-space: pre-wrap; }
+.preview-content blockquote { border-left: 4px solid var(--accent-color); padding: 15px 20px; margin: 1.2rem 0px; color: var(--text-secondary); background-color: rgba(0, 0, 0, 0.03); border-radius: 0px 4px 4px 0px; transition: all var(--transition-time); }
+.dark-mode .preview-content blockquote { background-color: rgba(255, 255, 255, 0.05); }
+.preview-content table { width: 100%; border-collapse: collapse; margin: 1.2rem 0px; transition: color var(--transition-time); }
+.preview-content th, .preview-content td { border: 1px solid var(--border-color); padding: 10px; text-align: left; transition: border-color var(--transition-time), background-color var(--transition-time); }
+.preview-content th { background-color: rgba(0, 0, 0, 0.03); }
+.preview-content hr { border: none; height: 1px; background-color: var(--border-color); margin: 1.5rem 0px; }
+.loading-overlay { position: fixed; top: 0px; left: 0px; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+.loading-spinner { width: 50px; height: 50px; border-width: 5px; border-style: solid; border-right-color: rgba(255, 255, 255, 0.3); border-bottom-color: rgba(255, 255, 255, 0.3); border-left-color: rgba(255, 255, 255, 0.3); border-image: initial; border-radius: 50%; border-top-color: var(--accent-color); animation: 1s ease-in-out 0s infinite normal none running spin; }
+@keyframes spin { 
+  100% { transform: rotate(360deg); }
+}
+.preview-header.hidden { display: none !important; }
+.preview-container.exporting { padding-top: 0px; }
+@media (max-width: 768px) {
+  .container { padding: 15px; }
+  h1 { font-size: 1.8rem; }
+  .theme-btn-container { transform: scale(0.32); margin-top: 5px; margin-right: 10px; }
+  .preview-content { font-size: 1rem; }
+  .preview-content h1 { font-size: 2rem; }
+  .preview-content h2 { font-size: 1.8rem; }
+}
+@media (max-width: 480px) {
+  header { flex-direction: column; align-items: flex-start; gap: 15px; }
+  .theme-btn-container { position: static; align-self: flex-end; transform: scale(0.3); margin-top: -55px; margin-right: 10px; }
+  .preview-content { padding: 10px; }
+  .preview-content h1 { font-size: 1.8rem; }
+  .preview-content h2 { font-size: 1.6rem; }
+  .preview-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+  .preview-header > div { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+  .export-btn, .upload-btn { width: 100%; }
+}
+.immersive-translate-input { position: absolute; inset: 0px; z-index: 2147483647; display: flex; justify-content: center; align-items: center; }
+.immersive-translate-attach-loading::after { content: " "; --loading-color: #f78fb6; width: 6px; height: 6px; border-radius: 50%; display: block; margin: 12px auto; color: white; box-sizing: border-box; animation: 1.5s linear 0s infinite normal none running immersiveTranslateShadowRolling; position: absolute; top: 50%; left: 50%; transform: translate(-2000%, -50%); z-index: 100; }
+.immersive-translate-loading-spinner { vertical-align: middle !important; width: 10px !important; height: 10px !important; display: inline-block !important; margin: 0px 4px !important; border-width: 2px !important; border-style: solid !important; border-color: rgba(0, 0, 0, 0.376) rgba(221, 244, 255, 0.6) rgba(221, 244, 255, 0.6) rgba(0, 0, 0, 0.376) !important; border-image: initial !important; border-radius: 50% !important; padding: 0px !important; animation: 0.6s linear 0s infinite normal none running immersive-translate-loading-animation !important; }
+@-webkit-keyframes immersive-translate-loading-animation { 
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(359deg); }
+}
+@keyframes immersive-translate-loading-animation { 
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(359deg); }
+}
+.immersive-translate-input-loading { --loading-color: #f78fb6; width: 6px; height: 6px; border-radius: 50%; display: block; margin: 12px auto; position: relative; color: white; left: -100px; box-sizing: border-box; animation: 1.5s linear 0s infinite normal none running immersiveTranslateShadowRolling; }
+@keyframes immersiveTranslateShadowRolling { 
+  0% { box-shadow: rgba(255, 255, 255, 0) 0px 0px, rgba(255, 255, 255, 0) 0px 0px, rgba(255, 255, 255, 0) 0px 0px, rgba(255, 255, 255, 0) 0px 0px; }
+  12% { box-shadow: 100px 0 var(--loading-color), 0px 0 rgba(255, 255, 255, 0),
+      0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0); }
+  25% { box-shadow: 110px 0 var(--loading-color), 100px 0 var(--loading-color),
+      0px 0 rgba(255, 255, 255, 0), 0px 0 rgba(255, 255, 255, 0); }
+  36% { box-shadow: 120px 0 var(--loading-color), 110px 0 var(--loading-color),
+      100px 0 var(--loading-color), 0px 0 rgba(255, 255, 255, 0); }
+  50% { box-shadow: 130px 0 var(--loading-color), 120px 0 var(--loading-color),
+      110px 0 var(--loading-color), 100px 0 var(--loading-color); }
+  62% { box-shadow: 200px 0 rgba(255, 255, 255, 0), 130px 0 var(--loading-color),
+      120px 0 var(--loading-color), 110px 0 var(--loading-color); }
+  75% { box-shadow: 200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0),
+      130px 0 var(--loading-color), 120px 0 var(--loading-color); }
+  87% { box-shadow: 200px 0 rgba(255, 255, 255, 0), 200px 0 rgba(255, 255, 255, 0),
+      200px 0 rgba(255, 255, 255, 0), 130px 0 var(--loading-color); }
+  100% { box-shadow: rgba(255, 255, 255, 0) 200px 0px, rgba(255, 255, 255, 0) 200px 0px, rgba(255, 255, 255, 0) 200px 0px, rgba(255, 255, 255, 0) 200px 0px; }
+}
+.immersive-translate-modal { position: fixed; z-index: 2147483647; left: 0px; top: 0px; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.4); font-size: 15px; }
+.immersive-translate-modal-content { background-color: rgb(254, 254, 254); margin: 10% auto; padding: 40px 24px 24px; border-radius: 12px; width: 350px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; position: relative; }
+@media screen and (max-width: 768px) {
+  .immersive-translate-modal-content { margin: 25% auto !important; }
+}
+@media screen and (max-width: 480px) {
+  .immersive-translate-modal-content { width: 80vw !important; margin: 20vh auto !important; padding: 20px 12px 12px !important; }
+  .immersive-translate-modal-title { font-size: 14px !important; }
+  .immersive-translate-modal-body { font-size: 13px !important; max-height: 60vh !important; }
+  .immersive-translate-btn { font-size: 13px !important; padding: 8px 16px !important; margin: 0px 4px !important; }
+  .immersive-translate-modal-footer { gap: 6px !important; margin-top: 16px !important; }
+}
+.immersive-translate-modal .immersive-translate-modal-content-in-input { max-width: 500px; }
+.immersive-translate-modal-content-in-input .immersive-translate-modal-body { text-align: left; max-height: unset; }
+.immersive-translate-modal-title { text-align: center; font-size: 16px; font-weight: 700; color: rgb(51, 51, 51); }
+.immersive-translate-modal-body { text-align: center; font-size: 14px; font-weight: 400; color: rgb(51, 51, 51); margin-top: 24px; }
+@media screen and (max-width: 768px) {
+  .immersive-translate-modal-body { max-height: 250px; overflow-y: auto; }
+}
+.immersive-translate-close { color: rgb(102, 102, 102); position: absolute; right: 16px; top: 16px; font-size: 20px; font-weight: bold; }
+.immersive-translate-close:hover, .immersive-translate-close:focus { text-decoration: none; cursor: pointer; }
+.immersive-translate-modal-footer { display: flex; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+.immersive-translate-btn { width: fit-content; color: rgb(255, 255, 255); background-color: rgb(234, 76, 137); border: none; font-size: 14px; margin: 0px 8px; padding: 9px 30px; border-radius: 5px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background-color 0.3s; }
+.immersive-translate-btn-container { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.immersive-translate-btn:hover { background-color: rgb(240, 130, 172); }
+.immersive-translate-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.immersive-translate-btn:disabled:hover { background-color: rgb(234, 76, 137); }
+.immersive-translate-link-btn { background-color: transparent; color: rgb(234, 76, 137); border: none; cursor: pointer; height: 30px; line-height: 30px; }
+.immersive-translate-cancel-btn { background-color: rgb(89, 107, 120); }
+.immersive-translate-cancel-btn:hover { background-color: rgb(65, 84, 98); }
+.immersive-translate-action-btn { background-color: transparent; color: rgb(234, 76, 137); border: 1px solid rgb(234, 76, 137); }
+.immersive-translate-btn svg { margin-right: 5px; }
+.immersive-translate-link { cursor: pointer; user-select: none; -webkit-user-drag: none; text-decoration: none; color: rgb(234, 76, 137); -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1); }
+.immersive-translate-primary-link { cursor: pointer; user-select: none; -webkit-user-drag: none; text-decoration: none; color: rgb(234, 76, 137); -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1); }
+.immersive-translate-modal input[type="radio"] { margin: 0px 6px; cursor: pointer; }
+.immersive-translate-modal label { cursor: pointer; }
+.immersive-translate-close-action { position: absolute; top: 2px; right: 0px; cursor: pointer; }
+.imt-image-status { background-color: rgba(0, 0, 0, 0.5) !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; border-radius: 16px !important; }
+.imt-image-status img, .imt-image-status svg, .imt-img-loading { width: 28px !important; height: 28px !important; margin: 0px 0px 8px !important; min-height: 28px !important; min-width: 28px !important; position: relative !important; }
+.imt-img-loading { background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAMAAACfWMssAAAAtFBMVEUAAAD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////oK74hAAAAPHRSTlMABBMIDyQXHwyBfFdDMSw+OjXCb+5RG51IvV/k0rOqlGRM6KKMhdvNyZBz9MaupmxpWyj437iYd/yJVNZeuUC7AAACt0lEQVRIx53T2XKiUBCA4QYOiyCbiAsuuGBcYtxiYtT3f6/pbqoYHVFO5r+iivpo6DpAWYpqeoFfr9f90DsYAuRSWkFnPO50OgR9PwiCUFcl2GEcx+N/YBh6pvKaefHlUgZd1zVe0NbYcQjGBfzrPE8Xz8aF+71D8gG6DHFPpc4a7xFiCDuhaWgKgGIJQ3d5IMGDrpS4S5KgpIm+en9f6PlAhKby4JwEIxlYJV9h5k5nee9GoxHJ2IDSNB0dwdad1NAxDJ/uXDHYmebdk4PdbkS58CIVHdYSUHTYYRWOJblWSyu2lmy3KNFVJNBhxcuGW4YBVCbYGRZwIooipHsNqjM4FbgOQqQqSKQQU9V8xmi1QlgHqQQ6DDBvRUVCDirs+EzGDGOQTCATgtYTnbCVLgsVgRE0T1QE0qHCFAht2z6dLvJQs3Lo2FQoDxWNUiBhaP4eRgwNkI+dAjVOA/kUrIDwf3CG8NfNOE0eiFotSuo+rBiq8tD9oY4Qzc6YJw99hl1wzpQvD7ef2M8QgnOGJfJw+EltQc+oX2yn907QB22WZcvlUpd143dqQu+8pCJZuGE4xCuPXJqqcs5sNpsI93Rmzym1k4Npk+oD1SH3/a3LOK/JpUBpWfqNySxWzCfNCUITuDG5dtuphrUJ1myeIE9bIsPiKrfqTai5WZxbhtNphYx6GEIHihyGFTI69lje/rxajdh0s0msZ0zYxyPLhYCb1CyHm9Qsd2H37Y3lugVwL9kNh8Ot8cha6fUNQ8nuXi5z9/ExsAO4zQrb/ev1yrCB7lGyQzgYDGuxq1toDN/JGvN+HyWNHKB7zEoK+PX11e12G431erGYzwmytAWU56fkMHY5JJnDRR2eZji3AwtIcrEV8Cojat/BdQ7XOwGV1e1hDjGGjXbdArm8uJZtCH5MbcctVX8A1WpqumJHwckAAAAASUVORK5CYII="); background-size: 28px 28px; animation: 1s linear 0s infinite normal none running image-loading-rotate !important; }
+.imt-image-status span { color: var(--bg-2, #fff) !important; font-size: 14px !important; line-height: 14px !important; font-weight: 500 !important; font-family: "PingFang SC", Arial, sans-serif !important; }
+.imt-primary-button { display: flex; padding: 12px 80px; justify-content: center; align-items: center; gap: 8px; border-radius: 8px; background: rgb(234, 76, 137); color: rgb(255, 255, 255); font-size: 16px; font-style: normal; font-weight: 700; line-height: 24px; border: none; cursor: pointer; }
+.imt-retry-text { color: rgb(153, 153, 153); text-align: center; font-size: 14px; font-style: normal; font-weight: 400; line-height: 21px; cursor: pointer; }
+.imt-action-container { display: flex; flex-direction: column; gap: 12px; }
+.imt-modal-content-text { text-align: left; color: rgb(51, 51, 51); font-size: 16px; font-weight: 400; line-height: 24px; }
+@keyframes image-loading-rotate { 
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+.imt-linear-gradient-text { background: linear-gradient(90deg, rgb(0, 166, 255) 0%, rgb(195, 105, 255) 52.4%, rgb(255, 69, 144) 100%) text; -webkit-text-fill-color: transparent; }
+.imt-flex-center { display: flex; align-items: center; justify-content: center; }
+.imt-linear-black-btn { border-radius: 50px; background: linear-gradient(66deg, rgb(34, 34, 34) 19%, rgb(105, 105, 105) 94.25%); height: 48px; width: 100%; color: rgb(255, 255, 255); font-size: 16px; font-weight: 700; display: flex; align-items: center; cursor: pointer; justify-content: center; }
+
+            body {
+                padding: 25px;
+                margin: 0;
+            }
+            
+            .preview-content {
+                min-height: 300px;
+                font-size: 1.1rem;
+                line-height: 1.7;
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+
+            .hljs {
+                background: #0d1117 !important;
+                color: #c9d1d9 !important;
+            }
+            
+            .theme-toggle {
+                position: fixed;
+                top: 15px;
+                right: 15px;
+                background-color: var(--bg-secondary);
+                border: 1px solid var(--border-color);
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                z-index: 100;
+                transition: all 0.3s ease;
+                user-select: none;
+                -webkit-tap-highlight-color: transparent;
+            }
+            
+            .theme-toggle:focus {
+                outline: none;
+            }
+            
+            .theme-toggle:hover {
+                transform: scale(1.05);
+            }
+            
+            .theme-icon {
+                font-size: 20px;
+                transition: transform 0.3s ease;
+                pointer-events: none;
+            }
+            
+            .dark-mode .theme-icon {
+                transform: rotate(180deg);
+            }</style></head>
+<body class="dark-mode">
+    <!-- 主题切换按钮 -->
+    <div class="theme-toggle" id="themeToggle">
+        <div class="theme-icon">☀️</div>
+    </div>
+    
+    <!-- 预览内容容器 -->
+    <div class="preview-content" id="previewContent"><h1>小舟工具箱隐私政策</h1>
+<p><strong>最后更新：2026年1月2日</strong></p>
+<h2>导言</h2>
+<p>欢迎使用"小舟工具箱"网站（以下简称"本网站"）。我们深知个人信息保护的重要性，并致力于保护您的隐私安全。本隐私政策旨在向您清晰地说明我们如何处理您的个人信息，包括Cookie和本地存储等技术的使用情况。</p>
+<p>请知悉，本网站为纯静态网站，<strong>本身不会主动收集、存储或使用您的任何个人身份信息，也不会设置任何HTTP Cookie</strong>。为提升用户体验，本网站会使用浏览器本地存储技术（如LocalStorage、SessionStorage）保存部分非敏感的用户偏好设置；同时，作为PWA（渐进式Web应用）站点，会使用Service Worker缓存资源以支持离线访问。此外，为进行数据分析，我们接入了第三方统计工具"51.la"，该工具可能会使用Cookie及相关技术收集部分匿名化浏览数据。请您仔细阅读本隐私政策，了解我们对您信息的处理方式。</p>
+<h2>Cookie与本地存储说明</h2>
+<h3>本网站使用的本地存储（非Cookie）</h3>
+<p>本网站<strong>不设置任何HTTP Cookie</strong>，但会合理使用浏览器客户端存储技术，所有数据均仅保存在您的设备本地，<strong>不会上传至服务器</strong>，包括：</p>
+<ul>
+<li><strong>用户界面偏好</strong>：如深色/浅色模式选择</li>
+<li><strong>交互状态记录</strong>：如部分提示弹窗的“不再显示”状态</li>
+<li><strong>本地版本标识</strong>：用于检测缓存更新</li>
+<li><strong>PWA运行所需缓存</strong>：<ul>
+<li>Service Worker注册信息</li>
+<li>静态资源缓存</li>
+<li>应用清单（manifest）相关数据</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>所有上述存储内容均为功能性、非追踪性质，且<strong>不包含任何个人身份信息</strong>。您可随时通过浏览器“清除站点数据”功能完全删除这些本地数据。</p>
+</blockquote>
+<h3>第三方统计工具使用的Cookie</h3>
+<ul>
+<li><strong>51.la统计工具</strong>：我们接入的51.la统计服务可能会在您的设备上放置Cookie，用于：<ul>
+<li>区分唯一访客</li>
+<li>记录会话时长</li>
+<li>识别流量来源</li>
+<li>优化统计准确性</li>
+</ul>
+</li>
+<li>所有通过51.la收集的数据均<strong>经过匿名化处理</strong>，不会与您的个人身份直接关联</li>
+<li>51.la对Cookie的使用受其<a href="https://www.51.la/about/privacy/">隐私政策</a>约束</li>
+</ul>
+<h2>个人信息收集范围与方式</h2>
+<h3>通过51.la统计工具收集的信息</h3>
+<p>51.la可能会自动收集并处理以下信息：</p>
+<ul>
+<li>IP地址</li>
+<li>用户代理(User-Agent)信息</li>
+<li>访问的URL和页面路径</li>
+<li>访问时间和停留时长</li>
+<li>通过Cookie生成的匿名访客标识符</li>
+</ul>
+<blockquote>
+<p>请注意：<strong>本地存储中的数据（如主题设置）不会被发送给51.la或任何第三方</strong>。</p>
+</blockquote>
+<h2>信息使用目的</h2>
+<ul>
+<li><strong>本地存储数据</strong>：仅用于在您设备上提供个性化体验（如记住主题偏好）、优化交互流畅性（如避免重复弹窗），纯客户端使用。</li>
+<li><strong>51.la收集的匿名化数据</strong>仅用于：<ul>
+<li>分析网站流量和用户行为</li>
+<li>优化网站内容和用户体验</li>
+<li>了解网站功能使用情况</li>
+<li>改进网站性能和结构</li>
+</ul>
+</li>
+</ul>
+<h2>您的选择与控制权</h2>
+<h3>管理本地存储与缓存</h3>
+<ul>
+<li>您可随时在浏览器中清除“站点数据”或“缓存与Cookie”，将重置所有本地设置（需注意，部分页面如“T显可视化编辑器”会利用本地缓存储存您的编辑历史，清除前请<strong>务必对这些数据进行备份</strong>避免造成不必要的损失）</li>
+<li>禁用JavaScript将阻止本地存储功能（但可能导致部分功能异常）</li>
+<li>无痕/隐私浏览模式下，关闭窗口后本地数据将自动清除</li>
+</ul>
+<h3>管理第三方Cookie与追踪</h3>
+<p>您可通过以下方式阻止51.la的数据收集：</p>
+<ol>
+<li><strong>浏览器设置</strong>：<ul>
+<li>阻止第三方Cookie</li>
+<li>启用"无痕/隐私浏览"模式</li>
+<li>配置Cookie例外，拒绝<code>*.51.la</code></li>
+</ul>
+</li>
+<li><strong>拦截工具</strong>：<ul>
+<li>安装Ublock Origin、Privacy Badger等插件</li>
+<li>将51.la相关域名加入拦截列表</li>
+</ul>
+</li>
+<li><strong>退出追踪</strong>：<ul>
+<li>启用"Do Not Track"（DNT），又名 禁止跟踪、跟踪防护、跟踪保护</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p><strong>重要提示</strong>：阻止51.la统计或清除本地存储<strong>不会影响</strong>网站核心功能的正常使用。主题偏好、弹窗记忆、编辑历史等功能仅作为便利性增强，非必需。</p>
+</blockquote>
+<h2>第三方服务</h2>
+<p>我们使用51.la作为网站统计服务提供商。51.la作为独立的数据控制者：</p>
+<ul>
+<li>其Cookie设置和数据处理受其<a href="https://www.51.la/about/privacy/">隐私政策</a>约束</li>
+<li>我们不控制51.la的数据处理活动，也不对其隐私实践负责</li>
+</ul>
+<h2>数据安全</h2>
+<ul>
+<li>本地存储数据仅存在于您的设备中，未经网络传输，安全性取决于您的设备环境</li>
+<li>本网站无后端服务，不接收、不存储任何用户提交的个人数据</li>
+<li>关于51.la所收集数据的安全保护，请参考其官方<a href="https://www.51.la/about/privacy/">隐私政策</a></li>
+</ul>
+<h2>隐私政策的更新</h2>
+<p>我们可能不时更新本隐私政策。如有重大变更，我们将在网站首页显著位置发布通知。建议您定期查阅本页面以了解最新政策。</p>
+<h2>联系我们</h2>
+<p>如对本隐私政策或Cookie使用有任何疑问，可通过以下方式与我们联系：</p>
+<ul>
+<li>邮件：<a href="mailto:i@lonzov.top" target="_blank" rel="noopener">i@lonzov.top</a></li>
+<li>QQ群: <a href="https://qm.qq.com/q/hjTqUyIKEo" target="_blank" rel="noopener">587984701</a></li>
+<li>频道：<a href="https://pd.qq.com/s/7itprw4rq?b=9" target="_blank" rel="noopener">#小舟の小窝</a>  </li>
+<li>GitHub：<a href="https://github.com/lonzov/LonzovTool" target="_blank" rel="noopener">LonzovTool</a></li>
+</ul>
+</div>
+    
+    <!-- 脚本将通过JavaScript添加 -->
+
+
+                <script>
+                const themeToggle = document.getElementById('themeToggle');
+                const themeIcon = themeToggle.querySelector('.theme-icon');
+                let isDarkMode = localStorage.getItem('darkMode') === 'true';
+                
+                function applyTheme(darkMode) {
+                    document.body.classList.toggle('dark-mode', darkMode);
+                    
+                    const root = document.documentElement;
+                    root.style.setProperty('--bg-primary', darkMode ? '#121212' : '#ffffff');
+                    root.style.setProperty('--bg-secondary', darkMode ? '#1e1e1e' : '#f8f9fa');
+                    root.style.setProperty('--text-primary', darkMode ? '#e0e0e0' : '#212529');
+                    root.style.setProperty('--text-secondary', darkMode ? '#a0a0a0' : '#495057');
+                    root.style.setProperty('--border-color', darkMode ? '#333333' : '#dee2e6');
+                    root.style.setProperty('--shadow-color', darkMode ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.1)');
+                    root.style.setProperty('--accent-color', darkMode ? '#3d8bfd' : '#0d6efd');
+                    
+                    themeIcon.textContent = darkMode ? '☀️' : '🌙';
+                    
+                    localStorage.setItem('darkMode', darkMode);
+                }
+                
+                function initTheme() {
+                    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+                    const systemPrefersDark = window.matchMedia && 
+                        window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    
+                    const initialTheme = savedDarkMode || (!('darkMode' in localStorage) && systemPrefersDark);
+                    applyTheme(initialTheme);
+                }
+                
+                themeToggle.addEventListener('click', () => {
+                    isDarkMode = !isDarkMode;
+                    applyTheme(isDarkMode);
+                });
+                
+                themeToggle.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                });
+                
+                initTheme();
+            </script></body></html>

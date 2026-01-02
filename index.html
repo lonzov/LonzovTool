@@ -163,9 +163,25 @@
             ]
         }; */
 
-        /* document.addEventListener('DOMContentLoaded', function () {
+        const IOSmodal_privacy = {
+            title: "隐私政策",
+            id: "privacy",
+            version: "202601020000",
+            forceShow: false,
+            content: `
+                    <p>我们更新了《隐私政策》，本次更新主要明确了Cookie使用及51.la统计工具的处理说明</p>
+                    <p style="margin:0;font-size:13px;color:#666;line-height:1.4">更新日期：2026-01-02</p>
+                    `,
+            buttons: [
+                { text: "查看详情", style: "gray", action: "open_link", url: "/about/privacy" },
+                { text: "接受", style: "", action: "close" },
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
             // showModal(IOSmodal_survey);
-        }); */
+            showModal(IOSmodal_privacy);
+        });
 
         const IOSmodal_ai_link = {
             title: "AI助手",
@@ -304,6 +320,7 @@
         <p>排序方式: 添加时间>主观使用频率</p>
         <p>© 2026 小舟工具箱 | <a href="https://icp.gov.moe/?keyword=20250698" target="_blank">萌ICP备20250698号</a></p>
         <p>本站已苟活 <span id="timer">--年--天--时--分</span></p>
+        <p><a href="https://blog.lonzov.top/posts/tool-about/" target="_blank">关于本站</a> | <a href="https://blog.lonzov.top/posts/tool-update/" target="_blank">更新日志</a> | <a href="/about/privacy" target="_blank">隐私政策</a> | <a href="https://github.com/lonzov/LonzovTool" target="_blank">GitHub</a> | <a href="https://v6.51.la/s/M9Z5hgOfLAQ9Sil" target="_blank">数据统计</a></p>
         <script id="LA-DATA-WIDGET" crossorigin="anonymous" charset="UTF-8" src="https://v6-widget.51.la/v6/3Ltl0yXYWQcgbDgB/quote.js?theme=#1690FF,#333333,#777777,#777777,#FFFFFF,#1690FF,11&f=12&display=0,1,1,1,1,1,1,1"></script>
     </footer>
     <script src="./index.js"></script>
@@ -533,8 +550,8 @@
                     version: newVersion,
                     forceShow: true,
                     content: `
-                        <p>[+] 离线操作优化</p>
-                        <p><strong>·</strong> 新卡片：站长能帮你干点啥</p>
+                        <p>[+] 添加隐私政策页</p>
+                        <p><strong>·</strong> 新卡片：无</p>
                         <p><strong>·</strong> 建议/反馈请加Q群: <a href="https://qm.qq.com/q/dgYFOtx4Qg" target="_blank" style="color:var(--text-color);">587984701</a></p>
                         <p style="font-size:14px;color:#666;margin-top:10px;">当前版本: ${currentVersion} → 最新版本: ${newVersion}</p>
                     `,
