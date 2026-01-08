@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.4.0';
+const CACHE_VERSION = 'v2.4.1';
 const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
@@ -34,9 +34,30 @@ const CORE_ASSETS = [
 ];
 
 self.addEventListener('install', event => {
-  // 预缓存核心资源（不强制 skipWaiting，等待用户触发更新以避免激活时破坏正在使用的页面）
+  // 预缓存核心资源，对音频文件单独处理
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_ASSETS)).then(() => {
+    caches.open(CACHE_NAME).then(cache => {
+      // 分别处理不同类型的资源
+      const coreAssets = CORE_ASSETS.filter(asset =>
+        !asset.endsWith('.mp3')
+      );
+
+      const audioAssets = CORE_ASSETS.filter(asset =>
+        asset.endsWith('.mp3')
+      );
+
+      // 先缓存核心资源
+      return cache.addAll(coreAssets).then(() => {
+        // 单独处理音频文件，即使失败也不影响整体
+        return Promise.all(
+          audioAssets.map(audioAsset => {
+            return cache.add(audioAsset).catch(err => {
+              console.warn(`Failed to cache audio asset ${audioAsset}:`, err);
+            });
+          })
+        );
+      });
+    }).then(() => {
       console.log('SW install: precache complete', CACHE_NAME);
     })
   );
@@ -80,8 +101,43 @@ self.addEventListener('fetch', event => {
 
   const request = event.request;
 
+  // 检查是否为音频文件
+  const isAudioRequest = request.destination === 'audio' ||
+                        request.url.endsWith('.mp3');
+
+  // 对音频文件采用特殊的缓存策略
+  if (isAudioRequest) {
+    event.respondWith(
+      caches.match(request).then(cached => {
+        if (cached) {
+          return cached;
+        }
+
+        // 先返回网络请求，同时缓存结果
+        return fetch(request).then(networkResponse => {
+          if (networkResponse && networkResponse.status === 200) {
+            try {
+              const reqOrigin = new URL(request.url).origin;
+              if (reqOrigin === self.location.origin) {
+                const clone = networkResponse.clone();
+                caches.open(CACHE_NAME).then(cache => {
+                  cache.put(request, clone).catch(err => console.warn('Audio cache put failed:', err));
+                });
+              }
+            } catch (e) {
+              console.warn('Audio caching skipped (bad url):', e);
+            }
+          }
+          return networkResponse;
+        }).catch(() => {
+          // 网络请求失败时，再次尝试从缓存获取
+          return caches.match(request);
+        });
+      })
+    );
+  }
   // 对导航请求使用缓存优先策略
-  if (request.mode === 'navigate') {
+  else if (request.mode === 'navigate') {
     event.respondWith(
       // 首先尝试从缓存获取
       caches.match(request).then(cached => {

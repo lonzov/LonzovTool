@@ -343,3 +343,22 @@ function updateTimer() {
 
 updateTimer();
 setInterval(updateTimer, 1000);
+
+// 预加载音频资源
+function preloadAudioAssets() {
+  const audioFiles = [
+    '/icon/8-bit/eat.mp3',
+    '/icon/8-bit/death.mp3',
+    '/icon/8-bit/move.mp3',
+    '/icon/8-bit/konami.mp3'
+  ];
+
+  audioFiles.forEach(src => {
+    const audio = new Audio();
+    audio.src = src;
+    audio.preload = 'auto';
+    audio.load();
+  });
+}
+
+window.addEventListener('load', preloadAudioAssets);
