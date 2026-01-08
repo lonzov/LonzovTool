@@ -1,12 +1,12 @@
 // 卡片数据
 const cardsData = [
     { title: "ID查询<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "查询原版所有ID · by 命令助手", categories:["command"], link: "https://idlist.projectxero.top/", newtap:true },
-    { title: "艺术字转换", description: "MC艺术字 游戏内才能显示", categories:["command"], link: "./c/qjzh", newtap:false },
-    { title: "T显动画", description: "自动生成“打字机”动画", categories:["command"], link: "./c/tr", newtap:false },
+    { title: "艺术字转换", description: "MC艺术字 游戏内才能显示", categories:["command"], link: "./c/qjzh/", newtap:false },
+    { title: "T显动画", description: "自动生成“打字机”动画", categories:["command"], link: "./c/tr/", newtap:false },
     { title: "T显可视化编辑器", description: "通过可视化界面编辑T显json", categories:["command"], link: "./c/raw-json/", newtap:false },
-    { title: "语法转换", description: "execute指令语法升级", categories:["command"], link: "./c/execute", newtap:false },
+    { title: "语法转换", description: "execute指令语法升级", categories:["command"], link: "./c/execute/", newtap:false },
     { title: "CHelper<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "命令助手在线版", categories:["command"], link: "https://www.yanceymc.cn/chelper/", newtap:true },
-    { title: "MC特殊符号", description: "mc特殊符号，如鸡腿M币等", categories:["command"], link: "./c/fuhao", newtap:false },
+    { title: "MC特殊符号", description: "mc特殊符号，如鸡腿M币等", categories:["command"], link: "./c/fuhao/", newtap:false },
     { title: "符号大全<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "特殊符号大全", categories:["command"], link: "https://teshuzifu.cn/", newtap:true },
     { title: "T显编辑器<i class=\"fa-solid fa-arrow-up-right-dots\" style=\"transform: scale(0.65);\"></i>", description: "可视化T显编辑器 · by Dislink", categories:["command"], link: "https://dislink.github.io/rawJSONEditor/", newtap:true },
     { title: "MCNav<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "MC导航站，致力于收录最全面的我的世界网址和工具", categories:["recom"], link: "https://www.mcnav.net/", newtap:true },
