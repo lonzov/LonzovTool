@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.4.2';
+const CACHE_VERSION = 'v2.4.3';
 const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
