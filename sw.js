@@ -35,7 +35,7 @@ const CORE_ASSETS = [
 ];
 
 self.addEventListener('install', event => {
-  // 预缓存核心资源，对音频文件单独处理
+  // 预缓存核心资源，对音频文件单独处理.
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       // 分别处理不同类型的资源
