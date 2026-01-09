@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="description" content="Minecraft指令工具箱，你需要的这里都有">
     <meta name="keywords" content="我的世界,Minecraft,MC,指令,命令,导航,网址,工具,网站,资源,基岩版,网易版,手机版">
     <title>小舟工具箱 - Minecraft指令工具箱</title>
@@ -323,7 +326,7 @@
         <p><a href="https://blog.lonzov.top/posts/tool-about/" target="_blank">关于本站</a> | <a href="https://blog.lonzov.top/posts/tool-update/" target="_blank">更新日志</a> | <a href="/about/privacy" target="_blank">隐私政策</a> | <a href="https://github.com/lonzov/LonzovTool" target="_blank">GitHub</a> | <a href="https://v6.51.la/s/M9Z5hgOfLAQ9Sil" target="_blank">数据统计</a></p>
         <script id="LA-DATA-WIDGET" crossorigin="anonymous" charset="UTF-8" src="https://v6-widget.51.la/v6/3Ltl0yXYWQcgbDgB/quote.js?theme=#1690FF,#333333,#777777,#777777,#FFFFFF,#1690FF,11&f=12&display=0,1,1,1,1,1,1,1"></script>
     </footer>
-    <script src="./index.js"></script>
+    <script src="./index.js?v=v2.4.2"></script>
     <script>
         (function () {
             'use strict';
@@ -363,14 +366,14 @@
                         break;
 
                     case 'ios-manual':
-                        content = '<p>iOS 系统需要手动添加到主屏幕：<br>· 点击 Safari 底部的 <i class="fa-solid fa-share-nodes"></i> 分享按钮<br>· 在菜单中找到并点击 <strong>"添加到主屏幕"</strong><br>· 点击右上角 <strong>"添加"</strong> 即可完成</p>' +
+                        content = '<p>当前系统需要手动添加到主屏幕：<br>· 使用系统浏览器打开本站，点击浏览器底部的 <i class="fa-solid fa-share-nodes"></i> 分享按钮<br>· 在菜单中找到并点击 <strong>"添加到主屏幕"</strong><br>· 点击右上角 <strong>"添加"</strong> 即可完成</p>' +
                             '<p>完成后，桌面上会出现本应用图标</p>';
                         buttons = [{ text: '好的', style: "gray", action: 'close' }];
                         break;
 
                     default:
                         content = '<p>当前设备或浏览器暂时无法自动安装。</p>' +
-                                '<p>您可以尝试：<br>· 使用 <strong>Chrome、Edge </strong>或<strong>系统自带的浏览器</strong><br>· 刷新页面重试</p>' +
+                                '<p>您可以尝试：<br>· 使用 <strong>Chrome、Edge </strong>或<strong>系统浏览器</strong><br>· 刷新页面重试</p>' +
                                 '<p>仍不成功？您可以尝试下方的"安卓下载"</p>';
 
 
@@ -398,7 +401,7 @@
 
                 if (isPWAInstalled()) return;
                 // iOS 直接触发引导弹窗（不尝试 deferredPrompt）
-                if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                if (/iPad|iPhone|iPod|OpenHarmony/.test(navigator.userAgent)) {
                     showInstallFailedModal('ios-manual');
                     return;
                 }
@@ -445,7 +448,7 @@
 
             // 监听 beforeinstallprompt（用于非 iOS）
             window.addEventListener('beforeinstallprompt', (e) => {
-                if (!/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                if (!/iPad|iPhone|iPod|OpenHarmony/.test(navigator.userAgent)) {
                     e.preventDefault();
                     deferredPrompt = e;
                 }
@@ -454,6 +457,6 @@
         })();
 
     </script>
-    <script src="/update-handler.js"></script>
+    <script src="/update-handler.js?v=v2.4.2"></script>
 </body>
 </html>
