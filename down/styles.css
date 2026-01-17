@@ -101,6 +101,12 @@ footer a:hover {
     text-decoration: underline;
 }
 
+/* --- 链接样式 --- */
+.contact-link {
+    color: #3caffc;
+    text-decoration: underline;
+}
+
 /* --- 下载区域 --- */
 .download-section {
     width: 100%;

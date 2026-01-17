@@ -7,23 +7,17 @@ document.addEventListener('DOMContentLoaded', () => {
             config = JSON.parse(configScript.textContent);
         } catch (e) {
             console.error("解析下载配置失败:", e);
-            showMessage("配置加载失败", false);
         }
-    } else {
-        console.error("未找到ID为 'downloadConfig' 的配置脚本。");
-        showMessage("配置缺失", false);
     }
     const downloadPassword = document.getElementById('downloadPassword');
     const manualDownloadLink = document.getElementById('manualDownloadLink');
-    const directDownloadBtn = document.getElementById('directDownloadBtn');
-    const quickDownloadBtn = document.getElementById('quickDownloadBtn');
+    const quickDownloadBtn1 = document.getElementById('quickDownloadBtn1');
+    const quickDownloadBtn2 = document.getElementById('quickDownloadBtn2');
     const copyPasswordBtn = document.getElementById('copyPasswordBtn');
     const message = document.getElementById('message');
     const quickDownloadCard = document.getElementById('quickDownloadCard');
     const manualDownloadCard = document.getElementById('manualDownloadCard');
 
-    // API
-    const API_BASE_URL = 'https://lz.qaiu.top/parser';
 
     // 根据配置初始化值和控制显示
     let isQuickCardNeeded = false;
@@ -38,35 +32,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (config.lanzou?.url) {
         manualDownloadLink.href = config.lanzou.url;
         isManualCardNeeded = true;
-    } else {
-        manualDownloadLink.classList.add('disabled');
-        manualDownloadLink.href = '#';
     }
 
     // 初始化快捷下载按钮和卡片
-    if (config.direct?.url) {
-        directDownloadBtn.href = config.direct.url;
-        isQuickCardNeeded = true;
-    } else {
-        directDownloadBtn.href = '#';
-        directDownloadBtn.classList.add('disabled');
-    }
-
+    // 确保两个解析按钮始终可用（因为现在都使用lanzou配置）
     if (config.lanzou?.url && config.lanzou?.password) {
         isQuickCardNeeded = true;
-    } else {
-        quickDownloadBtn.classList.add('disabled');
     }
 
     // 控制卡片显示
     quickDownloadCard.style.display = isQuickCardNeeded ? 'block' : 'none';
     manualDownloadCard.style.display = isManualCardNeeded ? 'block' : 'none';
 
-    // 如果两个卡片都隐藏，则隐藏整个下载卡片
-    if (!isQuickCardNeeded && !isManualCardNeeded) {
-        document.querySelector('.download-section').innerHTML = '<p class="section-description">暂无可用的下载方式。</p>';
-        console.warn("没有有效的下载链接配置。");
-    }
 
     // 主题
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -95,39 +72,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 下载逻辑
-    // 生成API URL的函数
-    function generateApiUrl() {
-        if (!config.lanzou?.url || !config.lanzou?.password) {
-            console.error("缺少生成API URL所需的数据 (url 或 password)");
-            showMessage("下载配置错误", false);
-            return '#';
-        }
-        const params = new URLSearchParams({
-            url: encodeURIComponent(config.lanzou.url),
-            pwd: encodeURIComponent(config.lanzou.password),
-        });
-        return `${API_BASE_URL}?${params}`;
-    }
-
-
-    // 蓝奏云按钮点击事件(原本点击按钮是显示遮罩层，现在直接执行原遮罩层点击后的逻辑)
-    quickDownloadBtn.addEventListener('click', function(e) {
-        if (this.classList.contains('disabled')) {
-            e.preventDefault();
-            showMessage('蓝奏云解析不可用', false, e);
-            return;
-        }
-        // e.preventDefault(); // 如果按钮是 <a> 标签，且希望始终在新窗口打开，可以保留此行阻止默认跳转
-
-        // 直接执行原遮罩层点击后的逻辑
-        const apiUrl = generateApiUrl();
-        if (apiUrl !== '#' && apiUrl !== 'http://www.722shop.top:6401/parser?') {
-            console.log("跳转到 API URL:", apiUrl);
-            window.open(apiUrl, '_blank');
-        } else {
-            showMessage("无法生成下载链接", false);
-        }
+    // 直链解析1按钮点击事件
+    quickDownloadBtn1.addEventListener('click', function(e) {
+        // 构建第一个API的URL - 公共解析服务
+        const apiUrl1 = `https://lz.qaiu.top/parser?url=${encodeURIComponent(config.lanzou.url)}&pwd=${encodeURIComponent(config.lanzou.password)}`;
+        console.log("直链解析1 (lz.qaiu.top):", apiUrl1);
+        window.location.href = apiUrl1;
     });
+
+    // 直链解析2按钮点击事件
+    quickDownloadBtn2.addEventListener('click', function(e) {
+        // 构建第二个API的URL - 自用api，有严格速率限制，如需使用直链解析请自行搭建服务，可参考此篇博文：https://blog.lonzov.top/posts/1/#%E7%BD%91%E7%9B%98
+        const apiUrl2 = `https://api.lonzov.top/lanzou/index.php?url=${encodeURIComponent(config.lanzou.url)}&pwd=${encodeURIComponent(config.lanzou.password)}&type=down`;
+        console.log("直链解析2 (api.lonzov.top):", apiUrl2);
+        window.location.href = apiUrl2;
+    });
+
 
     // 消息提示
     function showMessage(text, isSuccess, eventOrPosition) {
