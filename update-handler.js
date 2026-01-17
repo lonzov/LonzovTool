@@ -72,8 +72,8 @@ if ('serviceWorker' in navigator) {
             version: newVersion,
             forceShow: true,
             content: `
-                <p>[~] 缓存逻辑优化<br>[+] 做了个花里胡哨的离线页🤪</p>
-                <p><strong>·</strong> 新卡片：无</p>
+                <p>[+] 关于页加入在线反馈和收录申请表单<br>[~] 下载页逻辑优化</p>
+                <p><strong>·</strong> 新卡片：雪球T显生成器</p>
                 <p><strong>·</strong> 建议/反馈请加Q群: <a href="https://qm.qq.com/q/dgYFOtx4Qg" target="_blank" style="color:var(--text-color);">587984701</a></p>
                 <p style="font-size:14px;color:#666;margin-top:10px;">当前版本: ${currentVersion} → 最新版本: ${newVersion}</p>
             `,
