@@ -1,10 +1,10 @@
-const CACHE_VERSION = 'v2.4.5';
+const CACHE_VERSION = 'v2.4.6';
 const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
   '/',
   '/index.html',
-  `/index.js?v=${CACHE_VERSION}`,
+  `/index.js`,
   '/style.css',
   '/c/conver.css',
   '/c/execute/',
@@ -24,14 +24,18 @@ const CORE_ASSETS = [
   '/c/tr/index.html',
   '/c/tr/script.js',
   '/modal.js',
-  `/update-handler.js?v=${CACHE_VERSION}`,
+  `/update-handler.js`,
   '/alert-checker.js',
   '/manifest.json',
   '/offline.html',
   '/icon/8-bit/eat.mp3',
   '/icon/8-bit/death.mp3',
   '/icon/8-bit/move.mp3',
-  '/icon/8-bit/konami.mp3'
+  '/icon/8-bit/konami.mp3',
+  '/detect/sw/',
+  '/detect/sw/index.html',
+  '/detect/sw/script.js',
+  '/detect/sw/style.css'
 ];
 
 self.addEventListener('install', event => {
