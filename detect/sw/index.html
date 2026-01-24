@@ -21,7 +21,7 @@
             <div class="detection-list">
                 <div class="item">
                     <span class="item-name">当前版本号</span>
-                    <span class="item-value" id="current-version">检测中...</span>
+                    <span class="item-value" id="current-version" style="cursor: pointer;">检测中...</span>
                 </div>
                 <div class="item">
                     <span class="item-name">更新时间</span>
@@ -72,6 +72,20 @@
                     <span class="item-value" id="sw-status">检测中...</span>
                 </div>
             </div>
+
+    <!-- 强制清除缓存模态框 -->
+    <div id="force-clear-modal" class="force-clear-modal" style="display: none;">
+        <div class="force-clear-modal-backdrop"></div>
+        <div class="force-clear-modal-content">
+            <div class="force-clear-modal-body">
+                <h3>即将重置缓存(<span id="countdown">10</span>s)</h3>
+                <p>这将导致页面重新加载且所有通过缓存保存的设置将重置，如T显可视化编辑器的编辑记录。</p>
+            </div>
+            <div class="force-clear-modal-footer">
+                <button id="cancel-force-clear" class="force-clear-modal-button ios-button-gray">阻止</button>
+            </div>
+        </div>
+    </div>
         </main>
     </div>
 
@@ -79,9 +93,106 @@
         <button id="clear-cache-btn" class="debug-button danger">清除缓存并强制刷新</button>
         <button id="debug-toggle" class="debug-button">显示详细信息</button>
     </div>
+    <footer class="container">
+        <p>v2.4.7</p>
+    </footer>
 
     <div id="debug-log" class="debug-log" style="display: none;"></div>
 
+    <style>.force-clear-modal{position:fixed;top:0;left:0;width:100%;height:100%;z-index:10000}.force-clear-modal-backdrop{position:absolute;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,0.5);backdrop-filter:blur(4px)}.force-clear-modal-content{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);min-width:300px;max-width:520px;background:rgba(255,255,255,0.71);backdrop-filter:blur(12.5px);border-radius:22px;border:1px solid rgba(0,0,0,0.2);z-index:10001;box-shadow:0 4px 50px rgba(0,0,0,0.40);overflow:hidden;font-family:'Misa','PingFang SC','HarmonyOS Sans SC',sans-serif}[data-theme="dark"].force-clear-modal-content{background:rgba(23,24,26,0.85);border-color:rgba(255,255,255,0.08);box-shadow:0 4px 50px rgba(0,0,0,0.66)}.force-clear-modal-body{padding:24px;text-align:left}.force-clear-modal-body h3{margin:0 0 12px 0;font-size:18px;font-weight:600;color:#007AFF;text-align:center}[data-theme="dark"].force-clear-modal-body h3{color:#007AFF}.force-clear-modal-body p{margin:0;font-size:15px;color:#333;line-height:1.5}[data-theme="dark"].force-clear-modal-body p{color:#EEE}.force-clear-modal-footer{display:flex;border-top:1px solid rgba(0,0,0,0.2);margin-top:0}[data-theme="dark"].force-clear-modal-footer{border-top-color:rgba(255,255,255,0.08)}.force-clear-modal-button{flex:1;padding:12px 10px;text-align:center;font-size:16px;font-weight:600;color:#007AFF;background:none;border:none;cursor:pointer;position:relative;line-height:1.2;outline:none}.force-clear-modal-button:not(:last-child)::after{content:'';position:absolute;right:0;top:0;height:100%;width:1px;background:rgba(0,0,0,0.2)}[data-theme="dark"].force-clear-modal-button:not(:last-child)::after{background:rgba(255,255,255,0.08)}.force-clear-modal-button::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background-color:rgba(120,120,128,0.12);opacity:0;border-radius:0;pointer-events:none;transition:opacity 0.15s ease}[data-theme="dark"].force-clear-modal-button::before{background-color:rgba(120,120,126,0.06)}.force-clear-modal-button:hover::before{opacity:1}.ios-button-gray{color:#8E8E93!important}</style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentVersionEl = document.getElementById('current-version');
+            const modal = document.getElementById('force-clear-modal');
+            const countdownEl = document.getElementById('countdown');
+
+            let clickCount = 0;
+            let clickTimer = null;
+
+            currentVersionEl.addEventListener('click', function() {
+                clickCount++;
+
+                // 如果达到6次点击，显示模态框
+                if (clickCount >= 6) {
+                    showForceClearModal();
+                    clickCount = 0;
+                } else {
+                    // 2秒后重置计数
+                    if (clickTimer) {
+                        clearTimeout(clickTimer);
+                    }
+
+                    clickTimer = setTimeout(function() {
+                        clickCount = 0;
+                    }, 2000);
+                }
+            });
+
+            // 显示强制清除缓存模态框
+            function showForceClearModal() {
+                modal.style.display = 'block';
+
+                let seconds = 10;
+                countdownEl.textContent = seconds;
+
+                const countdownInterval = setInterval(function() {
+                    seconds--;
+                    countdownEl.textContent = seconds;
+
+                    if (seconds <= 0) {
+                        clearInterval(countdownInterval);
+                        performForceClear();
+                    }
+                }, 1000);
+
+                // 绑定阻止按钮事件
+                setTimeout(function() {
+                    const cancelButton = document.getElementById('cancel-force-clear');
+                    if (cancelButton) {
+                        cancelButton.onclick = function() {
+                            modal.style.display = 'none';
+                            clearInterval(countdownInterval);
+                        };
+                    }
+                }, 0);
+            }
+
+            // 执行强制清除缓存和刷新
+            async function performForceClear() {
+                try {
+                    // 发送SKIP_WAITING消息给当前活跃的SW
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({type: 'SKIP_WAITING'});
+                    }
+
+                    // 获取所有注册的SW
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+
+                    // 注销所有SW
+                    for (const registration of registrations) {
+                        await registration.unregister();
+                    }
+
+                    // 清除所有缓存
+                    if ('caches' in window) {
+                        const cacheNames = await caches.keys();
+                        for (const cacheName of cacheNames) {
+                            await caches.delete(cacheName);
+                        }
+                    }
+
+                    localStorage.clear();
+                    sessionStorage.clear();
+
+                    // 强制刷新页面
+                    window.location.reload(true);
+                } catch (error) {
+                    console.error('强制清除缓存失败:', error);
+                    alert('清除缓存时发生错误，请查看控制台了解详情。');
+                }
+            }
+        });
+    </script>
     <script src="script.js"></script>
     <script src="/update-handler.js"></script>
 </body>
