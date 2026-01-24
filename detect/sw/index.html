@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>小舟工具箱 - SW缓存诊断工具</title>
+    <link rel="stylesheet" href="../detection.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="/favicon.png" type="image/png">
+    <script src="/modal.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>小舟工具箱 - 缓存诊断</h1>
+            <p class="subtitle">此页面专门用于诊断Service Worker缓存相关问题，帮助您解决缓存更新和离线访问问题。</p>
+        </header>
+
+        <main>
+            <div class="detection-list">
+                <div class="item">
+                    <span class="item-name">当前版本号</span>
+                    <span class="item-value" id="current-version">检测中...</span>
+                </div>
+                <div class="item">
+                    <span class="item-name">更新时间</span>
+                    <span class="item-value" id="update-time">检测中...</span>
+                </div>
+                <div class="item">
+                    <span class="item-name">注册的SW数量</span>
+                    <span class="item-value" id="sw-count">检测中...</span>
+                </div>
+                <div class="item">
+                    <span class="item-name">当前激活的SW</span>
+                    <span class="item-value" id="active-sw">检测中...</span>
+                </div>
+                <div class="item">
+                    <span class="item-name">当前等待的SW</span>
+                    <span class="item-value" id="waiting-sw">检测中...</span>
+                </div>
+                <div class="item">
+                    <span class="item-name">当前安装中的SW</span>
+                    <span class="item-value" id="installing-sw">检测中...</span>
+                </div>
+                <div class="item">
+                    <span class="item-name">缓存版本</span>
+                    <span class="item-value" id="cache-versions">检测中...</span>
+                </div>
+                <div class="item">
+                    <span class="item-name">服务器连通性</span>
+                    <span class="item-value" id="server-connectivity">
+                        <div class="ping-tests">
+                            <span class="ping-ball" data-test="1"></span>
+                            <span class="ping-ball" data-test="2"></span>
+                            <span class="ping-ball" data-test="3"></span>
+                            <span class="ping-ball" data-test="4"></span>
+                            <span class="ping-ball" data-test="5"></span>
+                        </div>
+                    </span>
+                </div>
+                <div class="item">
+                    <span class="item-name">缓存大小</span>
+                    <span class="item-value" id="cache-size">检测中...</span>
+                </div>
+                <div class="item">
+                    <span class="item-name">存储占用</span>
+                    <span class="item-value" id="storage-quota">检测中...</span>
+                </div>
+                <div class="item">
+                    <span class="item-name">SW状态</span>
+                    <span class="item-value" id="sw-status">检测中...</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="button-container">
+        <button id="clear-cache-btn" class="debug-button danger">清除缓存并强制刷新</button>
+        <button id="debug-toggle" class="debug-button">显示详细信息</button>
+    </div>
+
+    <div id="debug-log" class="debug-log" style="display: none;"></div>
+
+    <script src="script.js"></script>
+    <script src="/update-handler.js"></script>
+</body>
+</html>

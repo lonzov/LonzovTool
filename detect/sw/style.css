@@ -1,0 +1,123 @@
+.danger {
+    background-color: #ff4d4f !important;
+}
+
+.danger:hover {
+    background-color: #ff7875 !important;
+}
+
+.item-value .status-error {
+    color: var(--status-error);
+}
+
+.item-value .status-warning {
+    color: var(--status-warning);
+}
+
+.item-value .status-warning2 {
+    color: var(--status-warning2);
+}
+
+.item-value .status-span {
+    margin-right: 8px;
+}
+
+.ping-tests {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.ping-ball {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #ccc;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.ping-ball.normal {
+    background-color: var(--status-normal);
+}
+
+.ping-ball.warning {
+    background-color: var(--status-warning);
+}
+
+.ping-ball.warning2 {
+    background-color: var(--status-warning2);
+}
+
+.ping-ball.error {
+    background-color: var(--status-error);
+}
+
+/* 响应式设计 - 与检测页面保持一致 */
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+        padding: 10px 0;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+    }
+
+    .item {
+        padding: 5px 0;
+    }
+
+    .item-name {
+        flex: 0 0 80px;
+        font-size: 0.9rem;
+    }
+
+    .item-value {
+        font-size: 0.9rem;
+        word-wrap: break-word;
+        white-space: normal;
+    }
+
+    .ping-tests {
+        gap: 2px;
+    }
+
+    .ping-ball {
+        width: 10px;
+        height: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .detection-list {
+        font-size: 0.8rem;
+    }
+
+    .item {
+        padding: 4px 0;
+    }
+
+    .item-name {
+        flex: 0 0 70px;
+        font-size: 0.8rem;
+    }
+
+    .item-value {
+        font-size: 0.8rem;
+    }
+
+    .ping-tests {
+        gap: 1px;
+    }
+
+    .ping-ball {
+        width: 8px;
+        height: 8px;
+    }
+}
