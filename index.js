@@ -18,7 +18,9 @@ const cardsData = [
     { title: "命令模拟器<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "强大的基岩版命令调试程序", categories:["recom"], link: "https://commandsimulator.great-site.net/", newtap:true },
     { title: "MT管理器<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "安卓平台文件管理 & 逆向修改神器", categories:["recom"], link: "https://mt2.cn/", newtap:true },
     { title: "ChunkBase<i class=\"fa-solid fa-arrow-up-right-dots\" style=\"transform: scale(0.65);\"></i>", description: "通过种子号定位群系、结构、史莱姆区块等", categories:["recom"], link: "https://www.chunkbase.com/apps/seed-map#seed=%E7%A7%8D%E5%AD%90%E5%8F%B7&platform=bedrock_1_21&dimension=overworld&x=0&z=0&zoom=0.5", newtap:true },
-    { title: "中文wiki<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "在这里可以找到和mc有关的大部分信息", categories:["recom"], link: "https://zh.minecraft.wiki/", newtap:true },
+    { title: "中文MC wiki<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "在这里可以找到和mc有关的大部分信息", categories:["recom"], link: "https://zh.minecraft.wiki/", newtap:true },
+    { title: "基岩版wiki<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "这个wiki一个关于基岩版技术特性的知识分享网站", categories:["recom"], link: "https://wiki.bedrock.dev/", newtap:true },
+    { title: "基岩版开发wiki<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "专门面向开发者和技术性的内容的wiki", categories:["recom"], link: "https://wiki.mcbe-dev.net/", newtap:true },
     { title: "蓝天工作室<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "代表作 CRoB命令查询机器人 等", categories:["recom"], link: "https://bsc.meteormc.cn/", newtap:true },
     { title: "苦力怕论坛<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "最大的基岩版中文资源、交流论坛之一", categories:["forum"], link: "https://klpbbs.com/", newtap:true },
     { title: "MineBBS<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "简洁好用的交流讨论和资源分享平台", categories:["forum"], link: "https://www.minebbs.com/", newtap:true },
@@ -35,7 +37,6 @@ const cardsData = [
     { title: "毒蘑菇性能测试", description: "进行volumeshader性能测试 查看设备GPU性能", categories:["other"], link: "./o/vsbm", newtap:true },
     { title: "MC音效大全<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "SomeBottle的Minecraft音效资源站", categories:["creation"], link: "https://o.xbottle.top/mcsounds/", newtap:true },
     { title: "McIcons<i class=\"fa-solid fa-arrow-up-right-dots\" style=\"transform: scale(0.65);\"></i>", description: "MC资源集合, 包括皮肤头像、贴图和各种生成器等", categories:["creation"], link: "https://mcicons.ccleaf.com/", newtap:true },
-    { title: "基岩版开发wiki<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "专门面向开发者和技术性的内容的wiki", categories:["recom"], link: "https://wiki.mcbe-dev.net/", newtap:true },
     { title: "Minecraft 艺术<i class=\"fa-solid fa-arrow-up-right-from-square\" style=\"transform: scale(0.65);\"></i>", description: "在线制作像素画、地图画、雕塑和红石音乐", categories:["creation"], link: "https://mcpixelart.com/", newtap:true },
 ];
 
