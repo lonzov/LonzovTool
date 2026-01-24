@@ -72,7 +72,7 @@ if ('serviceWorker' in navigator) {
             version: newVersion,
             forceShow: true,
             content: `
-                <p>[+] 关于页加入在线反馈和收录申请表单<br>[~] 下载页逻辑优化</p>
+                <p>[+] 关于页加入在线反馈和收录申请表单<br>[~] 下载页逻辑优化<br>[+] 添加SW缓存诊断页</p>
                 <p><strong>·</strong> 新卡片：矩阵方块，基岩版wiki</p>
                 <p><strong>·</strong> 建议/反馈请加Q群: <a href="https://qm.qq.com/q/dgYFOtx4Qg" target="_blank" style="color:var(--text-color);">587984701</a></p>
                 <p style="font-size:14px;color:#666;margin-top:10px;">当前版本: ${currentVersion} → 最新版本: ${newVersion}</p>
