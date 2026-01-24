@@ -7,7 +7,7 @@
     --table-header-bg: #f0f0f0;
     --table-row-hover: #f8f8f8;
     
-    --status-normal: #06c;
+    --status-normal: #52c41a;
     --status-warning: #e2bd15;
     --status-warning2: #f38620;
     --status-error: #fc6062;
@@ -152,7 +152,7 @@ h1 {
 }
 
 .item-value.status-error {
-    color: --status-error;
+    color: var(--status-error);
 }
 
 
@@ -203,12 +203,12 @@ footer a:hover {
     .item {
         padding: 5px 0;
     }
-    
+
     .item-name {
         flex: 0 0 80px;
         font-size: 0.9rem;
     }
-    
+
     .item-value {
         font-size: 0.9rem;
         word-wrap: break-word;
