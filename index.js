@@ -18,6 +18,7 @@ const cardsData = [
     { title: "命令助手·Reforged", description: "命令助手 | 社区重铸版", categories:["recom"], link: "https://ca.nycx.top", newtap:true },
     { title: "命令助手", description: "便捷易用的命令辅助输入应用", categories:["recom"], link: "https://projectxero.top/ca/", newtap:true },
     { title: "矩阵方块", description: "雪球T显生成器、动态菜单生成器等", categories:["recom"], link: "https://jzfk.wuaze.com/", newtap:true },
+    { title: "指令音符盒", description: "mid转指令，并利用无障碍权限自动填入命令方块", categories:["recom"], link: "./down/指令音符盒", newtap:true },
     { title: "命令集", description: "利用无障碍权限实现全自动填写命令", categories:["recom"], link: "https://space.bilibili.com/1526784927", newtap:true },
     { title: "命令模拟器", description: "强大的基岩版命令调试程序", categories:["recom"], link: "https://commandsimulator.great-site.net/", newtap:true },
     { title: "MT管理器", description: "安卓平台文件管理 & 逆向修改神器", categories:["recom"], link: "https://mt2.cn/", newtap:true },
