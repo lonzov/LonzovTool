@@ -106,24 +106,6 @@ function stripQueryParameters(urlString) {
   return url.pathname;
 }
 
-// 辅助函数：检查带版本号的资源
-function checkVersionedAsset(request) {
-  const url = new URL(request.url);
-  const pathname = url.pathname;
-
-  // 如果路径包含版本号参数 ?v=xxx，尝试匹配不带参数的缓存资源
-  if (url.searchParams.has('v')) {
-    return caches.match(request).then(response => {
-      if (response) return response;
-
-      // 如果没找到带版本号的资源，尝试匹配原始路径
-      const originalRequest = new Request(pathname);
-      return caches.match(originalRequest);
-    });
-  }
-
-  return caches.match(request);
-}
 
 // 核心策略：缓存优先 + 后台更新检查
 self.addEventListener('fetch', event => {
@@ -138,7 +120,7 @@ self.addEventListener('fetch', event => {
   // 对音频文件采用特殊的缓存策略
   if (isAudioRequest) {
     event.respondWith(
-      checkVersionedAsset(request).then(cached => {
+      caches.match(request).then(cached => {
         if (cached) {
           return cached;
         }
@@ -161,7 +143,7 @@ self.addEventListener('fetch', event => {
           return networkResponse;
         }).catch(() => {
           // 网络请求失败时，再次尝试从缓存获取
-          return checkVersionedAsset(request);
+          return caches.match(request);
         });
       })
     );
@@ -170,7 +152,7 @@ self.addEventListener('fetch', event => {
   else if (request.mode === 'navigate') {
     event.respondWith(
       // 首先尝试从缓存获取
-      checkVersionedAsset(request).then(cached => {
+      caches.match(request).then(cached => {
         if (cached) {
           // 如果缓存中有，则立即返回缓存内容
           return cached;
@@ -195,7 +177,7 @@ self.addEventListener('fetch', event => {
           return networkResponse;
         }).catch(() => {
           // 网络请求失败时返回缓存变体或离线页面
-          return checkVersionedAsset(request).then(cachedFallback => {
+          return caches.match(request).then(cachedFallback => {
             if (cachedFallback) return cachedFallback;
 
             // 尝试匹配可能的变体路径
@@ -227,7 +209,7 @@ self.addEventListener('fetch', event => {
   // 对于非导航请求（如JS、CSS、图片等），使用缓存优先策略
   else {
     event.respondWith(
-      checkVersionedAsset(request).then(cached => {
+      caches.match(request).then(cached => {
         // 如果缓存中有，则立即返回缓存内容
         if (cached) {
           // 在后台更新缓存
