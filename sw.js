@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.4.8';
+const CACHE_VERSION = 'v2.4.9';
 const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
@@ -73,7 +73,8 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames
-          .filter(name => name.startsWith('lonzovtool-cache-') && name !== CACHE_NAME)
+          .filter(name => (name.startsWith('lonzovtool-cache-') && name !== CACHE_NAME) ||
+                         (name.startsWith('my-app-cache-')))
           .map(name => caches.delete(name))
       );
     }).then(() => {
