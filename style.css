@@ -439,7 +439,19 @@ footer {
     text-align: center;
     color: #777;
     padding-top: 30px;
-    font-size: 1rem;
+    font-size: 0.9rem;
+    position: relative;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.footer-divider {
+    width: 50%;
+    height: 1px;
+    border-bottom: 1px dashed #777;
+    margin: 0 auto 0.7rem auto;
 }
 
 footer a {

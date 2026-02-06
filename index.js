@@ -375,6 +375,30 @@ function updateTimer() {
 updateTimer();
 setInterval(updateTimer, 1000);
 
+// 获取SW版本号
+document.addEventListener('DOMContentLoaded', function () {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(function (registration) {
+            const channel = new MessageChannel();
+
+            channel.port1.onmessage = function (event) {
+                if (event.data.type === 'VERSION_RESPONSE') {
+                    document.getElementById('version').textContent = event.data.version;
+                }
+            };
+
+            registration.active.postMessage({
+                type: 'GET_VERSION'
+            }, [channel.port2]);
+        }).catch(function (error) {
+            console.error('Service Worker未注册或出现错误:', error);
+            document.getElementById('version').textContent = '未知';
+        });
+    } else {
+        document.getElementById('version').textContent = 'SW not supported';
+    }
+});
+
 // 预加载音频资源
 function preloadAudioAssets() {
   const audioFiles = [
