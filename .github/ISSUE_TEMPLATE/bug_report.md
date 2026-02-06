@@ -2,12 +2,12 @@
 name: Bug report
 about: Create a report to help us improve
 title: "[Bug]: "
-labels: bug
+labels: bug, enhancement
 assignees: ''
 
 ---
 
-*描述错误**
+**描述错误**
 完整清晰简洁的描述你遇到的问题
 
 **复现步骤**
