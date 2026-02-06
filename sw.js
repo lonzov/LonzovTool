@@ -1,4 +1,5 @@
-const CACHE_VERSION = 'v2.4.9';
+// 2026-02-07T05:03:00+08:00
+const CACHE_VERSION = 'v2.4.9.1';
 const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
@@ -39,29 +40,10 @@ const CORE_ASSETS = [
 ];
 
 self.addEventListener('install', event => {
-  // 预缓存核心资源，对音频文件单独处理.
+  // 预缓存核心资源
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      // 分别处理不同类型的资源
-      const coreAssets = CORE_ASSETS.filter(asset =>
-        !asset.endsWith('.mp3')
-      );
-
-      const audioAssets = CORE_ASSETS.filter(asset =>
-        asset.endsWith('.mp3')
-      );
-
-      // 先缓存核心资源
-      return cache.addAll(coreAssets).then(() => {
-        // 单独处理音频文件，即使失败也不影响整体
-        return Promise.all(
-          audioAssets.map(audioAsset => {
-            return cache.add(audioAsset).catch(err => {
-              console.warn(`Failed to cache audio asset ${audioAsset}:`, err);
-            });
-          })
-        );
-      });
+      return cache.addAll(CORE_ASSETS);
     }).then(() => {
       console.log('SW install: precache complete', CACHE_NAME);
     })
@@ -95,7 +77,6 @@ function checkPossiblePaths(paths) {
     if (response) {
       return response;
     } else {
-      // 继续尝试下一个路径
       return checkPossiblePaths(paths.slice(1));
     }
   });
@@ -114,54 +95,15 @@ self.addEventListener('fetch', event => {
 
   const request = event.request;
 
-  // 检查是否为音频文件
-  const isAudioRequest = request.destination === 'audio' ||
-                        request.url.endsWith('.mp3');
-
-  // 对音频文件采用特殊的缓存策略
-  if (isAudioRequest) {
+  // 处理导航请求（页面跳转）
+  if (request.mode === 'navigate') {
     event.respondWith(
       caches.match(request).then(cached => {
         if (cached) {
           return cached;
         }
 
-        // 先返回网络请求，同时缓存结果
         return fetch(request).then(networkResponse => {
-          if (networkResponse && networkResponse.status === 200) {
-            try {
-              const reqOrigin = new URL(request.url).origin;
-              if (reqOrigin === self.location.origin) {
-                const clone = networkResponse.clone();
-                caches.open(CACHE_NAME).then(cache => {
-                  cache.put(request, clone).catch(err => console.warn('Audio cache put failed:', err));
-                });
-              }
-            } catch (e) {
-              console.warn('Audio caching skipped (bad url):', e);
-            }
-          }
-          return networkResponse;
-        }).catch(() => {
-          // 网络请求失败时，再次尝试从缓存获取
-          return caches.match(request);
-        });
-      })
-    );
-  }
-  // 对导航请求使用缓存优先策略
-  else if (request.mode === 'navigate') {
-    event.respondWith(
-      // 首先尝试从缓存获取
-      caches.match(request).then(cached => {
-        if (cached) {
-          // 如果缓存中有，则立即返回缓存内容
-          return cached;
-        }
-
-        // 如果缓存中没有，尝试网络请求
-        return fetch(request).then(networkResponse => {
-          // 网络请求成功则更新缓存
           if (networkResponse && networkResponse.status === 200) {
             try {
               const reqOrigin = new URL(request.url).origin;
@@ -177,26 +119,21 @@ self.addEventListener('fetch', event => {
           }
           return networkResponse;
         }).catch(() => {
-          // 网络请求失败时返回缓存变体或离线页面
           return caches.match(request).then(cachedFallback => {
             if (cachedFallback) return cachedFallback;
 
-            // 尝试匹配可能的变体路径
             const url = new URL(request.url);
             const pathname = url.pathname;
 
-            // 创建可能的路径变体数组
             const possiblePaths = [pathname];
 
+            // 尝试匹配可能的路径变体
             if (pathname.endsWith('/')) {
-              // 目录路径，尝试匹配 index.html
               possiblePaths.push(pathname + 'index.html');
             } else if (!pathname.includes('.')) {
-              // 没有扩展名的路径，尝试匹配 /index.html
               possiblePaths.push(pathname + '/index.html');
             }
 
-            // 检查每个可能的路径
             return checkPossiblePaths(possiblePaths).then(response => {
               if (response) return response;
               return caches.match('/offline.html');
@@ -207,13 +144,12 @@ self.addEventListener('fetch', event => {
     );
 
   }
-  // 对于非导航请求（如JS、CSS、图片等），使用缓存优先策略
+  // 处理非导航请求
   else {
     event.respondWith(
       caches.match(request).then(cached => {
-        // 如果缓存中有，则立即返回缓存内容
         if (cached) {
-          // 在后台更新缓存
+          // 后台更新缓存
           event.waitUntil(
             fetch(request).then(networkResponse => {
               if (networkResponse && networkResponse.status === 200) {
@@ -234,11 +170,10 @@ self.addEventListener('fetch', event => {
             })
           );
 
-          // 如果是 JS 请求，确保设置正确的 Content-Type 头部
+          // 确保JS请求的Content-Type正确
           if (request.destination === 'script' && request.url.endsWith('.js')) {
             const contentType = cached.headers.get('content-type') || 'application/javascript';
             if (!contentType.includes('javascript')) {
-              // 克隆响应并添加正确的 Content-Type 头部
               const newHeaders = new Headers(cached.headers);
               newHeaders.set('Content-Type', 'application/javascript');
               return new Response(cached.body, {
@@ -252,9 +187,7 @@ self.addEventListener('fetch', event => {
           return cached;
         }
 
-        // 如果缓存中没有，尝试网络请求
         return fetch(request).then(networkResponse => {
-          // 网络请求成功则更新缓存
           if (networkResponse && networkResponse.status === 200) {
             try {
               const reqOrigin = new URL(request.url).origin;
@@ -270,21 +203,18 @@ self.addEventListener('fetch', event => {
           }
           return networkResponse;
         }).catch(() => {
-          // 网络请求失败，尝试匹配 JS 请求的可能路径变体
+          // 处理JS请求失败的情况
           if (request.destination === 'script' && request.url.endsWith('.js')) {
             const url = new URL(request.url);
             const pathname = url.pathname;
 
-            // 对于 JS 请求，尝试匹配可能的路径变体
             const possiblePaths = [pathname];
 
-            // 检查每个可能的路径
             return checkPossiblePaths(possiblePaths).then(response => {
               if (response) {
-                // 对于 JS 文件，确保设置正确的 Content-Type 头部
+                // 确保JS文件的Content-Type正确
                 const contentType = response.headers.get('content-type') || 'application/javascript';
                 if (!contentType.includes('javascript')) {
-                  // 克隆响应并添加正确的 Content-Type 头部
                   const newHeaders = new Headers(response.headers);
                   newHeaders.set('Content-Type', 'application/javascript');
                   return new Response(response.body, {
@@ -295,12 +225,10 @@ self.addEventListener('fetch', event => {
                 }
                 return response;
               }
-              // 如果找不到匹配项，抛出错误
               throw new Error('Network request failed and no cached resource available.');
             });
           }
 
-          // 其他情况抛出错误
           throw new Error('Network request failed and no cached resource available.');
         });
       })
@@ -308,7 +236,7 @@ self.addEventListener('fetch', event => {
   }
 });
 
-// 客户端可以发送消息触发 skipWaiting（建议在用户确认后发送）
+// 客户端可以发送消息触发 skipWaiting
 self.addEventListener('message', event => {
   if (!event.data) return;
   console.log('SW message received:', event.data);

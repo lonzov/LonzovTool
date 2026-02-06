@@ -1,4 +1,36 @@
-// Service Worker 更新检查和处理 - 使用与首页相同的逻辑
+// 版本号比较函数
+// 返回更新类型：popup(弹窗更新)、auto(自动更新)、none(无更新)
+function compareVersions(currentVersion, newVersion) {
+    currentVersion = currentVersion.replace(/^v/, '');
+    newVersion = newVersion.replace(/^v/, '');
+
+    const currentParts = currentVersion.split('.').map(Number);
+    const newParts = newVersion.split('.').map(Number);
+
+    const maxLevel = Math.max(currentParts.length, newParts.length);
+
+    for (let i = 0; i < maxLevel; i++) {
+        const currentPart = i < currentParts.length ? currentParts[i] : 0;
+        const newPart = i < newParts.length ? newParts[i] : 0;
+
+        if (newPart > currentPart) {
+            const level = i + 1; // 版本号级别
+
+            // 三级版本号及以上需要弹窗，四级及以下自动更新
+            if (level <= 3) {
+                return { updateType: 'popup', level: level };
+            } else {
+                return { updateType: 'auto', level: level };
+            }
+        } else if (newPart < currentPart) {
+            return { updateType: 'none', level: level };
+        }
+    }
+
+    return { updateType: 'none', level: 0 };
+}
+
+// Service Worker 更新检查和处理
 if ('serviceWorker' in navigator) {
     let updateDialogShown = false; // 防止重复显示更新对话框
 
@@ -15,38 +47,80 @@ if ('serviceWorker' in navigator) {
                     newSW.addEventListener('statechange', () => {
                         if (newSW.state === 'installed' && navigator.serviceWorker.controller && !updateDialogShown) {
                             updateDialogShown = true;
-                            openSWUpdateDialog(reg);
+
+                            const messageChannel = new MessageChannel();
+                            messageChannel.port1.onmessage = function(event) {
+                                const newSWVersion = event.data.version;
+                                let currentSWVersion = localStorage.getItem('current_sw_version') || '未知';
+
+                                const versionComparison = compareVersions(currentSWVersion, newSWVersion);
+
+                                if (versionComparison.updateType === 'popup') {
+                                    openSWUpdateDialog(reg);
+                                } else if (versionComparison.updateType === 'auto') {
+                                    console.log(`检测到${versionComparison.level}级版本更新，将在下次加载时自动更新...`);
+
+                                    // 标记有更新可用，下次加载时自动更新
+                                    sessionStorage.setItem('sw-update-available', 'true');
+                                }
+                            };
+
+                            newSW.postMessage({type: 'GET_VERSION'}, [messageChannel.port2]);
                         }
                     });
                 });
 
                 // 如果已有 waiting worker，立即提示用户
                 if (reg.waiting && navigator.serviceWorker.controller && !updateDialogShown) {
-                    console.log('SW has waiting worker - showing update banner');
-                    updateDialogShown = true;
-                    openSWUpdateDialog(reg);
+                    console.log('SW has waiting worker - checking update type');
+
+                    const messageChannel = new MessageChannel();
+                    messageChannel.port1.onmessage = function(event) {
+                        const newSWVersion = event.data.version;
+                        let currentSWVersion = localStorage.getItem('current_sw_version') || '未知';
+
+                        const versionComparison = compareVersions(currentSWVersion, newSWVersion);
+
+                        if (versionComparison.updateType === 'popup') {
+                            updateDialogShown = true;
+                            openSWUpdateDialog(reg);
+                        } else if (versionComparison.updateType === 'auto') {
+                            console.log(`检测到${versionComparison.level}级版本更新，将在下次加载时自动更新...`);
+
+                            // 标记有更新可用，下次加载时自动更新
+                            sessionStorage.setItem('sw-update-available', 'true');
+                        }
+                    };
+
+                    reg.waiting.postMessage({type: 'GET_VERSION'}, [messageChannel.port2]);
                 }
             })
             .catch(err => console.warn('SW registration failed', err));
     });
 
-    // 当新的 service worker 接管页面时刷新页面
+    // 当新的 service worker 接管页面时，根据版本级别决定是否刷新页面
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('navigator.serviceWorker controllerchange -> reloading');
-        window.location.reload();
+        // 检查是否有标记为自动更新的版本
+        const isAutoUpdate = sessionStorage.getItem('sw-update-available');
+        if (isAutoUpdate) {
+            console.log('Service Worker 自动更新完成，不强制刷新页面');
+            sessionStorage.removeItem('sw-update-available');
+        } else {
+            console.log('navigator.serviceWorker controllerchange -> reloading');
+            window.location.reload();
+        }
     });
 
     // 监听来自 Service Worker 的消息
     navigator.serviceWorker.addEventListener('message', event => {
         if (event.data && event.data.type === 'UPDATE_AVAILABLE') {
             console.log('Update available, reloading page to get fresh content...');
-            // 只刷新页面，因为 updatefound 事件已经会处理更新提示
             window.location.reload();
         }
     });
 }
 
-// Service Worker 更新通知 - 与首页相同
+// Service Worker 更新通知
 (function () {
     function showSWUpdateModal(reg) {
         // 获取当前活动的SW版本
@@ -59,7 +133,21 @@ if ('serviceWorker' in navigator) {
         const messageChannel = new MessageChannel();
         messageChannel.port1.onmessage = function(event) {
             const newSWVersion = event.data.version;
-            showUpdateDialog(currentSWVersion, newSWVersion, reg);
+
+            // 比较版本号以确定更新类型
+            const versionComparison = compareVersions(currentSWVersion, newSWVersion);
+
+            if (versionComparison.updateType === 'popup') {
+                showUpdateDialog(currentSWVersion, newSWVersion, reg);
+            } else if (versionComparison.updateType === 'auto') {
+                console.log(`检测到${versionComparison.level}级版本更新，执行自动更新...`);
+
+                // 直接跳过等待并激活新版本
+                if (reg && reg.waiting) {
+                    reg.waiting.postMessage('SKIP_WAITING');
+                }
+            }
+            // 如果 updateType 是 'none'，则不执行任何操作
         };
         reg.waiting.postMessage({type: 'GET_VERSION'}, [messageChannel.port2]);
     }
@@ -108,43 +196,67 @@ if ('serviceWorker' in navigator) {
         if (e.detail && e.detail.type === 'update_sw') {
             const reg = e.detail.registration;
 
-            // 创建一个临时的更新状态提示
-            const updateStatusModal = {
-                title: "正在更新...",
-                id: "sw_update_progress",
-                version: Date.now().toString(),
-                forceShow: true,
-                content: `<p>正在下载最新版本，请稍候...</p><div class="loading-indicator"><div class="spinner"></div></div>`,
-                buttons: []
+            // 获取当前版本和新版本，以确定更新类型
+            const messageChannel = new MessageChannel();
+            messageChannel.port1.onmessage = function(event) {
+                const newSWVersion = event.data.version;
+                let currentSWVersion = localStorage.getItem('current_sw_version') || '未知';
+
+                // 比较版本号以确定更新类型
+                const versionComparison = compareVersions(currentSWVersion, newSWVersion);
+
+                // 创建一个临时的更新状态提示
+                const updateStatusModal = {
+                    title: "正在更新...",
+                    id: "sw_update_progress",
+                    version: Date.now().toString(),
+                    forceShow: true,
+                    content: `<p>正在下载最新版本，请稍候...</p><div class="loading-indicator"><div class="spinner"></div></div>`,
+                    buttons: []
+                };
+                showModal(updateStatusModal);
+
+                // 发送 SKIP_WAITING 消息给 Service Worker
+                if (reg && reg.waiting) {
+                    let controllerChangeListener = function() {
+                        console.log('Service Worker 控制器已变更，刷新页面...');
+                        navigator.serviceWorker.removeEventListener('controllerchange', controllerChangeListener);
+
+                        // 根据版本类型决定是否刷新
+                        if (versionComparison.updateType === 'popup') {
+                            window.location.reload();
+                        } else {
+                            closeModalById("sw_update_progress");
+                        }
+                    };
+
+                    navigator.serviceWorker.addEventListener('controllerchange', controllerChangeListener);
+
+                    reg.waiting.postMessage('SKIP_WAITING');
+
+                    // 设置超时处理
+                    setTimeout(() => {
+                        navigator.serviceWorker.removeEventListener('controllerchange', controllerChangeListener);
+                        closeModalById("sw_update_progress");
+
+                        // 如果还没刷新，根据版本类型决定是否刷新页面
+                        if (versionComparison.updateType === 'popup') {
+                            window.location.reload();
+                        }
+                    }, 10000);
+                } else if (reg && reg.active) {
+                    // 如果没有waiting状态的worker但有active的，则根据版本类型决定是否刷新
+                    if (versionComparison.updateType === 'popup') {
+                        window.location.reload();
+                    } else {
+                        closeModalById("sw_update_progress");
+                    }
+                }
             };
 
-            // 临时显示进度
-            showModal(updateStatusModal);
-
-            // 发送 SKIP_WAITING 消息给 Service Worker
+            // 获取新版本信息
             if (reg && reg.waiting) {
-                // 监听控制器变化以刷新页面
-                let controllerChangeListener = function() {
-                    console.log('Service Worker 控制器已变更，刷新页面...');
-                    navigator.serviceWorker.removeEventListener('controllerchange', controllerChangeListener);
-                    window.location.reload();
-                };
-
-                navigator.serviceWorker.addEventListener('controllerchange', controllerChangeListener);
-
-                reg.waiting.postMessage('SKIP_WAITING');
-
-                // 设置超时处理
-                setTimeout(() => {
-                    navigator.serviceWorker.removeEventListener('controllerchange', controllerChangeListener);
-                    closeModalById("sw_update_progress");
-
-                    // 如果还没刷新，直接刷新页面
-                    window.location.reload();
-                }, 10000); // 10秒超时
-            } else if (reg && reg.active) {
-                // 如果没有waiting状态的worker但有active的，则直接刷新
-                window.location.reload();
+                reg.waiting.postMessage({type: 'GET_VERSION'}, [messageChannel.port2]);
             }
         }
     });
@@ -175,12 +287,9 @@ if ('serviceWorker' in navigator) {
     // 页面加载完成后获取并保存当前SW版本
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            // 等待Service Worker控制器可用后保存版本
             if (navigator.serviceWorker.controller) {
-                // 如果已经有控制器，直接获取并保存版本
                 saveCurrentSWVersion();
             } else {
-                // 如果没有控制器，等待控制器变更事件
                 navigator.serviceWorker.addEventListener('controllerchange', () => {
                     saveCurrentSWVersion();
                 });
