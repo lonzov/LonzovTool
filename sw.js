@@ -46,6 +46,16 @@ self.addEventListener('install', event => {
       return cache.addAll(CORE_ASSETS);
     }).then(() => {
       console.log('SW install: precache complete', CACHE_NAME);
+      // 在安装阶段立即清除旧的my-app-cache缓存
+      return caches.keys().then(cacheNames => {
+        const oldAppCaches = cacheNames.filter(name => name.startsWith('my-app-cache-'));
+        return Promise.all(
+          oldAppCaches.map(name => {
+            console.log('Deleting old cache:', name);
+            return caches.delete(name);
+          })
+        );
+      });
     })
   );
 });
@@ -55,8 +65,7 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames
-          .filter(name => (name.startsWith('lonzovtool-cache-') && name !== CACHE_NAME) ||
-                         (name.startsWith('my-app-cache-')))
+          .filter(name => name.startsWith('lonzovtool-cache-') && name !== CACHE_NAME)
           .map(name => caches.delete(name))
       );
     }).then(() => {
