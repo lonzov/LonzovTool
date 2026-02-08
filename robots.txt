@@ -1,4 +1,5 @@
 User-agent: *
 Disallow: /detect/
 Disallow: /down/
+Disallow: /tr/
 Sitemap: https://tool.lonzov.top/sitemap.xml

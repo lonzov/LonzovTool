@@ -2,15 +2,9 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>https://tool.lonzov.top/</loc>
-        <lastmod>2025-12-08</lastmod>
+        <lastmod>2026-02-08</lastmod>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
-    </url>
-    <url>
-        <loc>https://tool.lonzov.top/nohello/</loc>
-        <lastmod>2025-09-19</lastmod>
-        <changefreq>never</changefreq>
-        <priority>0.8</priority>
     </url>
     <url>
         <loc>https://tool.lonzov.top/c/execute/</loc>
