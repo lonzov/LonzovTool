@@ -1,5 +1,5 @@
 // 2026-02-07T05:03:00+08:00
-const CACHE_VERSION = 'v2.4.9.1';
+const CACHE_VERSION = 'v2.4.9.2';
 const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
