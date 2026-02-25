@@ -38,7 +38,6 @@ const cardsData = [
     { title: "Vault(原McIcons)", description: "MC资源集合, 包括皮肤头像、贴图和各种生成器等", categories:["creation"], link: "https://ccvaults.com/", newtap:true, networkRestricted:true },
     { title: "Minecraft 艺术", description: "在线制作像素画、地图画、雕塑和红石音乐", categories:["creation"], link: "https://mcpixelart.com/", newtap:true },
     // 百宝箱
-    { title: "幸运转盘", description: "选择困难症？让转盘来决定！", categories:["other"], link: "./o/spin-the-wheel", newtap:true },
     { title: "反应速度测试", description: "潜力测试 & 恢复手感", categories:["other"], link: "./o/sudutest", newtap:true },
     { title: "Markdown渲染器", description: "在线预览Markdown 一键导出多种格式", categories:["other"], link: "./o/md", newtap:true },
     { title: "毒蘑菇性能测试", description: "进行volumeshader性能测试 查看设备GPU性能", categories:["other"], link: "./o/vsbm", newtap:true },
