@@ -35,7 +35,7 @@ const cardsData = [
     // 创作工具
     { title: "3D字生成", description: "轻松制作mc风格中文3D文本", categories:["creation"], link: "https://3dt.easecation.net/", newtap:true },
     { title: "MC音效大全", description: "SomeBottle的Minecraft音效资源站", categories:["creation"], link: "https://o.xbottle.top/mcsounds/", newtap:true },
-    { title: "McIcons", description: "MC资源集合, 包括皮肤头像、贴图和各种生成器等", categories:["creation"], link: "https://mcicons.ccleaf.com/", newtap:true, networkRestricted:true },
+    { title: "Vault(原McIcons)", description: "MC资源集合, 包括皮肤头像、贴图和各种生成器等", categories:["creation"], link: "https://ccvaults.com/", newtap:true, networkRestricted:true },
     { title: "Minecraft 艺术", description: "在线制作像素画、地图画、雕塑和红石音乐", categories:["creation"], link: "https://mcpixelart.com/", newtap:true },
     // 百宝箱
     { title: "幸运转盘", description: "选择困难症？让转盘来决定！", categories:["other"], link: "./o/spin-the-wheel", newtap:true },
