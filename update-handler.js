@@ -160,8 +160,8 @@ if ('serviceWorker' in navigator) {
             version: newVersion,
             forceShow: true,
             content: `
-                <p>[+] 首页卡片生成逻辑和代码结构调整<br>[~] 修复因sw缓存改名导致的更新问题</p>
-                <p><strong>·</strong> 新卡片：molang图示工具，FMBE模拟器，bedrock.dev，指令音符盒</p>
+                <p>[~] 首页页脚样式优化<br>[+] 下拉菜单添加社交按钮栏</p>
+                <p><strong>·</strong> 新卡片：Vault(原McIcon改名)</p>
                 <p><strong>·</strong> 建议/反馈请加Q群: <a href="https://qm.qq.com/q/dgYFOtx4Qg" target="_blank" style="color:var(--text-color);">587984701</a></p>
                 <p style="font-size:14px;color:#666;margin-top:10px;">当前版本: ${currentVersion} → 最新版本: ${newVersion}</p>
             `,
