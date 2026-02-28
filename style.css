@@ -508,3 +508,81 @@ footer a:hover {
         grid-template-columns: 1fr;
     }
 }
+
+.menu-divider {
+    width: 70%;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.3);
+    margin: 10px auto;
+}
+
+.social-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 7.5px 0;
+}
+
+.social-button {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    transition: var(--transition);
+    position: relative;
+}
+
+.social-button .button-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.social-button .button-icon i {
+    font-size: 1.5rem;
+    color: white;
+    transition: var(--transition);
+}
+
+.social-button:nth-child(1):hover .button-icon {
+    background: #FB7299;
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(251, 114, 153, 0.4);
+}
+
+
+.social-button:nth-child(2):hover .button-icon {
+    background: #000000;
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+
+.social-button:nth-child(3):hover .button-icon {
+    background: #12B7F5;
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(18, 183, 245, 0.4);
+}
+
+.social-button:nth-child(4):hover .button-icon {
+    background: #333;
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(51, 51, 51, 0.4);
+}
+
+[data-theme="dark"] .social-button:nth-child(4):hover .button-icon {
+    background: #6e6e6e;
+}
+
+.social-button:nth-child(5):hover .button-icon {
+    background: #1479B0;
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(20, 121, 176, 0.4);
+}
+
+
