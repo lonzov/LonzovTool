@@ -151,20 +151,21 @@
     <script src="modal.js"></script>
     <script>
 
-        /* const IOSmodal_survey = {
+        const IOSmodal_survey = {
             title: "问卷",
-            id: "survey_1114",
-            version: "202511210000",
+            id: "survey_0308",
+            version: "202603080002",
             forceShow: false,
             content: `
-                    <p>诚邀您用2分钟填写未来更新计划问卷，您的意见将帮助我们改进网站</p>
+                    <p>嘿！花5分钟填个问卷，帮我们改进网站~</p>
+                    <p>✨ 你的建议 = 网站的未来方向<br>我们会认真看每一条！</p>
                     <p style="margin:0;font-size:13px;color:#666;line-height:1.4">问卷入口长期保留，导航栏「≡」菜单中可随时填写</p>
                     `,
             buttons: [
-                { text: "填写问卷", style: "", action: "open_link", url: "https://f.kdocs.cn/g/JfmI2Ch8/" },
-                { text: "关闭", style: "red", action: "close" },
+                { text: "稍后", style: "gray", action: "close", cooldown: 6 },
+                { text: "填写问卷", style: "", action: "open_link", url: "https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnhwKDenIGeR63y3T7Zkfc2d" },
             ]
-        }; */
+        };
 
         const IOSmodal_privacy = {
             title: "隐私政策",
@@ -182,7 +183,7 @@
         };
 
         document.addEventListener('DOMContentLoaded', function () {
-            // showModal(IOSmodal_survey);
+            showModal(IOSmodal_survey);
             showModal(IOSmodal_privacy);
         });
 
@@ -273,9 +274,9 @@
             <a href="https://afdian.com/a/lonzov" class="menu-item" target="_blank">
                 <i class="fa-solid fa-hand-holding-heart"></i> 打赏
             </a>
-            <!--a href="https://f.kdocs.cn/g/JfmI2Ch8/" class="menu-item" target="_blank">
+            <a href="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnhwKDenIGeR63y3T7Zkfc2d" class="menu-item" target="_blank">
                 <i class="fa-solid fa-clipboard-list"></i> 问卷
-            </a-->
+            </a>
             <a href="javascript:void(0)" onclick="showSurveyModal()" class="menu-item">
                 <i class="fa-solid fa-robot"></i> ai 助手
             </a>
