@@ -11,7 +11,8 @@
  *     content: '<p>我是内容</p>',
  *     buttons: [
  *       { text: '确定', action: 'close' },
- *       { text: '跳转', action: 'open_link', url: 'https://example.com', style: 'red' }
+ *       { text: '跳转', action: 'open_link', url: 'https://example.com', style: 'red' },
+ *       { text: '3秒后才能点我', action: 'close', style: 'red', cooldown: 3 },
  *     ]
  *   });
  *
@@ -240,17 +241,56 @@
     footer.className = 'ios-modal-footer';
 
     // 遍历按钮配置，生成按钮
-    config.buttons.forEach(btn => {
+    config.buttons.forEach((btn, btnIndex) => {
       const button = document.createElement('button');
       // 拼接 class：基础类 + 颜色类（如有）
       const colorClass = btn.style ? `ios-button-${btn.style}` : '';
       button.className = `ios-modal-button ${colorClass}`.trim();
       button.textContent = btn.text;
 
+      // ▼ 倒计时逻辑：若配置了 cooldown（秒），则倒计时期间不可点击 ▼
+      // 存储 key：基于弹窗 id、版本号和按钮索引
+      const cooldownStorageKey = `modal_cooldown_${location.host}_${id}_${config.version || '1.0'}_${btnIndex}`;
+      const hasSeenCooldown = localStorage.getItem(cooldownStorageKey) === '1';
+
+      let remainingTime = 0;
+      // 仅当配置了 cooldown 且用户未看过倒计时时才启动
+      if (typeof btn.cooldown === 'number' && btn.cooldown > 0 && !hasSeenCooldown) {
+        remainingTime = btn.cooldown;
+      }
+
+      // 初始化按钮状态
+      if (remainingTime > 0) {
+        button.textContent = `${btn.text} ${remainingTime}`;
+        button.style.opacity = '0.3';
+        button.style.pointerEvents = 'none';
+      }
+
+      // 启动倒计时
+      if (remainingTime > 0) {
+        const countdownInterval = setInterval(() => {
+          remainingTime--;
+          if (remainingTime <= 0) {
+            clearInterval(countdownInterval);
+            button.textContent = btn.text;
+            button.style.opacity = '';
+            button.style.pointerEvents = '';
+            // 倒计时结束，保存已看过标记
+            localStorage.setItem(cooldownStorageKey, '1');
+          } else {
+            button.textContent = `${btn.text} ${remainingTime}`;
+          }
+        }, 1000);
+      }
+
       // ▼ 绑定点击事件 ▼
       // 使用闭包捕获当前 modal 的 id（即 config.id || ''）
       const modalId = id;
       button.onclick = function () {
+        // 若仍在倒计时中，不触发点击事件
+        if (remainingTime > 0) {
+          return;
+        }
         if (btn.action === 'close') {
           // 关闭动作：记录版本 + 关闭当前弹窗
           handleButtonAction(btn.action, btn.url, config.id, config.version, modalId);
