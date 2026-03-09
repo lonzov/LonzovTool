@@ -1,5 +1,4 @@
-// 2026-02-07T05:03:00+08:00
-const CACHE_VERSION = 'v2.5.1.0';
+const CACHE_VERSION = 'v2.5.2';
 const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
@@ -7,6 +6,7 @@ const CORE_ASSETS = [
   '/index.html',
   `/index.js`,
   '/style.css',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   '/c/conver.css',
   '/c/execute/',
   '/c/execute/index.html',
@@ -36,7 +36,11 @@ const CORE_ASSETS = [
   '/detect/sw/',
   '/detect/sw/index.html',
   '/detect/sw/script.js',
-  '/detect/sw/style.css'
+  '/detect/sw/style.css',
+  '/s/',
+  '/s/index.html',
+  '/s/script.js',
+  '/s/style.css',
 ];
 
 self.addEventListener('install', event => {
