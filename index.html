@@ -154,7 +154,7 @@
         const IOSmodal_survey = {
             title: "问卷",
             id: "survey_0308",
-            version: "202603080002",
+            version: "202603080004",
             forceShow: false,
             content: `
                     <p>嘿！花5分钟填个问卷，帮我们改进网站~</p>
@@ -162,29 +162,44 @@
                     <p style="margin:0;font-size:13px;color:#666;line-height:1.4">问卷入口长期保留，导航栏「≡」菜单中可随时填写</p>
                     `,
             buttons: [
-                { text: "稍后", style: "gray", action: "close", cooldown: 6 },
-                { text: "填写问卷", style: "", action: "open_link", url: "https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnhwKDenIGeR63y3T7Zkfc2d" },
-            ]
-        };
-
-        const IOSmodal_privacy = {
-            title: "隐私政策",
-            id: "privacy",
-            version: "202601020000",
-            forceShow: false,
-            content: `
-                    <p>我们更新了《隐私政策》，本次更新主要明确了Cookie使用及51.la统计工具的处理说明</p>
-                    <p style="margin:0;font-size:13px;color:#666;line-height:1.4">更新日期：2026-01-09</p>
-                    `,
-            buttons: [
-                { text: "查看详情", style: "gray", action: "open_link", url: "/about/privacy" },
-                { text: "知道了", style: "", action: "close" },
+                { text: "稍后", style: "gray", action: "close", cooldown: 5 },
+                { 
+                    text: "填写问卷", 
+                    style: "", 
+                    action: "custom", 
+                    customAction: { 
+                        type: 'track', 
+                        event: 'survey',
+                        handler: () => {
+                            try {
+                                LA.track('survey');
+                            } catch (e) {
+                                console.error('[IOSmodal_survey] 统计脚本无法正常加载，可能被浏览器插件拦截', e);
+                            }
+                            window.open('https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnhwKDenIGeR63y3T7Zkfc2d', '_blank');
+                        }
+                    } 
+                },
             ]
         };
 
         document.addEventListener('DOMContentLoaded', function () {
             showModal(IOSmodal_survey);
-            showModal(IOSmodal_privacy);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('error') === 'unauthorized') {
+                showModal({
+                    id: 'unauthorized_link',
+                    version: '1',
+                    forceShow: true,
+                    title: '安全提示',
+                    content: '<p>目标域名未授权，请不要点击不明链接</p>',
+                    buttons: [
+                        { text: '知道了', style: 'gray', action: 'close' }
+                    ]
+                });
+                history.replaceState({}, '', window.location.pathname);
+            }
         });
 
         const IOSmodal_ai_link = {
