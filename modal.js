@@ -414,8 +414,15 @@
 
   // 执行自定义动作
   function executeCustomAction(customAction) {
-    if (customAction && customAction.type) {
-      // 触发自定义事件
+    if (!customAction) return;
+
+    // 若配置了 handler 函数，直接执行
+    if (typeof customAction.handler === 'function') {
+      customAction.handler();
+    }
+
+    // 若配置了 type，同时触发自定义事件（兼容旧版）
+    if (customAction.type) {
       const event = new CustomEvent('sw_modal_action', {
         detail: customAction
       });
