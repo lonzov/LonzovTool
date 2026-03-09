@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark">
+    <title>51.la 数据提取测试</title>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
+    <script>LA.init({ id: "3Ltl0yXYWQcgbDgB", ck: "3Ltl0yXYWQcgbDgB" })</script>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+      opacity: 0.9;
+      font-weight: 500;
+    }
+
+    #stats-container {
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .stat-item {
+      padding: 12px 0;
+      border-bottom: 1px solid #333;
+      font-size: 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stat-item:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      color: #aaa;
+      font-size: 0.95rem;
+    }
+
+    .stat-value {
+      color: #1690FF;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    .loading {
+      color: #666;
+      font-style: italic;
+      padding: 20px;
+    }
+
+    .error {
+      color: #ff6b6b;
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
+
+    /* 隐藏原始51.la组件 */
+    #LA-DATA-WIDGET {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📊 网站访问统计</h1>
+
+  <div id="stats-container">
+    <div class="loading">⏳ 正在加载数据...</div>
+  </div>
+
+  <script 
+    id="LA-DATA-WIDGET" 
+    crossorigin="anonymous" 
+    charset="UTF-8" 
+    src="https://v6-widget.51.la/v6/3Ltl0yXYWQcgbDgB/quote.js?theme=#1690FF,#333333,#777773,#777777,#FFFFFF,#1690FF,11&f=12&display=0,0,0,1,0,1,1,1">
+  </script>
+
+  <script>
+    /**
+     * 从51.la注入的元素中提取数据
+     */
+    function extract51LaData(container) {
+      const result = {};
+      const mapping = {
+        '今日访问量': 'today',
+        '昨日访问量': 'yesterday', 
+        '本月访问量': 'month',
+        '总访问量': 'total'
+      };
+
+      // 遍历所有span，按文本内容匹配
+      const spans = container.querySelectorAll('span');
+      spans.forEach(span => {
+        const text = span.textContent?.trim();
+        if (mapping[text] && span.parentElement) {
+          // 找到对应的数值span（通常是兄弟元素或父元素的最后一个span）
+          const parent = span.parentElement;
+          const valueSpan = parent.querySelector('span:last-child');
+          if (valueSpan) {
+            result[mapping[text]] = valueSpan.textContent.trim();
+          }
+        }
+      });
+
+      return result;
+    }
+
+    /**
+     * 渲染数据到页面
+     */
+    function renderStats(data) {
+      const container = document.getElementById('stats-container');
+      const labels = {
+        today: '今日访问量',
+        yesterday: '昨日访问量',
+        month: '本月访问量',
+        total: '总访问量'
+      };
+
+      let html = '';
+      for (const key in labels) {
+        if (data[key]) {
+          html += `
+            <div class="stat-item">
+              <span class="stat-label">${labels[key]}</span>
+              <span class="stat-value">${data[key]}</span>
+            </div>
+          `;
+        }
+      }
+
+      if (html) {
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = '<div class="error">⚠️ 未提取到有效数据</div>';
+      }
+    }
+
+    /**
+     * 监听51.la元素注入并提取数据
+     */
+    function watchAndExtract() {
+      // 先检查是否已存在
+      const existing = document.querySelector('.la-data-widget__container');
+      if (existing) {
+        const data = extract51LaData(existing);
+        renderStats(data);
+        return;
+      }
+
+      // 否则监听DOM变化
+      const observer = new MutationObserver((mutations, obs) => {
+        const target = document.querySelector('.la-data-widget__container');
+        if (target) {
+          const data = extract51LaData(target);
+          renderStats(data);
+          obs.disconnect(); // 成功后停止监听
+        }
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+
+      // 超时保护：10秒后还没加载成功则提示
+      setTimeout(() => {
+        const container = document.getElementById('stats-container');
+        if (container.querySelector('.loading')) {
+          container.innerHTML = '<div class="error">⏱ 加载超时，请检查网络或脚本参数</div>';
+        }
+      }, 10000);
+    }
+
+    // 页面加载完成后启动监听
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', watchAndExtract);
+    } else {
+      watchAndExtract();
+    }
+
+    // 🔧 调试用：控制台手动触发提取
+    window.debugExtract = function() {
+      const container = document.querySelector('.la-data-widget__container');
+      if (container) {
+        console.log('📦 提取数据:', extract51LaData(container));
+      } else {
+        console.warn('⚠️ 未找到51.la容器元素');
+      }
+    };
+  </script>
+
+</body>
+</html>
