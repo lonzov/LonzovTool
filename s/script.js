@@ -38,6 +38,7 @@ const WHITELIST_DOMAINS = [
     'pcnk2disyt2p.feishu.cn',
     'doubao.com',
     'www.coze.cn',
+    'commandsimulator.great-site.net'
 ];
 
 (function () {
