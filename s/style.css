@@ -1,0 +1,62 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+}
+
+.loading-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5em;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.85s ease, visibility 0.85s ease;
+}
+
+.loading-container.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.loader-wrapper {
+  font-size: clamp(7px, 1.75vw, 12px);
+  line-height: 0;
+}
+
+.loader {
+  width: 50px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 8px solid;
+  border-color: #e7e7e7 #ffffff00;
+  animation: l1 1s infinite;
+}
+
+@keyframes l1 {
+  to {
+    transform: rotate(0.5turn);
+  }
+}
+
+/* 加载文字 */
+.loading-text {
+  color: #666;
+  font-size: 0.85em;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-align: center;
+  transition: opacity 0.5s ease;
+  opacity: 1;
+}

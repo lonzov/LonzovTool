@@ -1,3 +1,23 @@
+function isInternalUrl(url) {
+    if (!url) return false;
+    if (url.startsWith('./') || url.startsWith('/')) {
+        return true;
+    }
+    try {
+        const urlObj = new URL(url);
+        return urlObj.origin === window.location.origin;
+    } catch (e) {
+        return false;
+    }
+}
+
+function checkUrl(url) {
+    if (isInternalUrl(url)) {
+        return url;
+    }
+    return '/s/?url=' + encodeURIComponent(url);
+}
+
 // 卡片数据
 const cardsData = [
     // 在线工具
@@ -58,7 +78,8 @@ function generateCards(cards) {
         // 创建一个链接元素来包装整个卡片
         const cardLink = document.createElement('a');
         cardLink.className = 'card';
-        cardLink.href = card.link;
+        // 使用 checkUrl 函数处理链接
+        cardLink.href = checkUrl(card.link);
         cardLink.dataset.category = card.categories.join(' '); // 支持多分类
 
         // 判断是否为相对路径，如果不是，则在标题末尾加入图标
