@@ -26,7 +26,7 @@ const cardsData = [
     { title: "T显动画", description: "自动生成“打字机”动画", categories:["command"], link: "./c/tr/", newtap:false },
     { title: "T显可视化编辑器", description: "通过可视化界面编辑T显json", categories:["command"], link: "./c/raw-json/", newtap:false },
     { title: "语法转换", description: "execute指令语法升级", categories:["command"], link: "./c/execute/", newtap:false },
-    { title: "CHelper", description: "命令助手在线版", categories:["command"], link: "https://www.yanceymc.cn/chelper/", newtap:true },
+    { title: "CHelper", description: "命令助手在线版", categories:["command"], link: "https://chelper.lonzov.top/", newtap:true },
     { title: "MC特殊符号", description: "mc特殊符号，如鸡腿M币等", categories:["command"], link: "./c/fuhao/", newtap:false },
     { title: "符号大全", description: "特殊符号大全", categories:["command"], link: "https://teshuzifu.cn/", newtap:true },
     { title: "T显编辑器", description: "可视化T显编辑器 · by Dislink", categories:["command"], link: "https://dislink.github.io/rawJSONEditor/", newtap:true, networkRestricted:true },
