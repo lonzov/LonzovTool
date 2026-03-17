@@ -39,7 +39,7 @@ const WHITELIST_DOMAINS = [
     'doubao.com',
     'www.coze.cn',
     'commandsimulator.great-site.net',
-    'chelper.lonzov.top'
+    'blockcolors.app',
 ];
 
 (function () {
