@@ -29,6 +29,7 @@ const cardsData = [
     { title: "CHelper", description: "命令助手在线版", categories:["command"], link: "https://www.yanceymc.cn/chelper/", newtap:true },
     { title: "MC特殊符号", description: "mc特殊符号，如鸡腿M币等", categories:["command"], link: "./c/fuhao/", newtap:false },
     { title: "符号大全", description: "特殊符号大全", categories:["command"], link: "https://teshuzifu.cn/", newtap:true },
+    { title: "方块调色盘", description: "找到与指定颜色匹配的方块", categories:["command"], link: "https://blockcolors.app/", newtap:true },
     { title: "T显编辑器", description: "可视化T显编辑器 · by Dislink", categories:["command"], link: "https://dislink.github.io/rawJSONEditor/", newtap:true, networkRestricted:true },
     { title: "molang图示工具", description: "一个用于 Molang 的绘图工具", categories:["command"], link: "https://jannisx11.github.io/molang-grapher/", newtap:true, networkRestricted:true },
     { title: "FMBE模拟器", description: "FMBE模拟器，可视化预览+生成命令", categories:["command"], link: "https://szea-ll14.github.io/fmbeSim/", newtap:true, networkRestricted:true },
