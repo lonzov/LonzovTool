@@ -18,7 +18,7 @@ const WHITELIST_DOMAINS = [
     'szea-ll14.github.io',
     'space.bilibili.com',
     'bilibili.com',
-    'afdian.com',
+    'ifdian.net',
     'github.com',
     'blog.lonzov.top',
     'www.yanceymc.cn',
