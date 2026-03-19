@@ -172,12 +172,8 @@
                         type: 'track', 
                         event: 'survey',
                         handler: () => {
-                            try {
-                                LA.track('survey');
-                            } catch (e) {
-                                console.error('[IOSmodal_survey] 统计脚本无法正常加载，可能被浏览器插件拦截', e);
-                            }
                             window.open('https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnhwKDenIGeR63y3T7Zkfc2d', '_blank');
+                            try { LA?.track('survey'); } catch {}
                         }
                     } 
                 },
