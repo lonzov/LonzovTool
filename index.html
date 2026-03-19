@@ -19,6 +19,7 @@
     <!-- 此中文网页字体由文风字体（Windfonts）免费提供，您可以自由引用，请务必保留此授权许可标注 https://wenfeng.org/license -->
 
     <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="./icon/favicon_512x.gif">
     <link rel="manifest" href="/manifest.json">
     <script defer src="/alert-checker.js"></script>
     <script charset="UTF-8" id="LA_COLLECT" src="//sdk.51.la/js-sdk-pro.min.js"></script>
@@ -242,7 +243,7 @@
         <div class="container">
             <div class="header-top">
                 <div class="header-controls">
-                <button class="menu-toggle" id="menuToggle">
+                <button class="menu-toggle" id="menuToggle" title="菜单">
                     <!-- 三横 -->
                     <svg class="menu-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M5 7H19" />
@@ -250,7 +251,7 @@
                         <path d="M5 17H19" />
                     </svg>
                 </button>
-                    <button class="theme-toggle" id="themeToggle">
+                    <button class="theme-toggle" id="themeToggle" title="切换主题">
                         <!-- 太阳 -->
                         <svg class="sun-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5" fill="currentColor" />
@@ -283,13 +284,13 @@
     <div class="menu-overlay" id="menuOverlay"></div>
     <div class="menu-panel" id="menuPanel">
         <div class="menu-content">
-            <a href="https://blog.lonzov.top/posts/tool-about/" class="menu-item" target="_blank">
+            <a href="https://blog.lonzov.top/posts/tool-about/" class="menu-item" target="_blank" rel="noopener">
                 <i class="fa-solid fa-circle-info"></i> 关于
             </a>
-            <a href="https://ifdian.net/a/lonzov" class="menu-item" target="_blank">
+            <a href="https://ifdian.net/a/lonzov" class="menu-item" target="_blank" rel="noopener">
                 <i class="fa-solid fa-hand-holding-heart"></i> 打赏
             </a>
-            <a href="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnhwKDenIGeR63y3T7Zkfc2d" class="menu-item" target="_blank">
+            <a href="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnhwKDenIGeR63y3T7Zkfc2d" class="menu-item" target="_blank" rel="noopener">
                 <i class="fa-solid fa-clipboard-list"></i> 问卷
             </a>
             <a href="javascript:void(0)" onclick="showSurveyModal()" class="menu-item">
@@ -302,19 +303,19 @@
             <div class="menu-divider"></div>
             
             <div class="social-buttons">
-                <a href="https://space.bilibili.com/3494378672753456" class="social-button" target="_blank" title="哔哩哔哩">
+                <a href="https://space.bilibili.com/3494378672753456" class="social-button" target="_blank" rel="noopener" title="哔哩哔哩">
                     <div class="button-icon"><i class="fab fa-bilibili"></i></div>
                 </a>
-                <a href="https://www.douyin.com/user/MS4wLjABAAAADj8IaLSifYcIu5tcIOncHXGk_LjpeyRE7MJUV7xbIaK6A4Hijh1E--IiII91dFCn" class="social-button" target="_blank" title="抖音">
+                <a href="https://www.douyin.com/user/MS4wLjABAAAADj8IaLSifYcIu5tcIOncHXGk_LjpeyRE7MJUV7xbIaK6A4Hijh1E--IiII91dFCn" class="social-button" target="_blank" rel="noopener" title="抖音">
                     <div class="button-icon"><i class="fab fa-tiktok"></i></div>
                 </a>
-                <a href="https://qm.qq.com/q/bkJjoY67YI" class="social-button" target="_blank" title="QQ群">
+                <a href="https://qm.qq.com/q/bkJjoY67YI" class="social-button" target="_blank" rel="noopener" title="QQ群">
                     <div class="button-icon"><i class="fab fa-qq"></i></div>
                 </a>
-                <a href="https://github.com/lonzov/LonzovTool" class="social-button" target="_blank" title="Github">
+                <a href="https://github.com/lonzov/LonzovTool" class="social-button" target="_blank" rel="noopener" title="Github">
                     <div class="button-icon"><i class="fab fa-github"></i></div>
                 </a>
-                <a href="https://blog.lonzov.top/" class="social-button" target="_blank" title="博客">
+                <a href="https://blog.lonzov.top/" class="social-button" target="_blank" rel="noopener" title="博客">
                     <div class="button-icon"><i class="fa-solid fa-blog"></i></div>
                 </a>
             </div>
@@ -324,7 +325,7 @@
         <div class="search-container">
             <i class="fas fa-search search-icon"></i>
             <input type="text" class="search-box" placeholder="搜索工具、资源...">
-            <button id="clearSearch" class="clear-icon">
+            <button id="clearSearch" class="clear-icon" title="清空">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -351,10 +352,10 @@
     </main>
     <footer class="container">
         <div class="footer-divider"></div>
-        <p><a href="https://blog.lonzov.top/posts/tool-about/" target="_blank">关于本站</a> / <a href="https://blog.lonzov.top/posts/tool-update/" target="_blank">更新日志</a> / <a href="/about/privacy" target="_blank">隐私政策</a> / <a href="https://github.com/lonzov/LonzovTool" target="_blank">GitHub</a> / <a href="https://v6.51.la/s/M9Z5hgOfLAQ9Sil" target="_blank">数据统计</a></p>
-        <p>© 2026 小舟工具箱 | <a href="https://icp.gov.moe/?keyword=20250698" target="_blank">萌ICP备20250698号</a></p>
+        <p><a href="https://blog.lonzov.top/posts/tool-about/" target="_blank" rel="noopener">关于本站</a> / <a href="https://blog.lonzov.top/posts/tool-update/" target="_blank" rel="noopener">更新日志</a> / <a href="/about/privacy" target="_blank" rel="noopener">隐私政策</a> / <a href="https://github.com/lonzov/LonzovTool" target="_blank" rel="noopener">GitHub</a> / <a href="https://v6.51.la/s/M9Z5hgOfLAQ9Sil" target="_blank" rel="noopener">数据统计</a></p>
+        <p>© 2026 小舟工具箱 | <a href="https://icp.gov.moe/?keyword=20250698" target="_blank" rel="noopener">萌ICP备20250698号</a></p>
         <p>本站已苟活 <span id="timer">--年--天--时--分</span></p>
-        <p><a href="https://github.com/lonzov/LonzovTool/commits/main/" target="_blank"><span id="version">--</span></a></p>
+        <p><a href="https://github.com/lonzov/LonzovTool/commits/main/" target="_blank" rel="noopener"><span id="version">--</span></a></p>
         <script id="LA-DATA-WIDGET" crossorigin="anonymous" charset="UTF-8" src="https://v6-widget.51.la/v6/3Ltl0yXYWQcgbDgB/quote.js?theme=#1690FF,#333333,#777777,#777777,#FFFFFF,#1690FF,11&f=12&display=0,0,0,1,0,1,1,1"></script>
     </footer>
     <script src="./index.js"></script>
