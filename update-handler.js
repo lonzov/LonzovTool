@@ -160,8 +160,8 @@ if ('serviceWorker' in navigator) {
             version: newVersion,
             forceShow: true,
             content: `
-                <p>[+] 添加中间页<br>[~] 指令音符盒已发布新版本</p>
-                <p><strong>·</strong> 新卡片：方块调色盘</p>
+                <p>🎉 全新的v3版本正在施工中，可前往 <a href="https://toolv3.lonzov.top/" target="_blank" style="color:var(--text-color);">toolv3.lonzov.top</a> 查看预览版<br>[~] 重构了 MC特殊符号 页的图标加载逻辑</p>
+                <p><strong>·</strong> 新卡片：无</p>
                 <p><strong>·</strong> 建议/反馈请加Q群: <a href="https://qm.qq.com/q/dgYFOtx4Qg" target="_blank" style="color:var(--text-color);">587984701</a></p>
                 <p style="font-size:14px;color:#666;margin-top:10px;">当前版本: ${currentVersion} → 最新版本: ${newVersion}</p>
             `,
