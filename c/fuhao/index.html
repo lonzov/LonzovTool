@@ -210,38 +210,27 @@
             align-items: center;
             cursor: pointer;
             position: relative;
-            background: var(--skeleton-bg);
-            background-image: linear-gradient(90deg,
-                    var(--skeleton-highlight) 25%,
-                    transparent 50%,
-                    var(--skeleton-highlight) 75%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s infinite linear;
+            background-repeat: no-repeat;
         }
-        @keyframes skeleton-loading {
-            0% {
-                background-position: 200% 0;
-            }
-            100% {
-                background-position: -200% 0;
-            }
+        .card.image-loaded {
+            animation: none;
+            background-image: none;
+            background-color: var(--card-bg);
+        }
+        .card.image-loaded .icon-sprite {
+            width: 48px;
+            height: 48px;
+            background-repeat: no-repeat;
+            transition: transform 0.2s ease;
+        }
+        .card:hover .icon-sprite {
+            transform: scale(1.2);
         }
         .card img {
             max-width: 72%;
             max-height: 72%;
             object-fit: contain;
             transition: transform 0.2s ease, opacity 0.3s ease;
-            opacity: 0;
-        }
-        .card img.loaded {
-            opacity: 1;
-            animation: none;
-            background: none;
-        }
-        .card.image-loaded {
-            animation: none;
-            background-image: none;
-            background-color: var(--card-bg);
         }
         .card.combo-card {
             animation: none;
@@ -326,8 +315,10 @@
     <script src="/update-handler.js"></script>
     <script>
         const CONFIG = {
-            iconPath: '/icon/mc-unicode/',
-            fileExtension: '.gif',
+            spritePath: '/icon/mc-unicode/spritesheet.png',
+            iconWidth: 48,
+            iconHeight: 48,
+            iconsPerRow: 5,
             copyModes: {
                 CHARACTER: 'character',
                 CODEPOINT: 'codepoint'
@@ -360,24 +351,31 @@
         });
 
         async function loadIconsData() {
-            if (typeof iconNames !== 'undefined' && Array.isArray(iconNames)) {
-                iconsData = iconNames.map(name => {
-                    if (name === 'a0a') {
+            if (typeof iconSpriteConfig !== 'undefined' && Array.isArray(iconSpriteConfig.icons)) {
+                iconsData = iconSpriteConfig.icons.map((icon, index) => {
+                    const row = Math.floor(index / CONFIG.iconsPerRow);
+                    const col = index % CONFIG.iconsPerRow;
+
+                    if (icon.codePointHex === 'a0a') {
                         return {
-                            fileName: 'a0a.gif',
+                            index: index,
                             codePointHex: 'a0a',
-                            character: 'a\u0000a'
+                            character: 'a\u0000a',
+                            bgPositionX: -col * CONFIG.iconWidth,
+                            bgPositionY: -row * CONFIG.iconHeight
                         };
                     } else {
-                        const cp = parseInt(name, 16);
+                        const cp = parseInt(icon.codePointHex, 16);
                         return {
-                            fileName: name + CONFIG.fileExtension,
-                            codePointHex: name,
-                            character: String.fromCodePoint(cp)
+                            index: index,
+                            codePointHex: icon.codePointHex,
+                            character: String.fromCodePoint(cp),
+                            bgPositionX: -col * CONFIG.iconWidth,
+                            bgPositionY: -row * CONFIG.iconHeight
                         };
                     }
                 });
-                console.log(`加载了 ${iconsData.length} 个图标数据。`);
+                console.log(`加载了 ${iconsData.length} 个图标数据（雪碧图模式）。`);
             } else {
                 console.error('iconList.js 加载失败！');
                 iconsData = [];
@@ -390,27 +388,22 @@
                 elements.cardsContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">未加载到任何图标数据。</p>';
                 return;
             }
+            const spriteWidth = CONFIG.iconsPerRow * CONFIG.iconWidth;
+            const spriteHeight = Math.ceil(iconsData.length / CONFIG.iconsPerRow) * CONFIG.iconHeight;
+            
             iconsData.forEach(icon => {
                 const card = document.createElement('div');
-                card.className = 'card';
+                card.className = 'card image-loaded';
                 card.dataset.codePointHex = icon.codePointHex;
                 card.dataset.character = icon.character;
 
-                const img = document.createElement('img');
-                img.src = CONFIG.iconPath + icon.fileName;
-                img.alt = `Unicode: ${icon.codePointHex}`;
-                img.loading = 'lazy';
-                img.addEventListener('load', function () {
-                    this.classList.add('loaded');
-                    this.parentElement.classList.add('image-loaded');
-                });
-                img.addEventListener('error', function () {
-                    console.warn(`图片加载失败: ${this.src}`);
-                    this.classList.add('loaded');
-                    this.parentElement.classList.add('image-loaded');
-                });
+                const iconSprite = document.createElement('div');
+                iconSprite.className = 'icon-sprite';
+                iconSprite.style.backgroundImage = `url(${CONFIG.spritePath})`;
+                iconSprite.style.backgroundPosition = `${icon.bgPositionX}px ${icon.bgPositionY}px`;
+                iconSprite.style.backgroundSize = `${spriteWidth}px ${spriteHeight}px`;
 
-                card.appendChild(img);
+                card.appendChild(iconSprite);
                 elements.cardsContainer.appendChild(card);
             });
         }
