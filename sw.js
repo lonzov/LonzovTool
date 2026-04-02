@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.5.4';
+const CACHE_VERSION = 'v2.5.4.0';
 const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
 const CORE_ASSETS = [
@@ -14,6 +14,7 @@ const CORE_ASSETS = [
   '/c/fuhao/',
   '/c/fuhao/index.html',
   '/c/fuhao/iconList.js',
+  '/icon/mc-unicode/spritesheet.png',
   '/c/qjzh/',
   '/c/qjzh/index.html',
   '/c/qjzh/script.js',
