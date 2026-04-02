@@ -109,6 +109,26 @@ self.addEventListener('fetch', event => {
 
   const request = event.request;
 
+  // 特殊处理：update-handler.js 始终使用网络最新，不缓存
+  // 这样确保更新弹窗内容始终是最新的
+  const requestUrl = new URL(request.url).pathname;
+  if (requestUrl.endsWith('/update-handler.js')) {
+    event.respondWith(
+      fetch(request).then(networkResponse => {
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(request, clone).catch(err => console.warn('Cache put failed:', err));
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
+        return caches.match(request);
+      })
+    );
+    return;
+  }
+
   // 处理导航请求（页面跳转）
   if (request.mode === 'navigate') {
     event.respondWith(
