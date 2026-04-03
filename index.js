@@ -43,7 +43,7 @@ const cardsData = [
     { title: "命令集", description: "利用无障碍权限实现全自动填写命令", categories:["recom"], link: "https://space.bilibili.com/1526784927", newtap:true },
     { title: "命令模拟器", description: "强大的基岩版命令调试程序", categories:["recom"], link: "https://commandsimulator.great-site.net/", newtap:true },
     { title: "MT管理器", description: "安卓平台文件管理 & 逆向修改神器", categories:["recom"], link: "https://mt2.cn/", newtap:true },
-    { title: "ChunkBase", description: "通过种子号定位群系、结构、史莱姆区块等", categories:["recom"], link: "https://www.chunkbase.com/apps/seed-map#seed=%E7%A7%8D%E5%AD%90%E5%8F%B7&platform=bedrock_1_21&dimension=overworld&x=0&z=0&zoom=0.5", newtap:true, networkRestricted:true },
+    { title: "ChunkBase", description: "通过种子号定位群系、结构、史莱姆区块等", categories:["recom"], link: "https://www.chunkbase.com/apps/seed-map#seed=%E7%A7%8D%E5%AD%90%E5%8F%B7&platform=bedrock_1_21_50&dimension=overworld&x=0&z=0&zoom=0.5", newtap:true, networkRestricted:true },
     { title: "蓝天工作室", description: "代表作 CRoB命令查询机器人 等", categories:["recom"], link: "https://bsc.meteormc.cn/", newtap:true },
     // 文档与社区
     { title: "中文MC wiki", description: "在这里可以找到和mc有关的大部分信息", categories:["docs"], link: "https://zh.minecraft.wiki/", newtap:true },
