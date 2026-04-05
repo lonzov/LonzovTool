@@ -154,33 +154,41 @@ if ('serviceWorker' in navigator) {
 
     // 显示更新对话框
     function showUpdateDialog(currentVersion, newVersion, reg) {
-        const updateModal = {
-            title: "发现新版本",
-            id: "sw_update_notification",
-            version: newVersion,
-            forceShow: true,
-            content: `
-                <p>🎉 全新的v3版本正在施工中，可前往 <a href="https://toolv3.lonzov.top/" target="_blank" style="color:var(--text-color);">toolv3.lonzov.top</a> 查看预览版<br>[~] 重构了 MC特殊符号 页的图标加载逻辑</p>
-                <p><strong>·</strong> 新卡片：无</p>
-                <p><strong>·</strong> 建议/反馈请加Q群: <a href="https://qm.qq.com/q/dgYFOtx4Qg" target="_blank" style="color:var(--text-color);">587984701</a></p>
-                <p style="font-size:14px;color:#666;margin-top:10px;">当前版本: ${currentVersion} → 最新版本: ${newVersion}</p>
-            `,
-            buttons: [
-                { text: "了解更多", style: "gray", action: "open_link", url: "https://blog.lonzov.top/posts/tool-update/"},
-                {
-                    text: "立即更新",
-                    style: "blue",
-                    action: "custom",
-                    customAction: {
-                        type: "update_sw",
-                        registration: reg
+        // 从 SW 获取弹窗数据
+        const messageChannel = new MessageChannel();
+        messageChannel.port1.onmessage = function(event) {
+            const popupData = event.data.popupData;
+            
+            // 构建完整的弹窗配置
+            const updateModal = {
+                title: popupData.title,
+                id: "sw_update_notification",
+                version: newVersion,
+                forceShow: true,
+                content: popupData.content + `<p style="font-size:14px;color:#666;margin-top:10px;">当前版本: ${currentVersion} → 最新版本: ${newVersion}</p>`,
+                buttons: popupData.buttons.map(btn => {
+                    if (btn.action === 'update_sw') {
+                        return {
+                            ...btn,
+                            action: "custom",
+                            customAction: {
+                                type: "update_sw",
+                                registration: reg
+                            }
+                        };
                     }
-                },
-                { text: "暂不更新", style: "red", action: "close" },
-            ]
-        };
+                    return btn;
+                })
+            };
 
-        showModal(updateModal);
+            showModal(updateModal);
+        };
+        
+        if (reg.waiting) {
+            reg.waiting.postMessage({type: 'GET_POPUP_DATA'}, [messageChannel.port2]);
+        } else if (reg.active) {
+            reg.active.postMessage({type: 'GET_POPUP_DATA'}, [messageChannel.port2]);
+        }
     }
 
     function openSWUpdateDialog(reg) {

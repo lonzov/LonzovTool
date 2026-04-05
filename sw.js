@@ -1,6 +1,22 @@
 const CACHE_VERSION = 'v2.5.4.1';
 const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
+// 更新弹窗数据（放在 SW 中确保始终最新）
+const UPDATE_POPUP_DATA = {
+  title: "发现新版本",
+  version: null, // 由运行时动态填充
+  content: `
+    <p>🎉 全新的v3版本正在施工中，可前往 <a href="https://toolv3.lonzov.top/" target="_blank" style="color:var(--text-color);">toolv3.lonzov.top</a> 查看预览版<br>[~] 重构了 MC特殊符号 页的图标加载逻辑</p>
+    <p><strong>·</strong> 新卡片：无</p>
+    <p><strong>·</strong> 建议/反馈请加Q群: <a href="https://qm.qq.com/q/dgYFOtx4Qg" target="_blank" style="color:var(--text-color);">587984701</a></p>
+  `,
+  buttons: [
+    { text: "了解更多", style: "gray", action: "open_link", url: "https://blog.lonzov.top/posts/tool-update/"},
+    { text: "立即更新", style: "blue", action: "update_sw" },
+    { text: "暂不更新", style: "red", action: "close" },
+  ]
+};
+
 const CORE_ASSETS = [
   '/',
   '/index.html',
@@ -284,6 +300,15 @@ self.addEventListener('message', event => {
   if (event.data && event.data.type === 'GET_VERSION') {
     event.ports[0].postMessage({
       type: 'VERSION_RESPONSE',
+      version: CACHE_VERSION
+    });
+  }
+
+  // 响应弹窗数据查询请求
+  if (event.data && event.data.type === 'GET_POPUP_DATA') {
+    event.ports[0].postMessage({
+      type: 'POPUP_DATA_RESPONSE',
+      popupData: UPDATE_POPUP_DATA,
       version: CACHE_VERSION
     });
   }
