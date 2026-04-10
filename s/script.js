@@ -30,7 +30,7 @@ const WHITELIST_DOMAINS = [
     'teshuzifu.cn',
     'mcnav.net',
     'www.mcnav.net',
-    'jzfk.wuaze.com',
+    'jzfk.indevs.in',
     '3dt.easecation.net',
     'o.xbottle.top',
     'mcapks.net',
