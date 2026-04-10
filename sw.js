@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.5.5';
+const CACHE_VERSION = 'v2.5.5.0';
 const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
 // 更新弹窗数据（放在 SW 中确保始终最新）
