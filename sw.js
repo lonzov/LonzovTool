@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2.5.5.1';
+const CACHE_VERSION = 'v2.5.6';
 const CACHE_NAME = `lonzovtool-cache-${CACHE_VERSION}`;
 
 // 更新弹窗数据（放在 SW 中确保始终最新）
@@ -6,12 +6,11 @@ const UPDATE_POPUP_DATA = {
   title: "发现新版本",
   version: null, // 由运行时动态填充
   content: `
-    <p>🎉 全新的v3版本正在施工中，可前往 <a href="https://toolv3.lonzov.top/" target="_blank" style="color:var(--text-color);">toolv3.lonzov.top</a> 查看预览版<br>[~] 指令音符盒已同步至最新版本<br>[~] 重构了 MC特殊符号 页的图标加载逻辑</p>
+    <p>🎉 v3版本计划在五一前上线，可前往 <a href="https://toolv3.lonzov.top/" target="_blank" style="color:var(--text-color);">toolv3.lonzov.top</a> 查看预览版<br>[~] 重构了execute语法转换的核心逻辑（不过话说现在还有人需要用吗…?）</p>
     <p><strong>·</strong> 新卡片：无</p>
     <p><strong>·</strong> 建议/反馈请加Q群: <a href="https://qm.qq.com/q/dgYFOtx4Qg" target="_blank" style="color:var(--text-color);">587984701</a></p>
   `,
   buttons: [
-    { text: "了解更多", style: "gray", action: "open_link", url: "https://blog.lonzov.top/posts/tool-update/"},
     { text: "立即更新", style: "blue", action: "update_sw" },
     { text: "暂不更新", style: "red", action: "close" },
   ]
