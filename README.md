@@ -11,13 +11,17 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue?logo=apache&logoColor=fff)](LICENSE)
 [![Vibe Coding](https://img.shields.io/badge/Vibe-Coding-7C3AED?colorA=4B6BFB&colorB=7C3AED)](https://x.com/karpathy/status/1886192184808149383)
 
-一个简洁高效的 Minecraft 工具导航网站，聚合各类 MC 相关工具、文档与社区资源，100%的代码由 LLM 生成。
+一个简洁高效的 Minecraft 工具导航网站，聚合各类 MC 相关工具、文档与社区资源，其中100%的代码由 LLM 生成。
+
+![首页预览](./docs/image/home.webp)
+![标签页（工作站）预览](./docs/image/tap.webp)
 
 ## 特点
 
 - 🗂️ **分类清晰**： 将工具分为"在线网站"和"本地工具"两大类，方便快速定位
 - 🔎 **智能搜索**： 支持多种搜索引擎一键切换，满足不同搜索需求
 - 🌙 **主题切换**： 支持明暗模式自由切换，自动记忆用户偏好
+- 📑 **标签页布局**： 快速切换不同工具页，大幅提升效率
 - 📱 **响应式布局**： 完美适配桌面端与移动端，提供一致的优质体验
 - 🍪 **隐私保护**： Cookie 同意管理、隐私政策透明披露、可选的流量分析
 - ⚡ **PWA 支持**： 可安装到桌面，支持离线访问
@@ -34,6 +38,12 @@
 | 图标     | @vicons/fluent、@remixicon/vue |
 | 工具     | markdown-it、nprogress         |
 | 代码质量 | ESLint、Oxlint、Oxfmt          |
+
+## 特别鸣谢
+
+- **[命令模拟器](https://github.com/missing244/Command_Simulator/)**：execute 语法转换逻辑参考了此项目，特殊符号的符号图片也是由该项目整理。
+- **[Webstack网址导航](https://github.com/WebStackPage/WebStackPage.github.io)**： 首页布局参考了此项目。
+- **[Mizuki](https://github.com/LyraVoid/Mizuki)**： 部分 UI/UX 效果参考了此项目。
 
 ## 开发
 
