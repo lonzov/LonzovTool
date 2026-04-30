@@ -10,18 +10,16 @@
 很多地方是边搜、边问AI、边试错改出来的，AI贡献率不能说是100%，但实际也和100%没什么区别了😶‍🌫️。  
 代码谈不上优雅，结构也未必规范——但，它能跑，能用，还能帮到别人，我就挺开心的。
 
-> ~~（原想写“能用就行”，但想了想…既然放出来了，还是得稍微认真点 :）~~
+> ~~（原想写”能用就行”，但想了想…既然放出来了，还是得稍微认真点 :）~~
+
+## 开源协议
+
+本项目源码以 [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) 协议开源，具体条款见 [LICENSE-APACHE](https://github.com/lonzov/lonzovtool/blob/main/LICENSE-APACHE)；文档及非代码内容采用 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) 协议。
 
 如果你发现 Bug、有功能建议——  
 欢迎通过下面的反馈渠道反馈。你的每一条反馈，都会让这个网站变得更好！
 
 （毕竟，它最初就是为了“让复杂变简单”而生的嘛）
-
-### 技术栈
-
-- **[Vue 3](https://vuejs.org/)** - 渐进式 JavaScript 框架
-- **[Vite](https://vite.dev/)** - 下一代的前端工具链
-- **[Naive UI](https://www.naiveui.com/)** - 一个 Vue 3 组件库
 
 ## 特别鸣谢
 
