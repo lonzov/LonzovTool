@@ -1,0 +1,46 @@
+{
+  "name": "lonzovtool",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/prerender.js && node scripts/generate-seo.js",
+    "preview": "vite preview",
+    "lint": "run-s lint:*",
+    "lint:oxlint": "oxlint . --fix",
+    "lint:eslint": "eslint . --fix --cache",
+    "format": "oxfmt src/"
+  },
+  "dependencies": {
+    "@remixicon/vue": "^4.9.0",
+    "@vicons/ionicons5": "^0.13.0",
+    "@vicons/utils": "^0.1.4",
+    "@vueuse/head": "^2.0.0",
+    "markdown-it": "^14.1.1",
+    "naive-ui": "^2.44.1",
+    "nprogress": "^0.2.0",
+    "vue": "^3.5.29",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@vicons/fluent": "^0.13.0",
+    "@vitejs/plugin-vue": "^6.0.4",
+    "eslint": "^10.0.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-oxlint": "~1.50.0",
+    "eslint-plugin-vue": "~10.8.0",
+    "globals": "^17.3.0",
+    "npm-run-all2": "^8.0.4",
+    "oxfmt": "^0.35.0",
+    "oxlint": "~1.50.0",
+    "puppeteer": "^24.42.0",
+    "serve-handler": "^6.1.7",
+    "vite": "^7.3.1",
+    "vite-plugin-vue-devtools": "^8.0.6"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  }
+}
