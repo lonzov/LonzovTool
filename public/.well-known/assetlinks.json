@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "top.lonzov.tool.twa",
+        "sha256_cert_fingerprints": ["FB:6E:9D:43:B6:51:97:62:D1:C3:5C:36:53:B3:C0:4F:2F:AC:AC:26:BA:F3:1D:19:03:9C:6F:68:9C:37:AB:41"]
+      }
+    }]
