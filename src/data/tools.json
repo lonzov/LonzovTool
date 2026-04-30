@@ -235,7 +235,7 @@
         {
           "title": "命令模拟器",
           "description": "强大的基岩版命令调试程序",
-          "logo": "/logos/python.webp",
+          "logo": "/logos/command_simulator.webp",
           "link": "https://commandsimulator.great-site.net/"
         }
       ]
