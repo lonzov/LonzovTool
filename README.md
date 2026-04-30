@@ -4,29 +4,36 @@
 
 # 小舟工具箱
 
-一个简洁高效的 Minecraft 工具导航网站，聚合各类 MC 相关工具、文档与社区资源。
+[![Vue 3](https://img.shields.io/badge/Vue_3-4FC08D?logo=vuedotjs&logoColor=fff)](https://vuejs.org/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=fff)](https://vitejs.dev/)
+[![pnpm](https://img.shields.io/badge/pnpm-%3E%3D9-F69220?logo=pnpm&logoColor=fff)](https://pnpm.io/)
+[![Node](https://img.shields.io/badge/Node-%3E%3D20.19-339933?logo=nodedotjs&logoColor=fff)](https://nodejs.org/)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue?logo=apache&logoColor=fff)](LICENSE)
+[![Vibe Coding](https://img.shields.io/badge/Vibe-Coding-7C3AED?colorA=4B6BFB&colorB=7C3AED)](https://x.com/karpathy/status/1886192184808149383)
+
+一个简洁高效的 Minecraft 工具导航网站，聚合各类 MC 相关工具、文档与社区资源，100%的代码由 LLM 生成。
 
 ## 特点
 
-- 🗂️ **分类清晰** — 将工具分为"在线网站"和"本地工具"两大类，方便快速定位
-- 🔎 **智能搜索** — 支持多种搜索引擎一键切换，满足不同搜索需求
-- 🌙 **主题切换** — 支持明暗模式自由切换，自动记忆用户偏好
-- 📱 **响应式布局** — 完美适配桌面端与移动端，提供一致的优质体验
-- 🍪 **隐私保护** — Cookie 同意管理、隐私政策透明披露、可选的流量分析
-- ⚡ **PWA 支持** — 可安装到桌面，支持离线访问
+- 🗂️ **分类清晰**： 将工具分为"在线网站"和"本地工具"两大类，方便快速定位
+- 🔎 **智能搜索**： 支持多种搜索引擎一键切换，满足不同搜索需求
+- 🌙 **主题切换**： 支持明暗模式自由切换，自动记忆用户偏好
+- 📱 **响应式布局**： 完美适配桌面端与移动端，提供一致的优质体验
+- 🍪 **隐私保护**： Cookie 同意管理、隐私政策透明披露、可选的流量分析
+- ⚡ **PWA 支持**： 可安装到桌面，支持离线访问
 
 ## 技术栈
 
-| 类别 | 技术 |
-|------|------|
-| 框架 | Vue 3、Vite |
-| UI 库 | Naive UI |
-| 路由 | Vue Router |
-| SEO | @vueuse/head、Puppeteer 预渲染 |
-| PWA | vite-plugin-pwa (Workbox) |
-| 图标 | @vicons/fluent、@remixicon/vue |
-| 工具 | markdown-it、nprogress |
-| 代码质量 | ESLint、Oxlint、Oxfmt |
+| 类别     | 技术                           |
+| -------- | ------------------------------ |
+| 框架     | Vue 3、Vite                    |
+| UI 库    | Naive UI                       |
+| 路由     | Vue Router                     |
+| SEO      | @vueuse/head、Puppeteer 预渲染 |
+| PWA      | vite-plugin-pwa (Workbox)      |
+| 图标     | @vicons/fluent、@remixicon/vue |
+| 工具     | markdown-it、nprogress         |
+| 代码质量 | ESLint、Oxlint、Oxfmt          |
 
 ## 开发
 
@@ -35,7 +42,7 @@ pnpm install          # 安装依赖
 
 pnpm dev              # 启动开发服务器
 
-pnpm build            # 构建生产版本（含 SEO 预渲染）
+pnpm build            # 构建生产版本
 pnpm preview          # 预览构建结果
 
 pnpm lint             # 代码检查
