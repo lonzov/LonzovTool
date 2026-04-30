@@ -1,0 +1,12 @@
+{
+  "icon": "/logos/command_plus.webp",
+  "name": "指令音符盒",
+  "version": "v2.0",
+  "tagline": "MID音乐转指令音符盒，半自动填入命令方块",
+  "intro": "将 MID 文件转换为 Minecraft 基岩版游戏内播放音效的指令序列，并支持半自动填入命令方块。\n\n视频教程(旧版本)：<a href=\"https://www.bilibili.com/video/BV13HAtzXECM/\" target=\"_blank\" rel=\"noopener\">BV13HAtzXECM</a>\n开源仓库：<a href=\"https://github.com/xukun142857/Music-Minecraft\" target=\"_blank\" rel=\"noopener\">xukun142857/Music-Minecraft</a>",
+  "developer": "3762024811",
+  "developerLink": "mailto:3762024811@qq.com",
+  "lanzou": { "url": "https://lonzov.lanzouu.com/iVIgZ3oa665a", "password": "d7ba" },
+  "fileSize": "4.8",
+  "downloads": 1219
+}

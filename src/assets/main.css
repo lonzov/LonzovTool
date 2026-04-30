@@ -1,0 +1,450 @@
+/* 文档内容区超链接下划线样式（全局，确保 v-html 生成的 a 也生效） */
+.docs-content a,
+.docs-content .trigger-feedback,
+.docs-content .trigger-url-tj {
+  color: var(--text-primary);
+  text-decoration: none;
+  position: relative;
+  padding-bottom: 2px;
+  cursor: pointer;
+  display: inline-block;
+  vertical-align: baseline;
+  background: none;
+}
+
+.docs-content a::before,
+.docs-content .trigger-feedback::before,
+.docs-content .trigger-url-tj::before {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5px;
+  height: 1px;
+  background-image: repeating-linear-gradient(to right,
+      color-mix(in srgb, var(--text-primary), transparent 30%) 0 4px,
+      transparent 4px 8px);
+  background-repeat: repeat-x;
+  background-size: 8px 1px;
+  opacity: 1;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.docs-content a::after,
+.docs-content .trigger-feedback::after,
+.docs-content .trigger-url-tj::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5px;
+  height: 1px;
+  background-color: var(--text-primary);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.docs-content a:hover::before,
+.docs-content .trigger-feedback:hover::before,
+.docs-content .trigger-url-tj:hover::before {
+  opacity: 0;
+}
+
+.docs-content a:hover::after,
+.docs-content .trigger-feedback:hover::after,
+.docs-content .trigger-url-tj:hover::after {
+  opacity: 1;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif;
+}
+
+/* ===== 主题变量 - 亮色模式 (默认) ===== */
+:root,
+[data-theme="light"] {
+  --primary-color: var(--text-primary);
+  /* 背景色 */
+  --bg-color: #F5F7F9;
+  --bg-card: #FFFFFF;
+  --bg-sub: #F0F2F5;
+  --footer-bg: #E8EAED;
+  --footer-bg-rgb: 232, 234, 237;
+
+  /* 文字颜色 */
+  --text-primary: #1A1A1A;
+  --text-secondary: #525252;
+  --text-tertiary: #A0A0A0;
+
+  /* 边框和分割线 */
+  --border-color: #E0E0E0;
+  --sider-border: #D0D0D0;
+  --footer-divider-bg: #D0D3D6;
+
+  /* 按钮相关 */
+  --theme-icon-color: #525252;
+  --theme-ripple-color: rgba(0, 0, 0, 0.08);
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  /* Naive UI Menu 颜色 */
+  --menu-text: #525252;
+  --menu-text-hover: #1A1A1A;
+  --menu-bg-hover: #F0F2F5;
+
+  /* 搜索高亮颜色 */
+  --highlight-bg: #fadb14;
+  --highlight-color: #000;
+}
+
+/* ===== 主题变量 - 深色模式 ===== */
+
+[data-theme="dark"] {
+  --primary-color: var(--text-primary);
+  /* 背景色 */
+  --bg-color: #111111;
+  --bg-card: #191919;
+  --bg-sub: #242424;
+  --footer-bg: #0A0A0A;
+  --footer-bg-rgb: 10, 10, 10;
+
+  /* 文字颜色 */
+  --text-primary: #E8E8E8;
+  --text-secondary: #A0A0A0;
+  --text-tertiary: #606060;
+
+  /* 边框和分割线 */
+  --border-color: #2B2B2B;
+  --sider-border: #2B2B2B;
+  --footer-divider-bg: #1A1A1A;
+
+  /* 按钮相关 */
+  --theme-icon-color: #A0A0A0;
+  --theme-ripple-color: rgba(255, 255, 255, 0.12);
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+
+  /* Naive UI Menu 颜色 */
+  --menu-text: #A0A0A0;
+  --menu-text-hover: #E8E8E8;
+  --menu-bg-hover: #2A2A2A;
+
+  /* 搜索高亮颜色 - 深色模式使用更亮的黄色 */
+  --highlight-bg: #d4b106;
+  --highlight-color: #000;
+}
+
+/* ===== 全局过渡动画 ===== */
+body,
+button,
+input,
+select,
+textarea,
+a,
+img,
+svg,
+path,
+circle,
+rect,
+div,
+span,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+ul,
+ol,
+li {
+  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease,
+    box-shadow 0.4s ease, fill 0.4s ease, stroke 0.4s ease;
+}
+
+/* ===== 页面动画的过渡类（仅用于覆盖全局 transition） ===== */
+.page-enter-active,
+.page-leave-active {
+  transition: none !important;
+}
+
+/* 禁用移动端触摸高亮和按钮涟漪效果 */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 禁用 Chrome 按钮涟漪效果 */
+button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ===== Naive UI Menu 样式 ===== */
+.n-menu {
+  --n-item-text-color: var(--menu-text) !important;
+  --n-item-text-color-hover: var(--menu-text-hover) !important;
+  --n-item-text-color-active: var(--menu-text-hover) !important;
+  --n-item-text-color-pressed: var(--menu-text-hover) !important;
+  --n-item-text-color-focus: var(--menu-text-hover) !important;
+  --n-item-text-color-child-active: var(--menu-text-hover) !important;
+
+  --n-icon-color: var(--menu-text) !important;
+  --n-icon-color-hover: var(--menu-text-hover) !important;
+  --n-icon-color-active: var(--menu-text-hover) !important;
+  --n-icon-color-pressed: var(--menu-text-hover) !important;
+  --n-icon-color-focus: var(--menu-text-hover) !important;
+
+  --n-color-hover: var(--menu-bg-hover) !important;
+  --n-color-pressed: var(--menu-bg-hover) !important;
+  --n-color-focus: var(--menu-bg-hover) !important;
+  --n-color-active: var(--menu-bg-hover) !important;
+}
+
+/* ===== Naive UI Dropdown 深色模式适配 ===== */
+[data-theme="dark"] .n-dropdown {
+  --n-color: #1F1F1F !important;
+  --n-text-color: #E8E8E8 !important;
+  --n-icon-color: #A0A0A0 !important;
+  --n-divider-color: #2B2B2B !important;
+  --n-option-color-hover: #2A2A2A !important;
+  --n-group-header-color: #A0A0A0 !important;
+  --n-option-text-color: #E8E8E8 !important;
+  --n-option-text-color-hover: #E8E8E8 !important;
+}
+
+[data-theme="dark"] .n-dropdown-divider {
+  background-color: #2B2B2B !important;
+}
+
+[data-theme="dark"] .n-dropdown-option:hover {
+  background-color: #2A2A2A !important;
+}
+
+/* ===== Naive UI Drawer 深色模式适配 ===== */
+[data-theme="dark"] .n-drawer {
+  background-color: var(--bg-color) !important;
+}
+
+[data-theme="dark"] .n-drawer-mask {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* ===== Naive UI Button 深色模式适配 ===== */
+[data-theme="dark"] .n-button.n-button--quaternary {
+  --n-color-hover: var(--bg-sub) !important;
+  --n-color-pressed: var(--bg-sub) !important;
+  --n-color-focus: var(--bg-sub) !important;
+}
+
+/* ===== Naive UI Scrollbar 深色模式适配 ===== */
+[data-theme="dark"] .n-scrollbar {
+  --n-rail-color: #1F1F1F !important;
+  --n-rail-color-hover: #1F1F1F !important;
+  --n-thumb-color: #404040 !important;
+  --n-thumb-color-hover: #505050 !important;
+}
+
+/* ===== Naive UI Input 输入框 - 全局深浅色适配（遵循项目变量） ===== */
+.n-input {
+  --n-border: 1px solid var(--border-color) !important;
+  --n-border-hover: 1px solid var(--text-secondary) !important;
+  --n-border-focus: 1px solid var(--text-primary) !important;
+  --n-box-shadow-focus: 0 0 0 2px color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
+  --n-color: var(--bg-card) !important;
+  --n-color-disabled: var(--bg-sub) !important;
+  --n-text-color: var(--text-primary) !important;
+  --n-placeholder-color: var(--text-tertiary) !important;
+  --n-clear-color: var(--text-tertiary) !important;
+  border-radius: 6px !important;
+}
+
+[data-theme="dark"] .n-input {
+  --n-border: 1px solid #333333 !important;
+  --n-border-hover: 1px solid #555555 !important;
+  --n-border-focus: 1px solid var(--text-primary) !important;
+  --n-box-shadow-focus: 0 0 0 2px color-mix(in srgb, var(--primary-color) 15%, transparent) !important;
+  --n-color: #1E1E1E !important;
+  --n-color-disabled: var(--bg-sub) !important;
+}
+
+/* ===== Naive UI Select 选择器 ===== */
+.n-select .n-base-selection {
+  --n-border: 1px solid var(--border-color) !important;
+  --n-border-hover: 1px solid var(--text-secondary) !important;
+  --n-border-active: 1px solid var(--text-primary) !important;
+  --n-border-focus: 1px solid var(--text-primary) !important;
+  --n-box-shadow-focus: 0 0 0 2px color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
+  --n-color: var(--bg-card) !important;
+  --n-text-color: var(--text-primary) !important;
+  --n-placeholder-color: var(--text-tertiary) !important;
+  border-radius: 6px !important;
+}
+
+[data-theme="dark"] .n-select .n-base-selection {
+  --n-border: 1px solid #333333 !important;
+  --n-border-hover: 1px solid #555555 !important;
+  --n-border-active: 1px solid var(--text-primary) !important;
+  --n-border-focus: 1px solid var(--text-primary) !important;
+  --n-box-shadow-focus: 0 0 0 2px color-mix(in srgb, var(--primary-color) 15%, transparent) !important;
+  --n-color: #1E1E1E !important;
+}
+
+/* Select 下拉菜单 */
+.n-select-menu {
+  --n-color: var(--bg-card) !important;
+  --n-option-text-color: var(--text-primary) !important;
+  --n-option-text-color-active: var(--text-primary) !important;
+  --n-option-color-active: var(--bg-sub) !important;
+  border-radius: 8px !important;
+}
+
+[data-theme="dark"] .n-select-menu {
+  --n-color: #1E1E1E !important;
+  --n-option-color-active: #2A2A2A !important;
+}
+
+/* ===== Naive UI Button 按钮 ===== */
+.n-button {
+  --n-color: var(--bg-card) !important;
+  --n-color-hover: var(--bg-sub) !important;
+  --n-color-pressed: var(--bg-sub) !important;
+  --n-text-color: var(--text-primary) !important;
+  --n-border: 1px solid var(--border-color) !important;
+  --n-border-hover: 1px solid var(--text-secondary) !important;
+  --n-border-pressed: 1px solid var(--text-primary) !important;
+  /* 焦点状态 */
+  --n-box-shadow-focus: 0 0 0 2px color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
+  overflow: hidden !important;
+  border-radius: 6px !important;
+}
+
+.n-button--primary-type {
+  --n-color: var(--text-secondary) !important;
+  --n-color-hover: var(--text-primary) !important;
+  --n-color-pressed: var(--text-primary) !important;
+  --n-text-color: #ffffff !important;
+  --n-border: none !important;
+  --n-border-hover: none !important;
+  --n-border-pressed: none !important;
+  --n-box-shadow-focus: 0 0 0 2px color-mix(in srgb, var(--text-primary) 30%, transparent) !important;
+}
+
+[data-theme="dark"] .n-button {
+  --n-color: #242424 !important;
+  --n-color-hover: #333333 !important;
+  --n-color-pressed: #3a3a3a !important;
+  --n-border: 1px solid #333333 !important;
+  --n-border-hover: 1px solid #555555 !important;
+  --n-border-pressed: #666666 !important;
+}
+
+[data-theme="dark"] .n-button--primary-type {
+  --n-color: var(--text-secondary) !important;
+  --n-color-hover: var(--text-primary) !important;
+  --n-color-pressed: #cccccc !important;
+}
+
+/* ===== Naive UI Switch 开关 ===== */
+.n-switch {
+  --n-rail-color: var(--border-color) !important;
+  --n-rail-color-active: var(--text-primary) !important;
+  --n-loading-color: var(--text-primary) !important;
+}
+
+/* ===== Naive UI Message 提示条 深色模式适配 ===== */
+[data-theme="dark"] .n-message {
+  --n-color: #2A2A2A !important;
+  --n-text-color: #E8E8E8 !important;
+  --n-icon-color: #E8E8E8 !important;
+}
+
+/* ===== Naive UI Popover 弹出层（Select下拉等）深色适配补充 ===== */
+[data-theme="dark"] .n-base-selection-focus-ring {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 15%, transparent) !important;
+}
+
+/* ===== NProgress 页面进度条 ===== */
+#nprogress {
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  background: #5a5a5a !important;
+  background-image: none !important;
+  position: fixed;
+  top: 0;
+  left: 200px;
+  width: calc(100% - 200px);
+  height: 2.5px !important;
+  box-shadow: 0 0 12px rgba(64, 64, 64, 0.4) !important;
+  transition: opacity 0.15s ease !important;
+}
+
+/* 移动端 */
+@media (max-width: 770px) {
+  #nprogress .bar {
+    left: 0 !important;
+    width: 100% !important;
+    top: 56px !important;
+  }
+}
+
+/* 深色模式下的进度条颜色 */
+[data-theme="dark"] #nprogress .bar {
+  background: #adadad !important;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4) !important;
+}
+
+#nprogress .peg {
+  display: none !important;
+  box-shadow: none !important;
+}
+
+#nprogress .spinner {
+  display: none !important;
+}
+
+.docs-content blockquote {
+  position: relative;
+  padding-left: 20px;
+  margin: 16px 0;
+  color: var(--text-secondary);
+  border-left: none !important;
+}
+
+.docs-content blockquote::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3.5px;
+  height: 100%;
+  background: color-mix(in srgb, var(--primary-color) 22%, transparent);
+  border-radius: 3px;
+  z-index: 1;
+  transition: background 0.4s;
+}

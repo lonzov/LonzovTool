@@ -1,0 +1,16 @@
+{
+  "parentMenus": [
+    {
+      "id": "websites",
+      "name": "在线网站",
+      "icon": "Globe24Regular",
+      "defaultCollapsed": false
+    },
+    {
+      "id": "localtools",
+      "name": "本地工具",
+      "icon": "Apps24Filled",
+      "defaultCollapsed": false
+    }
+  ]
+}

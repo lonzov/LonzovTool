@@ -1,0 +1,12 @@
+{
+  "icon": "/logos/mt2_cn.webp",
+  "name": "指令语法高亮包",
+  "version": "v1.2.9",
+  "tagline": "指令语法高亮包，适用于 MT 管理器",
+  "intro": "这是一个专用于MT管理器的语法包，为 MT 管理器提供 Minecraft 基岩版指令的语法高亮支持，安装后 .mcfunction 文件会默认使用此语法包进行语法高亮渲染，或在其他文件手动选择语法为“语法高亮MCGH”也可以达到一样的效果。\n\nQ：MT管理器是什么/在哪下载？\nA：一款安卓的全能文件管理器，官网 <a href=\"https://mt2.cn\" target=\"_blank\" rel=\"noopener\">mt2.cn</a> 。\n\n开源仓库：<a href=\"https://github.com/long-or/syntax-by-mt-mtsx\" target=\"_blank\" rel=\"noopener\">long-or/syntax-by-mt-mtsx</a>\nQQ 群：<a href=\"https://qm.qq.com/q/vfCFekynVC\" target=\"_blank\" rel=\"noopener\">549528248</a>\n------------------------\n\n原作者的话：\n 导入方式：在MT管理器里面点击后缀为mtsx的文件，然后选择安装\n说明：\n- 给基岩版常用语法添加了高亮和报错功能\n- 颜色只有暗色模式下的，可以自己改\n- 有bug可以报给我(QQ:356134208)(bug挺多的,等你们发现)\n- 其他的可以在mtsx文件里面看\n- 语法高亮和MT语法模块同步更新\n\n正式版和重构版的区别:\n- 重构版在 MT版本v2.14.3 以上才能用\n- 用的是语法树结构匹配，效果会更好\n- 正式版不要求MT版本，效果比重构版差一点\n\nBeta版发布群: 549528248",
+  "developer": "胧_CB",
+  "developerLink": "https://space.bilibili.com/1637130924",
+  "lanzou": { "url": "https://lonzov.lanzouu.com/i2ZyS370w8zg", "password": "无" },
+  "fileSize": "0.8",
+  "downloads": 514
+}

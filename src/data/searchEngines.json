@@ -1,0 +1,107 @@
+[
+  {
+    "id": "internal",
+    "name": "站内",
+    "type": "internal",
+    "url": "",
+    "placeholder": "搜索站内内容..."
+  },
+  {
+    "id": "bing",
+    "name": "Bing",
+    "type": "engine",
+    "url": "https://cn.bing.com/search?q={query}",
+    "placeholder": "Bing 搜索，有求必应..."
+  },
+  {
+    "id": "google",
+    "name": "谷歌",
+    "type": "engine",
+    "url": "https://www.google.com/search?q={query}",
+    "placeholder": "谷歌一下..."
+  },
+  {
+    "id": "baidu",
+    "name": "百度",
+    "type": "engine",
+    "url": "https://www.baidu.com/s?wd={query}",
+    "placeholder": "百度一下，你就知道..."
+  },
+  {
+    "id": "360",
+    "name": "360",
+    "type": "engine",
+    "url": "https://www.so.com/s?q={query}",
+    "placeholder": "360 搜索..."
+  },
+  {
+    "id": "sogou",
+    "name": "搜狗",
+    "type": "engine",
+    "url": "https://www.sogou.com/web?query={query}",
+    "placeholder": "搜狗一下..."
+  },
+  {
+    "id": "sm",
+    "name": "神马",
+    "type": "engine",
+    "url": "https://www.sm.cn/s?q={query}",
+    "placeholder": "神马都能搜..."
+  },
+  {
+    "id": "mwiki",
+    "name": "中文 Wiki",
+    "type": "wiki",
+    "url": "https://zh.minecraft.wiki/?search={query}",
+    "placeholder": "搜索 Minecraft Wiki 内容..."
+  },
+  {
+    "id": "bewiki",
+    "name": "BE 开发",
+    "type": "wiki",
+    "url": "https://wiki.mcbe-dev.net/w/index.php?search={query}",
+    "placeholder": "搜索基岩版开发 Wiki 内容..."
+  },
+  {
+    "id": "minebbs",
+    "name": "MineBBS",
+    "type": "community",
+    "url": "https://www.minebbs.com/search/17504569/?q={query}",
+    "placeholder": "搜索 MineBBS 玩家社区..."
+  },
+  {
+    "id": "tieba",
+    "name": "百度贴吧",
+    "type": "community",
+    "url": "https://tieba.baidu.com/f/search/res?kw=minecraft&qw={query}",
+    "placeholder": "搜索 Minecraft 吧..."
+  },
+  {
+    "id": "klpbbs",
+    "name": "苦力怕论坛",
+    "type": "community",
+    "url": "https://klpbbs.com/plugin.php?id=twpx_xunsearch&q={query}",
+    "placeholder": "搜索苦力怕论坛..."
+  },
+  {
+    "id": "zhihu",
+    "name": "知乎",
+    "type": "community",
+    "url": "https://www.zhihu.com/search?q={query}",
+    "placeholder": "有问题就有答案..."
+  },
+  {
+    "id": "weixin",
+    "name": "微信",
+    "type": "community",
+    "url": "https://weixin.sogou.com/weixin?type=2&query={query}",
+    "placeholder": "搜索微信公众平台内容..."
+  },
+  {
+    "id": "bilibili",
+    "name": "B站",
+    "type": "community",
+    "url": "https://search.bilibili.com/all?keyword={query}",
+    "placeholder": "搜索Bilibili视频..."
+  }
+]

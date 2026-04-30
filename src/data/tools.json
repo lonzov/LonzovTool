@@ -1,0 +1,317 @@
+{
+  "categories": [
+    {
+      "name": "指令工具",
+      "icon": "KeyCommand16Filled",
+      "parentMenuId": "websites",
+      "tools": [
+        {
+          "title": "MCBEID表",
+          "description": "查询基岩版所有ID",
+          "logo": "/logos/idlist_projectxero_top.webp",
+          "link": "https://idlist.projectxero.top/"
+        },
+        {
+          "title": "CHelper",
+          "description": "命令助手在线版",
+          "logo": "/logos/www_yanceymc_cn.webp",
+          "link": "https://www.yanceymc.cn/chelper/"
+        },
+        {
+          "title": "艺术字转换",
+          "description": "将字母数字转换为游戏内的艺术字",
+          "logo": "/logos/tool_lonzov_top.webp",
+          "link": "/c/qjzh/"
+        },
+        {
+          "title": "T显动画生成",
+          "description": "生成打字机动画效果的rawJSON",
+          "logo": "/logos/tool_lonzov_top.webp",
+          "link": "/c/tr/"
+        },
+        {
+          "title": "T显可视化编辑器",
+          "description": "通过可视化界面编辑rawJSON",
+          "logo": "/logos/tool_lonzov_top.webp",
+          "link": "https://tool.lonzov.top/c/raw-json/"
+        },
+        {
+          "title": "T显编辑器",
+          "description": "可视化T显编辑器",
+          "logo": "/logos/dislink_github_io.webp",
+          "link": "https://dislink.github.io/rawJSONEditor/"
+        },
+        {
+          "title": "语法转换",
+          "description": "execute指令语法升级",
+          "logo": "/logos/tool_lonzov_top.webp",
+          "link": "/c/execute/"
+        }
+      ]
+    },
+    {
+      "name": "其他工具",
+      "icon": "Toolbox24Regular",
+      "parentMenuId": "websites",
+      "tools": [
+        {
+          "title": "MC特殊符号",
+          "description": "mc特殊符号,如鸡腿M币等",
+          "logo": "/logos/tool_lonzov_top.webp",
+          "link": "/c/fuhao/"
+        },
+        {
+          "title": "符号大全",
+          "description": "特殊符号大全",
+          "logo": "/logos/teshuzifu_cn.webp",
+          "link": "https://teshuzifu.cn/"
+        },
+        {
+          "title": "molang图示工具",
+          "description": "一个用于 Molang 的绘图工具",
+          "logo": "/logos/github.webp",
+          "link": "https://jannisx11.github.io/molang-grapher/"
+        },
+        {
+          "title": "FMBE模拟器",
+          "description": "FMBE模拟器,可视化预览+生成命令",
+          "logo": "/logos/github.webp",
+          "link": "https://szea-ll14.github.io/fmbeSim/"
+        },
+        {
+          "title": "ChunkBase",
+          "description": "通过种子号定位群系、结构、史莱姆区块等",
+          "logo": "/logos/www_chunkbase_com.webp",
+          "link": "https://www.chunkbase.com/apps/seed-map#seed=%E7%A7%8D%E5%AD%90%E5%8F%B7&platform=bedrock_1_21_50&dimension=overworld&x=0&z=0&zoom=0.5"
+        },
+        {
+          "title": "方块调色盘",
+          "description": "找到与指定颜色匹配的方块",
+          "logo": "/logos/blockcolors_app.webp",
+          "link": "https://blockcolors.app/"
+        },
+        {
+          "title": "Minecraft 艺术",
+          "description": "在线制作像素画、地图画、雕塑和红石音乐",
+          "logo": "/logos/mcpixelart_com.webp",
+          "link": "https://mcpixelart.com/"
+        },
+        {
+          "title": "Blockbench网页版",
+          "description": "一款强大的3D建模工具,支持mc模型制作",
+          "logo": "/logos/blockbench_net.webp",
+          "link": "https://web.blockbench.net/"
+        },
+        {
+          "title": "3D字生成",
+          "description": "轻松制作mc风格中文3D文本",
+          "logo": "/logos/3dt_easecation_net.webp",
+          "link": "https://3dt.easecation.net/"
+        }
+      ]
+    },
+    {
+      "name": "延伸推荐",
+      "icon": "Link24Regular",
+      "parentMenuId": "websites",
+      "tools": [
+        {
+          "title": "MCNav",
+          "description": "MC综合导航站",
+          "logo": "/logos/www_mcnav_net.webp",
+          "link": "https://www.mcnav.net/"
+        },
+        {
+          "title": "蓝天工作室",
+          "description": "代表作 CRoB命令查询机器人 等",
+          "logo": "/logos/bsc_meteormc_cn.webp",
+          "link": "https://bsc.meteormc.cn/"
+        }
+      ]
+    },
+    {
+      "name": "文档百科",
+      "icon": "Book24Regular",
+      "parentMenuId": "websites",
+      "tools": [
+        {
+          "title": "中文MC wiki",
+          "description": "在这里可以找到和mc有关的大部分信息",
+          "logo": "/logos/zh_minecraft_wiki.webp",
+          "link": "https://zh.minecraft.wiki/"
+        },
+        {
+          "title": "BWIKI",
+          "description": "Bilibili我的世界玩家社区wiki",
+          "logo": "/logos/wiki_biligame_com.webp",
+          "link": "https://wiki.biligame.com/mcplayer/"
+        },
+        {
+          "title": "基岩版官方创作者文档",
+          "description": "微软官方基岩版创作者文档",
+          "logo": "/logos/learn_microsoft_com.webp",
+          "link": "https://learn.microsoft.com/zh-cn/minecraft/creator/"
+        },
+        {
+          "title": "基岩版wiki",
+          "description": "基岩版技术特性知识的分享网站",
+          "logo": "/logos/wiki_bedrock_dev.webp",
+          "link": "https://wiki.bedrock.dev/"
+        },
+        {
+          "title": "基岩版开发wiki",
+          "description": "专门面向开发者和技术性的内容的wiki",
+          "logo": "/logos/wiki_mcbe-dev_net.webp",
+          "link": "https://wiki.mcbe-dev.net/"
+        },
+        {
+          "title": "bedrock.dev",
+          "description": "Minecraft基岩版文档",
+          "logo": "/logos/bedrock_dev.webp",
+          "link": "https://bedrock.dev/"
+        }
+      ]
+    },
+    {
+      "name": "社区论坛",
+      "icon": "People24Regular",
+      "parentMenuId": "websites",
+      "tools": [
+        {
+          "title": "苦力怕论坛",
+          "description": "最大的基岩版中文资源、交流论坛之一",
+          "logo": "/logos/klpbbs_com.webp",
+          "link": "https://klpbbs.com/"
+        },
+        {
+          "title": "MineBBS",
+          "description": "简洁好用的交流讨论和资源分享平台",
+          "logo": "/logos/www_minebbs_com.webp",
+          "link": "https://www.minebbs.com/"
+        },
+        {
+          "title": "CBerGit",
+          "description": "国内首个 MC 指令托管和研发交流平台",
+          "logo": "/logos/cbergit_com.png",
+          "link": "https://cbergit.com/"
+        }
+      ]
+    },
+    {
+      "name": "指令工具",
+      "icon": "KeyCommand16Filled",
+      "parentMenuId": "localtools",
+      "tools": [
+        {
+          "title": "命令魔方",
+          "description": "强大的命令辅助应用",
+          "logo": "/logos/www_viqu_com.webp",
+          "link": "https://www.viqu.com/pricing.html"
+        },
+        {
+          "title": "命令助手·Reforged",
+          "description": "命令助手 | 社区重铸版",
+          "logo": "/logos/ca_nycx_top.webp",
+          "link": "https://ca.nycx.top"
+        },
+        {
+          "title": "命令助手",
+          "description": "便捷易用的命令辅助输入应用",
+          "logo": "/logos/projectxero_top.webp",
+          "link": "https://projectxero.top/ca/"
+        },
+        {
+          "title": "矩阵方块",
+          "description": "雪球T显生成器、动态菜单生成器等",
+          "logo": "/logos/jzfk_wuaze_com.webp",
+          "link": "https://jzfk.indevs.in/"
+        },
+        {
+          "title": "指令音符盒",
+          "description": "mid转指令,并半自动填入命令方块",
+          "logo": "/logos/command_plus.webp",
+          "link": "/down/zhiling-yinfuhe"
+        },
+        {
+          "title": "命令模拟器",
+          "description": "强大的基岩版命令调试程序",
+          "logo": "/logos/python.webp",
+          "link": "https://commandsimulator.great-site.net/"
+        }
+      ]
+    },
+    {
+      "name": "其他工具",
+      "icon": "DesktopToolbox20Regular",
+      "parentMenuId": "localtools",
+      "tools": [
+        {
+          "title": "MT管理器",
+          "description": "安卓平台文件管理 & 逆向修改神器",
+          "logo": "/logos/mt2_cn.webp",
+          "link": "https://mt2.cn/"
+        },
+        {
+          "title": "Blockbench",
+          "description": "一款强大的3D建模工具,支持mc模型制作",
+          "logo": "/logos/blockbench_net.webp",
+          "link": "https://blockbench.net/"
+        }
+      ]
+    },
+    {
+      "name": "资源素材",
+      "icon": "Edit24Filled",
+      "tools": [
+        {
+          "title": "指令语法高亮包",
+          "description": "适用于MT管理器的指令语法高亮包",
+          "logo": "/logos/mt2_cn.webp",
+          "link": "/down/mc-yufabao"
+        },
+        {
+          "title": "McSounds",
+          "description": "Minecraft音效资源站",
+          "logo": "/logos/o_xbottle_top.webp",
+          "link": "https://o.xbottle.top/mcsounds/"
+        },
+        {
+          "title": "Vault",
+          "description": "MC资源集合, 包括皮肤头像、贴图等",
+          "logo": "/logos/ccvaults_com.webp",
+          "link": "https://ccvaults.com/"
+        },
+        {
+          "title": "红河资源站",
+          "description": "针对Minecraft视频创作的资源站",
+          "logo": "/logos/honghemc_cn.webp",
+          "link": "https://honghemc.cn/"
+        },
+        {
+          "title": "国际基岩版下载",
+          "description": "《优质的境外下载站》仅安卓",
+          "logo": "/logos/mcapks_net.webp",
+          "link": "https://mcapks.net/"
+        },
+        {
+          "title": "国际基岩版下载",
+          "description": "MineBBS论坛的下载站",
+          "logo": "/logos/mc_minebbs_com.webp",
+          "link": "https://mc.minebbs.com/"
+        }
+      ]
+    },
+    {
+      "name": "百宝箱",
+      "icon": "Box24Regular",
+      "tools": [
+        {
+          "title": "雨云",
+          "description": "本站云计算支持，提供一键部署MC服等云服务",
+          "logo": "/logos/rainyun.webp",
+          "link": "https://www.rainyun.com/lonzov_?s=tool_card"
+        }
+      ]
+    }
+  ]
+}
