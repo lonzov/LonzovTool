@@ -11,7 +11,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue?logo=apache&logoColor=fff)](LICENSE)
 [![Vibe Coding](https://img.shields.io/badge/Vibe-Coding-7C3AED?colorA=4B6BFB&colorB=7C3AED)](https://x.com/karpathy/status/1886192184808149383)
 
-一个简洁高效的 Minecraft 工具导航网站，聚合各类 MC 相关工具、文档与社区资源，其中100%的代码由 LLM 生成。
+一个简洁高效的 Minecraft 基岩版命令工具导航网站，聚合各类命令相关工具、文档与社区资源，其中100%的代码由 LLM 生成。
 
 ![首页预览](./docs/image/home.webp)
 ![标签页（工作站）预览](./docs/image/tap.webp)
