@@ -7,7 +7,15 @@
           <p class="footer-copyright">© 浪小舟 2025~{{ currentYear }} 保留所有权利.</p>
           <p class="footer-disclaimer">"Minecraft" 以及 "我的世界" 为 Mojang Synergies AB 的商标.</p>
           <p class="footer-third-party">第三方网站内容由其运营者负责，请自行判断，与本站无关.</p>
-          <p class="footer-uptime">本站已运行 {{ uptime.years }}年 {{ uptime.months }}月 {{ uptime.days }}天</p>
+          <p class="footer-uptime">
+            本站已运行 {{ uptime.years }}年 {{ uptime.months }}月 {{ uptime.days }}天
+            <span
+              v-if="swVersionShort"
+              class="sw-version"
+              :class="{ 'sw-version--expandable': swVersionExtra }"
+              @click="toggleVersion"
+            >| {{ swVersionShort }}<span v-if="showFull && swVersionExtra" class="sw-version-extra">{{ swVersionExtra }}</span></span>
+          </p>
 
           <!-- 社交按钮行 -->
           <div class="social-buttons">
@@ -113,6 +121,30 @@ export default {
       if (uptimeTimer) clearInterval(uptimeTimer)
     })
 
+    // SW 缓存版本号
+    const swVersionShort = ref('')
+    const swVersionExtra = ref('')
+    const showFull = ref(false)
+
+    function parseSWVersion() {
+      const raw = localStorage.getItem('current_sw_version')
+      if (!raw) return
+      const v = raw.startsWith('v') ? raw : 'v' + raw
+      const parts = v.replace(/^v/, '').split('.')
+      const short = parts.slice(0, 4).join('.')
+      swVersionShort.value = 'v' + short
+      if (parts.length > 4) {
+        swVersionExtra.value = '.' + parts.slice(4).join('.')
+      }
+    }
+
+    function toggleVersion() {
+      if (!swVersionExtra.value) return
+      showFull.value = !showFull.value
+    }
+
+    onMounted(() => { parseSWVersion() })
+
     const { openModal } = usePrivacyModal()
 
     function handleUpdateCookie() {
@@ -127,7 +159,7 @@ export default {
       { name: 'blog', label: '博客', icon: RiRssFill, href: 'https://blog.lonzov.top/', title: '博客' },
     ]
 
-    return { breakpoint, currentYear, uptime, handleUpdateCookie, socialLinks }
+    return { breakpoint, currentYear, uptime, handleUpdateCookie, socialLinks, swVersionShort, swVersionExtra, showFull, toggleVersion }
   },
 }
 </script>
@@ -340,5 +372,16 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.sw-version--expandable {
+  cursor: pointer;
+  user-select: none;
+}
+.sw-version--expandable:hover {
+  opacity: 0.8;
+}
+.sw-version-extra {
+  transition: opacity 0.3s ease;
 }
 </style>
