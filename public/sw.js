@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.0.1'
+const CACHE_VERSION = '3.0.2'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 const PRECACHE_URLS = ['/offline.html']
 
@@ -128,6 +128,8 @@ self.addEventListener('message', (event) => {
         <h3>🚀 小舟工具箱 v${CACHE_VERSION} 已就绪！</h3>
         <h4><br>全新重构v3版本震撼来袭！<br></h4>
         <p>✨ 全新界面：焕然一新的设计，清爽简洁！<br>🐌 极速性能：全新架构，加载更慢，不如原生:(<br>🗂️ 分类清晰: 将工具分为两大类，方便快速定位<br>🔎 智能搜索: 支持多种搜索引擎，满足不同需求<br>🔒 强化隐私：隐私政策透明披露，Cookie 同意自主管理！</p>
+        <h4>👾 更新日志：</h4>
+        <p>[+] 新卡片：红河资源站<br>[~] 修复T显可视化编辑器路径被SPA路由拦截的问题，该工具暂未重构</p>
         `,
         buttons: [
           { text: '立即更新', style: 'blue', action: 'update_sw' },
