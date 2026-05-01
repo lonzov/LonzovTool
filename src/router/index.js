@@ -155,6 +155,16 @@ const router = createRouter({
 
 // 路由前置守卫：开始进度条
 router.beforeEach((to, from, next) => {
+  // /c/raw-json/ 绕过 SPA，直接访问原生 HTML 静态文件
+  if (to.path.startsWith('/c/raw-json')) {
+    const { path, hash } = to
+    const target = (path === '/c/raw-json' || path === '/c/raw-json/')
+      ? '/c/raw-json/index.html'
+      : path
+    window.location.href = target + (hash || '')
+    return false
+  }
+
   if (to.path !== from.path) {
     NProgress.start()
     // 确保进度条在最高层（延迟设置以确保 DOM 已创建）
