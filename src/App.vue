@@ -1,6 +1,5 @@
 <script>
-import { markRaw, computed, ref, provide, watch } from 'vue'
-import { List24Filled } from '@vicons/fluent'
+import { computed, ref, provide, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { NMessageProvider } from 'naive-ui'
 import AppMenu from './components/AppMenu.vue'
@@ -18,7 +17,6 @@ export default {
     const activeKey = ref('home')
     const mobileMenuOpen = ref(false)
     const isMobile = ref(window.innerWidth < 771)
-    const MenuIcon = markRaw(List24Filled)
     const fakeTitleOpacity = ref(0)
     const fakeTitleTransition = ref('opacity 0.15s ease')
     let pendingCategoryIndex = null // 待处理的分类索引
@@ -273,7 +271,6 @@ export default {
       activeKey,
       mobileMenuOpen,
       isMobile,
-      MenuIcon,
       fakeTitleOpacity,
       fakeTitleTransition,
       desktopScrollbar,
@@ -436,11 +433,16 @@ export default {
 
       <button
         class="mobile-menu-button"
+        :class="{ 'is-open': mobileMenuOpen }"
         @click="mobileMenuOpen = !mobileMenuOpen"
         type="button"
         aria-label="打开菜单"
       >
-        <NIcon :component="MenuIcon" size="20" color="var(--theme-icon-color)" />
+        <span class="burger">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
       </button>
 
       <div style="padding: 12px 24px 24px">
@@ -559,23 +561,76 @@ export default {
 .mobile-menu-button {
   position: fixed !important;
   top: 12px !important;
-  left: 12px !important;
+  left: 17px !important;
   z-index: 99999 !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: transform 0.3s ease;
   padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.mobile-menu-button:active {
-  transform: scale(0.85);
+.burger {
+  position: relative;
+  width: 64px;
+  height: 27px;
+  transform: scale(0.5);
+  transform-origin: center center;
+}
+
+.burger span {
+  display: block;
+  position: absolute;
+  height: 4px;
+  width: 100%;
+  background: var(--theme-icon-color);
+  border-radius: 9px;
+  opacity: 1;
+  left: 0;
+  transform: rotate(0deg);
+  transition: .25s ease-in-out;
+}
+
+.burger span:nth-of-type(1) {
+  top: 0px;
+  transform-origin: left center;
+}
+
+.burger span:nth-of-type(2) {
+  top: 50%;
+  transform: translateY(-50%);
+  transform-origin: left center;
+  width: 120%;
+}
+
+.burger span:nth-of-type(3) {
+  top: 100%;
+  transform-origin: left center;
+  transform: translateY(-100%);
+  width: 80%;
+}
+
+.mobile-menu-button.is-open .burger span:nth-of-type(1) {
+  transform: rotate(45deg);
+  top: -1px;
+  left: 5px;
+}
+
+.mobile-menu-button.is-open .burger span:nth-of-type(2) {
+  width: 0%;
+  opacity: 0;
+  width: 100%;
+}
+
+.mobile-menu-button.is-open .burger span:nth-of-type(3) {
+  transform: rotate(-45deg);
+  top: 22px;
+  left: 5px;
+  width: 100%;
 }
 
 .n-drawer-mask {
