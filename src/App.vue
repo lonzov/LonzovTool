@@ -174,6 +174,11 @@ export default {
         activeKey.value = 'home'
         return
       }
+      if (key === 'donate') {
+        router.push('/donate')
+        activeKey.value = 'donate'
+        return
+      }
       if (key === 'workspace') {
         // 检查是否有已打开的标签页，并读取存储的活跃标签路径
         const { hasTabs, activeTab } = useWorkspace()
@@ -244,6 +249,8 @@ export default {
         }
       } else if (path.startsWith('/docs')) {
         activeKey.value = 'about'
+      } else if (path.startsWith('/donate')) {
+        activeKey.value = 'donate'
       } else if (path.startsWith('/submit')) {
         activeKey.value = 'submit'
       } else if (path.startsWith('/c/')) {
