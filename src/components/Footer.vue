@@ -138,12 +138,37 @@ export default {
       }
     }
 
+    /** 直接从当前活跃的 SW 获取版本号，实时更新 */
+    function fetchSWVersion() {
+      if (!navigator.serviceWorker?.controller) return
+      const mc = new MessageChannel()
+      mc.port1.onmessage = (e) => {
+        if (e.data?.version) {
+          localStorage.setItem('current_sw_version', e.data.version)
+          parseSWVersion()
+        }
+      }
+      navigator.serviceWorker.controller.postMessage({ type: 'GET_VERSION' }, [mc.port2])
+    }
+
     function toggleVersion() {
       if (!swVersionExtra.value) return
       showFull.value = !showFull.value
     }
 
-    onMounted(() => { parseSWVersion() })
+    onMounted(() => {
+      parseSWVersion()
+      // 监听 SW 控制器变更，实时同步版本号
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('controllerchange', fetchSWVersion)
+      }
+    })
+
+    onBeforeUnmount(() => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('controllerchange', fetchSWVersion)
+      }
+    })
 
     const { openModal } = usePrivacyModal()
 
