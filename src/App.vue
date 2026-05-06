@@ -1,31 +1,29 @@
 <script>
-import { computed, ref, provide, watch } from 'vue'
+import { markRaw, computed, ref, provide, watch } from 'vue'
+import { List24Filled } from '@vicons/fluent'
 import { useRouter } from 'vue-router'
 import { NMessageProvider } from 'naive-ui'
 import AppMenu from './components/AppMenu.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import PrivacyBanner from './components/PrivacyBanner.vue'
-import UpdateDialog from './components/UpdateDialog.vue'
 import { useTheme } from './composables/useTheme'
 import { useWorkspace } from './composables/useWorkspace.js'
-import { useSWUpdate } from './composables/useSWUpdate'
 
 export default {
-  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog },
+  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner },
   setup() {
     const router = useRouter()
     const { themeMode, cycleTheme, isDark } = useTheme()
-    const { initSW } = useSWUpdate()
 
     const activeKey = ref('home')
     const mobileMenuOpen = ref(false)
     const isMobile = ref(window.innerWidth < 771)
+    const MenuIcon = markRaw(List24Filled)
     const fakeTitleOpacity = ref(0)
     const fakeTitleTransition = ref('opacity 0.15s ease')
     let pendingCategoryIndex = null // 待处理的分类索引
     let prevRoutePath = null // 上一次路由路径，用于判断同页面跳转
     const desktopScrollbar = ref(null) // 桌面端 NScrollbar 实例引用
-    const mobileScrollbar = ref(null) // 移动端 NScrollbar 实例引用
 
     // 用于存储首页 HomeView 的 triggerDimEffect 方法
     const homeViewMethods = ref(null)
@@ -160,7 +158,7 @@ export default {
         } else {
           // 已在首页，无路由变化，手动触发平滑滚动
           if (isMobile.value) {
-            mobileScrollbar.value?.scrollTo({ top: 0, behavior: 'smooth' })
+            document.body.scrollTo({ top: 0, behavior: 'smooth' })
           } else {
             desktopScrollbar.value?.scrollTo({ top: 0, behavior: 'smooth' })
           }
@@ -190,11 +188,6 @@ export default {
         const fullPath = '/c/' + (targetPath === '/c/' ? '' : targetPath.replace(/^\/c\//, ''))
         router.push(fullPath)
         activeKey.value = 'workspace'
-        return
-      }
-      if (key === 'donate') {
-        router.push('/donate')
-        activeKey.value = 'donate'
         return
       }
       if (key && key.startsWith('category-')) {
@@ -234,7 +227,7 @@ export default {
       // 其他时候（跨页面切换）瞬间滚动到顶部，不继承上一页的浏览进度
       const behavior = (prevRoutePath !== null && prevRoutePath === path) ? 'smooth' : 'auto'
       if (isMobile.value) {
-        mobileScrollbar.value?.scrollTo({ top: 0, behavior })
+        document.body.scrollTo({ top: 0, behavior })
       } else {
         desktopScrollbar.value?.scrollTo({ top: 0, behavior })
       }
@@ -253,8 +246,6 @@ export default {
         }
       } else if (path.startsWith('/docs')) {
         activeKey.value = 'about'
-      } else if (path.startsWith('/donate')) {
-        activeKey.value = 'donate'
       } else if (path.startsWith('/submit')) {
         activeKey.value = 'submit'
       } else if (path.startsWith('/c/')) {
@@ -282,22 +273,20 @@ export default {
       activeKey,
       mobileMenuOpen,
       isMobile,
+      MenuIcon,
       fakeTitleOpacity,
       fakeTitleTransition,
       desktopScrollbar,
-      mobileScrollbar,
       isHome,
       isWorkspaceRoute,
       skipPageTransition,
       handleResize,
       handleMenuNavigate,
-      initSW,
     }
   },
   mounted() {
     window.addEventListener('resize', this.handleResize)
     this.observeTheme()
-    this.initSW()
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.handleResize)
@@ -393,7 +382,7 @@ export default {
 
         <NLayoutContent style="height: 100%; background: var(--bg-color)">
           <NScrollbar ref="desktopScrollbar" :style="{ height: '100%' }">
-            <div style="padding: 12px 24px 24px">
+            <div style="padding: 12px 24px 24px; scrollMarginTop: 56px">
               <div style="max-width: 1200px; margin: 0 auto">
                 <RouterView v-slot="{ Component, route }">
                   <Transition :name="skipPageTransition ? '' : 'page'" mode="out-in">
@@ -447,21 +436,15 @@ export default {
 
       <button
         class="mobile-menu-button"
-        :class="{ 'is-open': mobileMenuOpen }"
         @click="mobileMenuOpen = !mobileMenuOpen"
         type="button"
         aria-label="打开菜单"
       >
-        <span class="burger">
-          <span></span>
-          <span></span>
-          <span></span>
-        </span>
+        <NIcon :component="MenuIcon" size="20" color="var(--theme-icon-color)" />
       </button>
 
-      <NScrollbar ref="mobileScrollbar" :style="{ flex: 1, height: 'calc(100vh - 56px)' }">
-        <div style="padding: 12px 24px 24px">
-          <RouterView v-slot="{ Component, route }">
+      <div style="padding: 12px 24px 24px">
+        <RouterView v-slot="{ Component, route }">
           <Transition :name="skipPageTransition ? '' : 'page'" mode="out-in">
             <KeepAlive :include="['HomeView']">
               <component
@@ -472,7 +455,6 @@ export default {
           </Transition>
         </RouterView>
       </div>
-    </NScrollbar>
 
       <NDrawer
         v-model:show="mobileMenuOpen"
@@ -569,7 +551,6 @@ export default {
       </NDrawer>
     </div>
     <PrivacyBanner />
-    <UpdateDialog />
     </NMessageProvider>
   </NConfigProvider>
 </template>
@@ -578,76 +559,23 @@ export default {
 .mobile-menu-button {
   position: fixed !important;
   top: 12px !important;
-  left: 17px !important;
+  left: 12px !important;
   z-index: 99999 !important;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  padding: 0;
 }
 
-.burger {
-  position: relative;
-  width: 64px;
-  height: 27px;
-  transform: scale(0.5);
-  transform-origin: center center;
-}
-
-.burger span {
-  display: block;
-  position: absolute;
-  height: 4px;
-  width: 100%;
-  background: var(--theme-icon-color);
-  border-radius: 9px;
-  opacity: 1;
-  left: 0;
-  transform: rotate(0deg);
-  transition: .25s ease-in-out;
-}
-
-.burger span:nth-of-type(1) {
-  top: 0px;
-  transform-origin: left center;
-}
-
-.burger span:nth-of-type(2) {
-  top: 50%;
-  transform: translateY(-50%);
-  transform-origin: left center;
-  width: 120%;
-}
-
-.burger span:nth-of-type(3) {
-  top: 100%;
-  transform-origin: left center;
-  transform: translateY(-100%);
-  width: 80%;
-}
-
-.mobile-menu-button.is-open .burger span:nth-of-type(1) {
-  transform: rotate(45deg);
-  top: -1px;
-  left: 5px;
-}
-
-.mobile-menu-button.is-open .burger span:nth-of-type(2) {
-  width: 0%;
-  opacity: 0;
-  width: 100%;
-}
-
-.mobile-menu-button.is-open .burger span:nth-of-type(3) {
-  transform: rotate(-45deg);
-  top: 22px;
-  left: 5px;
-  width: 100%;
+.mobile-menu-button:active {
+  transform: scale(0.85);
 }
 
 .n-drawer-mask {
