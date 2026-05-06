@@ -5,14 +5,17 @@ import { NMessageProvider } from 'naive-ui'
 import AppMenu from './components/AppMenu.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import PrivacyBanner from './components/PrivacyBanner.vue'
+import UpdateDialog from './components/UpdateDialog.vue'
 import { useTheme } from './composables/useTheme'
 import { useWorkspace } from './composables/useWorkspace.js'
+import { useSWUpdate } from './composables/useSWUpdate'
 
 export default {
-  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner },
+  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog },
   setup() {
     const router = useRouter()
     const { themeMode, cycleTheme, isDark } = useTheme()
+    const { initSW } = useSWUpdate()
 
     const activeKey = ref('home')
     const mobileMenuOpen = ref(false)
@@ -286,11 +289,13 @@ export default {
       skipPageTransition,
       handleResize,
       handleMenuNavigate,
+      initSW,
     }
   },
   mounted() {
     window.addEventListener('resize', this.handleResize)
     this.observeTheme()
+    this.initSW()
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.handleResize)
@@ -560,6 +565,7 @@ export default {
       </NDrawer>
     </div>
     <PrivacyBanner />
+    <UpdateDialog />
     </NMessageProvider>
   </NConfigProvider>
 </template>
