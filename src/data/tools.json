@@ -20,19 +20,19 @@
         {
           "title": "艺术字转换",
           "description": "将字母数字转换为游戏内的艺术字",
-          "logo": "/logos/tool_lonzov_top.webp",
+          "logo": "/logos/1tool_lonzov_top.webp",
           "link": "/c/qjzh/"
         },
         {
           "title": "T显动画生成",
           "description": "生成打字机动画效果的rawJSON",
-          "logo": "/logos/tool_lonzov_top.webp",
+          "logo": "/logos/1tool_lonzov_top.webp",
           "link": "/c/tr/"
         },
         {
           "title": "T显可视化编辑器",
           "description": "通过可视化界面编辑rawJSON",
-          "logo": "/logos/tool_lonzov_top.webp",
+          "logo": "/logos/1tool_lonzov_top.webp",
           "link": "https://tool.lonzov.top/c/raw-json/"
         },
         {
@@ -44,7 +44,7 @@
         {
           "title": "语法转换",
           "description": "execute指令语法升级",
-          "logo": "/logos/tool_lonzov_top.webp",
+          "logo": "/logos/1tool_lonzov_top.webp",
           "link": "/c/execute/"
         }
       ]
@@ -57,7 +57,7 @@
         {
           "title": "MC特殊符号",
           "description": "mc特殊符号,如鸡腿M币等",
-          "logo": "/logos/tool_lonzov_top.webp",
+          "logo": "/logos/1tool_lonzov_top.webp",
           "link": "/c/fuhao/"
         },
         {
