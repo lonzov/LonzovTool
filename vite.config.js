@@ -1,14 +1,62 @@
 import { fileURLToPath, URL } from 'node:url'
+import { writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const SITE_URL = 'https://tool.lonzov.top'
+
+// 被 robots.txt 禁止的路径
+const DISALLOW_PATHS = ['/submit']
+
+// 站点所有公开页面路径
+const PAGES = [
+  '/',
+  '/docs',
+  '/docs/privacy',
+  '/donate',
+  '/c/qjzh/',
+  '/c/tr/',
+  '/c/raw-json/',
+  '/c/execute/',
+  '/c/fuhao/',
+]
+
+/** Vite 插件：构建完成后生成 sitemap.xml 和 robots.txt */
+function seoPlugin() {
+  return {
+    name: 'vite-plugin-seo',
+    closeBundle() {
+      const distDir = join(__dirname, 'dist')
+
+      // sitemap.xml
+      const now = new Date().toISOString()
+      const allowedPages = PAGES.filter(p => !DISALLOW_PATHS.some(d => p.startsWith(d)))
+      const urls = allowedPages.map(path =>
+        `    <url>\n        <loc>${SITE_URL}${path}</loc>\n        <lastmod>${now}</lastmod>\n    </url>`
+      ).join('\n')
+      const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`
+      writeFileSync(join(distDir, 'sitemap.xml'), sitemap, 'utf-8')
+      console.log('[seo] 已生成 sitemap.xml')
+
+      // robots.txt
+      const disallowRules = DISALLOW_PATHS.map(p => `Disallow: ${p}`).join('\n')
+      const robots = `User-agent: *\n${disallowRules}\nSitemap: ${SITE_URL}/sitemap.xml`
+      writeFileSync(join(distDir, 'robots.txt'), robots, 'utf-8')
+      console.log('[seo] 已生成 robots.txt')
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
     vueDevTools(),
+    seoPlugin(),
   ],
   resolve: {
     alias: {

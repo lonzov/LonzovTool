@@ -13,11 +13,12 @@ const DIST_DIR = join(ROOT, 'dist')
 
 const SITE_URL = 'https://tool.lonzov.top'
 
-// 站点所有公开页面路径（不含被 robots 禁止的路径）
+// 站点所有公开页面路径
 const PAGES = [
   '/',
   '/docs',
   '/docs/privacy',
+  '/donate',
   '/submit',
   '/c/qjzh/',
   '/c/tr/',

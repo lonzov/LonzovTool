@@ -19,6 +19,7 @@ const ROUTES = [
   '/',
   '/docs',
   '/docs/privacy',
+  '/donate',
   '/submit',
   // 站内工具页
   '/c/qjzh/',
@@ -156,7 +157,7 @@ async function prerender() {
   }
 
   // 清理上次预渲染产物（子目录），只保留 vite build 原始输出
-  const prerenderDirs = ['docs', 'submit', 'c']
+  const prerenderDirs = ['docs', 'submit', 'donate', 'c']
   for (const dir of prerenderDirs) {
     const dirPath = join(DIST_DIR, dir)
     if (existsSync(dirPath)) {
