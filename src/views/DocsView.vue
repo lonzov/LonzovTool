@@ -166,7 +166,7 @@ function setupLinkInterception() {
       } else {
         // 非内部链接一律在新标签页打开
         link.setAttribute('target', '_blank')
-        link.setAttribute('rel', 'noopener noreferrer')
+        link.setAttribute('rel', 'noopener')
       }
     }
 

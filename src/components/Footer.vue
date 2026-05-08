@@ -35,7 +35,7 @@
         <div class="footer-section">
           <h3 class="footer-title">友链推荐</h3>
           <ul class="footer-list">
-            <li><a href="https://www.rainyun.com/lonzov_?s=tool_foot" target="_blank" rel="noopener noreferrer">雨云</a></li>
+            <li><a href="https://www.rainyun.com/lonzov_?s=tool_foot" target="_blank" rel="noopener">雨云</a></li>
           </ul>
         </div>
         <div class="footer-section">
@@ -52,7 +52,7 @@
           <ul class="footer-list">
             <li><a href="mailto:i@lonzov.top" target="_blank" rel="noopener noreferrer">邮件</a></li>
             <li><a href="https://qm.qq.com/q/3EGIb5POqk" target="_blank" rel="noopener noreferrer">QQ 群</a></li>
-            <li><a href="https://github.com/lonzov/lonzovtool/" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+            <li><a href="https://github.com/lonzov/lonzovtool/" target="_blank" rel="noopener">GitHub</a></li>
           </ul>
         </div>
       </div>
