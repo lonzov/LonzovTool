@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.0.2.4'
+const CACHE_VERSION = '3.0.2.5'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 const PRECACHE_URLS = ['/offline.html']
 
