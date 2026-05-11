@@ -67,7 +67,7 @@ observer.observe(document.documentElement, {
 
     <!-- 爱发电按钮 -->
     <a
-      href="https://afdian.com/a/lonzov"
+      href="https://ifdian.com/a/lonzov"
       target="_blank"
       rel="noopener noreferrer"
       class="donate-afdian-btn"
