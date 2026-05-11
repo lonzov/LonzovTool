@@ -3,6 +3,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { NIcon, useMessage, NSwitch } from 'naive-ui'
 import { CurrencyDollarEuro20Regular } from '@vicons/fluent'
 import { useMouseGlow } from '../../composables/useMouseGlow.js'
+import { useToolStorage } from '../../composables/useToolStorage.js'
 
 defineProps({
   tabPath: {
@@ -82,6 +83,8 @@ const spriteHeight = Math.ceil(iconsData.length / SPRITE_CONFIG.iconsPerRow) * S
 
 // ===== 复制模式 =====
 const copyModeCodepoint = ref(false)
+
+useToolStorage('lonzovtool-fuhao', { copyModeCodepoint })
 
 function toggleCopyMode(value) {
   copyModeCodepoint.value = value

@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { NIcon, useMessage } from 'naive-ui'
 import { Copy24Regular, Delete24Regular, TextCaseTitle24Regular, ConvertRange24Regular } from '@vicons/fluent'
+import { useToolStorage } from '../../composables/useToolStorage.js'
 
 defineProps({
   tabPath: {
@@ -15,6 +16,10 @@ const message = useMessage()
 const inputText = ref('')
 const outputText = ref('')
 const selectedMode = ref('fullwidth')
+
+useToolStorage('lonzovtool-arttext', { inputText, selectedMode }, {
+  onRestored: () => { if (inputText.value.trim()) outputText.value = transformText(inputText.value) },
+})
 
 function transformText(text) {
   const mode = selectedMode.value

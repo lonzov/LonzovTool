@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { NIcon, useMessage } from 'naive-ui'
 import { Copy24Regular, Delete24Regular, TextGrammarWand24Regular, ConvertRange24Regular } from '@vicons/fluent'
+import { useToolStorage } from '../../composables/useToolStorage.js'
 
 defineProps({
   tabPath: {
@@ -17,6 +18,15 @@ const outputText = ref('')
 const startScore = ref('')
 const scoreboardName = ref('')
 const initialize = ref(false)
+
+useToolStorage('lonzovtool-tranimation', { inputText, startScore, scoreboardName, initialize }, {
+  onRestored: () => {
+    if (inputText.value.trim() && scoreboardName.value.trim()) {
+      const res = transformText(inputText.value, scoreboardName.value, startScore.value, initialize.value)
+      if (!res.error) outputText.value = res.result
+    }
+  },
+})
 
 // ===== 核心转换逻辑 (来自 v2/c/tr/script.js) =====
 

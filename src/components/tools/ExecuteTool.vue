@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { NIcon, useMessage } from 'naive-ui'
 import { Copy24Regular, Delete24Regular, ArrowTrending20Regular, ConvertRange24Regular } from '@vicons/fluent'
+import { useToolStorage } from '../../composables/useToolStorage.js'
 
 defineProps({
   tabPath: {
@@ -14,6 +15,15 @@ const message = useMessage()
 
 const inputText = ref('')
 const outputText = ref('')
+
+useToolStorage('lonzovtool-execute', { inputText }, {
+  onRestored: () => {
+    if (inputText.value.trim()) {
+      const { result } = convertExecuteCommand(inputText.value)
+      outputText.value = result
+    }
+  },
+})
 
 // ===== 核心转换逻辑 (来自 v2/c/execute/script.js) =====
 

@@ -109,6 +109,7 @@ src/
 │   ├── usePrivacyModal.js  # 隐私弹窗状态共享组合式函数
 │   ├── useSWUpdate.js      # Service Worker 更新检测与版本比较组合式函数
 │   ├── useTheme.js         # 主题状态管理组合式函数
+│   ├── useToolStorage.js   # 工具页 localStorage 持久化组合式函数
 │   └── useWorkspace.js     # 工作区状态管理组合式函数
 ├── config/
 │   └── categoryIcons.js    # 分类图标配置
