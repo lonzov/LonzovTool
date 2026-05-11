@@ -5,12 +5,32 @@ import { useRouter, useRoute } from 'vue-router'
 import { ChevronDown16Filled } from '@vicons/fluent'
 import { useWorkspace } from '../composables/useWorkspace.js'
 import { useTheme } from '../composables/useTheme.js'
+import ToolLoading from './ToolLoading.vue'
 
 // 动态加载工具组件，实现按需加载
-const ArtTextTool = defineAsyncComponent(() => import('./tools/ArtTextTool.vue'))
-const TrAnimationTool = defineAsyncComponent(() => import('./tools/TrAnimationTool.vue'))
-const ExecuteTool = defineAsyncComponent(() => import('./tools/ExecuteTool.vue'))
-const FuhaoTool = defineAsyncComponent(() => import('./tools/FuhaoTool.vue'))
+const asyncOptions = {
+  loadingComponent: ToolLoading,
+  errorComponent: ToolLoading,
+  delay: 200,
+  timeout: 10000,
+}
+
+const ArtTextTool = defineAsyncComponent({
+  loader: () => import('./tools/ArtTextTool.vue'),
+  ...asyncOptions,
+})
+const TrAnimationTool = defineAsyncComponent({
+  loader: () => import('./tools/TrAnimationTool.vue'),
+  ...asyncOptions,
+})
+const ExecuteTool = defineAsyncComponent({
+  loader: () => import('./tools/ExecuteTool.vue'),
+  ...asyncOptions,
+})
+const FuhaoTool = defineAsyncComponent({
+  loader: () => import('./tools/FuhaoTool.vue'),
+  ...asyncOptions,
+})
 
 const router = useRouter()
 const route = useRoute()

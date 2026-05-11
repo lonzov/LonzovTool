@@ -95,6 +95,7 @@ src/
 │   ├── ThemeToggle.vue  # 主题切换按钮
 │   ├── ToolCard.vue     # 工具卡片组件，支持懒加载、骨架屏、边框光晕跟随鼠标
 │   ├── ToolGrid.vue     # 工具网格布局，管理分类展示与视线引导
+│   ├── ToolLoading.vue  # 异步组件加载动画（旋转圆圈 + 加载文字），复用文档页加载样式
 │   ├── UpdateDialog.vue # SW 更新确认弹窗，照搬 Cookie 弹窗样式
 │   ├── WorkspaceView.vue # 工作区视图容器，管理多标签页
 │   └── tools/           # 内置工具页面组件
