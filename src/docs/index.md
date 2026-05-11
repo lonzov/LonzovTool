@@ -14,7 +14,7 @@
 
 ## 开源协议
 
-本项目源码以 [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) 协议开源，具体条款见 [LICENSE-APACHE](https://github.com/lonzov/lonzovtool/blob/main/LICENSE-APACHE)；文档及非代码内容采用 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) 协议。
+本项目源码以 [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) 协议开源，仓库地址：[lonzov/lonzovtool](https://github.com/lonzov/lonzovtool)，具体条款见 [LICENSE-APACHE](https://github.com/lonzov/lonzovtool/blob/main/LICENSE-APACHE)；文档及非代码内容采用 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) 协议。
 
 如果你发现 Bug、有功能建议——  
 欢迎通过下面的反馈渠道反馈。你的每一条反馈，都会让这个网站变得更好！
