@@ -15,7 +15,6 @@
   "dependencies": {
     "@remixicon/vue": "^4.9.0",
     "@vicons/ionicons5": "^0.13.0",
-    "@vicons/utils": "^0.1.4",
     "@vueuse/head": "^2.0.0",
     "markdown-it": "^14.1.1",
     "naive-ui": "^2.44.1",
