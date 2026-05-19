@@ -134,8 +134,7 @@ src/
 └── views/
     ├── AboutView.vue      # 关于页面，展示项目信息与统计数据
     ├── DocsView.vue       # 文档页面，动态加载 Markdown 文档（支持组件占位符注入）
-    ├── DownView.vue       # 下载页面，展示工具下载信息与下载选项
-    └── SubmitView.vue     # 工具提交页面（重定向到 /docs/url-tj）
+    └── DownView.vue       # 下载页面，展示工具下载信息与下载选项
 public/
 ├── sw.js                  # Service Worker，手写实现 StaleWhileRevalidate 缓存优先 + 离线诊断回退 + V2 兼容消息协议
 └── offline.html           # 离线回退页（极简兜底）
