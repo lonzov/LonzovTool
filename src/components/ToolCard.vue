@@ -481,9 +481,17 @@ export default {
   border-radius: inherit;
   padding: 1px;
   background: radial-gradient(
-    80px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(255, 255, 255, 0.65),
-    transparent 60%
+    150px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 1)     0%,
+    rgba(255, 255, 255, 0.55) 5%,
+    rgba(255, 255, 255, 0.31) 10%,
+    rgba(255, 255, 255, 0.18) 15%,
+    rgba(255, 255, 255, 0.12) 20%,
+    rgba(255, 255, 255, 0.07) 30%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(255, 255, 255, 0.02) 55%,
+    rgba(255, 255, 255, 0.01) 70%,
+    transparent                 100%
   );
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -497,15 +505,6 @@ export default {
 
 .tool-card.glow-active::before {
   opacity: 1;
-}
-
-/* 浅色模式：更亮的彩色高光 */
-[data-theme="light"] .tool-card::before {
-  background: radial-gradient(
-    80px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgb(255, 255, 255),
-    transparent 60%
-  );
 }
 
 .tool-card:hover .tool-card-logo-inner {
