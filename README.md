@@ -34,8 +34,8 @@
 | UI 库    | Naive UI                       |
 | 路由     | Vue Router                     |
 | SEO      | @vueuse/head、Puppeteer 预渲染 |
-| PWA      | vite-plugin-pwa (Workbox)      |
-| 图标     | @vicons/fluent、@remixicon/vue |
+| PWA      | Service Worker (手动)、Web App Manifest |
+| 图标     | @vicons/fluent、@vicons/ionicons5、@remixicon/vue |
 | 工具     | markdown-it、nprogress         |
 | 代码质量 | ESLint、Oxlint、Oxfmt          |
 
@@ -131,13 +131,16 @@ src/
 │   └── url-tj.md           # 网址提交页面
 ├── router/
 │   └── index.js           # Vue Router 路由配置，包含 NProgress 集成、SEO meta 映射与 @vueuse/head 动态更新
-└── sw.js                  # Service Worker，手写实现 StaleWhileRevalidate 缓存优先 + 离线诊断回退 + V2 兼容消息协议
 └── views/
     ├── AboutView.vue      # 关于页面，展示项目信息与统计数据
     ├── DocsView.vue       # 文档页面，动态加载 Markdown 文档（支持组件占位符注入）
     ├── DownView.vue       # 下载页面，展示工具下载信息与下载选项
     └── SubmitView.vue     # 工具提交页面（重定向到 /docs/url-tj）
+public/
+├── sw.js                  # Service Worker，手写实现 StaleWhileRevalidate 缓存优先 + 离线诊断回退 + V2 兼容消息协议
+└── offline.html           # 离线回退页（极简兜底）
 scripts/
+├── route-list.js          # 共享模块：从路由配置自动提取所有公开页面路径
 ├── prerender.js           # Puppeteer 预渲染脚本，并发爬取路由生成静态 HTML（SEO）
 └── generate-seo.js        # SEO 文件生成脚本，输出 sitemap.xml 和 robots.txt
 ```
@@ -151,8 +154,8 @@ scripts/
 
 - **目的**：为爬虫提供完整的页面内容，提升搜索引擎收录效果。
 - **实现**：
-  - 构建时运行 `scripts/prerender.js`，使用 Puppeteer **并发**爬取指定路由（`/`、`/c/*`、`/docs/*`、`/submit`），等待异步组件完全渲染后生成静态 HTML。
-  - 随后执行 `scripts/generate-seo.js`，生成 `sitemap.xml` 和 `robots.txt`。
+  - `vite build` 完成后运行 `scripts/generate-seo.js`，自动从路由配置中提取所有公开页面路径生成 `sitemap.xml` 和 `robots.txt`。
+  - 随后执行 `scripts/prerender.js`，使用 Puppeteer **并发**爬取自动检测到的路由，等待异步组件完全渲染后生成静态 HTML。
 - **关键细节**：
   - 并发控制（默认 5 个路由同时渲染），大幅缩短构建时间。
   - 等待 `router.isReady()` 和 `defineAsyncComponent` 解析完成，确保工具页面内容完整。
@@ -195,7 +198,7 @@ scripts/
 
 ### PWA 与 Service Worker 缓存
 
-- **技术方案**：`vite-plugin-pwa` + `injectManifest` 模式，自定义 `public/sw.js`。
+- **技术方案**：纯手写 Service Worker（`public/sw.js`），不依赖任何构建插件。
 - **预缓存**：无预缓存，所有资源运行时按需缓存。首次成功访问后 index.html 会被写入 INDEX_KEY 固定 key 作为离线 SPA shell。
 - **缓存策略**（全局缓存优先，先让用户用上再管更新）：
   - 导航请求：StaleWhileRevalidate（有缓存立即返回 + 后台静默更新），离线回退到 SPA 诊断页（`OfflineDiagnostic.vue`）

@@ -8,26 +8,18 @@ import { mkdirSync, writeFileSync, existsSync, readFileSync, rmSync } from 'node
 import { dirname, join } from 'node:path'
 import { createServer } from 'node:http'
 import serveHandler from 'serve-handler'
+import { getPages } from './route-list.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 const DIST_DIR = join(ROOT, 'dist')
 const PORT = 18789
 
-// 需要预渲染的路由列表
-const ROUTES = [
-  '/',
-  '/docs',
-  '/docs/privacy',
-  '/donate',
-  '/submit',
-  // 站内工具页
-  '/c/qjzh/',
-  '/c/tr/',
-  '/c/raw-json/',
-  '/c/execute/',
-  '/c/fuhao/',
-]
+// 无法预渲染的路径（/c/raw-json/ 在路由守卫中 bypass SPA 直接跳转）
+const PRERENDER_EXCLUDE = ['/c/raw-json/']
+
+// 需要预渲染的路由列表（自动从路由配置和数据目录提取）
+const ROUTES = getPages().filter(p => !PRERENDER_EXCLUDE.includes(p))
 
 // 并发控制：同时渲染的页面数
 const CONCURRENCY = 5
@@ -156,8 +148,12 @@ async function prerender() {
     process.exit(1)
   }
 
-  // 清理上次预渲染产物（子目录），只保留 vite build 原始输出
-  const prerenderDirs = ['docs', 'submit', 'donate', 'c']
+  // 从 ROUTES 自动推导需要清理的顶层目录
+  const prerenderDirs = [...new Set(
+    ROUTES
+      .map(r => r.replace(/^\//, '').split('/')[0])
+      .filter(Boolean)
+  )]
   for (const dir of prerenderDirs) {
     const dirPath = join(DIST_DIR, dir)
     if (existsSync(dirPath)) {
