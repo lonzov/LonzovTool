@@ -1,15 +1,25 @@
-const CACHE_VERSION = '3.0.3'
+const CACHE_VERSION = '3.0.7'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
-const PRECACHE_URLS = ['/offline.html']
+// 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
+const INDEX_KEY = new Request('/?__sw_index=1')
 
-// ===== Install: 预缓存离线页 =====
+// ===== Install: 预缓存 SPA shell (index.html) =====
+// 确保首次安装后 INDEX_KEY 就有值，离线时总能找到 SPA shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Precaching offline page')
-      return cache.addAll(PRECACHE_URLS)
-    })
+    fetch(new Request('/'))
+      .then((response) => {
+        if (response.ok) {
+          return caches.open(CACHE_NAME).then((cache) => {
+            console.log('[SW] Pre-cached index.html to INDEX_KEY')
+            return cache.put(INDEX_KEY, response)
+          })
+        }
+      })
+      .catch(() => console.warn('[SW] Pre-cache failed, will fallback on first navigation'))
   )
+  // 跳过等待，立即激活（配合 clients.claim 实现无缝更新）
+  self.skipWaiting()
 })
 
 // ===== Activate: 清理旧缓存 + 接管客户端 =====
@@ -31,7 +41,7 @@ self.addEventListener('activate', (event) => {
   )
 })
 
-// ===== Fetch: 缓存策略 =====
+// ===== Fetch: 缓存优先策略（始终先让用户用上） =====
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
@@ -41,29 +51,69 @@ self.addEventListener('fetch', (event) => {
   // 仅处理同源请求
   if (url.origin !== self.location.origin) return
 
-  // 导航请求: NetworkFirst + 离线兜底
+  // 导航请求: StaleWhileRevalidate + 离线兜底到 SPA 诊断页
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
+      (async () => {
+        const cached = await caches.match(request)
+
+        // 有缓存：立即返回 + 后台更新
+        if (cached) {
+          fetch(request)
+            .then((response) => {
+              if (response.ok) {
+                caches.open(CACHE_NAME).then((cache) => cache.put(request, response))
+              }
+            })
+            .catch(() => { })
+          return cached
+        }
+
+        // 无缓存：尝试网络
+        try {
+          const response = await fetch(request)
           if (response.ok) {
-            const clone = response.clone()
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+            // 同时缓存：原始 key + 固定 INDEX_KEY（确保离线时总能找到 SPA shell）
+            const clone1 = response.clone()
+            const clone2 = response.clone()
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, clone1)
+              cache.put(INDEX_KEY, clone2)
+            })
           }
           return response
-        })
-        .catch(async () => {
-          const cached = await caches.match(request)
-          if (cached) return cached
-          const offline = await caches.match('/offline.html')
-          if (offline) return offline
-          return new Response('Offline', { status: 503 })
-        })
+        } catch {
+          // 网络失败：用固定 key 查找 SPA shell，注入 __SW_OFFLINE 标记
+          const indexCached = await caches.match(INDEX_KEY)
+          if (indexCached) {
+            const body = await indexCached.text()
+            const injected = body.replace(
+              '</body>',
+              '<script>window.__SW_OFFLINE=true;</script></body>'
+            )
+            return new Response(injected, {
+              status: 200,
+              headers: { 'Content-Type': 'text/html' },
+            })
+          }
+          // SPA shell 完全没缓存（首次访问就离线）：返回内联极简页
+          return new Response(
+            '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>连接失败</title>'
+            + '<style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#000;color:#fff;font-family:-apple-system,sans-serif}'
+            + 'c{text-align:center;padding:40px}</style></head><body><c>'
+            + '<div style="width:48px;height:48px;border-radius:50%;border:4px solid #E46962;border-right-color:transparent;display:inline-block"></div>'
+            + '<h2 style="margin:24px 0 12px;color:#E46962">无法连接至服务器</h2>'
+            + '<p style="color:#888;font-size:14px">请检查网络后重试</p>'
+            + '</c></body></html>',
+            { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+          )
+        }
+      })()
     )
     return
   }
 
-  // 带 hash 的 JS/CSS: CacheFirst
+  // 带 hash 的 JS/CSS: CacheFirst (内容不变，长期缓存)
   if (url.pathname.startsWith('/assets/') && /\.(js|css)$/.test(url.pathname)) {
     event.respondWith(cacheFirst(request))
     return
@@ -126,7 +176,7 @@ self.addEventListener('message', (event) => {
         title: '有新版本可用',
         content: `
         <h4>👾 更新日志：</h4>
-        <p>[+] 工具站输入内容现在会自动草稿保存，离开后内容不丢失<br>[+] 工具站添加加载动画<br>[~] 修复移动端导航栏显示异常<br>[~] 修复移动端自动滚动失效<br>[+] 首页通知栏加入两条tip<br>[~] 优化字体显示效果</p>
+        <p>[~] 优化缓存逻辑，大幅提升加载速度<br>[+] 工具站输入内容现在会自动草稿保存，离开后内容不丢失<br>[+] 首页通知栏加入两条tip</p>
         `,
         buttons: [
           { text: '立即更新', style: 'blue', action: 'update_sw' },

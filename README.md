@@ -88,6 +88,7 @@ src/
 │   ├── Footer.vue       # 页脚组件，包含版权信息、运行时间、隐私政策入口
 │   ├── HomeView.vue     # 首页视图容器，集成搜索栏、工具网格、页脚
 │   ├── IframeForm.vue   # iframe 表单封装组件
+│   ├── OfflineDiagnostic.vue # 离线诊断页，ping 检测区分服务端异常/网络断开
 │   ├── NoticeBar.vue    # 公告通知栏，支持多公告自动轮播与高度自适应
 │   ├── PrivacyBanner.vue # 隐私横幅与 Cookie 设置弹窗，管理用户同意选项
 │   ├── SearchBar.vue    # 搜索栏，支持多搜索引擎切换
@@ -130,7 +131,7 @@ src/
 │   └── url-tj.md           # 网址提交页面
 ├── router/
 │   └── index.js           # Vue Router 路由配置，包含 NProgress 集成、SEO meta 映射与 @vueuse/head 动态更新
-└── sw.js                  # Service Worker，基于 Workbox 实现预缓存 + 运行时缓存 + V2 兼容消息协议
+└── sw.js                  # Service Worker，手写实现 StaleWhileRevalidate 缓存优先 + 离线诊断回退 + V2 兼容消息协议
 └── views/
     ├── AboutView.vue      # 关于页面，展示项目信息与统计数据
     ├── DocsView.vue       # 文档页面，动态加载 Markdown 文档（支持组件占位符注入）
@@ -194,13 +195,14 @@ scripts/
 
 ### PWA 与 Service Worker 缓存
 
-- **技术方案**：`vite-plugin-pwa` + `injectManifest` 模式，自定义 `src/sw.js`。
-- **预缓存**：仅 `offline.html`（离线兜底页，含贪吃蛇游戏彩蛋），其余资源全部运行时缓存。
-- **缓存策略**：
-  - 导航请求：NetworkFirst，离线回退到 `offline.html`
+- **技术方案**：`vite-plugin-pwa` + `injectManifest` 模式，自定义 `public/sw.js`。
+- **预缓存**：无预缓存，所有资源运行时按需缓存。首次成功访问后 index.html 会被写入 INDEX_KEY 固定 key 作为离线 SPA shell。
+- **缓存策略**（全局缓存优先，先让用户用上再管更新）：
+  - 导航请求：StaleWhileRevalidate（有缓存立即返回 + 后台静默更新），离线回退到 SPA 诊断页（`OfflineDiagnostic.vue`）
   - 带 hash 的 JS/CSS：CacheFirst（长期缓存）
   - 图片/字体：CacheFirst
   - 其他同源请求：StaleWhileRevalidate
+- **离线诊断页**：导航请求失败时，SW 注入 `window.__SW_OFFLINE` 标记后返回缓存中的 `index.html`，Vue App 据此自动路由到 `/offline` 诊断页，展示连接诊断动画并 ping `tool.lonzov.top` + `www.baidu.com` 区分服务端异常 / 网络断开。
 - **更新机制**：
   - 检测到新 SW → 通过 `GET_VERSION` 消息获取版本号 → 与 `localStorage.current_sw_version` 比较
   - 1-3 级版本差异（如 v3.0.0 → v3.1.0）：弹出更新确认弹窗（`UpdateDialog.vue`），用户选择立即更新或暂不更新

@@ -16,6 +16,7 @@ import {
 } from 'naive-ui'
 import App from './App.vue'
 import router from './router'
+import NProgress from 'nprogress'
 import { createHead } from '@vueuse/head'
 
 const head = createHead()
@@ -42,7 +43,25 @@ if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
   history.scrollRestoration = 'manual'
 }
 
+// SW 离线诊断：若 SW 标记了离线状态，在 mount 前修改 URL 为 /offline
+// 必须在 app.mount 之前，因为 mount 会同步触发 Router 初始路由解析
+if (window.__SW_OFFLINE) {
+  window.history.replaceState(null, '', '/offline')
+}
+
 app.mount('#app')
+
+// SPA 内部页面切换时，懒加载 chunk 加载失败（如离线）的处理
+router.onError((error) => {
+  if (error.message.includes('Failed to fetch dynamically imported module') ||
+      error.message.includes('Importing a module script failed') ||
+      error.message.includes('error loading dynamically imported module')) {
+    NProgress.done()
+    // 硬跳转：绕过 Vue Router 软导航，直接让浏览器发起完整导航请求
+    // SW 会捕获这个 /offline 导航并返回 SPA shell + __SW_OFFLINE 标记
+    window.location.href = '/offline'
+  }
+})
 
 // 移除全屏加载动画
 const loadingEl = document.getElementById('loading-overlay')

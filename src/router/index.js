@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 import HomeView from '../components/HomeView.vue'
+import OfflineDiagnostic from '../components/OfflineDiagnostic.vue'
 
 // 配置 NProgress
 NProgress.configure({
@@ -11,6 +12,19 @@ NProgress.configure({
   speed: 150,         // 消失动画速度 150ms
   easing: 'ease',     // 缓动函数
 })
+
+// ===== 路由导航超时机制 =====
+// 防止 chunk 加载挂起导致 NProgress 永久卡住（如离线/网络极差场景）
+const NAV_TIMEOUT_MS = 8000
+let navTimer = null
+
+/** 清除导航超时计时器 */
+function clearNavTimer() {
+  if (navTimer) {
+    clearTimeout(navTimer)
+    navTimer = null
+  }
+}
 
 // 内置工具页的 SEO meta 映射（path slug -> meta）
 const TOOL_META_MAP = {
@@ -142,6 +156,14 @@ const routes = [
     props: true,
   },
   {
+    path: '/offline',
+    name: 'offline',
+    component: OfflineDiagnostic,
+    meta: {
+      title: '连接失败 - 小舟工具箱',
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     redirect: '/',
@@ -153,7 +175,7 @@ const router = createRouter({
   routes,
 })
 
-// 路由前置守卫：开始进度条
+// 路由前置守卫：开始进度条 + 启动超时计时器
 router.beforeEach((to, from, next) => {
   // /c/raw-json/ 绕过 SPA，直接访问原生 HTML 静态文件
   if (to.path.startsWith('/c/raw-json')) {
@@ -165,7 +187,14 @@ router.beforeEach((to, from, next) => {
     return false
   }
 
-  if (to.path !== from.path) {
+  if (to.path !== from.path && to.name !== 'offline') {
+    clearNavTimer()
+    // 导航超时兜底：8 秒内未完成则强制跳转离线页（覆盖 chunk 挂起场景）
+    navTimer = setTimeout(() => {
+      NProgress.done()
+      window.location.href = '/offline'
+    }, NAV_TIMEOUT_MS)
+
     NProgress.start()
     // 确保进度条在最高层（延迟设置以确保 DOM 已创建）
     setTimeout(() => {
@@ -184,6 +213,9 @@ router.beforeEach((to, from, next) => {
 import { useHead } from '@vueuse/head'
 
 router.afterEach((to) => {
+  // 导航完成，清除超时计时器
+  clearNavTimer()
+
   // 解析 SEO head 信息：优先使用 route meta，动态路由走工具映射
   const meta = to.meta || {}
   let title = meta.title
