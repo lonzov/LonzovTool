@@ -41,6 +41,7 @@ let tabsRef = null
 let activeTabRef = null
 let initialized = false
 let restored = false
+let _skipPersist = false
 
 export function useWorkspace() {
   if (!initialized) {
@@ -59,11 +60,15 @@ export function useWorkspace() {
 
     // sync 确保 openTab/push/splice 后立即写入 localStorage，避免竞态
     watch(tabsRef, (val) => {
+      if (_skipPersist) return
       const paths = val.map(t => t.path)
       saveToStorage(TABS_KEY, paths)
     }, { deep: true, flush: 'sync' })
 
-    watch(activeTabRef, (val) => saveToStorage(ACTIVE_KEY, val), { flush: 'sync' })
+    watch(activeTabRef, (val) => {
+      if (_skipPersist) return
+      saveToStorage(ACTIVE_KEY, val)
+    }, { flush: 'sync' })
   }
 
   const tabs = tabsRef
@@ -163,6 +168,13 @@ export function useWorkspace() {
     activeTab.value = path
   }
 
+  // 仅设置活跃标签但不持久化（用于无效工具页：UI 显示"暂无内容"但不写入 localStorage）
+  function setActiveTabWithoutPersist(path) {
+    _skipPersist = true
+    activeTab.value = path
+    setTimeout(() => { _skipPersist = false }, 0)
+  }
+
   return {
     tabs,
     activeTab,
@@ -174,5 +186,6 @@ export function useWorkspace() {
     hasTabs,
     restoreTabs,
     ensureTabForPath,
+    setActiveTabWithoutPersist,
   }
 }

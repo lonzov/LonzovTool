@@ -35,7 +35,7 @@ const FuhaoTool = defineAsyncComponent({
 const router = useRouter()
 const route = useRoute()
 const message = useMessage()
-const { tabs, activeTab, closeTab, restoreTabs, ensureTabForPath } = useWorkspace()
+const { tabs, activeTab, closeTab, restoreTabs, ensureTabForPath, setActiveTabWithoutPersist } = useWorkspace()
 const { isDark } = useTheme()
 
 // 路径到组件的映射
@@ -106,7 +106,12 @@ function syncFromRoute() {
   if (!routePath.startsWith('/c/')) return
 
   syncingFromRoute = true
-  ensureTabForPath(routePath)
+  if (getComponent(routePath)) {
+    ensureTabForPath(routePath)
+  } else {
+    // 无效工具页：UI 显示"暂无内容"，但不写入 localStorage
+    setActiveTabWithoutPersist(routePath)
+  }
   setTimeout(() => { syncingFromRoute = false }, 0)
 }
 
@@ -121,7 +126,12 @@ onMounted(() => {
   if (normalizedRoute !== '/c') {
     // URL 明确指向某个工具页 — 以 URL 为准（直接输入地址或卡片点击）
     syncingFromRoute = true
-    ensureTabForPath(route.path)
+    if (getComponent(route.path)) {
+      ensureTabForPath(route.path)
+    } else {
+      // 无效工具页：UI 显示"暂无内容"，但不写入 localStorage
+      setActiveTabWithoutPersist(route.path)
+    }
     setTimeout(() => { syncingFromRoute = false }, 0)
   } else if (activeTab.value) {
     // URL 仅为 /c，无具体工具，用本地存储的活跃标签
