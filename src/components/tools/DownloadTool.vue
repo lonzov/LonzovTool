@@ -155,32 +155,108 @@ function handleDeveloperClick() {
   }
 }
 
-// ===== 下载次数统计 =====
-const COUNT_STORAGE_KEY = 'dl_count_log'
-const COUNT_COOLDOWN_MS = 3 * 60 * 1000 // 3分钟冷却
+// ===== 下载次数统计（多层缓存） =====
+const CACHE_KEY = 'dl_count_cache'       // localStorage 缓存 key
+const COOLDOWN_KEY = 'dl_count_log'      // 上报限速 key（复用已有）
+const CACHE_TTL_MS = 3 * 60 * 1000       // 缓存有效期 3 分钟
+// 内存缓存（跨组件实例共享）
+const memoryCache = new Map()             // slug → { count, ts }
+
 const dlCount = ref(0)
 const dlCountFetched = ref(false)
 
-/** 读取本地上报记录 */
-function getCountLog() {
-  try { return JSON.parse(localStorage.getItem(COUNT_STORAGE_KEY) || '{}') }
-  catch { return {} }
+/** 验证下载量数值：必须为 8 位及以内的正整数 */
+function isValidCount(val) {
+  return typeof val === 'number' && Number.isInteger(val) && val >= 0 && val < 1e8
 }
 
-/** 检查是否需要上报（3分钟冷却） */
+/** 读取 localStorage 缓存 */
+function readLocalCache(slug) {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY)
+    if (!raw) return null
+    const map = JSON.parse(raw)
+    const entry = map[slug]
+    if (!entry || typeof entry.count !== 'number' || typeof entry.ts !== 'number') return null
+    return entry
+  } catch { return null }
+}
+
+/** 写入 localStorage 缓存 */
+function writeLocalCache(slug, count, ts) {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY)
+    const map = raw ? JSON.parse(raw) : {}
+    map[slug] = { count, ts }
+    localStorage.setItem(CACHE_KEY, JSON.stringify(map))
+  } catch { /* ignore */ }
+}
+
+/** 检查上报冷却（3 分钟限速） */
 function shouldReport(slug) {
-  const log = getCountLog()
-  const entry = log[slug]
-  if (!entry) return true
-  return Date.now() - entry.t > COUNT_COOLDOWN_MS
+  try {
+    const raw = localStorage.getItem(COOLDOWN_KEY)
+    if (!raw) return true
+    const log = JSON.parse(raw)
+    const entry = log[slug]
+    if (!entry) return true
+    return Date.now() - entry.t > CACHE_TTL_MS
+  } catch { return true }
 }
 
-/** 记录上报时间 */
+/** 标记已上报 */
 function markReported(slug) {
-  const log = getCountLog()
-  log[slug] = { t: Date.now(), p: slug }
-  try { localStorage.setItem(COUNT_STORAGE_KEY, JSON.stringify(log)) }
-  catch { /* ignore */ }
+  try {
+    const raw = localStorage.getItem(COOLDOWN_KEY)
+    const log = raw ? JSON.parse(raw) : {}
+    log[slug] = { t: Date.now(), p: slug }
+    localStorage.setItem(COOLDOWN_KEY, JSON.stringify(log))
+  } catch { /* ignore */ }
+}
+
+/** 获取下载次数（核心逻辑） */
+async function fetchDownloadCount() {
+  const slug = pageName.value
+  if (!slug) return
+
+  const hardcoded = config.value?.downloads ?? 0
+  let bestCount = isValidCount(hardcoded) ? hardcoded : 0
+  let hasFreshCache = false
+
+  // 检查内存缓存
+  const mem = memoryCache.get(slug)
+  if (mem && isValidCount(mem.count)) {
+    if (mem.count > bestCount) bestCount = mem.count
+    if (Date.now() - mem.ts < CACHE_TTL_MS) hasFreshCache = true
+  }
+
+  // 检查 localStorage 缓存
+  const local = readLocalCache(slug)
+  if (local && isValidCount(local.count)) {
+    if (local.count > bestCount) bestCount = local.count
+    if (Date.now() - local.ts < CACHE_TTL_MS) hasFreshCache = true
+  }
+
+  // 先显示已知最大值
+  dlCount.value = bestCount
+  dlCountFetched.value = true
+
+  // 有任意未过期缓存则不发请求
+  if (hasFreshCache) return
+
+  // 全过期，发请求
+  try {
+    const res = await fetch(`https://api.lonzov.top/count/?s=${encodeURIComponent(slug)}`)
+    const data = await res.json()
+    const count = typeof data === 'number' ? data : (data?.count ?? data?.value ?? null)
+    if (isValidCount(count)) {
+      const now = Date.now()
+      dlCount.value = count
+      // 存入内存 + localStorage
+      memoryCache.set(slug, { count, ts: now })
+      writeLocalCache(slug, count, now)
+    }
+  } catch { /* ignore */ }
 }
 
 /** 上报下载事件（点击模态框按钮时调用） */
@@ -188,31 +264,22 @@ function reportDownload() {
   const slug = pageName.value
   if (!slug || !shouldReport(slug)) return
   markReported(slug)
-  // 静默上报，不阻塞用户操作
+  // 静默上报
   fetch(`https://api.lonzov.top/count/?p=${encodeURIComponent(slug)}`, { mode: 'no-cors' }).catch(() => {})
-}
-
-/** 获取下载次数 */
-async function fetchDownloadCount() {
-  const slug = pageName.value
-  if (!slug) return
-  try {
-    const res = await fetch(`https://api.lonzov.top/count/?s=${encodeURIComponent(slug)}`)
-    const data = await res.json()
-    const count = typeof data === 'number' ? data : (data?.count ?? data?.value ?? null)
-    if (typeof count === 'number') {
-      dlCount.value = count
-      dlCountFetched.value = true
-    }
-  } catch { /* ignore */ }
+  // 本地缓存 +1
+  const now = Date.now()
+  let current = dlCount.value
+  if (isValidCount(current)) {
+    current += 1
+    dlCount.value = current
+    memoryCache.set(slug, { count: current, ts: now })
+    writeLocalCache(slug, current, now)
+  }
 }
 
 // 配置加载完成后拉取下载次数
 watch(config, (val) => {
-  if (val) {
-    dlCount.value = val.downloads ?? 0
-    fetchDownloadCount()
-  }
+  if (val) fetchDownloadCount()
 }, { immediate: true })
 </script>
 
@@ -248,9 +315,9 @@ watch(config, (val) => {
           <span class="stat-label">下载</span>
           <span class="stat-value">
             <NNumberAnimation
-              :from="config.downloads ?? 0"
-              :to="dlCountFetched ? dlCount : (config.downloads ?? 0)"
-              :active="true"
+              :from="0"
+              :to="dlCount"
+              :active="dlCountFetched"
               :duration="1200"
             />
           </span>
