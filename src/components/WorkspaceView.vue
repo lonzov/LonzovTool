@@ -114,10 +114,17 @@ onMounted(() => {
   if (!route.path.startsWith('/c/')) return
 
   // restoreTabs 是幂等的：tabs 已有数据时直接跳过
-  const didRestore = restoreTabs()
+  restoreTabs()
 
-  // 以 localStorage 恢复的数据为准，用它来同步路由
-  if (didRestore && activeTab.value) {
+  const normalizedRoute = route.path.replace(/\/+$/, '')
+
+  if (normalizedRoute !== '/c') {
+    // URL 明确指向某个工具页 — 以 URL 为准（直接输入地址或卡片点击）
+    syncingFromRoute = true
+    ensureTabForPath(route.path)
+    setTimeout(() => { syncingFromRoute = false }, 0)
+  } else if (activeTab.value) {
+    // URL 仅为 /c，无具体工具，用本地存储的活跃标签
     syncingFromRoute = true
     const targetPath = '/c/' + (activeTab.value === '/c/' ? '' : activeTab.value.replace(/^\/c\//, ''))
     if (route.fullPath !== targetPath) {
