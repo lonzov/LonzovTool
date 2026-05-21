@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.0.8'
+const CACHE_VERSION = '3.0.8.0'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
