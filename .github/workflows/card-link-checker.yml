@@ -1,0 +1,199 @@
+name: 外部链接可访问性检查
+
+on:
+  schedule:
+    - cron: '0 20 * * 4'
+  workflow_dispatch:
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 检查 tools.json 中所有外部链接
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs')
+            const path = require('node:path')
+            
+            const CONFIG = {
+              TIMEOUT: 15000,
+              RETRY_DELAY: 1000,
+              MAX_RETRIES: 2,
+              CONCURRENCY: 10,
+              USER_AGENT: 'Mozilla/5.0 (compatible; lonzovTool-Link-Checker/1.0; http://tool.lonzov.top/)'
+            }
+            
+            // 1. 读取并解析 JSON 文件
+            const data = JSON.parse(fs.readFileSync('src/data/tools.json', 'utf-8'))
+
+            // 提取所有外部链接（https:// 或 http:// 开头）
+            const entries = []
+            for (const cat of data.categories) {
+              for (const tool of cat.tools) {
+                if (tool.link && (tool.link.startsWith('https://') || tool.link.startsWith('http://'))) {
+                  entries.push({
+                    category: cat.name,
+                    title: tool.title,
+                    link: tool.link,
+                  })
+                }
+              }
+            }
+
+            console.log(`\n📋 共检测到 ${entries.length} 个外部链接\n`)
+            console.log(`⚙️  配置：并发=${CONFIG.CONCURRENCY} | 超时=${CONFIG.TIMEOUT}ms | 最大重试=${CONFIG.MAX_RETRIES}次\n`)
+
+            // 2. 链接检查函数
+            async function checkLinkWithRetry(entry) {
+              let lastError = null
+              let lastStatus = '—'
+              
+              for (let attempt = 0; attempt <= CONFIG.MAX_RETRIES; attempt++) {
+                try {
+                  const ctrl = new AbortController()
+                  const timer = setTimeout(() => ctrl.abort(), CONFIG.TIMEOUT)
+                  
+                  const resp = await fetch(entry.link, {
+                    method: 'HEAD',
+                    signal: ctrl.signal,
+                    redirect: 'follow',
+                    headers: {
+                      'User-Agent': CONFIG.USER_AGENT,
+                      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                    }
+                  })
+                  
+                  clearTimeout(timer)
+                  
+                  // 请求成功
+                  return {
+                    ...entry,
+                    status: resp.status,
+                    ok: resp.ok,
+                    attempt: attempt + 1,
+                    maxAttempts: CONFIG.MAX_RETRIES + 1,
+                    message: '成功'
+                  }
+                  
+                } catch (e) {
+                  lastError = e
+                  lastStatus = e.name === 'AbortError' ? 'TIMEOUT' : (e.cause?.code || e.message)
+                  
+                  // 如果还有重试机会，则等待后重试
+                  if (attempt < CONFIG.MAX_RETRIES) {
+                    console.log(`   ⏳ 第 ${attempt + 1} 次失败，${CONFIG.RETRY_DELAY / 1000}秒后重试... (${lastStatus})`)
+                    await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY))
+                  }
+                }
+              }
+              
+              // 所有尝试都失败
+              return {
+                ...entry,
+                status: lastStatus,
+                ok: false,
+                attempt: CONFIG.MAX_RETRIES + 1,
+                maxAttempts: CONFIG.MAX_RETRIES + 1,
+                message: lastStatus
+              }
+            }
+
+            // 3. 并发控制执行器
+            async function runWithConcurrency(tasks, concurrency) {
+              const results = []
+              const executing = new Set()
+              
+              for (const task of tasks) {
+                const promise = checkLinkWithRetry(task).then(result => {
+                  executing.delete(promise)
+                  return result
+                })
+                
+                executing.add(promise)
+                results.push(promise)
+                
+                // 如果达到并发上限，等待其中一个完成
+                if (executing.size >= concurrency) {
+                  await Promise.race(executing)
+                }
+              }
+              
+              // 等待所有剩余任务完成
+              return Promise.all(results)
+            }
+
+            // 4. 执行并发检查
+            console.log(`🚀 开始并发检查 ${entries.length} 个链接...\n`)
+            const startTime = Date.now()
+            
+            const results = await runWithConcurrency(entries, CONFIG.CONCURRENCY)
+            
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
+            console.log(`\n✅ 检查完成！耗时 ${elapsed} 秒\n`)
+            
+            // 5. 输出详细日志
+            for (const r of results) {
+              const icon = r.ok ? '✅' : '❌'
+              const retryInfo = r.attempt > 1 ? ` (第${r.attempt}/${r.maxAttempts}次)` : ''
+              console.log(`${icon} [${r.status}] ${r.link}${retryInfo}`)
+            }
+            
+            // 6. 生成 Job Summary 报告
+            const okCount = results.filter(r => r.ok).length
+            const fail = results.filter(r => !r.ok)
+
+            let summary = `# 🔗 外部链接可访问性检查报告\n\n`
+            summary += `> **检查时间**：${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}\n`
+            summary += `> **总链接数**：${results.length}\n`
+            summary += `> **正常链接**：${okCount} 🟢\n`
+            summary += `> **异常链接**：${fail.length} 🔴\n`
+            summary += `> **检查耗时**：${elapsed} 秒\n`
+            summary += `> **配置信息**：并发=${CONFIG.CONCURRENCY} | 超时=${CONFIG.TIMEOUT / 1000}s | 重试=${CONFIG.MAX_RETRIES}次\n\n`
+
+            // 统计表格
+            summary += `## 📊 检查结果详情\n\n`
+            summary += `| 状态 | HTTP状态码 | 分类 | 工具名称 | 链接地址 |\n`
+            summary += `|:----:|:----------:|------|----------|----------|\n`
+            
+            for (const r of results) {
+              const icon = r.ok ? '🟢' : '🔴'
+              const statusText = `\`${r.status}\``
+              const retryNote = (!r.ok && r.attempt > 1) ? ` *(重试${r.attempt - 1}次)*` : ''
+              summary += `| ${icon} | ${statusText}${retryNote} | ${r.category} | ${r.title} | [点击访问](${r.link}) |\n`
+            }
+
+            // 异常链接汇总
+            if (fail.length > 0) {
+              summary += `\n## ⚠️ 异常链接汇总\n\n`
+              summary += `以下 **${fail.length}** 个链接在经过最多 ${CONFIG.MAX_RETRIES + 1} 次尝试后仍无法访问：\n\n`
+              
+              for (const r of fail) {
+                summary += `- ❌ **[${r.title}](${r.link})** \n`
+                summary += `  - 分类：${r.category}\n`
+                summary += `  - 错误：\`${r.message}\`\n`
+                summary += `  - 尝试次数：${r.attempt}/${r.maxAttempts}\n\n`
+              }
+            } else {
+              summary += `\n## 🎉 检查结果\n\n`
+              summary += `✅ 所有 **${results.length}** 个外部链接均可正常访问！\n`
+            }
+
+            // 写入 Summary
+            await core.summary.addRaw(summary).write()
+            
+            // 7. 设置 Job 状态
+            if (fail.length > 0) {
+              console.log(`\n⚠️  ${fail.length}/${results.length} 个链接不可达:`)
+              for (const r of fail) {
+                console.log(`   ❌ ${r.link}`)
+                console.log(`      状态: ${r.status} | 尝试: ${r.attempt}次`)
+              }
+              core.setFailed(`❌ ${fail.length}/${results.length} 个链接检查失败`)
+            } else {
+              console.log(`\n🎉 所有 ${results.length} 个外部链接均可访问！`)
+            }
