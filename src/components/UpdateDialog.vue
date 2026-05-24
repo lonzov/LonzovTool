@@ -6,7 +6,26 @@ import { useTheme } from '../composables/useTheme'
 import { useSWUpdate } from '../composables/useSWUpdate'
 
 const { isDark } = useTheme()
-const { showUpdateModal, popupTitle, popupContent, applyUpdate, deferUpdate } = useSWUpdate()
+const { showUpdateModal, popupTitle, popupContent, popupButtons, applyUpdate, deferUpdate } = useSWUpdate()
+
+/** 处理按钮点击 */
+function handleButtonClick(btn) {
+  if (btn.link) {
+    window.open(btn.link, '_blank', 'noopener')
+  } else if (btn.action === 'update_sw') {
+    applyUpdate()
+  } else if (btn.action === 'close' || !btn.action) {
+    deferUpdate()
+  }
+}
+
+/** 获取按钮样式类 */
+function getBtnClass(btn) {
+  const style = btn.style || 'outline'
+  if (style === 'fill') return 'btn btn-fill'
+  if (style === 'text') return 'btn btn-text'
+  return 'btn btn-outline'
+}
 
 const darkOverrides = {
   common: { neutralModal: '#191919' },
@@ -56,8 +75,18 @@ watch(showUpdateModal, (val) => {
       <div class="update-desc" v-html="popupContent || '小舟工具箱已更新，点击&quot;立即更新&quot;刷新页面获取最新体验。'"></div>
       <template #footer>
         <div class="modal-actions">
-          <button class="btn btn-later" @click="deferUpdate">暂不更新</button>
-          <button class="btn btn-update" @click="applyUpdate">立即更新</button>
+          <template v-if="popupButtons.length > 0">
+            <button
+              v-for="(btn, i) in popupButtons"
+              :key="i"
+              :class="getBtnClass(btn)"
+              @click="handleButtonClick(btn)"
+            >{{ btn.text }}</button>
+          </template>
+          <template v-else>
+            <button class="btn btn-outline" @click="deferUpdate">暂不更新</button>
+            <button class="btn btn-fill" @click="applyUpdate">立即更新</button>
+          </template>
         </div>
       </template>
     </NModal>
@@ -143,41 +172,62 @@ watch(showUpdateModal, (val) => {
   border: none;
 }
 
-/* 立即更新 - 主按钮 */
-[data-theme="light"] .btn-update {
+/* fill - 全填充主按钮 */
+[data-theme="light"] .btn-fill {
   background: #1A1A1A;
   color: #fff !important;
 }
 
-[data-theme="dark"] .btn-update {
+[data-theme="dark"] .btn-fill {
   background: #fff;
   color: #1A1A1A !important;
 }
 
-.btn-update:hover {
+.btn-fill:hover {
   opacity: 0.85;
 }
 
-/* 暂不更新 - 描边按钮 */
-.btn-later {
+/* outline - 描边按钮 */
+.btn-outline {
   border: 1.5px solid currentColor;
 }
 
-[data-theme="light"] .btn-later {
+[data-theme="light"] .btn-outline {
   background: #fff;
   color: #1A1A1A;
 }
 
-[data-theme="light"] .btn-later:hover {
+[data-theme="light"] .btn-outline:hover {
   background: #E8E8E8;
 }
 
-[data-theme="dark"] .btn-later {
+[data-theme="dark"] .btn-outline {
   background: transparent;
   color: rgba(255, 255, 255, 0.87);
 }
 
-[data-theme="dark"] .btn-later:hover {
+[data-theme="dark"] .btn-outline:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* text - 仅文字按钮 */
+.btn-text {
+  background: transparent;
+}
+
+[data-theme="light"] .btn-text {
+  color: #1A1A1A;
+}
+
+[data-theme="light"] .btn-text:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .btn-text {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+[data-theme="dark"] .btn-text:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 </style>

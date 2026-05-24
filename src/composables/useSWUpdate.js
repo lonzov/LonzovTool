@@ -3,6 +3,7 @@ import { ref } from 'vue'
 const showUpdateModal = ref(false)
 const popupTitle = ref('')
 const popupContent = ref('')
+const popupButtons = ref([])
 let pendingRegistration = null
 let shouldReload = false
 
@@ -74,6 +75,7 @@ async function handleUpdate(reg) {
       } else {
         popupContent.value = ''
       }
+      popupButtons.value = Array.isArray(data?.buttons) ? data.buttons : []
       pendingRegistration = reg
       showUpdateModal.value = true
     }
@@ -143,5 +145,5 @@ export function useSWUpdate() {
     pendingRegistration = null
   }
 
-  return { showUpdateModal, popupTitle, popupContent, initSW, applyUpdate, deferUpdate }
+  return { showUpdateModal, popupTitle, popupContent, popupButtons, initSW, applyUpdate, deferUpdate }
 }
