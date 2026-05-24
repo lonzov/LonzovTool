@@ -137,12 +137,35 @@ function handleBackupParse() {
   showDownloadModal.value = false
 }
 
+// 临时记录：已提示过复制失败的 slug 集合，下次点击不再拦截
+const _copyFailedSlugs = new Set()
+
 async function handleOriginalLink() {
   reportDownload()
   const pwd = config.value?.lanzou?.password
-  if (pwd) {
-    try { await navigator.clipboard.writeText(pwd); message.success('密码已复制', { duration: 1800 }) }
-    catch { message.error('复制失败', { duration: 1800 }) }
+  const slug = pageName.value
+  if (pwd && !_copyFailedSlugs.has(slug)) {
+    let copied = false
+    try {
+      await navigator.clipboard.writeText(pwd)
+      copied = true
+    } catch {
+      try {
+        const textarea = document.createElement('textarea')
+        textarea.value = pwd
+        textarea.setAttribute('readonly', '')
+        textarea.style.cssText = 'position:fixed;left:-9999px'
+        document.body.appendChild(textarea)
+        textarea.select()
+        copied = !!document.execCommand('copy')
+        document.body.removeChild(textarea)
+      } catch { /* ignore */ }
+    }
+    if (!copied) {
+      _copyFailedSlugs.add(slug)
+      message.error(`复制失败，请在记住密码 ${pwd} 后再次点击`, { duration: 6000 })
+      return
+    }
   }
   window.open(config.value.lanzou.url, '_blank')
   showDownloadModal.value = false
@@ -387,7 +410,7 @@ watch(config, (val) => {
               <NIcon :component="ArrowDownload24Filled" :size="22" class="dl-option-icon" />
               <div class="dl-option-text">
                 <span class="dl-option-title">蓝奏云网盘</span>
-                <span class="dl-option-desc">解析失效时使用，密码会自动复制</span>
+                <span class="dl-option-desc">解析失效时使用，密码会自动复制({{ config.lanzou.password }})</span>
               </div>
               <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
             </div>
