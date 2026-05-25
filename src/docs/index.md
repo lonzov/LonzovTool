@@ -1,8 +1,12 @@
+> 常见问题在底部
+
 # 关于本站
 
 ## 什么是小舟工具箱？
 
 这是一个<a href="https://minecraft.net" target="_blank" rel="noopener" referrerpolicy="origin">Minecraft</a>基岩版 **指令工具聚合平台**​​。提供**在线** [ID查询](/?search=id)、[智能补全](/?search=命令助手) 与各种快捷工具，浏览器点开即用，让复杂重复变得简单高效。
+
+<iframe src="//player.bilibili.com/player.html?isOutside=true&amp;aid=116619267281992&amp;bvid=BV1i6Ga6EELe&amp;cid=38536282740&amp;p=1&amp;autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width:100%;aspect-ratio:16/9;"></iframe>
 
 ## 关于这个项目
 
@@ -11,6 +15,13 @@
 代码谈不上优雅，结构也未必规范——但，它能跑，能用，还能帮到别人，我就挺开心的。
 
 > ~~（原想写”能用就行”，但想了想…既然放出来了，还是得稍微认真点 :）~~
+
+## 关注我们
+
+如果你觉得这东西还算有用，不妨点个 Star、分享给身边的朋友  
+你的每一个关注和点赞，都是我继续折腾下去的动力 :)
+
+> [Bilibili](https://space.bilibili.com/3494378672753456) | [抖音](https://www.douyin.com/user/MS4wLjABAAAADj8IaLSifYcIu5tcIOncHXGk_LjpeyRE7MJUV7xbIaK6A4Hijh1E--IiII91dFCn) | [GitHub](https://github.com/lonzov/lonzovtool)
 
 ## 开源协议
 

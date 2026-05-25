@@ -36,6 +36,7 @@
           <h3 class="footer-title">友链推荐</h3>
           <ul class="footer-list">
             <li><a href="https://www.rainyun.com/lonzov_?s=tool_foot" target="_blank" rel="noopener" referrerpolicy="origin">雨云</a></li>
+            <li><a href="https://blog.lonzov.top/" target="_blank" rel="noopener" referrerpolicy="origin">一叶舟记</a></li>
           </ul>
         </div>
         <div class="footer-section">
