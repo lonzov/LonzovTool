@@ -2,7 +2,7 @@
 
 ## 什么是小舟工具箱？
 
-这是一个<a href="https://minecraft.net" target="_blank" rel="noopener">Minecraft</a>基岩版 **指令工具聚合平台**​​。提供**在线** [ID查询](/?search=id)、[智能补全](/?search=命令助手) 与各种快捷工具，浏览器点开即用，让复杂重复变得简单高效。
+这是一个<a href="https://minecraft.net" target="_blank" rel="noopener" referrerpolicy="origin">Minecraft</a>基岩版 **指令工具聚合平台**​​。提供**在线** [ID查询](/?search=id)、[智能补全](/?search=命令助手) 与各种快捷工具，浏览器点开即用，让复杂重复变得简单高效。
 
 ## 关于这个项目
 
@@ -32,8 +32,8 @@
 # 建议&反馈
 
 - 在线反馈：<span class="trigger-feedback">点击填写</span>
-- 邮件：<a href="mailto:i@lonzov.top" target="_blank" rel="noopener">i@lonzov.top</a>
-- QQ群: <a href="https://qm.qq.com/q/hjTqUyIKEo" target="_blank" rel="noopener">587984701</a>
+- 邮件：<a href="mailto:i@lonzov.top" target="_blank" rel="noopener" referrerpolicy="origin">i@lonzov.top</a>
+- QQ群: <a href="https://qm.qq.com/q/hjTqUyIKEo" target="_blank" rel="noopener" referrerpolicy="origin">587984701</a>
 
 <iframe-form src="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnSkK8TS3y8eR4bnHkI1wmlc" height="600" key="feedback" />
 

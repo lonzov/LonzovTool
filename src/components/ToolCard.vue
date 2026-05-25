@@ -264,6 +264,7 @@ export default {
           href: this.link,
           target: isInternal ? '' : '_blank',
           rel: isInternal ? '' : 'noopener',
+          referrerpolicy: isInternal ? '' : 'origin',
           onClick: (e) => {
             // 站内链接：拦截默认行为，走 SPA 路由（预渲染时 JS 未执行则正常跳转 <a>）
             if (isInternal) {
