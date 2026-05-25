@@ -1,12 +1,13 @@
 <script setup>
 import { watch, nextTick } from 'vue'
-import { NModal, NConfigProvider } from 'naive-ui'
+import { NModal, NConfigProvider, useMessage } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { useTheme } from '../composables/useTheme'
 import { useSWUpdate } from '../composables/useSWUpdate'
 
 const { isDark } = useTheme()
 const { showUpdateModal, popupTitle, popupContent, popupButtons, applyUpdate, deferUpdate } = useSWUpdate()
+const message = useMessage()
 
 /** 处理按钮点击 */
 function handleButtonClick(btn) {
@@ -14,6 +15,7 @@ function handleButtonClick(btn) {
     window.open(btn.link, '_blank', 'noopener')
   } else if (btn.action === 'update_sw') {
     applyUpdate()
+    message.success('更新完成，即将刷新…', { duration: 1800 })
   } else if (btn.action === 'close' || !btn.action) {
     deferUpdate()
   }
