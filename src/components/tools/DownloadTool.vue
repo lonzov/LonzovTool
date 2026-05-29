@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { NIcon, NModal, NConfigProvider, NNumberAnimation, useMessage } from 'naive-ui'
+import { NIcon, NModal, NConfigProvider, NCascader, NNumberAnimation, useMessage } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { PersonBoard24Filled, Link24Filled, ArrowDownload24Filled, ArrowUpRight20Filled } from '@vicons/fluent'
 import { useTheme } from '../../composables/useTheme'
@@ -111,13 +111,45 @@ watch(showDownloadModal, (val) => {
 })
 
 function openDownloadModal() {
-  if (!config.value?.lanzou?.url) return
+  if (!currentLanzou.value) return
   showDownloadModal.value = true
 }
 
+// ===== 多版本选择 =====
+const selectedVersionIndex = ref(0)
+
+/** 将 lanzou 统一为数组格式（兼容旧对象格式） */
+const lanzouList = computed(() => {
+  const lz = config.value?.lanzou
+  if (!lz) return []
+  return Array.isArray(lz) ? lz : [lz]
+})
+
+/** 是否存在多版本 */
+const hasMultiVersion = computed(() => lanzouList.value.length > 1)
+
+/** 当前选中版本的下载信息 */
+const currentLanzou = computed(() => {
+  const list = lanzouList.value
+  return list[selectedVersionIndex.value] || list[0] || null
+})
+
+/** Cascader options：单层结构，value 为索引 */
+const cascaderOptions = computed(() =>
+  lanzouList.value.map((item, idx) => ({
+    value: idx,
+    label: item.version || `版本 ${idx + 1}`,
+  }))
+)
+
+/** 打开模态框时重置为最新版本（第一个） */
+watch(showDownloadModal, (val) => {
+  if (val) selectedVersionIndex.value = 0
+})
+
 /** 构造API解析链接 */
 function buildApiUrl(apiType) {
-  const lz = config.value?.lanzou
+  const lz = currentLanzou.value
   if (!lz) return ''
   if (apiType === 1) {
     return `https://lz.qaiu.top/parser?url=${encodeURIComponent(lz.url)}&pwd=${encodeURIComponent(lz.password)}`
@@ -142,7 +174,8 @@ const _copyFailedSlugs = new Set()
 
 async function handleOriginalLink() {
   reportDownload()
-  const pwd = config.value?.lanzou?.password
+  const lz = currentLanzou.value
+  const pwd = lz?.password
   const slug = pageName.value
   if (pwd && !_copyFailedSlugs.has(slug)) {
     let copied = false
@@ -167,7 +200,7 @@ async function handleOriginalLink() {
       return
     }
   }
-  window.open(config.value.lanzou.url, '_blank')
+  window.open(lz.url, '_blank')
   showDownloadModal.value = false
 }
 
@@ -387,7 +420,19 @@ watch(config, (val) => {
           closable
           :auto-focus="false"
         >
-          <div class="dl-modal-desc">选择一个适合你的下载方式</div>
+          <div class="dl-modal-header-row">
+            <span class="dl-modal-desc">选择一个适合你的下载方式</span>
+            <NCascader
+              v-if="hasMultiVersion"
+              v-model:value="selectedVersionIndex"
+              :options="cascaderOptions"
+              placeholder="选择版本"
+              :show-path="false"
+              placement="bottom-end"
+              size="medium"
+              class="dl-version-cascader"
+            />
+          </div>
 
           <div class="dl-options">
             <div class="dl-option" @click="handleDirectParse">
@@ -410,7 +455,7 @@ watch(config, (val) => {
               <NIcon :component="ArrowDownload24Filled" :size="22" class="dl-option-icon" />
               <div class="dl-option-text">
                 <span class="dl-option-title">蓝奏云网盘</span>
-                <span class="dl-option-desc">解析失效时使用，密码会自动复制({{ config.lanzou.password }})</span>
+                <span class="dl-option-desc">解析失效时使用，密码会自动复制({{ currentLanzou.password }})</span>
               </div>
               <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
             </div>
@@ -705,14 +750,29 @@ watch(config, (val) => {
   color: rgba(255, 255, 255, 1) !important;
 }
 
+/* ===== 版本选择行（文字 + 级联选择器同一行） ===== */
+.dl-modal-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
 .dl-modal-desc {
   font-size: 14px;
   line-height: 1.6;
   color: rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
 }
 
 [data-theme='dark'] .dl-modal-desc {
   color: rgba(255, 255, 255, 0.6);
+}
+
+/* ===== 版本级联选择器 ===== */
+.dl-version-cascader {
+  flex: 1;
+  max-width: 180px;
+  min-width: 0;
 }
 
 .dl-options {
@@ -906,5 +966,34 @@ watch(config, (val) => {
   .intro-text {
     font-size: 14px;
   }
+}
+</style>
+
+<!-- 非 scoped：级联选择器下拉菜单被 teleport 到 body，scoped 样式无法触及 -->
+<style>
+/* 级联选择器下拉面板描边 + 配色（与搜索引擎下拉菜单一致，直接选择器，不使用父选择器） */
+.n-cascader-menu {
+  --n-menu-color: var(--bg-card) !important;
+  --n-option-color-hover: var(--bg-sub) !important;
+  --n-option-text-color: var(--text-primary) !important;
+  --n-menu-divider-color: var(--border-color) !important;
+  --n-column-width: 126px !important;
+  --n-menu-height: calc(var(--n-option-height) * 2) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+[data-theme='light'] .n-cascader-menu,
+html:not([data-theme='dark']) .n-cascader-menu {
+  box-shadow:
+    0 3px 6px -4px rgba(0, 0, 0, 0.16),
+    0 6px 16px 0 rgba(0, 0, 0, 0.12),
+    0 9px 28px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme='dark'] .n-cascader-menu {
+  box-shadow:
+    0 3px 6px -4px rgba(0, 0, 0, 0.48),
+    0 6px 12px 0 rgba(0, 0, 0, 0.36),
+    0 9px 18px 8px rgba(0, 0, 0, 0.24) !important;
 }
 </style>
