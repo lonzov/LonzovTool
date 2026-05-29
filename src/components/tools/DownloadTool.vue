@@ -832,7 +832,7 @@ onUnmounted(() => unsubGlow(handleGlow))
   border-radius: inherit;
   padding: 1px;
   background: radial-gradient(
-    150px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    250px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
     rgba(255, 255, 255, 1)     0%,
     rgba(255, 255, 255, 0.55) 5%,
     rgba(255, 255, 255, 0.31) 10%,
