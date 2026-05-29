@@ -781,6 +781,11 @@ watch(config, (val) => {
   min-width: 0;
 }
 
+.dl-version-cascader :deep(.n-base-selection),
+.dl-version-cascader :deep(.n-base-selection-label) {
+  border-radius: 100px !important;
+}
+
 .dl-options {
   margin-top: 16px;
   display: flex;
@@ -984,7 +989,18 @@ watch(config, (val) => {
   --n-option-text-color: var(--text-primary) !important;
   --n-menu-divider-color: var(--border-color) !important;
   --n-column-width: 126px !important;
+  --n-menu-border-radius:8px !important;
   border: 1px solid var(--border-color) !important;
+}
+
+/* 级联选择器 focus 状态不改变边框样式 */
+.dl-version-cascader .n-base-selection {
+  --n-border: 1px solid var(--border-color) !important;
+  --n-border-hover: 1px solid var(--border-color) !important;
+  --n-border-focus: 1px solid var(--border-color) !important;
+  --n-border-active: 1px solid var(--border-color) !important;
+  --n-box-shadow-focus: none !important;
+  --n-box-shadow-active: none !important;
 }
 
 [data-theme='light'] .n-cascader-menu,
