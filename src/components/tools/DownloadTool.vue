@@ -142,6 +142,11 @@ const cascaderOptions = computed(() =>
   }))
 )
 
+/** 下拉菜单高度随版本数自适应 */
+const cascaderMenuProps = computed(() => ({
+  style: { '--n-menu-height': `calc(var(--n-option-height) * ${lanzouList.value.length})` }
+}))
+
 /** 打开模态框时重置为最新版本（第一个） */
 watch(showDownloadModal, (val) => {
   if (val) selectedVersionIndex.value = 0
@@ -428,6 +433,7 @@ watch(config, (val) => {
               :options="cascaderOptions"
               placeholder="选择版本"
               :show-path="false"
+              :menu-props="cascaderMenuProps"
               placement="bottom-end"
               size="medium"
               class="dl-version-cascader"
@@ -771,7 +777,7 @@ watch(config, (val) => {
 /* ===== 版本级联选择器 ===== */
 .dl-version-cascader {
   flex: 1;
-  max-width: 180px;
+  max-width:120px;
   min-width: 0;
 }
 
@@ -978,7 +984,6 @@ watch(config, (val) => {
   --n-option-text-color: var(--text-primary) !important;
   --n-menu-divider-color: var(--border-color) !important;
   --n-column-width: 126px !important;
-  --n-menu-height: calc(var(--n-option-height) * 2) !important;
   border: 1px solid var(--border-color) !important;
 }
 
