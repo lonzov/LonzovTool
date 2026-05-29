@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { NIcon, NModal, NConfigProvider, NCascader, NNumberAnimation, useMessage } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { PersonBoard24Filled, Link24Filled, ArrowDownload24Filled, ArrowUpRight20Filled } from '@vicons/fluent'
 import { useTheme } from '../../composables/useTheme'
+import { useMouseGlow } from '../../composables/useMouseGlow'
 
 const props = defineProps({
   tabPath: {
@@ -342,6 +343,36 @@ function reportDownload() {
 watch(config, (val) => {
   if (val) fetchDownloadCount()
 }, { immediate: true })
+
+// ===== 鼠标跟随边框高光（照抄 ToolCard 实现） =====
+const { subscribe: subGlow, unsubscribe: unsubGlow } = useMouseGlow()
+
+const GLOW_SELECTORS = '.dl-version-cascader .n-base-selection, .dl-option'
+
+function handleGlow(mouseX, mouseY) {
+  if (!showDownloadModal.value) return
+  const els = document.querySelectorAll(GLOW_SELECTORS)
+  els.forEach((el) => {
+    const rect = el.getBoundingClientRect()
+    const x = mouseX - rect.left
+    const y = mouseY - rect.top
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+    const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
+    const threshold = Math.sqrt(rect.width ** 2 + rect.height ** 2) * 1.8
+
+    if (dist < threshold) {
+      el.style.setProperty('--mouse-x', `${x}px`)
+      el.style.setProperty('--mouse-y', `${y}px`)
+      el.classList.add('glow-active')
+    } else {
+      el.classList.remove('glow-active')
+    }
+  })
+}
+
+onMounted(() => subGlow(handleGlow))
+onUnmounted(() => unsubGlow(handleGlow))
 </script>
 
 <template>
@@ -786,6 +817,48 @@ watch(config, (val) => {
   border-radius: 100px !important;
 }
 
+.dl-version-cascader :deep(.n-base-selection) {
+  position: relative;
+  z-index: 0;
+}
+
+/* ===== 鼠标跟随边框高光（照抄 ToolCard） ===== */
+/* 级联选择器：高光在 .n-base-selection 层（有圆角的那层） */
+.dl-version-cascader :deep(.n-base-selection)::before,
+.dl-option::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    150px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 1)     0%,
+    rgba(255, 255, 255, 0.55) 5%,
+    rgba(255, 255, 255, 0.31) 10%,
+    rgba(255, 255, 255, 0.18) 15%,
+    rgba(255, 255, 255, 0.12) 20%,
+    rgba(255, 255, 255, 0.07) 30%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(255, 255, 255, 0.02) 55%,
+    rgba(255, 255, 255, 0.01) 70%,
+    transparent                 100%
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: destination-out;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+  transition: opacity 0.2s ease;
+}
+
+.dl-version-cascader :deep(.n-base-selection.glow-active)::before,
+.dl-option.glow-active::before {
+  opacity: 1;
+}
+
 .dl-options {
   margin-top: 16px;
   display: flex;
@@ -801,6 +874,8 @@ watch(config, (val) => {
   display: flex;
   align-items: center;
   gap: 14px;
+  position: relative;
+  z-index: 0;
 }
 
 [data-theme='light'] .dl-option:hover { background: #F0F2F5; }
