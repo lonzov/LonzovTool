@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.0.11'
+const CACHE_VERSION = '3.0.12'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
@@ -180,7 +180,7 @@ self.addEventListener('message', (event) => {
         content: `
         <h3>宣传视频已发布，还请多多三连呀~😭👊</h3><br>
         <h4>👾 更新日志：</h4>
-        <p>[~] 修复下载页密码复制失败<br>[↑] 指令音符盒同步v3.0<br>[~] 优化缓存逻辑，大幅提升加载速度<br>[+] 工具站输入内容现在会自动草稿保存，离开后内容不丢失</p>
+        <p>[+] 下载页支持选择历史版本<br>[~] 修复下载页密码复制失败<br>[↑] 指令音符盒同步v3.0<br>[~] 优化缓存逻辑，大幅提升加载速度<br>[+] 工具站输入内容现在会自动草稿保存，离开后内容不丢失</p>
         `,
         buttons: [
           { text: '立即更新', style: 'fill', action: 'update_sw' },
