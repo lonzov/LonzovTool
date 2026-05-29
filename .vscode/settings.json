@@ -15,5 +15,8 @@
     "editor.codeActionsOnSave": {
       "source.fixAll": "never"
     }
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
   }
 }
