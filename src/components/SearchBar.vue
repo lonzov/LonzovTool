@@ -314,6 +314,7 @@ export default {
 /* 搜索方式下拉菜单描边（包括二级菜单） */
 .n-dropdown-menu {
   border: 1px solid var(--border-color) !important;
+  border-radius: 6px !important;
 }
 
 /* 加强搜索方式下拉菜单阴影 */
