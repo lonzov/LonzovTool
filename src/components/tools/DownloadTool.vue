@@ -457,7 +457,7 @@ onUnmounted(() => unsubGlow(handleGlow))
           :auto-focus="false"
         >
           <div class="dl-modal-header-row">
-            <span class="dl-modal-desc">选择一个适合你的下载方式</span>
+            <span class="dl-modal-desc">{{ hasMultiVersion ? '请选择下载方式和版本' : '选择一个适合你的下载方式' }}</span>
             <NCascader
               v-if="hasMultiVersion"
               v-model:value="selectedVersionIndex"
@@ -859,6 +859,23 @@ onUnmounted(() => unsubGlow(handleGlow))
   opacity: 1;
 }
 
+[data-theme='light'] .dl-version-cascader :deep(.n-base-selection)::before,
+[data-theme='light'] .dl-option::before {
+  background: radial-gradient(
+    300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(180, 180, 180, 1)     0%,
+    rgba(180, 180, 180, 0.55)  5%,
+    rgba(180, 180, 180, 0.31) 10%,
+    rgba(180, 180, 180, 0.18) 15%,
+    rgba(180, 180, 180, 0.12) 20%,
+    rgba(180, 180, 180, 0.07) 30%,
+    rgba(180, 180, 180, 0.04) 40%,
+    rgba(180, 180, 180, 0.02) 55%,
+    rgba(180, 180, 180, 0.01) 70%,
+    transparent                100%
+  );
+}
+
 .dl-options {
   margin-top: 16px;
   display: flex;
@@ -1076,6 +1093,11 @@ onUnmounted(() => unsubGlow(handleGlow))
   --n-border-active: 1px solid var(--border-color) !important;
   --n-box-shadow-focus: none !important;
   --n-box-shadow-active: none !important;
+}
+
+/* 级联选择器触发器深色模式背景 */
+[data-theme='dark'] .dl-version-cascader .n-base-selection {
+  --n-color: #191919 !important;
 }
 
 [data-theme='light'] .n-cascader-menu,
