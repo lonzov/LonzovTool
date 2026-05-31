@@ -101,6 +101,7 @@ src/
 │   ├── WorkspaceView.vue # 工作区视图容器，管理多标签页
 │   └── tools/           # 内置工具页面组件
 │       ├── ArtTextTool.vue     # 艺术字转换工具页
+│       ├── DownloadModal.vue   # 下载方式选择模态框
 │       ├── DownloadTool.vue    # 工具下载页（蓝奏云解析）
 │       ├── TrAnimationTool.vue # T显动画编辑器工具页
 │       ├── ExecuteTool.vue     # 语法转换工具页

@@ -1,11 +1,9 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { NIcon, NModal, NConfigProvider, NCascader, NNumberAnimation, useMessage } from 'naive-ui'
-import { darkTheme } from 'naive-ui'
-import { PersonBoard24Filled, Link24Filled, ArrowDownload24Filled, ArrowUpRight20Filled } from '@vicons/fluent'
-import { useTheme } from '../../composables/useTheme'
-import { useMouseGlow } from '../../composables/useMouseGlow'
+import { NIcon, NNumberAnimation, useMessage } from 'naive-ui'
+import { PersonBoard24Filled } from '@vicons/fluent'
+import DownloadModal from './DownloadModal.vue'
 
 const props = defineProps({
   tabPath: {
@@ -17,18 +15,14 @@ const props = defineProps({
 const route = useRoute()
 const message = useMessage()
 
-// 从路由参数解析页面名称
 const pageName = computed(() => {
-  // 优先使用 props.tabPath（WorkspaceView 传入），其次用路由参数，最后从 path 解析
   if (props.tabPath) {
     return props.tabPath.replace(/\/+$/, '').split('/').pop() || ''
   }
-  // /down/:path 路由，直接取 params
   const param = route.params.path
   if (param && typeof param === 'string') {
     return param.replace(/\/+$/, '')
   }
-  // fallback: 从完整路径取最后一段
   return route.path.replace(/\/+$/, '').split('/').pop() || ''
 })
 
@@ -61,178 +55,33 @@ onMounted(() => { loadConfig() })
 
 // ===== 下载逻辑 =====
 const showDownloadModal = ref(false)
-const { isDark } = useTheme()
-
-// 覆盖Naive弹窗背景色为主区域卡片同色（--bg-card: 浅色#FFFFFF, 深色#191919）
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
-
-const lightOverrides = {
-  common: { neutralModal: '#FFFFFF' },
-  Card: { colorModal: '#FFFFFF' },
-}
-
-// 手动创建模糊遮罩（NModal 自带遮罩不支持 backdrop-filter + 遮罩不够黑）
-watch(showDownloadModal, (val) => {
-  if (val) {
-    nextTick(() => {
-      const existing = document.getElementById('download-blur-overlay')
-      if (!existing) {
-        const overlay = document.createElement('div')
-        overlay.id = 'download-blur-overlay'
-        overlay.style.cssText = [
-          'position: fixed',
-          'top: 0',
-          'left: 0',
-          'right: 0',
-          'bottom: 0',
-          'z-index: 1000',
-          '-webkit-backdrop-filter: blur(8px)',
-          'backdrop-filter: blur(8px)',
-          'background: rgba(0, 0, 0, 0.1)',
-          'pointer-events: none',
-          'opacity: 0',
-          'transition: opacity 0.3s ease'
-        ].join(';')
-        document.body.appendChild(overlay)
-        requestAnimationFrame(() => {
-          overlay.style.opacity = '1'
-        })
-      }
-    })
-  } else {
-    const overlay = document.getElementById('download-blur-overlay')
-    if (overlay) {
-      overlay.style.opacity = '0'
-      setTimeout(() => overlay.remove(), 300)
-    }
-  }
-})
 
 function openDownloadModal() {
-  if (!currentLanzou.value) return
+  const lz = config.value?.lanzou
+  if (!lz) return
+  if (Array.isArray(lz) && lz.length === 0) return
   showDownloadModal.value = true
 }
 
-// ===== 多版本选择 =====
-const selectedVersionIndex = ref(0)
-
-/** 将 lanzou 统一为数组格式（兼容旧对象格式） */
-const lanzouList = computed(() => {
-  const lz = config.value?.lanzou
-  if (!lz) return []
-  return Array.isArray(lz) ? lz : [lz]
-})
-
-/** 是否存在多版本 */
-const hasMultiVersion = computed(() => lanzouList.value.length > 1)
-
-/** 当前选中版本的下载信息 */
-const currentLanzou = computed(() => {
-  const list = lanzouList.value
-  return list[selectedVersionIndex.value] || list[0] || null
-})
-
-/** Cascader options：单层结构，value 为索引 */
-const cascaderOptions = computed(() =>
-  lanzouList.value.map((item, idx) => ({
-    value: idx,
-    label: item.version || `版本 ${idx + 1}`,
-  }))
-)
-
-/** 下拉菜单高度随版本数自适应 */
-const cascaderMenuProps = computed(() => ({
-  style: { '--n-menu-height': `calc(var(--n-option-height) * ${lanzouList.value.length})` }
-}))
-
-/** 打开模态框时重置为最新版本（第一个） */
-watch(showDownloadModal, (val) => {
-  if (val) selectedVersionIndex.value = 0
-})
-
-/** 构造API解析链接 */
-function buildApiUrl(apiType) {
-  const lz = currentLanzou.value
-  if (!lz) return ''
-  if (apiType === 1) {
-    return `https://lz.qaiu.top/parser?url=${encodeURIComponent(lz.url)}&pwd=${encodeURIComponent(lz.password)}`
-  }
-  return `https://api.lonzov.top/lanzou/index.php?url=${encodeURIComponent(lz.url)}&pwd=${encodeURIComponent(lz.password)}&type=down`
-}
-
-function handleDirectParse() {
-  reportDownload()
-  window.open(buildApiUrl(1), '_blank')
-  showDownloadModal.value = false
-}
-
-function handleBackupParse() {
-  reportDownload()
-  window.open(buildApiUrl(2), '_blank')
-  showDownloadModal.value = false
-}
-
-// 临时记录：已提示过复制失败的 slug 集合，下次点击不再拦截
-const _copyFailedSlugs = new Set()
-
-async function handleOriginalLink() {
-  reportDownload()
-  const lz = currentLanzou.value
-  const pwd = lz?.password
-  const slug = pageName.value
-  if (pwd && !_copyFailedSlugs.has(slug)) {
-    let copied = false
-    try {
-      await navigator.clipboard.writeText(pwd)
-      copied = true
-    } catch {
-      try {
-        const textarea = document.createElement('textarea')
-        textarea.value = pwd
-        textarea.setAttribute('readonly', '')
-        textarea.style.cssText = 'position:fixed;left:-9999px'
-        document.body.appendChild(textarea)
-        textarea.select()
-        copied = !!document.execCommand('copy')
-        document.body.removeChild(textarea)
-      } catch { /* ignore */ }
-    }
-    if (!copied) {
-      _copyFailedSlugs.add(slug)
-      message.error(`复制失败，请在记住密码 ${pwd} 后再次点击`, { duration: 6000 })
-      return
-    }
-  }
-  window.open(lz.url, '_blank')
-  showDownloadModal.value = false
-}
-
-// 开发者点击
 function handleDeveloperClick() {
   if (config.value?.developerLink) {
     window.open(config.value.developerLink, '_blank')
   }
 }
 
-// ===== 下载次数统计（多层缓存） =====
-const CACHE_KEY = 'dl_count_cache'       // localStorage 缓存 key
-const COOLDOWN_KEY = 'dl_count_log'      // 上报限速 key（复用已有）
-const CACHE_TTL_MS = 3 * 60 * 1000       // 缓存有效期 3 分钟
-// 内存缓存（跨组件实例共享）
-const memoryCache = new Map()             // slug → { count, ts }
+// ===== 下载次数统计 =====
+const CACHE_KEY = 'dl_count_cache'
+const COOLDOWN_KEY = 'dl_count_log'
+const CACHE_TTL_MS = 3 * 60 * 1000
+const memoryCache = new Map()
 
 const dlCount = ref(0)
 const dlCountFetched = ref(false)
 
-/** 验证下载量数值：必须为 8 位及以内的正整数 */
 function isValidCount(val) {
   return typeof val === 'number' && Number.isInteger(val) && val >= 0 && val < 1e8
 }
 
-/** 读取 localStorage 缓存 */
 function readLocalCache(slug) {
   try {
     const raw = localStorage.getItem(CACHE_KEY)
@@ -244,7 +93,6 @@ function readLocalCache(slug) {
   } catch { return null }
 }
 
-/** 写入 localStorage 缓存 */
 function writeLocalCache(slug, count, ts) {
   try {
     const raw = localStorage.getItem(CACHE_KEY)
@@ -254,7 +102,6 @@ function writeLocalCache(slug, count, ts) {
   } catch { /* ignore */ }
 }
 
-/** 检查上报冷却（3 分钟限速） */
 function shouldReport(slug) {
   try {
     const raw = localStorage.getItem(COOLDOWN_KEY)
@@ -266,7 +113,6 @@ function shouldReport(slug) {
   } catch { return true }
 }
 
-/** 标记已上报 */
 function markReported(slug) {
   try {
     const raw = localStorage.getItem(COOLDOWN_KEY)
@@ -276,7 +122,6 @@ function markReported(slug) {
   } catch { /* ignore */ }
 }
 
-/** 获取下载次数（核心逻辑） */
 async function fetchDownloadCount() {
   const slug = pageName.value
   if (!slug) return
@@ -285,28 +130,23 @@ async function fetchDownloadCount() {
   let bestCount = isValidCount(hardcoded) ? hardcoded : 0
   let hasFreshCache = false
 
-  // 检查内存缓存
   const mem = memoryCache.get(slug)
   if (mem && isValidCount(mem.count)) {
     if (mem.count > bestCount) bestCount = mem.count
     if (Date.now() - mem.ts < CACHE_TTL_MS) hasFreshCache = true
   }
 
-  // 检查 localStorage 缓存
   const local = readLocalCache(slug)
   if (local && isValidCount(local.count)) {
     if (local.count > bestCount) bestCount = local.count
     if (Date.now() - local.ts < CACHE_TTL_MS) hasFreshCache = true
   }
 
-  // 先显示已知最大值
   dlCount.value = bestCount
   dlCountFetched.value = true
 
-  // 有任意未过期缓存则不发请求
   if (hasFreshCache) return
 
-  // 全过期，发请求
   try {
     const res = await fetch(`https://api.lonzov.top/count/?s=${encodeURIComponent(slug)}`)
     const data = await res.json()
@@ -314,21 +154,17 @@ async function fetchDownloadCount() {
     if (isValidCount(count)) {
       const now = Date.now()
       dlCount.value = count
-      // 存入内存 + localStorage
       memoryCache.set(slug, { count, ts: now })
       writeLocalCache(slug, count, now)
     }
   } catch { /* ignore */ }
 }
 
-/** 上报下载事件（点击模态框按钮时调用） */
 function reportDownload() {
   const slug = pageName.value
   if (!slug || !shouldReport(slug)) return
   markReported(slug)
-  // 静默上报
   fetch(`https://api.lonzov.top/count/?p=${encodeURIComponent(slug)}`, { mode: 'no-cors' }).catch(() => {})
-  // 本地缓存 +1
   const now = Date.now()
   let current = dlCount.value
   if (isValidCount(current)) {
@@ -339,40 +175,9 @@ function reportDownload() {
   }
 }
 
-// 配置加载完成后拉取下载次数
 watch(config, (val) => {
   if (val) fetchDownloadCount()
 }, { immediate: true })
-
-// ===== 鼠标跟随边框高光（照抄 ToolCard 实现） =====
-const { subscribe: subGlow, unsubscribe: unsubGlow } = useMouseGlow()
-
-const GLOW_SELECTORS = '.dl-version-cascader .n-base-selection, .dl-option'
-
-function handleGlow(mouseX, mouseY) {
-  if (!showDownloadModal.value) return
-  const els = document.querySelectorAll(GLOW_SELECTORS)
-  els.forEach((el) => {
-    const rect = el.getBoundingClientRect()
-    const x = mouseX - rect.left
-    const y = mouseY - rect.top
-    const centerX = rect.width / 2
-    const centerY = rect.height / 2
-    const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
-    const threshold = Math.sqrt(rect.width ** 2 + rect.height ** 2) * 1.8
-
-    if (dist < threshold) {
-      el.style.setProperty('--mouse-x', `${x}px`)
-      el.style.setProperty('--mouse-y', `${y}px`)
-      el.classList.add('glow-active')
-    } else {
-      el.classList.remove('glow-active')
-    }
-  })
-}
-
-onMounted(() => subGlow(handleGlow))
-onUnmounted(() => unsubGlow(handleGlow))
 </script>
 
 <template>
@@ -401,7 +206,7 @@ onUnmounted(() => unsubGlow(handleGlow))
         </div>
       </div>
 
-      <!-- 统计栏：三等分卡片 -->
+      <!-- 统计栏 -->
       <div class="stats-row">
         <div class="stat-item">
           <span class="stat-label">下载</span>
@@ -431,7 +236,7 @@ onUnmounted(() => unsubGlow(handleGlow))
         </div>
       </div>
 
-      <!-- 下载按钮：滑动动画 -->
+      <!-- 下载按钮 -->
       <button class="download-btn" @click="openDownloadModal">
         <div class="dl-btn-content">
           <div class="dl-btn-icon-wrap">
@@ -446,59 +251,8 @@ onUnmounted(() => unsubGlow(handleGlow))
       </button>
 
       <!-- 下载选项模态框 -->
-      <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : lightOverrides" style="display: contents">
-        <NModal
-          v-model:show="showDownloadModal"
-          preset="card"
-          :style="{ maxWidth: '540px', width: 'calc(100% - 32px)', borderRadius: '16px' }"
-          title="下载方式"
-          :bordered="false"
-          closable
-          :auto-focus="false"
-        >
-          <div class="dl-modal-header-row">
-            <span class="dl-modal-desc">{{ hasMultiVersion ? '请选择下载方式和版本' : '选择一个适合你的下载方式' }}</span>
-            <NCascader
-              v-if="hasMultiVersion"
-              v-model:value="selectedVersionIndex"
-              :options="cascaderOptions"
-              placeholder="选择版本"
-              :show-path="false"
-              :menu-props="cascaderMenuProps"
-              placement="bottom-end"
-              size="medium"
-              class="dl-version-cascader"
-            />
-          </div>
+      <DownloadModal v-model:show="showDownloadModal" :config="config" :page-name="pageName" @download="reportDownload" />
 
-          <div class="dl-options">
-            <div class="dl-option" @click="handleDirectParse">
-              <NIcon :component="Link24Filled" :size="22" class="dl-option-icon" />
-              <div class="dl-option-text">
-                <span class="dl-option-title">直链解析（推荐）</span>
-                <span class="dl-option-desc">一键下载，不可用时尝试其他通道</span>
-              </div>
-              <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
-            </div>
-            <div class="dl-option" @click="handleBackupParse">
-              <NIcon :component="Link24Filled" :size="22" class="dl-option-icon" />
-              <div class="dl-option-text">
-                <span class="dl-option-title">备用解析</span>
-                <span class="dl-option-desc">一键下载，不可用时尝试其他通道</span>
-              </div>
-              <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
-            </div>
-            <div class="dl-option" @click="handleOriginalLink">
-              <NIcon :component="ArrowDownload24Filled" :size="22" class="dl-option-icon" />
-              <div class="dl-option-text">
-                <span class="dl-option-title">蓝奏云网盘</span>
-                <span class="dl-option-desc">解析失效时使用，密码会自动复制({{ currentLanzou.password }})</span>
-              </div>
-              <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
-            </div>
-          </div>
-        </NModal>
-      </NConfigProvider>
       <p class="download-disclaimer">第三方内容，与本站无关，本站无法保证其100%的安全性和可靠性</p>
       <div class="disclaimer-divider"></div>
 
@@ -516,7 +270,7 @@ onUnmounted(() => unsubGlow(handleGlow))
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding-top: 70px; /* PC端顶部间距 */
+  padding-top: 70px;
 }
 
 /* ===== 加载状态 ===== */
@@ -568,7 +322,6 @@ onUnmounted(() => unsubGlow(handleGlow))
   display: block;
 }
 
-/* 版本号绝对定位在图片下方，不占布局空间，保证标题与图片中轴对齐 */
 .header-version {
   position: absolute;
   left: 50%;
@@ -602,7 +355,7 @@ onUnmounted(() => unsubGlow(handleGlow))
   line-height: 1.5;
 }
 
-/* ===== 统计栏：三等分无填充无描边卡片 ===== */
+/* ===== 统计栏 ===== */
 .stats-row {
   display: flex;
   align-items: stretch;
@@ -620,12 +373,11 @@ onUnmounted(() => unsubGlow(handleGlow))
   position: relative;
 }
 
-/* 分割线：通过伪元素实现，仅第1、2张卡片的右侧显示，高度65%，使用项目标准边框色 */
 .stat-item:not(:last-child)::after {
   content: '';
   position: absolute;
   right: 0;
-  top: 17.5%; /* (100%-65%)/2 = 17.5% 居中 */
+  top: 17.5%;
   height: 65%;
   width: 1px;
   background: var(--border-color);
@@ -653,7 +405,6 @@ onUnmounted(() => unsubGlow(handleGlow))
   line-height: 1.2;
 }
 
-/* 让 NumberAnimation 内部数字继承 stat-value 样式 */
 .stat-value :deep(.n-number-animation) {
   font-size: inherit;
   font-weight: inherit;
@@ -666,7 +417,6 @@ onUnmounted(() => unsubGlow(handleGlow))
   color: color-mix(in srgb, var(--text-primary) 50%, transparent);
 }
 
-/* 开发者卡片：属相排列 - 标签 / 图标 / 名字 */
 .stat-dev-icon {
   font-size: 26px;
   line-height: 1.2;
@@ -678,7 +428,7 @@ onUnmounted(() => unsubGlow(handleGlow))
   color: color-mix(in srgb, var(--text-primary) 50%, transparent);
 }
 
-/* ===== 下载按钮（滑动动画） ===== */
+/* ===== 下载按钮 ===== */
 .download-btn {
   width: 100%;
   height: 45px;
@@ -761,7 +511,6 @@ onUnmounted(() => unsubGlow(handleGlow))
   line-height: 1.5;
 }
 
-/* 免责声明下方全宽分割线，使用项目标准边框色 */
 .disclaimer-divider {
   width: 100%;
   height: 1px;
@@ -773,184 +522,6 @@ onUnmounted(() => unsubGlow(handleGlow))
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-/* ===== 下载选项模态框（仿 Cookie 模态框风格） ===== */
-
-/* 弹窗标题加粗 + 强制100%不透明度 */
-:deep(.n-card-header__main) {
-  font-weight: 700 !important;
-  color: rgba(0, 0, 0, 1) !important;
-}
-
-[data-theme='dark'] :deep(.n-card-header__main) {
-  color: rgba(255, 255, 255, 1) !important;
-}
-
-/* ===== 版本选择行（文字 + 级联选择器同一行） ===== */
-.dl-modal-header-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-}
-
-.dl-modal-desc {
-  font-size: 14px;
-  line-height: 1.6;
-  color: rgba(0, 0, 0, 0.6);
-  white-space: nowrap;
-}
-
-[data-theme='dark'] .dl-modal-desc {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* ===== 版本级联选择器 ===== */
-.dl-version-cascader {
-  flex: 1;
-  max-width:120px;
-  min-width: 0;
-}
-
-.dl-version-cascader :deep(.n-base-selection),
-.dl-version-cascader :deep(.n-base-selection-label) {
-  border-radius: 100px !important;
-}
-
-.dl-version-cascader :deep(.n-base-selection) {
-  position: relative;
-  z-index: 0;
-}
-
-/* ===== 鼠标跟随边框高光（照抄 ToolCard） ===== */
-/* 级联选择器：高光在 .n-base-selection 层（有圆角的那层） */
-.dl-version-cascader :deep(.n-base-selection)::before,
-.dl-option::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: radial-gradient(
-    250px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(255, 255, 255, 1)     0%,
-    rgba(255, 255, 255, 0.55) 5%,
-    rgba(255, 255, 255, 0.31) 10%,
-    rgba(255, 255, 255, 0.18) 15%,
-    rgba(255, 255, 255, 0.12) 20%,
-    rgba(255, 255, 255, 0.07) 30%,
-    rgba(255, 255, 255, 0.04) 40%,
-    rgba(255, 255, 255, 0.02) 55%,
-    rgba(255, 255, 255, 0.01) 70%,
-    transparent                 100%
-  );
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask-composite: destination-out;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 10;
-  transition: opacity 0.2s ease;
-}
-
-.dl-version-cascader :deep(.n-base-selection.glow-active)::before,
-.dl-option.glow-active::before {
-  opacity: 1;
-}
-
-[data-theme='light'] .dl-version-cascader :deep(.n-base-selection)::before,
-[data-theme='light'] .dl-option::before {
-  background: radial-gradient(
-    300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(180, 180, 180, 1)     0%,
-    rgba(180, 180, 180, 0.55)  5%,
-    rgba(180, 180, 180, 0.31) 10%,
-    rgba(180, 180, 180, 0.18) 15%,
-    rgba(180, 180, 180, 0.12) 20%,
-    rgba(180, 180, 180, 0.07) 30%,
-    rgba(180, 180, 180, 0.04) 40%,
-    rgba(180, 180, 180, 0.02) 55%,
-    rgba(180, 180, 180, 0.01) 70%,
-    transparent                100%
-  );
-}
-
-.dl-options {
-  margin-top: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.dl-option {
-  padding: 16px 10px;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: background-color 0.15s ease, opacity 0.15s ease;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  position: relative;
-  z-index: 0;
-}
-
-[data-theme='light'] .dl-option:hover { background: #F0F2F5; }
-[data-theme='dark'] .dl-option:hover { background: rgba(255,255,255,0.06); }
-
-.dl-option:active {
-  opacity: 0.7;
-}
-
-.dl-option-icon {
-  flex-shrink: 0;
-  color: rgba(0, 0, 0, 0.4);
-}
-
-[data-theme='dark'] .dl-option-icon {
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.dl-option-text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.dl-option-arrow {
-  flex-shrink: 0;
-  margin-left: auto;
-  color: rgba(0, 0, 0, 0.7);
-  transition: transform 0.25s ease, filter 0.25s ease;
-}
-
-[data-theme='dark'] .dl-option-arrow {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.dl-option:hover .dl-option-arrow {
-  transform: rotate(45deg);
-  filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 8px rgba(128, 128, 128, 0.3));
-}
-
-.dl-option-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 1);
-}
-
-[data-theme='dark'] .dl-option-title {
-  color: rgba(255, 255, 255, 1);
-}
-
-.dl-option-desc {
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.6);
-}
-
-[data-theme='dark'] .dl-option-desc {
-  color: rgba(255, 255, 255, 0.6);
 }
 
 .intro-title {
@@ -968,7 +539,6 @@ onUnmounted(() => unsubGlow(handleGlow))
   margin: 0;
 }
 
-/* 超链接样式（仿 docs 页面） */
 .intro-text :deep(a) {
   color: var(--text-primary);
   text-decoration: none;
@@ -1025,7 +595,7 @@ onUnmounted(() => unsubGlow(handleGlow))
 /* ===== 响应式 ===== */
 @media (max-width: 640px) {
   .download-tool {
-    padding-top: 21px; /* 移动端21px间距 */
+    padding-top: 21px;
   }
 
   .download-header {
@@ -1069,49 +639,5 @@ onUnmounted(() => unsubGlow(handleGlow))
   .intro-text {
     font-size: 14px;
   }
-}
-</style>
-
-<!-- 非 scoped：级联选择器下拉菜单被 teleport 到 body，scoped 样式无法触及 -->
-<style>
-/* 级联选择器下拉面板描边 + 配色（与搜索引擎下拉菜单一致，直接选择器，不使用父选择器） */
-.n-cascader-menu {
-  --n-menu-color: var(--bg-card) !important;
-  --n-option-color-hover: var(--bg-sub) !important;
-  --n-option-text-color: var(--text-primary) !important;
-  --n-menu-divider-color: var(--border-color) !important;
-  --n-column-width: 126px !important;
-  --n-menu-border-radius:8px !important;
-  border: 1px solid var(--border-color) !important;
-}
-
-/* 级联选择器 focus 状态不改变边框样式 */
-.dl-version-cascader .n-base-selection {
-  --n-border: 1px solid var(--border-color) !important;
-  --n-border-hover: 1px solid var(--border-color) !important;
-  --n-border-focus: 1px solid var(--border-color) !important;
-  --n-border-active: 1px solid var(--border-color) !important;
-  --n-box-shadow-focus: none !important;
-  --n-box-shadow-active: none !important;
-}
-
-/* 级联选择器触发器深色模式背景 */
-[data-theme='dark'] .dl-version-cascader .n-base-selection {
-  --n-color: #191919 !important;
-}
-
-[data-theme='light'] .n-cascader-menu,
-html:not([data-theme='dark']) .n-cascader-menu {
-  box-shadow:
-    0 3px 6px -4px rgba(0, 0, 0, 0.16),
-    0 6px 16px 0 rgba(0, 0, 0, 0.12),
-    0 9px 28px 8px rgba(0, 0, 0, 0.08) !important;
-}
-
-[data-theme='dark'] .n-cascader-menu {
-  box-shadow:
-    0 3px 6px -4px rgba(0, 0, 0, 0.48),
-    0 6px 12px 0 rgba(0, 0, 0, 0.36),
-    0 9px 18px 8px rgba(0, 0, 0, 0.24) !important;
 }
 </style>
