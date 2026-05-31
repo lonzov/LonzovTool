@@ -178,6 +178,12 @@
       "parentMenuId": "websites",
       "tools": [
         {
+          "title": "Paul 指令社区",
+          "description": "针对网易版指令创作者的交易与答疑平台",
+          "logo": "/logos/center_beelzebul_top.webp",
+          "link": "https://center.beelzebul.top/"
+        },
+        {
           "title": "苦力怕论坛",
           "description": "最大的基岩版中文资源、交流论坛之一",
           "logo": "/logos/klpbbs_com.webp",
