@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { NIcon, useMessage, NSwitch } from 'naive-ui'
 import { CurrencyDollarEuro20Regular } from '@vicons/fluent'
 import { useMouseGlow } from '../../composables/useMouseGlow.js'
@@ -55,6 +55,7 @@ const rawIcons = [
 ]
 
 // 处理图标数据：计算背景位置和字符
+const NULL_CHAR = String.fromCharCode(0)
 const iconsData = rawIcons.map((icon, index) => {
   const row = Math.floor(index / SPRITE_CONFIG.iconsPerRow)
   const col = index % SPRITE_CONFIG.iconsPerRow
@@ -63,7 +64,7 @@ const iconsData = rawIcons.map((icon, index) => {
     return {
       index,
       codePointHex: 'a0a',
-      character: 'a\u0000a',
+      character: 'a' + NULL_CHAR + 'a',
       bgPositionX: -col * SPRITE_CONFIG.iconWidth,
       bgPositionY: -row * SPRITE_CONFIG.iconHeight,
     }
@@ -80,6 +81,60 @@ const iconsData = rawIcons.map((icon, index) => {
 
 const spriteWidth = SPRITE_CONFIG.iconsPerRow * SPRITE_CONFIG.iconWidth
 const spriteHeight = Math.ceil(iconsData.length / SPRITE_CONFIG.iconsPerRow) * SPRITE_CONFIG.iconHeight
+
+// ===== 字符到图标映射（仅单字符条目，排除 a0a） =====
+const charToIconMap = new Map()
+iconsData.forEach((icon) => {
+  if (icon.codePointHex !== 'a0a') {
+    charToIconMap.set(icon.character, icon)
+  }
+})
+
+const PREVIEW_SPRITE_SIZE = 24
+const PREVIEW_SPRITE_SCALE = 2.5
+const PREVIEW_ICON_SIZE = PREVIEW_SPRITE_SIZE * PREVIEW_SPRITE_SCALE
+const previewIconScale = PREVIEW_ICON_SIZE / SPRITE_CONFIG.iconWidth
+
+// ===== 验证输入 =====
+const verifyInput = ref('')
+
+const previewSegments = computed(() => {
+  const chars = [...verifyInput.value]
+  const segments = []
+  let textBuf = ''
+  for (const char of chars) {
+    const icon = charToIconMap.get(char)
+    if (icon) {
+      if (textBuf) { segments.push({ type: 'text', text: textBuf }); textBuf = '' }
+      segments.push({ type: 'icon', icon })
+    } else if (char.charCodeAt(0) === 0) {
+      if (textBuf) { segments.push({ type: 'text', text: textBuf }); textBuf = '' }
+      segments.push({ type: 'dot' })
+    } else {
+      textBuf += char
+    }
+  }
+  if (textBuf) segments.push({ type: 'text', text: textBuf })
+  return segments
+})
+
+function getPreviewSpriteStyle(icon) {
+  return {
+    backgroundImage: `url(${SPRITE_CONFIG.spritePath})`,
+    backgroundPosition: `${icon.bgPositionX * previewIconScale}px ${icon.bgPositionY * previewIconScale}px`,
+    backgroundSize: `${spriteWidth * previewIconScale}px ${spriteHeight * previewIconScale}px`,
+    width: `${PREVIEW_ICON_SIZE}px`,
+    height: `${PREVIEW_ICON_SIZE}px`,
+  }
+}
+
+function getSegmentMargin(seg, index) {
+  const segments = previewSegments.value
+  const leftType = index > 0 ? segments[index - 1].type : null
+  if (!leftType) return { marginLeft: '0px' }
+  const ml = (seg.type === 'icon' && leftType === 'icon') ? -20 : -8
+  return { marginLeft: ml + 'px' }
+}
 
 // ===== 复制模式 =====
 const copyModeCodepoint = ref(false)
@@ -190,6 +245,38 @@ onBeforeUnmount(() => {
       <p class="page-desc">Minecraft 基岩版特殊符号合集，点击即可复制</p>
     </div>
 
+    <!-- 验证输入卡片 -->
+    <div class="verify-card">
+      <div class="verify-col verify-col-left">
+        <label class="verify-label">输入验证</label>
+        <input
+          v-model="verifyInput"
+          type="text"
+          class="verify-input"
+          placeholder="粘贴或输入字符以验证..."
+          spellcheck="false"
+          autocomplete="off"
+        />
+      </div>
+      <div class="verify-divider"></div>
+      <div class="verify-col verify-col-right">
+        <label class="verify-label">预览结果</label>
+        <div class="verify-preview">
+          <template v-for="(seg, i) in previewSegments" :key="i">
+            <div v-if="seg.type === 'icon'" class="preview-sprite-wrap" :style="getSegmentMargin(seg, i)">
+              <div
+                class="preview-sprite"
+                :style="getPreviewSpriteStyle(seg.icon)"
+              ></div>
+            </div>
+            <span v-else-if="seg.type === 'dot'" class="preview-dot" :style="getSegmentMargin(seg, i)"></span>
+            <span v-else class="preview-text" :style="getSegmentMargin(seg, i)">{{ seg.text }}</span>
+          </template>
+          <span v-if="!previewSegments.length" class="preview-placeholder">预览</span>
+        </div>
+      </div>
+    </div>
+
     <!-- 模式切换栏 -->
     <div class="mode-bar">
       <span class="mode-label">复制为:</span>
@@ -297,6 +384,135 @@ onBeforeUnmount(() => {
   margin-left: auto;
 }
 
+/* ===== 验证输入卡片（照抄 ArtTextTool 风格） ===== */
+.verify-card {
+  display: flex;
+  align-items: stretch;
+  background: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #E0E0E0;
+  padding: 16px;
+  gap: 0;
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+
+[data-theme="dark"] .verify-card {
+  background: #191919;
+  border-color: #2B2B2B;
+}
+
+.verify-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.verify-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.verify-input {
+  width: 100%;
+  flex: 1;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  background-color: transparent;
+  color: var(--text-primary);
+  font-family: inherit;
+  line-height: 1.4;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  caret-color: var(--text-primary);
+}
+
+.verify-input:focus {
+  outline: none;
+  border-color: var(--text-secondary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 20%, transparent);
+}
+
+.verify-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.verify-divider {
+  width: 1px;
+  align-self: stretch;
+  background: #E0E0E0;
+  margin: 0 16px;
+  flex-shrink: 0;
+  transition: background-color 0.4s ease;
+}
+
+[data-theme="dark"] .verify-divider {
+  background: #2B2B2B;
+}
+
+.verify-preview {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--text-primary);
+  overflow-x: auto;
+  white-space: nowrap;
+  transition: border-color 0.4s ease;
+  min-height: 36px;
+}
+
+.verify-preview::-webkit-scrollbar {
+  height: 3px;
+}
+
+.verify-preview::-webkit-scrollbar-thumb {
+  background: var(--text-tertiary);
+  border-radius: 3px;
+}
+
+.preview-placeholder {
+  color: var(--text-tertiary);
+}
+
+.preview-text {
+  display: inline;
+}
+
+.preview-sprite-wrap {
+  width: 60px;
+  height: 16px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: visible;
+}
+
+.preview-sprite {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  background-repeat: no-repeat;
+}
+
+.preview-dot {
+  display: inline-block;
+  width: 0.2em;
+  height: 0.2em;
+  background: #e74c3c;
+  border-radius: 50%;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
 /* ===== 卡片网格 ===== */
 .cards-grid {
   display: grid;
@@ -387,6 +603,21 @@ onBeforeUnmount(() => {
 }
 
 /* ===== 响应式 ===== */
+@media (max-width: 640px) {
+  .verify-card {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .verify-divider {
+    width: 100%;
+    height: 1px;
+    margin: 0;
+    align-self: auto;
+  }
+}
+
 @media (max-width: 470px) {
   .mode-bar {
     flex-wrap: wrap;
