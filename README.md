@@ -44,10 +44,11 @@
 - **[命令模拟器](https://github.com/missing244/Command_Simulator/)**：execute 语法转换逻辑参考了此项目，特殊符号的符号图片也是由该项目整理。
 - **[Webstack网址导航](https://github.com/WebStackPage/WebStackPage.github.io)**： 首页布局参考了此项目。
 - **[Mizuki](https://github.com/LyraVoid/Mizuki)**： 部分 UI/UX 效果参考了此项目。
+- **[Minecraft 格式化代码渲染器](https://github.com/Spectrollay/minecraft_formatting_code_online)**： T显编辑器 § 颜色代码渲染基于此项目 (MIT)。
 
 ## TODO
 
-- [ ] **重构T显可视化编辑器**
+- [x] ~~**重构T显可视化编辑器**~~
 - [ ] **设置页**： 添加全局设置面板，支持标签页行为、性能选项等自定义偏好
 - [ ] **自定义性能选项**： 允许自定义控制较为影响性能的功能是否启用，如模糊、部分动画等
 - [ ] **站外链接嵌入**： 允许将站外链接以 iframe 形式在标签页中打开，拓展工具工作流
@@ -105,14 +106,22 @@ src/
 │       ├── DownloadTool.vue    # 工具下载页（蓝奏云解析）
 │       ├── TrAnimationTool.vue # T显动画编辑器工具页
 │       ├── ExecuteTool.vue     # 语法转换工具页
-│       └── FuhaoTool.vue      # 特殊符号工具页
+│       ├── FuhaoTool.vue      # 特殊符号工具页
+│       ├── RawJsonTool.vue         # T显可视化编辑器（主组件）
+│       ├── RawJsonConfigBar.vue    # T显编辑器：配置栏 + 工具栏
+│       ├── RawJsonElementList.vue  # T显编辑器：元素节点列表
+│       ├── RawJsonRightPanel.vue   # T显编辑器：预览 + JSON + 命令输出
+│       ├── RawJsonEditModal.vue    # T显编辑器：编辑/添加元素弹窗
+│       ├── RawJsonImportModal.vue  # T显编辑器：导入指令弹窗
+│       └── RawJsonColorModal.vue   # T显编辑器：颜色参考表弹窗
 ├── composables/
-│   ├── useMouseGlow.js      # 卡片边框高光平滑跟随鼠标效果（lerp 插值）
-│   ├── usePrivacyModal.js  # 隐私弹窗状态共享组合式函数
-│   ├── useSWUpdate.js      # Service Worker 更新检测与版本比较组合式函数
-│   ├── useTheme.js         # 主题状态管理组合式函数
-│   ├── useToolStorage.js   # 工具页 localStorage 持久化组合式函数
-│   └── useWorkspace.js     # 工作区状态管理组合式函数
+│   ├── useMouseGlow.js        # 卡片边框高光平滑跟随鼠标效果（lerp 插值）
+│   ├── usePrivacyModal.js     # 隐私弹窗状态共享组合式函数
+│   ├── useRawJsonEditor.js    # T显编辑器核心状态与逻辑（模块级单例）
+│   ├── useSWUpdate.js         # Service Worker 更新检测与版本比较组合式函数
+│   ├── useTheme.js            # 主题状态管理组合式函数
+│   ├── useToolStorage.js      # 工具页 localStorage 持久化组合式函数
+│   └── useWorkspace.js        # 工作区状态管理组合式函数
 ├── config/
 │   └── categoryIcons.js    # 分类图标配置
 ├── data/
@@ -182,12 +191,12 @@ scripts/
 - **目的**：每个路由页面动态设置 `<title>`、`<meta name="description">`、`<meta name="keywords">`，提升搜索引擎收录效果。
 - **实现**：基于 `@vueuse/head` 插件，在 `router.afterEach` 中根据路由 `meta` 或动态工具页映射自动更新 head 标签。
 - **静态路由 meta**：直接在路由配置中声明 `meta.title / description / keywords`（首页、文档页、提交页）。
-- **动态工具页映射**：`/c/:path` 路径通过 `TOOL_META_MAP` 按 path slug 匹配对应 SEO 信息（艺术字、T显动画、T显编辑器、语法转换、特殊符号）。
+- **动态工具页映射**：`/c/:path` 路径通过 `TOOL_META_MAP` 按 path slug 匹配对应 SEO 信息（艺术字、T显动画、T显编辑器、语法转换、特殊符号、RawJSON 编辑器）。
 
 ### 工作区标签系统
 
 - **功能**：多工具页签管理，支持拖拽排序、关闭、持久化存储。
-- **组件**：`WorkspaceView.vue` 根据当前路由参数动态加载对应工具组件（`ArtTextTool.vue`、`TrAnimationTool.vue`、`ExecuteTool.vue`、`FuhaoTool.vue`）。
+- **组件**：`WorkspaceView.vue` 根据当前路由参数动态加载对应工具组件（`ArtTextTool.vue`、`TrAnimationTool.vue`、`ExecuteTool.vue`、`FuhaoTool.vue`、`RawJsonTool.vue`）。
 - **路径归一化**：`getComponent()` 方法对路径进行归一化处理（移除末尾斜杠），确保路由匹配准确。
 
 ### 隐私与 Cookie 管理

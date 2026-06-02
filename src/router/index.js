@@ -177,16 +177,6 @@ const router = createRouter({
 
 // 路由前置守卫：开始进度条 + 启动超时计时器
 router.beforeEach((to, from, next) => {
-  // /c/raw-json/ 绕过 SPA，直接访问原生 HTML 静态文件
-  if (to.path.startsWith('/c/raw-json')) {
-    const { path, hash } = to
-    const target = (path === '/c/raw-json' || path === '/c/raw-json/')
-      ? '/c/raw-json/index.html'
-      : path
-    window.location.href = target + (hash || '')
-    return false
-  }
-
   if (to.path !== from.path && to.name !== 'offline') {
     clearNavTimer()
     // 导航超时兜底：8 秒内未完成则强制跳转离线页（覆盖 chunk 挂起场景）

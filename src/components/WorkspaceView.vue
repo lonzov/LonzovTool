@@ -31,6 +31,10 @@ const FuhaoTool = defineAsyncComponent({
   loader: () => import('./tools/FuhaoTool.vue'),
   ...asyncOptions,
 })
+const RawJsonTool = defineAsyncComponent({
+  loader: () => import('./tools/RawJsonTool.vue'),
+  ...asyncOptions,
+})
 
 const router = useRouter()
 const route = useRoute()
@@ -44,6 +48,7 @@ const componentMap = {
   '/c/tr': TrAnimationTool,
   '/c/execute': ExecuteTool,
   '/c/fuhao': FuhaoTool,
+  '/c/raw-json': RawJsonTool,
 }
 
 function getComponent(path) {

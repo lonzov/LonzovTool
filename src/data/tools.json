@@ -33,7 +33,7 @@
           "title": "T显可视化编辑器",
           "description": "通过可视化界面编辑rawJSON",
           "logo": "/logos/1tool_lonzov_top.webp",
-          "link": "https://tool.lonzov.top/c/raw-json/"
+          "link": "/c/raw-json/"
         },
         {
           "title": "T显编辑器",

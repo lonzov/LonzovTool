@@ -37,6 +37,8 @@
 - **[命令模拟器](https://commandsimulator.great-site.net/)** —— execute 语法转换逻辑参考了它，特殊符号的符号图片也是从这搬的。
 - **[Webstack网址导航](https://github.com/WebStackPage/WebStackPage.github.io)** —— 首页布局参考了此项目。
 - **[Mizuki](https://github.com/LyraVoid/Mizuki)** —— 部分 UI/UX 效果参考了此项目。
+- **[矩阵方块 - T显编译器](https://jzfk.indevs.in/)** —— T显编辑器参考了此项目。
+- **[Minecraft 格式化代码渲染器](https://github.com/Spectrollay/minecraft_formatting_code_online)** —— T显编辑器的 § 颜色代码渲染基于此项目 (MIT)。
 
 ---
 
