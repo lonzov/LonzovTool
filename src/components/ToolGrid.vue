@@ -14,6 +14,10 @@ export default {
       type: String,
       default: '',
     },
+    showFavorites: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup() {
     const activeCategoryIndex = ref(null)
@@ -136,15 +140,39 @@ export default {
 
     // 过滤分类和工具
     const filteredCategories = computed(() => {
-      if (!searchQuery) return toolsData.categories
+      const hasSearch = !!searchQuery
+      const hasFavFilter = this.showFavorites
+
+      // 读取收藏列表
+      let favs = null
+      if (hasFavFilter) {
+        try {
+          favs = JSON.parse(localStorage.getItem('favorite_cards') || '[]')
+        } catch {
+          favs = []
+        }
+      }
+
+      if (!hasSearch && !hasFavFilter) return toolsData.categories
 
       return toolsData.categories
         .map((category) => {
-          const filteredTools = category.tools.filter(
-            (tool) =>
-              tool.title.replace(/\s/g, '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-              tool.description.replace(/\s/g, '').toLowerCase().includes(searchQuery.toLowerCase()),
-          )
+          let filteredTools = category.tools
+
+          if (hasSearch) {
+            filteredTools = filteredTools.filter(
+              (tool) =>
+                tool.title.replace(/\s/g, '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                tool.description.replace(/\s/g, '').toLowerCase().includes(searchQuery.toLowerCase()),
+            )
+          }
+
+          if (hasFavFilter) {
+            filteredTools = filteredTools.filter((tool) =>
+              favs.includes(tool.id),
+            )
+          }
+
           if (filteredTools.length > 0) {
             return { ...category, tools: filteredTools }
           }
@@ -221,10 +249,12 @@ export default {
             },
             category.tools.map((tool) =>
               h(ToolCard, {
+                key: tool.id,
                 title: tool.title,
                 description: tool.description,
                 logo: tool.logo || '',
                 link: tool.link || '',
+                toolId: tool.id || '',
                 searchPatterns: searchPatterns,
               }),
             ),

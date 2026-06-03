@@ -92,13 +92,31 @@
     >
       <n-icon :component="Search12Regular" :size="18" />
     </div>
+
+    <!-- 收藏筛选按钮 -->
+    <div
+      :style="{
+        padding: '0 12px 0 0',
+        display: 'flex',
+        alignItems: 'center',
+        height: '100%',
+        cursor: 'pointer',
+      }"
+      @click="toggleFavorite"
+    >
+      <n-icon
+        :component="Star12Regular"
+        :size="18"
+        :color="favoriteActive ? '#f5c842' : undefined"
+      />
+    </div>
   </div>
 </template>
 
 <script>
 import { ref, computed, watch } from 'vue'
 import { NIcon, NDropdown } from 'naive-ui'
-import { Search12Regular, ChevronDown20Filled } from '@vicons/fluent'
+import { Search12Regular, ChevronDown20Filled, Star12Regular } from '@vicons/fluent'
 import searchEngines from '../data/searchEngines.json'
 
 export default {
@@ -113,7 +131,7 @@ export default {
       default: '',
     },
   },
-  emits: ['internalSearch', 'update:modelValue'],
+  emits: ['internalSearch', 'update:modelValue', 'toggleFavorites'],
   setup(props, { emit }) {
     const STORAGE_KEY = 'search_engine_selected'
 
@@ -217,6 +235,13 @@ export default {
       emit('internalSearch', '')
     }
 
+    // 收藏筛选
+    const favoriteActive = ref(false)
+    const toggleFavorite = () => {
+      favoriteActive.value = !favoriteActive.value
+      emit('toggleFavorites', favoriteActive.value)
+    }
+
     const dropdownOptions = computed(() => {
       const result = []
 
@@ -291,6 +316,9 @@ export default {
       placeholder,
       Search12Regular,
       ChevronDown20Filled,
+      Star12Regular,
+      favoriteActive,
+      toggleFavorite,
       handleSelect,
       doSearch,
       handleKeydown,

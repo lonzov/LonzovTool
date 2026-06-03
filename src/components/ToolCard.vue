@@ -1,13 +1,15 @@
 <script>
-import { h, ref, onMounted, onUnmounted } from 'vue'
+import { h, ref, onMounted, onUnmounted, Transition } from 'vue'
 import { useRouter } from 'vue-router'
-import { NHighlight } from 'naive-ui'
+import { NHighlight, NIcon, useMessage } from 'naive-ui'
+import { Star24Filled } from '@vicons/fluent'
 import { useWorkspace } from '../composables/useWorkspace.js'
 import { useMouseGlow } from '../composables/useMouseGlow.js'
 
 export default {
   components: {
     NHighlight,
+    NIcon,
   },
   props: {
     title: {
@@ -26,6 +28,10 @@ export default {
       type: String,
       default: '',
     },
+    toolId: {
+      type: String,
+      default: '',
+    },
     searchPatterns: {
       type: Array,
       default: () => [],
@@ -35,6 +41,7 @@ export default {
     const router = useRouter()
     const { openTab } = useWorkspace()
     const { subscribe: subGlow, unsubscribe: unsubGlow } = useMouseGlow()
+    const message = useMessage()
 
     const imageError = ref(false)
     const imageLoaded = ref(false)
@@ -102,12 +109,27 @@ export default {
       router,
       subGlow,
       unsubGlow,
+      message,
     }
   },
   data() {
     return {
       containerId: `logo-${Math.random().toString(36).substr(2, 9)}`,
       observer: null,
+      isFavorite: false,
+      longPressTimer: null,
+      longPressed: false,
+      touchFired: false,
+      toggleLock: false,
+    }
+  },
+  created() {
+    // 在首次渲染前初始化收藏状态，避免三角标闪烁
+    try {
+      const favs = JSON.parse(localStorage.getItem('favorite_cards') || '[]')
+      this.isFavorite = favs.includes(this.toolId || this.link || this.title)
+    } catch {
+      this.isFavorite = false
     }
   },
   mounted() {
@@ -210,8 +232,77 @@ export default {
         el.classList.remove('glow-active')
       }
     },
+    checkFavoriteStatus() {
+      try {
+        const favs = JSON.parse(localStorage.getItem('favorite_cards') || '[]')
+        this.isFavorite = favs.includes(this.toolId || this.link || this.title)
+      } catch {
+        this.isFavorite = false
+      }
+    },
+    toggleFavorite(e) {
+      if (e) e.preventDefault()
+      // 防止长按同时触发 touch 计时器和 contextmenu 导致双击
+      if (this.toggleLock) return
+      this.toggleLock = true
+      setTimeout(() => { this.toggleLock = false }, 400)
+
+      const key = this.toolId || this.link || this.title
+      try {
+        const favs = JSON.parse(localStorage.getItem('favorite_cards') || '[]')
+        const idx = favs.indexOf(key)
+        if (idx > -1) {
+          favs.splice(idx, 1)
+          this.isFavorite = false
+          localStorage.setItem('favorite_cards', JSON.stringify(favs))
+          this.message.info('已取消收藏', { duration: 1500 })
+        } else {
+          favs.push(key)
+          this.isFavorite = true
+          localStorage.setItem('favorite_cards', JSON.stringify(favs))
+          this.message.info('已收藏', { duration: 1500 })
+        }
+      } catch {
+        /* ignore quota / parse errors */
+      }
+    },
+    handleContextMenu(e) {
+      e.preventDefault()
+      this.toggleFavorite()
+    },
+    handleTouchStart() {
+      if (this.touchFired) return
+      this.longPressed = false
+      this.longPressTimer = setTimeout(() => {
+        this.toggleFavorite()
+        this.longPressed = true
+        this.touchFired = true
+        this.longPressTimer = null
+      }, 500)
+    },
+    handleTouchEnd() {
+      this.touchFired = false
+      if (this.longPressTimer) {
+        clearTimeout(this.longPressTimer)
+        this.longPressTimer = null
+      }
+    },
+    handleTouchMove() {
+      if (this.longPressTimer) {
+        clearTimeout(this.longPressTimer)
+        this.longPressTimer = null
+      }
+    },
   },
   watch: {
+    toolId() {
+      try {
+        const favs = JSON.parse(localStorage.getItem('favorite_cards') || '[]')
+        this.isFavorite = favs.includes(this.toolId || this.link || this.title)
+      } catch {
+        this.isFavorite = false
+      }
+    },
     logo() {
       // logo 变化时重置状态
       this.imageError = false
@@ -260,12 +351,22 @@ export default {
       {
         class: 'tool-card',
         style: cardStyle,
+        onContextmenu: (e) => this.handleContextMenu(e),
+        onTouchstart: this.handleTouchStart,
+        onTouchend: () => this.handleTouchEnd(),
+        onTouchmove: () => this.handleTouchMove(),
         ...(this.link ? {
           href: this.link,
           target: isInternal ? '' : '_blank',
           rel: isInternal ? '' : 'noopener',
           referrerpolicy: isInternal ? '' : 'origin',
           onClick: (e) => {
+            // 长按收藏后阻止导航
+            if (this.longPressed) {
+              e.preventDefault()
+              this.longPressed = false
+              return
+            }
             // 站内链接：拦截默认行为，走 SPA 路由（预渲染时 JS 未执行则正常跳转 <a>）
             if (isInternal) {
               e.preventDefault()
@@ -451,6 +552,22 @@ export default {
             ),
           ],
         ),
+        // 收藏三角形标签
+        h(
+          Transition,
+          { name: 'fav' },
+          {
+            default: () =>
+              this.isFavorite
+                ? h('div', { class: 'favorite-tag' }, [
+                    h('div', { class: 'favorite-triangle' }),
+                    h('div', { class: 'favorite-star' }, [
+                      h(NIcon, { component: Star24Filled, size: 10, color: '#fff' }),
+                    ]),
+                  ])
+                : null,
+          },
+        ),
       ],
     )
   },
@@ -529,5 +646,50 @@ export default {
   100% {
     background-position: -200% 0;
   }
+}
+
+/* 收藏三角形标签 */
+.favorite-tag {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 0 8px 0 0;
+}
+
+.favorite-triangle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background: #f5c842;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+
+.favorite-star {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  transform: rotate(45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* 收藏标签过渡动画 */
+.fav-enter-active,
+.fav-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fav-enter-from,
+.fav-leave-to {
+  opacity: 0;
 }
 </style>

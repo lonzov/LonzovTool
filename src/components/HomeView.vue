@@ -17,6 +17,7 @@ export default {
     const toolGrid = ref(null)
     const searchBar = ref(null)
     const searchQuery = ref('')
+    const showFavorites = ref(false)
 
     // 清理搜索字符串，只保留字母、数字和中文
     const sanitizeSearchString = (str) => {
@@ -87,7 +88,11 @@ export default {
       searchQuery.value = query
     }
 
-    return { toolGrid, searchBar, searchQuery, handleInternalSearch }
+    const handleToggleFavorites = (active) => {
+      showFavorites.value = active
+    }
+
+    return { toolGrid, searchBar, searchQuery, showFavorites, handleInternalSearch, handleToggleFavorites }
   },
 }
 </script>
@@ -95,9 +100,9 @@ export default {
 <template>
   <div class="home-view">
     <NoticeBar />
-    <SearchBar ref="searchBar" v-model="searchQuery" @internalSearch="handleInternalSearch" />
+    <SearchBar ref="searchBar" v-model="searchQuery" @internalSearch="handleInternalSearch" @toggleFavorites="handleToggleFavorites" />
     <SearchGrid :searchQuery="searchQuery" />
-    <ToolGrid ref="toolGrid" :searchQuery="searchQuery" />
+    <ToolGrid ref="toolGrid" :searchQuery="searchQuery" :showFavorites="showFavorites" />
     <AppFooter />
   </div>
 </template>
