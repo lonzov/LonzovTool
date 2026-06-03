@@ -373,6 +373,7 @@ export default {
   padding: 0;
   background: #FFFFFF;
   border-radius: 8px;
+  corner-shape: squircle;
   border: 1px solid #E0E0E0;
   color: var(--text-secondary);
   text-decoration: none;
@@ -381,6 +382,12 @@ export default {
   box-shadow: 0 0 0 transparent;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+@supports (corner-shape: squircle) {
+  .social-btn {
+    border-radius: 14px;
+  }
 }
 
 [data-theme="dark"] .social-btn {
