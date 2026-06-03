@@ -543,12 +543,19 @@ onBeforeUnmount(() => {
 .tool-card {
   background: #FFFFFF;
   border-radius: 12px;
+  corner-shape: squircle;
   border: 1px solid #E0E0E0;
   transition: all 0.3s ease;
   box-shadow: 0 0 0 transparent;
   position: relative;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
+}
+
+@supports (corner-shape: squircle) {
+  .tool-card {
+    border-radius: 25px;
+  }
 }
 
 [data-theme="dark"] .tool-card {
