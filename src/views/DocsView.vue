@@ -214,18 +214,29 @@ watchEffect(() => {
 }
 
 .docs-content :deep(h1) {
-  font-size: 2em;
-  margin: 0.67em 0;
+  font-size: 1.875rem;
+  line-height: 1.2;
+  margin: 0 0 0.67em;
+}
+
+/* 相邻标题或分割线后的标题，取消上边距 */
+.docs-content :deep(:is(h1, h2, h3, h4, h5, h6) + :is(h1, h2, h3, h4, h5, h6)),
+.docs-content :deep(hr + :is(h1, h2, h3, h4, h5, h6)) {
+  margin-top: 0;
 }
 
 .docs-content :deep(h2) {
   font-size: 1.5em;
-  margin: 0.83em 0;
+  line-height: 1.333;
+  font-weight: 700;
+  margin: 2em 0 1em;
 }
 
 .docs-content :deep(h3) {
-  font-size: 1.17em;
-  margin: 1em 0;
+  font-size: 1.25em;
+  line-height: 1.6;
+  font-weight: 600;
+  margin: 1.6em 0 0.6em;
 }
 
 .docs-content :deep(p) {
@@ -239,22 +250,36 @@ watchEffect(() => {
 
 .docs-content :deep(code) {
   background: var(--bg-sub);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.9em;
-  font-family: 'Cascadia Code', 'Fira Code', monospace;
+  padding: 0.25rem 0.375rem;
+  border-radius: 0.375rem;
+  font-size: 0.875em;
+  font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
+  font-weight: 400;
+  overflow: hidden;
+  transition: background-color 0.4s ease;
 }
 
 .docs-content :deep(pre) {
   background: var(--bg-sub);
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 0.75rem;
   overflow-x: auto;
+  margin: 1.5em 0;
+  transition: background-color 0.4s ease;
 }
 
 .docs-content :deep(pre code) {
   background: transparent;
   padding: 0;
+  border-radius: 0;
+  font-size: 0.875em;
+  line-height: 1.7142857;
+  counter-reset: line;
+}
+
+.docs-content :deep(pre code span.line:last-child:empty),
+.docs-content :deep(pre code span.line:last-child:has(> span:empty:only-child)) {
+  display: none;
 }
 
 .docs-content :deep(blockquote) {
@@ -267,32 +292,61 @@ watchEffect(() => {
 .docs-content :deep(img) {
   max-width: 100%;
   height: auto;
+  border-radius: 0.75rem;
 }
 
 .docs-content :deep(table) {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   width: 100%;
-  margin: 16px 0;
+  margin: 1.5em 0;
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: border-color 0.4s ease;
 }
 
 .docs-content :deep(th),
 .docs-content :deep(td) {
-  border: 1px solid var(--border-color);
-  padding: 8px 12px;
+  padding: 0.75rem 1rem;
   text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  white-space: nowrap;
+  transition: none;
 }
 
 .docs-content :deep(th) {
   background: var(--bg-sub);
   font-weight: 600;
+  transition: background-color 0.4s ease;
+}
+
+.docs-content :deep(tr:last-child td) {
+  border-bottom: none;
+}
+
+.docs-content :deep(th:last-child),
+.docs-content :deep(td:last-child) {
+  border-right: none;
+}
+
+.docs-content :deep(tr:nth-child(even)) {
+  background-color: var(--bg-sub);
+  transition: background-color 0.4s ease;
+}
+
+.docs-content :deep(tr:hover td) {
+  background-color: var(--bg-sub);
+  transition: none;
 }
 
 .docs-content :deep(hr) {
   border: none;
-  height: 1px;
-  background: var(--border-color);
-  margin: 24px 0;
-  transition: background-color 0.4s ease;
+  height: 0;
+  border-top: 1px dashed var(--border-color);
+  margin: 2em 0;
+  transition: border-color 0.4s ease;
 }
 
 /* 加载动画 */
@@ -353,6 +407,9 @@ watchEffect(() => {
 .docs-content iframe {
   border-radius: 18px;
   corner-shape: squircle;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 100%;
 }
 
 @supports (corner-shape: squircle) {
