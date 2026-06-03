@@ -216,20 +216,14 @@ watchEffect(() => {
 .docs-content :deep(h1) {
   font-size: 1.875rem;
   line-height: 1.2;
-  margin: 0 0 0.67em;
-}
-
-/* 相邻标题或分割线后的标题，取消上边距 */
-.docs-content :deep(:is(h1, h2, h3, h4, h5, h6) + :is(h1, h2, h3, h4, h5, h6)),
-.docs-content :deep(hr + :is(h1, h2, h3, h4, h5, h6)) {
-  margin-top: 0;
+  margin: 0.67em 0;
 }
 
 .docs-content :deep(h2) {
   font-size: 1.5em;
   line-height: 1.333;
   font-weight: 700;
-  margin: 2em 0 1em;
+  margin: 1em 0 0.5em;
 }
 
 .docs-content :deep(h3) {
@@ -347,6 +341,12 @@ watchEffect(() => {
   border-top: 1px dashed var(--border-color);
   margin: 2em 0;
   transition: border-color 0.4s ease;
+}
+
+/* 相邻标题之间、分割线后接标题：消除前一个元素的下边距 */
+.docs-content :deep(hr:has(+ :is(h1, h2, h3, h4, h5, h6))),
+.docs-content :deep(:is(h1, h2, h3, h4, h5, h6):has(+ :is(h1, h2, h3, h4, h5, h6))) {
+  margin-bottom: 0;
 }
 
 /* 加载动画 */
