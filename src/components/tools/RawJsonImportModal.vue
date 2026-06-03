@@ -18,7 +18,7 @@ const darkOverrides = {
       v-model:show="showImportModal"
       preset="card"
       title="导入指令"
-      :style="{ maxWidth: '520px', width: 'calc(100% - 32px)', maxHeight: 'calc(100vh - 48px)', borderRadius: '16px' }"
+      :style="{ maxWidth: '520px', width: 'calc(100% - 32px)', maxHeight: 'calc(100vh - 48px)', borderRadius: '16px', cornerShape: 'squircle' }"
       :segmented="{ content: true, footer: 'soft' }"
       content-scrollable
     >

@@ -92,7 +92,6 @@ export default {
               style: {
                 width: '100%',
                 height: this.heightStyle,
-                borderRadius: '8px',
                 display: 'block',
               },
             }),

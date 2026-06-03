@@ -450,3 +450,10 @@ button {
   z-index: 1;
   transition: background 0.4s;
 }
+
+/* ===== 弹窗超椭圆圆角（约 1.7x，浏览器不支持 corner-shape 时回退到 inline 16px） ===== */
+@supports (corner-shape: squircle) {
+  .n-card[style*="corner-shape"] {
+    border-radius: 27px !important;
+  }
+}

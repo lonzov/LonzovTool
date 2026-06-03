@@ -353,8 +353,20 @@ watchEffect(() => {
 </style>
 
 <style>
+/* iframe 全局超椭圆圆角（含 .iframe-form 和原生 iframe） */
+.docs-content iframe {
+  border-radius: 18px;
+  corner-shape: squircle;
+}
+
+@supports (corner-shape: squircle) {
+  .docs-content iframe {
+    border-radius: 30px;
+  }
+}
+
 /* 深色模式下给 iframe 添加滤镜（非 scoped，确保动态挂载的组件也生效） */
-[data-theme='dark'] .docs-content .iframe-form {
+[data-theme='dark'] .docs-content iframe {
   filter: brightness(0.6);
 }
 </style>

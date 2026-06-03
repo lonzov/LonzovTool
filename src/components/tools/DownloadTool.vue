@@ -317,9 +317,16 @@ watch(config, (val) => {
   width: 80px;
   height: 80px;
   border-radius: 22px;
+  corner-shape: squircle;
   object-fit: cover;
   background: var(--bg-sub);
   display: block;
+}
+
+@supports (corner-shape: squircle) {
+  .header-icon {
+    border-radius: 38px;
+  }
 }
 
 .header-version {
@@ -606,6 +613,13 @@ watch(config, (val) => {
     width: 64px;
     height: 64px;
     border-radius: 18px;
+    corner-shape: squircle;
+  }
+
+  @supports (corner-shape: squircle) {
+    .header-icon {
+      border-radius: 30px;
+    }
   }
 
   .header-version {

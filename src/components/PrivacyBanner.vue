@@ -218,7 +218,7 @@ export default {
   <NModal
     v-model:show="showCookieModal"
     preset="card"
-    :style="{ maxWidth: '540px', width: 'calc(100% - 32px)', borderRadius: '16px' }"
+    :style="{ maxWidth: '540px', width: 'calc(100% - 32px)', borderRadius: '16px', cornerShape: 'squircle' }"
     title="Cookie 偏好设置"
     :bordered="false"
     closable

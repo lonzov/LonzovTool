@@ -192,7 +192,7 @@ onUnmounted(() => unsubGlow(handleGlow))
     <NModal
       v-model:show="showLocal"
       preset="card"
-      :style="{ maxWidth: '540px', width: 'calc(100% - 32px)', borderRadius: '16px' }"
+      :style="{ maxWidth: '540px', width: 'calc(100% - 32px)', borderRadius: '16px', cornerShape: 'squircle' }"
       title="下载方式"
       :bordered="false"
       closable

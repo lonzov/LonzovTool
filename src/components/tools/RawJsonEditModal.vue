@@ -24,7 +24,7 @@ const darkOverrides = {
       v-model:show="showEditModal"
       preset="card"
       :title="editIdx !== null ? '编辑元素' : '添加元素'"
-      :style="{ maxWidth: '480px', width: 'calc(100% - 32px)', maxHeight: 'calc(100vh - 48px)', borderRadius: '16px' }"
+      :style="{ maxWidth: '480px', width: 'calc(100% - 32px)', maxHeight: 'calc(100vh - 48px)', borderRadius: '16px', cornerShape: 'squircle' }"
       :segmented="{ content: true, footer: 'soft' }"
       content-scrollable
       @esc="closeEditModal"

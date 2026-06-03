@@ -21,7 +21,7 @@ const darkOverrides = {
       v-model:show="showColorModal"
       preset="card"
       title="颜色代码参考表"
-      :style="{ maxWidth: '640px', width: 'calc(100% - 32px)', maxHeight: 'calc(100vh - 110px)', borderRadius: '16px' }"
+      :style="{ maxWidth: '640px', width: 'calc(100% - 32px)', maxHeight: 'calc(100vh - 110px)', borderRadius: '16px', cornerShape: 'squircle' }"
       :segmented="{ content: true, footer: 'soft' }"
       content-scrollable
     >

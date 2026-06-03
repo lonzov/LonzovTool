@@ -67,7 +67,7 @@ watch(showUpdateModal, (val) => {
     <NModal
       v-model:show="showUpdateModal"
       preset="card"
-      :style="{ maxWidth: '540px', width: 'calc(100% - 32px)', borderRadius: '16px' }"
+      :style="{ maxWidth: '540px', width: 'calc(100% - 32px)', borderRadius: '16px', cornerShape: 'squircle' }"
       :title="popupTitle || '发现新版本'"
       :bordered="false"
       :closable="true"

@@ -293,6 +293,7 @@ export default {
               width: '40px',
               height: '40px',
               borderRadius: '10px',
+              cornerShape: 'squircle',
               background: 'var(--logo-gradient)',
               marginRight: '12px',
               flexShrink: 0,
@@ -514,6 +515,12 @@ export default {
 
 .tool-card-logo {
   transition: background 0.4s ease !important;
+}
+
+@supports (corner-shape: squircle) {
+  .tool-card-logo {
+    border-radius: 18px !important;
+  }
 }
 @keyframes skeleton-scan {
   0% {
