@@ -216,15 +216,11 @@ watchEffect(() => {
 .docs-content :deep(h1) {
   font-size: 2em;
   margin: 0.67em 0;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.3em;
 }
 
 .docs-content :deep(h2) {
   font-size: 1.5em;
   margin: 0.83em 0;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.3em;
 }
 
 .docs-content :deep(h3) {
