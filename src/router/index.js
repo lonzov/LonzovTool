@@ -156,6 +156,16 @@ const routes = [
     props: true,
   },
   {
+    path: '/settings',
+    name: 'settings',
+    component: () => import('../views/SettingsView.vue'),
+    meta: {
+      title: '设置 - 小舟工具箱',
+      description: '小舟工具箱全局设置，自定义主题模式等偏好。',
+      keywords: '小舟工具箱,设置,主题模式,偏好设置',
+    },
+  },
+  {
     path: '/offline',
     name: 'offline',
     component: OfflineDiagnostic,

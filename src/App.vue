@@ -1,7 +1,8 @@
 <script>
 import { computed, ref, provide, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { NMessageProvider } from 'naive-ui'
+import { NMessageProvider, NIcon, NTooltip } from 'naive-ui'
+import { Settings24Regular } from '@vicons/fluent'
 import AppMenu from './components/AppMenu.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import PrivacyBanner from './components/PrivacyBanner.vue'
@@ -11,7 +12,7 @@ import { useWorkspace } from './composables/useWorkspace.js'
 import { useSWUpdate } from './composables/useSWUpdate'
 
 export default {
-  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog },
+  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog, NIcon, NTooltip },
   setup() {
     const router = useRouter()
     const { themeMode, cycleTheme, isDark } = useTheme()
@@ -226,6 +227,13 @@ export default {
       }, 100)
     }
 
+    function goSettings() {
+      router.push('/settings')
+      if (mobileMenuOpen.value) {
+        mobileMenuOpen.value = false
+      }
+    }
+
     function handleRouteChange() {
       const path = router.currentRoute.value.path
 
@@ -289,6 +297,8 @@ export default {
       skipPageTransition,
       handleResize,
       handleMenuNavigate,
+      goSettings,
+      SettingsIcon: Settings24Regular,
       initSW,
     }
   },
@@ -383,7 +393,30 @@ export default {
                 margin: '0 auto 16px auto',
               }"
             ></div>
-            <div style="display: flex; justify-content: center">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 2px">
+              <NTooltip placement="right">
+                <template #trigger>
+                  <button
+                    type="button"
+                    aria-label="设置"
+                    :style="{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      border: 'none',
+                      background: 'transparent',
+                      cursor: 'pointer',
+                    }"
+                    @click="goSettings"
+                  >
+                    <NIcon :component="SettingsIcon" :size="22" :color="'var(--theme-icon-color)'" />
+                  </button>
+                </template>
+                设置
+              </NTooltip>
               <ThemeToggle :mode="themeMode" @click="cycleTheme" />
             </div>
           </div>
@@ -556,7 +589,30 @@ export default {
                   margin: '0 auto 16px auto',
                 }"
               ></div>
-              <div style="display: flex; justify-content: center">
+              <div style="display: flex; justify-content: center; align-items: center; gap: 2px">
+                <NTooltip placement="right">
+                  <template #trigger>
+                    <button
+                      type="button"
+                      aria-label="设置"
+                      :style="{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                      }"
+                      @click="goSettings"
+                    >
+                      <NIcon :component="SettingsIcon" :size="20" :color="'var(--theme-icon-color)'" />
+                    </button>
+                  </template>
+                  设置
+                </NTooltip>
                 <ThemeToggle :mode="themeMode" @click="cycleTheme" />
               </div>
             </div>

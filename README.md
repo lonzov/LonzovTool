@@ -28,16 +28,16 @@
 
 ## 技术栈
 
-| 类别     | 技术                           |
-| -------- | ------------------------------ |
-| 框架     | Vue 3、Vite                    |
-| UI 库    | Naive UI                       |
-| 路由     | Vue Router                     |
-| SEO      | @vueuse/head、Puppeteer 预渲染 |
-| PWA      | Service Worker (手动)、Web App Manifest |
+| 类别     | 技术                                              |
+| -------- | ------------------------------------------------- |
+| 框架     | Vue 3、Vite                                       |
+| UI 库    | Naive UI                                          |
+| 路由     | Vue Router                                        |
+| SEO      | @vueuse/head、Puppeteer 预渲染                    |
+| PWA      | Service Worker (手动)、Web App Manifest           |
 | 图标     | @vicons/fluent、@vicons/ionicons5、@remixicon/vue |
-| 工具     | markdown-it、nprogress         |
-| 代码质量 | ESLint、Oxlint、Oxfmt          |
+| 工具     | markdown-it、nprogress                            |
+| 代码质量 | ESLint、Oxlint、Oxfmt                             |
 
 ## 特别鸣谢
 
@@ -76,83 +76,7 @@ pnpm format           # 代码格式化
 <details>
 <summary>📂 项目结构（面向 AI Agent 维护）</summary>
 
-```
-src/
-├── App.vue              # 根组件，包含桌面/移动端双布局、主题配置、NScrollbar 滚动容器
-├── main.js             # 应用入口，全局注册组件、@vueuse/head 插件注册、scrollRestoration 禁用
-├── assets/
-│   └── main.css         # 全局样式与 CSS 变量定义
-├── components/
-│   ├── AppMenu.vue      # 侧边栏导航菜单，支持分类折叠
-│   ├── DonateCard.vue   # 打赏收款码卡片，含三平台切换 + 爱发电按钮
-│   ├── DonateRecords.vue # 打赏记录表格，异步加载 JSON 动态渲染
-│   ├── Footer.vue       # 页脚组件，包含版权信息、运行时间、隐私政策入口
-│   ├── HomeView.vue     # 首页视图容器，集成搜索栏、工具网格、页脚
-│   ├── IframeForm.vue   # iframe 表单封装组件
-│   ├── OfflineDiagnostic.vue # 离线诊断页，ping 检测区分服务端异常/网络断开
-│   ├── NoticeBar.vue    # 公告通知栏，支持多公告自动轮播与高度自适应
-│   ├── PrivacyBanner.vue # 隐私横幅与 Cookie 设置弹窗，管理用户同意选项
-│   ├── SearchBar.vue    # 搜索栏，支持多搜索引擎切换
-│   ├── SearchGrid.vue   # 搜索网格布局组件
-│   ├── ThemeToggle.vue  # 主题切换按钮
-│   ├── ToolCard.vue     # 工具卡片组件，支持懒加载、骨架屏、边框光晕跟随鼠标
-│   ├── ToolGrid.vue     # 工具网格布局，管理分类展示与视线引导
-│   ├── ToolLoading.vue  # 异步组件加载动画（旋转圆圈 + 加载文字），复用文档页加载样式
-│   ├── UpdateDialog.vue # SW 更新确认弹窗，照搬 Cookie 弹窗样式
-│   ├── WorkspaceView.vue # 工作区视图容器，管理多标签页
-│   └── tools/           # 内置工具页面组件
-│       ├── ArtTextTool.vue     # 艺术字转换工具页
-│       ├── DownloadModal.vue   # 下载方式选择模态框
-│       ├── DownloadTool.vue    # 工具下载页（蓝奏云解析）
-│       ├── TrAnimationTool.vue # T显动画编辑器工具页
-│       ├── ExecuteTool.vue     # 语法转换工具页
-│       ├── FuhaoTool.vue      # 特殊符号工具页
-│       ├── RawJsonTool.vue         # T显可视化编辑器（主组件）
-│       ├── RawJsonConfigBar.vue    # T显编辑器：配置栏 + 工具栏
-│       ├── RawJsonElementList.vue  # T显编辑器：元素节点列表
-│       ├── RawJsonRightPanel.vue   # T显编辑器：预览 + JSON + 命令输出
-│       ├── RawJsonEditModal.vue    # T显编辑器：编辑/添加元素弹窗
-│       ├── RawJsonImportModal.vue  # T显编辑器：导入指令弹窗
-│       └── RawJsonColorModal.vue   # T显编辑器：颜色参考表弹窗
-├── composables/
-│   ├── useMouseGlow.js        # 卡片边框高光平滑跟随鼠标效果（lerp 插值）
-│   ├── usePrivacyModal.js     # 隐私弹窗状态共享组合式函数
-│   ├── useRawJsonEditor.js    # T显编辑器核心状态与逻辑（模块级单例）
-│   ├── useSWUpdate.js         # Service Worker 更新检测与版本比较组合式函数
-│   ├── useTheme.js            # 主题状态管理组合式函数
-│   ├── useToolStorage.js      # 工具页 localStorage 持久化组合式函数
-│   └── useWorkspace.js        # 工作区状态管理组合式函数
-├── config/
-│   └── categoryIcons.js    # 分类图标配置
-├── data/
-│   ├── downloads/          # 下载工具数据目录
-│   │   ├── index.js        # 模块映射与动态导入配置
-│   │   ├── zhiling-yinfuhe.json  # 指令音符盒下载配置
-│   │   └── mc-yufabao.json      # MC语法包下载配置
-│   ├── donateRecords.json  # 打赏记录数据（带哈希异步加载）
-│   ├── notices.json        # 公告数据
-│   ├── parentMenus.json    # 父级菜单配置
-│   ├── searchEngines.json  # 搜索引擎配置
-│   └── tools.json          # 工具数据（分类与工具项）
-├── docs/                   # 文档目录
-│   ├── index.md            # 项目文档首页
-│   ├── donate.md           # 打赏支持页面（含收款码与打赏记录组件）
-│   ├── privacy.md          # 隐私政策
-│   └── url-tj.md           # 网址提交页面
-├── router/
-│   └── index.js           # Vue Router 路由配置，包含 NProgress 集成、SEO meta 映射与 @vueuse/head 动态更新
-└── views/
-    ├── AboutView.vue      # 关于页面，展示项目信息与统计数据
-    ├── DocsView.vue       # 文档页面，动态加载 Markdown 文档（支持组件占位符注入）
-    └── DownView.vue       # 下载页面，展示工具下载信息与下载选项
-public/
-├── sw.js                  # Service Worker，手写实现 StaleWhileRevalidate 缓存优先 + 离线诊断回退 + V2 兼容消息协议
-└── offline.html           # 离线回退页（极简兜底）
-scripts/
-├── route-list.js          # 共享模块：从路由配置自动提取所有公开页面路径
-├── prerender.js           # Puppeteer 预渲染脚本，并发爬取路由生成静态 HTML（SEO）
-└── generate-seo.js        # SEO 文件生成脚本，输出 sitemap.xml 和 robots.txt
-```
+项目结构描述已迁移至 YML 文件，详见 [docs/project-structure.yml](docs/project-structure.yml)。
 
 </details>
 
