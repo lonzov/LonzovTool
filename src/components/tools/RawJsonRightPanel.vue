@@ -112,7 +112,8 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
   border-color: #2b2b2b;
 }
 .preview-content {
-  font-size: 14px; text-align: center; word-break: break-all;
+  display: inline-block;
+  font-size: 14px; text-align: left;
   white-space: pre-line; max-width: 100%; overflow-x: auto;
   letter-spacing: 0.8px;
 }
