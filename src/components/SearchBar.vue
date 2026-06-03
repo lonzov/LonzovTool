@@ -94,28 +94,34 @@
     </div>
 
     <!-- 收藏筛选按钮 -->
-    <div
-      :style="{
-        padding: '0 12px 0 0',
-        display: 'flex',
-        alignItems: 'center',
-        height: '100%',
-        cursor: 'pointer',
-      }"
-      @click="toggleFavorite"
-    >
-      <n-icon
-        :component="Star12Regular"
-        :size="18"
-        :color="favoriteActive ? '#f5c842' : undefined"
-      />
-    </div>
+    <NTooltip placement="bottom">
+      <template #trigger>
+        <div
+          :style="{
+            padding: '0 12px 0 0',
+            display: 'flex',
+            alignItems: 'center',
+            height: '100%',
+            cursor: 'pointer',
+            color: 'var(--text-secondary)',
+          }"
+          @click="toggleFavorite"
+        >
+          <n-icon
+            :component="Star12Regular"
+            :size="18"
+            :color="favoriteActive ? '#f5c842' : undefined"
+          />
+        </div>
+      </template>
+      筛选收藏-右键/长按卡片收藏
+    </NTooltip>
   </div>
 </template>
 
 <script>
 import { ref, computed, watch } from 'vue'
-import { NIcon, NDropdown } from 'naive-ui'
+import { NIcon, NDropdown, NTooltip } from 'naive-ui'
 import { Search12Regular, ChevronDown20Filled, Star12Regular } from '@vicons/fluent'
 import searchEngines from '../data/searchEngines.json'
 
@@ -124,6 +130,7 @@ export default {
   components: {
     NIcon,
     NDropdown,
+    NTooltip,
   },
   props: {
     modelValue: {
