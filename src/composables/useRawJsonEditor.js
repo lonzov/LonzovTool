@@ -63,6 +63,14 @@ export const tempWith = ref([])
 export const deleteConfirmIdx = ref(null)
 let deleteConfirmTimer = null
 
+// 弹窗内删除确认状态
+export const withParamConfirmIdx = ref(null)
+export const withElConfirmIdx = ref(null)
+export const nestedWithParamConfirmIdx = ref(null)
+let withParamConfirmTimer = null
+let withElConfirmTimer = null
+let nestedWithParamConfirmTimer = null
+
 // 弹窗状态
 export const showEditModal = ref(false)
 export const showImportModal = ref(false)
@@ -75,6 +83,22 @@ export const formSelector = ref('@p')
 export const formScoreObj = ref('')
 export const formScoreName = ref('@s')
 export const formTranslateKey = ref('')
+
+// translate with 配置
+export const withMode = ref('array') // 'array' | 'object'
+export const withRawtext = ref([]) // object 模式下的 rawtext 元素数组
+
+// 嵌套编辑（with.rawtext 内元素编辑）
+export const nestedIdx = ref(null) // null=不在嵌套编辑中
+export const nestedType = ref('text')
+export const nestedText = ref('')
+export const nestedSelector = ref('@p')
+export const nestedScoreObj = ref('')
+export const nestedScoreName = ref('@s')
+export const nestedTranslateKey = ref('')
+export const nestedWithMode = ref('array')
+export const nestedWith = ref([])
+export const nestedWithRawtext = ref([])
 
 // 导入
 export const importText = ref('')
@@ -235,8 +259,16 @@ export function validate() {
     } else if (el.translate !== undefined) {
       if (typeof el.translate !== 'string') errors.push({ idx, msg: `#${num} translate 必须是字符串` })
       else if (el.translate === '') errors.push({ idx, msg: `#${num} translate 为空` })
-      if (el.with && (!el.with.rawtext || !Array.isArray(el.with.rawtext))) {
-        errors.push({ idx, msg: `#${num} with.rawtext 必须是数组` })
+      if (el.with !== undefined) {
+        if (Array.isArray(el.with)) {
+          for (let wi = 0; wi < el.with.length; wi++) {
+            if (typeof el.with[wi] !== 'string') {
+              errors.push({ idx, msg: `#${num} with[${wi}] 必须是字符串` })
+            }
+          }
+        } else if (!el.with.rawtext || !Array.isArray(el.with.rawtext)) {
+          errors.push({ idx, msg: `#${num} with.rawtext 必须是数组` })
+        }
       }
     } else {
       errors.push({ idx, msg: `#${num} 未知的元素类型` })
@@ -357,7 +389,9 @@ export function getElPreviewText(el) {
     case 'selector': return el.selector || ''
     case 'score': return `${el.score.objective || ''} / ${el.score.name || ''}`
     case 'translate': {
-      const wl = el.with?.rawtext?.length || 0
+      let wl = 0
+      if (Array.isArray(el.with)) wl = el.with.length
+      else if (el.with?.rawtext) wl = el.with.rawtext.length
       return (el.translate || '') + (wl > 0 ? ` [${wl}]` : '')
     }
     default: return '未知类型'
@@ -373,7 +407,6 @@ export function getElTypeClass(el) {
 export function addElement(idx = null) {
   insertIdx.value = idx
   editIdx.value = null
-  tempWith.value = []
   resetEditForm()
   editType.value = 'text'
   showEditModal.value = true
@@ -394,7 +427,16 @@ export function editElement(idx) {
       break
     case 'translate':
       formTranslateKey.value = el.translate || ''
-      tempWith.value = el.with?.rawtext?.map(r => r.text || '') || []
+      if (Array.isArray(el.with)) {
+        withMode.value = 'array'
+        tempWith.value = el.with.map(String)
+      } else if (el.with?.rawtext && Array.isArray(el.with.rawtext)) {
+        withMode.value = 'object'
+        withRawtext.value = el.with.rawtext.map(e => ({ ...e }))
+      } else {
+        withMode.value = 'array'
+        tempWith.value = []
+      }
       break
     default: formText.value = ''; break
   }
@@ -434,6 +476,15 @@ export function moveElement(idx, dir) {
 }
 
 // ========== 编辑弹窗 ==========
+function clearModalConfirmStates() {
+  clearTimeout(withParamConfirmTimer)
+  clearTimeout(withElConfirmTimer)
+  clearTimeout(nestedWithParamConfirmTimer)
+  withParamConfirmIdx.value = null
+  withElConfirmIdx.value = null
+  nestedWithParamConfirmIdx.value = null
+}
+
 export function resetEditForm() {
   formText.value = ''
   formSelector.value = '@p'
@@ -441,12 +492,30 @@ export function resetEditForm() {
   formScoreName.value = '@s'
   formTranslateKey.value = ''
   tempWith.value = []
+  withMode.value = 'array'
+  withRawtext.value = []
+  clearModalConfirmStates()
+  resetNestedForm()
+}
+
+function resetNestedForm() {
+  nestedIdx.value = null
+  nestedType.value = 'text'
+  nestedText.value = ''
+  nestedSelector.value = '@p'
+  nestedScoreObj.value = ''
+  nestedScoreName.value = '@s'
+  nestedTranslateKey.value = ''
+  nestedWithMode.value = 'array'
+  nestedWith.value = []
+  nestedWithRawtext.value = []
 }
 
 export function closeEditModal() {
   showEditModal.value = false
   editIdx.value = null
   insertIdx.value = null
+  clearModalConfirmStates()
 }
 
 export function saveElement() {
@@ -461,9 +530,12 @@ export function saveElement() {
       break
     case 'translate': {
       el = { translate: formTranslateKey.value }
-      const arr = []
-      for (const w of tempWith.value) { if (w.trim()) arr.push({ text: w.trim() }) }
-      if (arr.length) el.with = { rawtext: arr }
+      if (withMode.value === 'array') {
+        const arr = tempWith.value.map(s => s.trim()).filter(Boolean)
+        if (arr.length) el.with = arr
+      } else {
+        if (withRawtext.value.length) el.with = { rawtext: withRawtext.value.map(e => ({ ...e })) }
+      }
       break
     }
     default: el = { text: '' }
@@ -478,7 +550,167 @@ export function saveElement() {
 }
 
 export function addWithParam() { tempWith.value.push('') }
-export function removeWithParam(i) { tempWith.value.splice(i, 1) }
+export function removeWithParam(i) {
+  if (withParamConfirmIdx.value === i) {
+    clearTimeout(withParamConfirmTimer)
+    withParamConfirmIdx.value = null
+    tempWith.value.splice(i, 1)
+  } else {
+    clearTimeout(withParamConfirmTimer)
+    withParamConfirmIdx.value = i
+    withParamConfirmTimer = setTimeout(() => { withParamConfirmIdx.value = null }, 5000)
+  }
+}
+
+// ========== 嵌套编辑（with.rawtext 内元素） ==========
+
+function buildNestedElement() {
+  const type = nestedType.value
+  switch (type) {
+    case 'text': return { text: nestedText.value }
+    case 'selector': return { selector: nestedSelector.value }
+    case 'score': return { score: { name: nestedScoreName.value || '@s', objective: nestedScoreObj.value } }
+    case 'translate': {
+      const el = { translate: nestedTranslateKey.value }
+      const arr = nestedWith.value.map(s => s.trim()).filter(Boolean)
+      if (arr.length) el.with = arr
+      return el
+    }
+    default: return { text: '' }
+  }
+}
+
+function populateNestedForm(el) {
+  const type = getElType(el)
+  nestedType.value = type
+  switch (type) {
+    case 'text': nestedText.value = el.text || ''; break
+    case 'selector': nestedSelector.value = el.selector || '@p'; break
+    case 'score':
+      nestedScoreObj.value = el.score?.objective || ''
+      nestedScoreName.value = el.score?.name || '@s'
+      break
+    case 'translate':
+      nestedTranslateKey.value = el.translate || ''
+      nestedWith.value = Array.isArray(el.with) ? el.with.map(String) : []
+      break
+  }
+}
+
+export function startNestedEdit(idx) {
+  if (idx !== null && idx !== undefined) {
+    nestedIdx.value = idx
+    populateNestedForm(withRawtext.value[idx])
+  } else {
+    nestedIdx.value = -1 // -1 表示新增
+    resetOnlyNestedForm()
+  }
+}
+
+function resetOnlyNestedForm() {
+  nestedType.value = 'text'
+  nestedText.value = ''
+  nestedSelector.value = '@p'
+  nestedScoreObj.value = ''
+  nestedScoreName.value = '@s'
+  nestedTranslateKey.value = ''
+  nestedWithMode.value = 'array'
+  nestedWith.value = []
+  nestedWithRawtext.value = []
+}
+
+export function saveNestedEdit() {
+  const el = buildNestedElement()
+  if (nestedIdx.value >= 0) {
+    withRawtext.value[nestedIdx.value] = el
+  } else {
+    withRawtext.value.push(el)
+  }
+  nestedIdx.value = null
+  clearModalConfirmStates()
+}
+
+export function cancelNestedEdit() {
+  nestedIdx.value = null
+  clearModalConfirmStates()
+}
+
+export function deleteWithEl(idx) {
+  if (withElConfirmIdx.value === idx) {
+    clearTimeout(withElConfirmTimer)
+    withElConfirmIdx.value = null
+    withRawtext.value.splice(idx, 1)
+  } else {
+    clearTimeout(withElConfirmTimer)
+    withElConfirmIdx.value = idx
+    withElConfirmTimer = setTimeout(() => { withElConfirmIdx.value = null }, 5000)
+  }
+}
+
+export function moveWithEl(idx, dir) {
+  if (dir === 'up' && idx > 0) {
+    const temp = withRawtext.value[idx]
+    withRawtext.value[idx] = withRawtext.value[idx - 1]
+    withRawtext.value[idx - 1] = temp
+  } else if (dir === 'down' && idx < withRawtext.value.length - 1) {
+    const temp = withRawtext.value[idx]
+    withRawtext.value[idx] = withRawtext.value[idx + 1]
+    withRawtext.value[idx + 1] = temp
+  }
+}
+
+// 嵌套 translate 的 with 操作
+export function addNestedWithParam() { nestedWith.value.push('') }
+export function removeNestedWithParam(i) {
+  if (nestedWithParamConfirmIdx.value === i) {
+    clearTimeout(nestedWithParamConfirmTimer)
+    nestedWithParamConfirmIdx.value = null
+    nestedWith.value.splice(i, 1)
+  } else {
+    clearTimeout(nestedWithParamConfirmTimer)
+    nestedWithParamConfirmIdx.value = i
+    nestedWithParamConfirmTimer = setTimeout(() => { nestedWithParamConfirmIdx.value = null }, 5000)
+  }
+}
+export function addNestedWithRawtextEl() {
+  nestedWithRawtext.value.push({ text: '' })
+}
+
+// 嵌套 translate 的 with.rawtext 内元素编辑（第三层）
+// 复用 nestedIdx 追踪：当嵌套 translate 的 with 为 object 时，
+// 编辑其 rawtext 内元素 → 将当前元素备份，切换 nested 表单
+export function startNestedWithEdit(idx) {
+  // 备份当前 nested 表单状态，进入更深层编辑
+  // 实际上嵌套 translate 编辑其 with.rawtext 中的元素时，
+  // 我们用另一个临时数组来追踪：当前 translate 编辑的就是 nestedWithRawtext
+  // 编辑其 with.rawtext 元素时，把元素数据填入 nested 表单
+  if (idx !== null && idx !== undefined) {
+    // 编辑已有元素
+    const el = nestedWithRawtext.value[idx]
+    nestedIdx.value = idx
+    populateNestedForm(el)
+    // 保存编辑目标：是 nestedWithRawtext 而非 withRawtext
+    // 需要新增一个标记区分
+  } else {
+    // 添加新元素到 nestedWithRawtext
+    nestedIdx.value = -1
+    resetOnlyNestedForm()
+  }
+}
+
+export function saveNestedWithEdit() {
+  const el = buildNestedElement()
+  if (nestedIdx.value >= 0) {
+    nestedWithRawtext.value[nestedIdx.value] = el
+  } else {
+    nestedWithRawtext.value.push(el)
+  }
+  nestedIdx.value = null
+}
+
+export function deleteNestedWithEl(idx) {
+  nestedWithRawtext.value.splice(idx, 1)
+}
 
 // ========== 导入 ==========
 export function openImport() {
@@ -592,8 +824,12 @@ export function useRawJsonEditor() {
     data, cmdType, titlePos, targetSel, targetCustom,
     undoStack, redoStack,
     editIdx, insertIdx, tempWith, deleteConfirmIdx,
+    withParamConfirmIdx, withElConfirmIdx, nestedWithParamConfirmIdx,
     showEditModal, showImportModal, showColorModal,
     editType, formText, formSelector, formScoreObj, formScoreName, formTranslateKey,
+    withMode, withRawtext,
+    nestedIdx, nestedType, nestedText, nestedSelector, nestedScoreObj, nestedScoreName, nestedTranslateKey,
+    nestedWithMode, nestedWith, nestedWithRawtext,
     importText, importError,
     jsonFormatted,
     // 计算属性
@@ -605,6 +841,9 @@ export function useRawJsonEditor() {
     getElType, getElTypeLabel, getElPreviewText, getElTypeClass,
     addElement, editElement, deleteElement, moveElement,
     resetEditForm, closeEditModal, saveElement, addWithParam, removeWithParam,
+    startNestedEdit, saveNestedEdit, cancelNestedEdit, deleteWithEl, moveWithEl,
+    addNestedWithParam, removeNestedWithParam, addNestedWithRawtextEl,
+    startNestedWithEdit, saveNestedWithEdit, deleteNestedWithEl,
     openImport, closeImport, parseImport,
     openColorTable, closeColorTable, copyColorCode,
     formatJson, minifyJson, copyCommand, clearAll, loadExample,
