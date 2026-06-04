@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.1.1.0'
+const CACHE_VERSION = '3.1.2'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
@@ -180,7 +180,7 @@ self.addEventListener('message', (event) => {
         content: `
         <h3>宣传视频已发布，还请多多三连呀~😭👊<br>⚠️ 3.1.0-更新前请务必导出您的T显编辑器的数据，更新不保证100%不造成损坏！</h3><br>
         <h4>👾 更新日志：</h4>
-        <p>[+] 首页加入收藏卡片功能<br>[~] 优化文档页markdown样式<br>[+] 部分元素圆角改用超椭圆(需浏览器支持)<br>[+] 重构T显可视化编辑器<br>[+] 特殊符号页添加预览验证功能<br>[+] 新卡片：Paul指令社区、MC指令音乐站<br>[+] 下载页支持选择历史版本</p>
+        <p>[+] T显编辑器支持translate嵌套编辑<br>[+] 首页加入收藏卡片功能<br>[~] 优化文档页markdown样式<br>[+] 部分元素圆角改用超椭圆(需浏览器支持)<br>[+] 重构T显可视化编辑器<br>[+] 特殊符号页添加预览验证功能<br>[+] 新卡片：Paul指令社区、MC指令音乐站<br>[+] 下载页支持选择历史版本</p>
         `,
         buttons: [
           { text: '立即更新', style: 'fill', action: 'update_sw' },
