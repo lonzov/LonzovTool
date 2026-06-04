@@ -76,7 +76,7 @@ pnpm format           # 代码格式化
 <details>
 <summary>📂 项目结构（面向 AI Agent 维护）</summary>
 
-项目结构描述已迁移至 YML 文件，详见 [docs/project-structure.yml](docs/project-structure.yml)。
+项目结构描述已迁移至 YML 文件，详见 [docs/project-structure.yml](docs/project-structure.yml)
 
 </details>
 
