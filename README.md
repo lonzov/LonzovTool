@@ -44,16 +44,8 @@
 - **[命令模拟器](https://github.com/missing244/Command_Simulator/)**：execute 语法转换逻辑参考了此项目，特殊符号的符号图片也是由该项目整理。
 - **[Webstack网址导航](https://github.com/WebStackPage/WebStackPage.github.io)**： 首页布局参考了此项目。
 - **[Mizuki](https://github.com/LyraVoid/Mizuki)**： 部分 UI/UX 效果参考了此项目。
+- **[矩阵方块 - T显编译器](https://jzfk.indevs.in/)**： T显编辑器参考了此项目。
 - **[Minecraft 格式化代码渲染器](https://github.com/Spectrollay/minecraft_formatting_code_online)**： T显编辑器 § 颜色代码渲染基于此项目 (MIT)。
-
-## TODO
-
-- [x] ~~**重构T显可视化编辑器**~~
-- [ ] **设置页**： 添加全局设置面板，支持标签页行为、性能选项等自定义偏好
-- [ ] **自定义性能选项**： 允许自定义控制较为影响性能的功能是否启用，如模糊、部分动画等
-- [ ] **站外链接嵌入**： 允许将站外链接以 iframe 形式在标签页中打开，拓展工具工作流
-- [ ] **架构优化**： 抽取公共模块与组合式函数，消除跨文件的重复逻辑，优化项目结构
-- [x] ~~移除 Herobrine~~
 
 ## 开发
 
