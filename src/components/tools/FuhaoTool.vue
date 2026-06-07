@@ -569,6 +569,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: -1px;
   border-radius: inherit;
+  corner-shape: squircle;
   padding: 1px;
   background: radial-gradient(
     150px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
