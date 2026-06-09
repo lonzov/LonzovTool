@@ -57,6 +57,7 @@ const importModal = ref({
   scopeLabel: '',
   hasLocalData: false,
   data: null,
+  rejectedKeys: [],
 })
 
 function getScopeKeys(scope) {
@@ -73,6 +74,16 @@ function getScopeKeys(scope) {
     }
   }
   return keys
+}
+
+function isKeyInScope(key, scope) {
+  if (scope.keys && scope.keys.includes(key)) return true
+  if (scope.keysExact && scope.keysExact.includes(key)) return true
+  if (scope.keysPrefix && scope.keysPrefix.some((p) => key.startsWith(p))) return true
+  if (typeof scope.getKeys === 'function') {
+    return getScopeKeys(scope).includes(key)
+  }
+  return false
 }
 
 function collectScopeData(scope) {
@@ -144,6 +155,23 @@ function handleImport(scopeKey) {
       }
 
       const scope = CONFIG_SCOPES[scopeKey]
+
+      // 白名单过滤
+      const validData = {}
+      const rejectedKeys = []
+      for (const [key, val] of entries) {
+        if (isKeyInScope(key, scope)) {
+          validData[key] = val
+        } else {
+          rejectedKeys.push(key)
+        }
+      }
+
+      if (Object.keys(validData).length === 0) {
+        message.error('文件中没有可导入的有效配置项，请确认选择了正确的配置文件')
+        return
+      }
+
       const hasLocalData = checkLocalData(scope)
 
       importModal.value = {
@@ -151,7 +179,8 @@ function handleImport(scopeKey) {
         scope: scopeKey,
         scopeLabel: scope.label,
         hasLocalData,
-        data,
+        data: validData,
+        rejectedKeys,
       }
     } catch (err) {
       if (err instanceof SyntaxError) {
@@ -259,6 +288,13 @@ const darkOverrides = {
           </p>
           <p v-else>
             即将导入「{{ importModal.scopeLabel }}」的配置数据，是否确认导入？
+          </p>
+          <p
+            v-if="importModal.rejectedKeys.length"
+            class="import-rejected"
+          >
+            以下 {{ importModal.rejectedKeys.length }} 项不在白名单中，已自动忽略：<br />
+            <code>{{ importModal.rejectedKeys.join('、') }}</code>
           </p>
         </div>
         <template #footer>
@@ -410,6 +446,23 @@ const darkOverrides = {
 .import-modal-body strong {
   font-weight: 600;
   color: var(--n-text-color);
+}
+
+.import-rejected {
+  margin-top: 12px !important;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--text-primary) 65%, transparent);
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+}
+
+.import-rejected code {
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 12px;
+  word-break: break-all;
 }
 
 .import-modal-actions {
