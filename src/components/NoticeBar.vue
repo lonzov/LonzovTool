@@ -1,7 +1,7 @@
 <script>
 import { h, TransitionGroup, nextTick } from 'vue'
 import { NIcon } from 'naive-ui'
-import { MegaphoneLoud24Filled } from '@vicons/fluent'
+import { MegaphoneLoud24Filled, Open20Filled } from '@vicons/fluent'
 import notices from '../data/notices.json'
 
 export default {
@@ -137,7 +137,7 @@ export default {
         visibility: hidden;
         pointer-events: none;
         background: var(--bg-card);
-        border-radius: 4px;
+        border-radius: 8px;
         display: flex;
         align-items: flex-start;
         padding: 8px 12px;
@@ -194,7 +194,7 @@ export default {
         ref: 'noticeBar',
         style: {
           background: 'var(--bg-card)',
-          borderRadius: '4px',
+          borderRadius: '8px',
           display: 'flex',
           alignItems: 'flex-start',
           padding: '8px 12px',
@@ -283,7 +283,21 @@ export default {
                                     color: 'var(--text-primary)',
                                   },
                                 },
-                                notice.content,
+                                [
+                                  notice.content,
+                                  hasLink &&
+                                    h(NIcon, {
+                                      component: Open20Filled,
+                                      size: 13,
+                                      color: 'var(--text-primary)',
+                                      style: {
+                                        verticalAlign: 'text-top',
+                                        marginLeft: '1px',
+                                        position: 'relative',
+                                        top: '1px',
+                                      },
+                                    }),
+                                ],
                               ),
                               // 日期（带 Tooltip）- 靠右对齐
                               h(

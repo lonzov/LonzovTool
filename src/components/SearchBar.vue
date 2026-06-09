@@ -2,7 +2,7 @@
   <div
     :style="{
       background: 'var(--bg-card)',
-      borderRadius: '4px',
+      borderRadius: '8px',
       display: 'flex',
       alignItems: 'center',
       padding: '0',
