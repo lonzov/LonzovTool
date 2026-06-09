@@ -37,6 +37,18 @@ const CONFIG_SCOPES = {
     desc: '例如深浅主题、搜索偏好',
     keys: ['theme_mode', 'search_engine_selected'],
   },
+  all: {
+    label: '所有配置',
+    desc: '一键导入导出上方全部配置',
+    getKeys() {
+      const allKeys = []
+      for (const key of Object.keys(CONFIG_SCOPES)) {
+        if (key === 'all') continue
+        allKeys.push(...getScopeKeys(CONFIG_SCOPES[key]))
+      }
+      return [...new Set(allKeys)]
+    },
+  },
 }
 
 const importModal = ref({
@@ -48,6 +60,7 @@ const importModal = ref({
 })
 
 function getScopeKeys(scope) {
+  if (typeof scope.getKeys === 'function') return scope.getKeys()
   const keys = []
   if (scope.keys) keys.push(...scope.keys)
   if (scope.keysExact) keys.push(...scope.keysExact)
@@ -176,7 +189,7 @@ const darkOverrides = {
 
         <!-- 外观 -->
         <div class="settings-card">
-          <div class="card-header">外观</div>
+          <div class="card-header">个性化</div>
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-title">主题模式</span>
