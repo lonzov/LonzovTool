@@ -293,27 +293,19 @@ watchEffect(() => {
   border-collapse: separate;
   border-spacing: 0;
   width: 100%;
-  margin: 1.5em 0;
+  margin: 16px 0;
   border: 1px solid var(--border-color);
   border-radius: 0.75rem;
+  corner-shape: squircle;
   overflow: hidden;
-  transition: border-color 0.4s ease;
 }
 
 .docs-content :deep(th),
 .docs-content :deep(td) {
-  padding: 0.75rem 1rem;
-  text-align: left;
   border-bottom: 1px solid var(--border-color);
   border-right: 1px solid var(--border-color);
-  white-space: nowrap;
-  transition: none;
-}
-
-.docs-content :deep(th) {
-  background: var(--bg-sub);
-  font-weight: 600;
-  transition: background-color 0.4s ease;
+  padding: 8px 12px;
+  text-align: left;
 }
 
 .docs-content :deep(tr:last-child td) {
@@ -325,14 +317,9 @@ watchEffect(() => {
   border-right: none;
 }
 
-.docs-content :deep(tr:nth-child(even)) {
-  background-color: var(--bg-sub);
-  transition: background-color 0.4s ease;
-}
-
-.docs-content :deep(tr:hover td) {
-  background-color: var(--bg-sub);
-  transition: none;
+.docs-content :deep(th) {
+  background: var(--bg-sub);
+  font-weight: 600;
 }
 
 .docs-content :deep(hr) {
@@ -400,6 +387,12 @@ watchEffect(() => {
 }
 
 /* 错误状态样式已合并到 .docs-loading--error */
+
+@supports (corner-shape: squircle) {
+  .docs-content :deep(table) {
+    border-radius: 1.275rem;
+  }
+}
 </style>
 
 <style>

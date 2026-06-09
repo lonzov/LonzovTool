@@ -100,7 +100,7 @@ observer.observe(document.documentElement, {
 
 /* 选项槽 */
 .donate-tab-switch {
-  --radius: 8px;
+  --radius: 18px;
   --height: 42px;
   --speed: 0.25s;
   --count: 3;
@@ -128,9 +128,23 @@ observer.observe(document.documentElement, {
   grid-auto-columns: 1fr;
   position: relative;
   border-radius: var(--radius);
+  corner-shape: squircle;
   width: 260px;
-  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+  background: var(--bg-sub);
+  box-shadow: none;
   transition: background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.donate-tab-switch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  corner-shape: squircle;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+  z-index: 2;
+  transition: box-shadow 0.4s ease;
 }
 
 .donate-tab-input {
@@ -160,6 +174,7 @@ observer.observe(document.documentElement, {
 
 .donate-tab-switch :checked + .donate-tab-label {
   --highlight: 1;
+  color: #fff;
 }
 
 .donate-tab-label {
@@ -169,10 +184,12 @@ observer.observe(document.documentElement, {
   height: 100%;
   display: grid;
   border-radius: calc(var(--radius));
+  corner-shape: squircle;
   place-items: center;
   font-weight: 600;
   font-size: 14px;
-  color: hsl(0 0% 100% / calc(0.5 + var(--highlight, 0)));
+  /* 非焦点文字颜色（仅浅色模式），深色模式见下方 [data-theme='dark'] 覆盖 */
+  color: hsl(0, 0%, 33%);
   transition: color var(--speed);
   transition-timing-function: var(--ease, ease);
   user-select: none;
@@ -194,20 +211,24 @@ observer.observe(document.documentElement, {
   background: var(--active-color, #ffffff);
   position: absolute;
   border-radius: calc(var(--radius));
+  corner-shape: squircle;
   translate: calc(var(--active, 0) * 100%) 0;
   transition: translate var(--speed), background-color var(--speed);
   transition-timing-function: var(--ease, ease);
   z-index: 0;
 }
 
-/* 亮色模式 */
-.donate-tab-switch {
-  background: hsl(0, 0%, 65%);
+/* 深色模式 */
+[data-theme='dark'] .donate-tab-label {
+  color: hsl(0 0% 100% / calc(0.5 + var(--highlight, 0)));
 }
 
-/* 深色模式 */
-[data-theme='dark'] .donate-tab-switch {
-  background: hsl(0 0% 4%);
+[data-theme='dark'] .donate-tab-switch :checked + .donate-tab-label {
+  color: #fff;
+}
+
+[data-theme='dark'] .donate-tab-switch::before {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 /* 收款码图片 */
@@ -324,6 +345,12 @@ observer.observe(document.documentElement, {
 /* 深色模式图片加亮边框 */
 .donate-card--dark .donate-qr-wrapper {
   border: 1px solid #333333;
+}
+
+@supports (corner-shape: squircle) {
+  .donate-tab-switch {
+    --radius: 30px;
+  }
 }
 </style>
 
