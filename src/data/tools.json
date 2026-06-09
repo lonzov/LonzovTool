@@ -76,20 +76,6 @@
           "link": "https://teshuzifu.cn/"
         },
         {
-          "id": "molang-grapher",
-          "title": "molang图示工具",
-          "description": "一个用于 Molang 的绘图工具",
-          "logo": "/logos/github.webp",
-          "link": "https://jannisx11.github.io/molang-grapher/"
-        },
-        {
-          "id": "fmbe-sim",
-          "title": "FMBE模拟器",
-          "description": "FMBE模拟器,可视化预览+生成命令",
-          "logo": "/logos/github.webp",
-          "link": "https://szea-ll14.github.io/fmbeSim/"
-        },
-        {
           "id": "chunkbase",
           "title": "ChunkBase",
           "description": "通过种子号定位群系、结构、史莱姆区块等",
@@ -111,6 +97,34 @@
           "link": "https://mcpixelart.com/"
         },
         {
+          "id": "3d-text",
+          "title": "3D字生成",
+          "description": "轻松制作mc风格中文3D文本",
+          "logo": "/logos/3dt_easecation_net.webp",
+          "link": "https://3dt.easecation.net/"
+        },
+        {
+          "id": "mc-hm0-top",
+          "title": "网易版存档解密",
+          "description": "网易版加密存档解密工具",
+          "logo": "/logos/HAIMING.webp",
+          "link": "https://mc.hm0.top/"
+        }
+      ]
+    },
+    {
+      "name": "FMBE专区",
+      "icon": "Cube24Regular",
+      "parentMenuId": "websites",
+      "tools": [
+        {
+          "id": "BB-CVT-FMBE",
+          "title": "BB模型转FMBE",
+          "description": "BlockBench模型转成FMBE指令",
+          "logo": "/logos/Allah-Ethan.webp",
+          "link": "https://fairy-oracle-sanctuary.github.io/BB-CVT-FMBE/"
+        },
+        {
           "id": "blockbench-web",
           "title": "Blockbench网页版",
           "description": "一款强大的3D建模工具,支持mc模型制作",
@@ -118,11 +132,25 @@
           "link": "https://web.blockbench.net/"
         },
         {
-          "id": "3d-text",
-          "title": "3D字生成",
-          "description": "轻松制作mc风格中文3D文本",
-          "logo": "/logos/3dt_easecation_net.webp",
-          "link": "https://3dt.easecation.net/"
+          "id": "ex-fmbe-sim",
+          "title": "EX FMBE模拟器",
+          "description": "可视化预览+生成命令",
+          "logo": "/logos/Allah-Ethan.webp",
+          "link": "https://fairy-oracle-sanctuary.github.io/EX-FMBE-simulator/"
+        },
+        {
+          "id": "fmbe-sim",
+          "title": "FMBE模拟器",
+          "description": "FMBE模拟器,可视化预览+生成命令",
+          "logo": "/logos/github.webp",
+          "link": "https://szea-ll14.github.io/fmbeSim/"
+        },
+        {
+          "id": "molang-grapher",
+          "title": "molang图示工具",
+          "description": "一个用于 Molang 的绘图工具",
+          "logo": "/logos/github.webp",
+          "link": "https://jannisx11.github.io/molang-grapher/"
         }
       ]
     },
@@ -366,6 +394,13 @@
           "description": "本站云计算支持，提供一键部署MC服等云服务",
           "logo": "/logos/rainyun.webp",
           "link": "https://www.rainyun.com/lonzov_?s=tool_card"
+        },
+        {
+          "id": "aura-music",
+          "title": "Aura Music",
+          "description": "在线音乐播放器，支持PWA应用，不提供音源",
+          "logo": "/logos/aura-music.svg",
+          "link": "https://music.lonzov.top/"
         }
       ]
     }

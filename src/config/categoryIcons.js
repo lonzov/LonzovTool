@@ -11,6 +11,7 @@ import {
   KeyCommand16Filled,
   Edit24Filled,
   Box24Regular,
+  Cube24Regular,
 } from '@vicons/fluent'
 
 // 图标映射表
@@ -25,6 +26,7 @@ export const categoryIconMap = {
   KeyCommand16Filled: KeyCommand16Filled,
   Edit24Filled: Edit24Filled,
   Box24Regular: Box24Regular,
+  Cube24Regular: Cube24Regular,
 }
 
 export function getCategoryIcon(iconName, defaultIcon = Apps24Regular) {
