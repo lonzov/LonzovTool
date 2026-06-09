@@ -61,22 +61,45 @@ onMounted(async () => {
 }
 
 .donate-records table {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   width: 100%;
   margin: 16px 0;
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  corner-shape: squircle;
+  overflow: hidden;
+  transition: border-color 0.4s ease;
 }
 
 .donate-records th,
 .donate-records td {
-  border: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
   padding: 8px 12px;
   text-align: left;
   transition: border-color 0.4s ease, background-color 0.4s ease;
 }
 
+.donate-records tr:last-child td {
+  border-bottom: none;
+}
+
+.donate-records th:last-child,
+.donate-records td:last-child {
+  border-right: none;
+}
+
 .donate-records th {
   background: var(--bg-sub);
   font-weight: 600;
+  transition: background-color 0.4s ease;
+}
+
+@supports (corner-shape: squircle) {
+  .donate-records table {
+    border-radius: 1.275rem;
+  }
 }
 
 .donate-records a {
