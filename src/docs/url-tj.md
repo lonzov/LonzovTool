@@ -24,6 +24,6 @@
 
 ---
 
-<span class="trigger-url-tj">✅ 我已阅读并理解上述须知</span>
+<span class="trigger-url-tj">✅ 阅读并理解上述须知后，请点击此处开始填写</span>
 
 <iframe-form src="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcngo6gGFT1RD2Rtkg5C2OlUc" height="600" key="url-tj" />

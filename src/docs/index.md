@@ -1,4 +1,4 @@
-> 常见问题在底部
+> 导航：[常见问题](/docs/faq) | [开发文档](/docs/dev)
 
 ---
 
@@ -53,18 +53,3 @@
 - QQ群: <a href="https://qm.qq.com/q/hjTqUyIKEo" target="_blank" rel="noopener" referrerpolicy="origin">587984701</a>
 
 <iframe-form src="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnSkK8TS3y8eR4bnHkI1wmlc" height="600" key="feedback" />
-
----
-
-# 常见问题
-
-## 1. 卡片的链接打不开
-
-1. **多刷新几次**
-2. **更换网络环境：** wifi换流量，流量换wifi，还不行尝试更换DNS或使用代理。
-3. **过几十分钟再试：** 尤其在下午和晚上高峰期时。
-
-## 2. 网址记不住怎么办
-
-1. **收藏夹：** 浏览器收藏夹里保存一份，想用的时候直接点开。
-2. **[o3o.ren/tool](https://o3o.ren/tool)：** “欧三欧点人(ren)/工具(tool)”，这样总能记住了吧？

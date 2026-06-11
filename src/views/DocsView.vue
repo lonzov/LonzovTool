@@ -43,6 +43,8 @@ const docMap = {
   'url-tj': '../docs/url-tj.md',
   privacy: '../docs/privacy.md',
   donate: '../docs/donate.md',
+  faq: '../docs/faq.md',
+  dev: '../docs/dev.md',
 }
 
 // 将组件渲染到 markdown 中的占位符位置
@@ -153,22 +155,29 @@ function setupLinkInterception() {
       const href = link.getAttribute('href')
       if (!href) return
 
-      // 检查是否是内部链接（以 /?search= 开头）
-      if (href.startsWith('/?search=')) {
-        e.preventDefault()
-        const searchQuery = href.split('?search=')[1] || ''
-        // 解码 search 参数
-        try {
-          router.push({ path: '/', query: { search: decodeURIComponent(searchQuery) } })
-        } catch {
-          router.push({ path: '/', query: { search: searchQuery } })
-        }
-      } else {
-        // 非内部链接一律在新标签页打开
-        link.setAttribute('target', '_blank')
-        link.setAttribute('rel', 'noopener')
-        link.setAttribute('referrerpolicy', 'origin')
+      // 解析目标 URL
+      let targetURL
+      try {
+        targetURL = new URL(href, window.location.origin)
+      } catch {
+        // 无效 URL 忽略
+        return
       }
+
+      // mailto / tel 等非 HTTP 协议跳过
+      if (targetURL.protocol !== 'http:' && targetURL.protocol !== 'https:') return
+
+      // 同源 → 使用 Vue Router 在当前标签页导航
+      if (targetURL.origin === window.location.origin) {
+        e.preventDefault()
+        router.push(targetURL.pathname + targetURL.search + targetURL.hash)
+        return
+      }
+
+      // 外部链接 → 新标签页打开
+      link.setAttribute('target', '_blank')
+      link.setAttribute('rel', 'noopener')
+      link.setAttribute('referrerpolicy', 'origin')
     }
 
     document.addEventListener('click', contentClickHandler)
