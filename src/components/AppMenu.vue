@@ -28,7 +28,7 @@ export default {
     })
 
     // PWA 安装
-    const { isInstallable, isInstalled, isIOS, isOpenHarmony, install: doInstall } = usePWAInstall()
+    const { isInstalled, install: doInstall } = usePWAInstall()
     const message = useMessage()
 
     function handlePWAInstall() {
@@ -37,7 +37,7 @@ export default {
 
         if (result.type === 'ios-manual' || result.type === 'openharmony-manual') {
           message.info(
-            '请使用浏览器打开本站，点击分享按钮 → 添加到主屏幕，即可完成安装',
+            '请使用浏览器打开本站，点击分享按钮 -\n→ 添加到主屏幕，即可完成安装',
             { duration: 8000, closable: true }
           )
           return
@@ -47,13 +47,13 @@ export default {
           if (result.outcome === 'accepted') {
             message.success('安装成功！小舟工具箱已添加到桌面')
           } else {
-            message.warning('请在浏览器弹出窗口中点击"安装"按钮即可完成')
+            message.warning('手动取消安装或浏览器不支持')
           }
           return
         }
 
         // unsupported — 浏览器不支持自动安装
-        message.error('当前浏览器不支持自动安装，请使用 Chrome 或 Edge 浏览器打开本站', {
+        message.error('当前浏览器不支持自动安装，请使用标准浏览器打开本站', {
           duration: 6000,
           closable: true,
         })
@@ -62,10 +62,7 @@ export default {
 
     return {
       defaultExpandedKeys,
-      isInstallable,
       isInstalled,
-      isIOS,
-      isOpenHarmony,
       handlePWAInstall,
     }
   },
@@ -87,8 +84,8 @@ export default {
     }
   },
   watch: {
-    // beforeinstallprompt 事件是异步的，当 isInstallable 变为 true 时重建菜单
-    isInstallable() {
+    // 安装完成后隐藏按钮
+    isInstalled() {
       this.initMenuOptions()
     },
   },
@@ -146,8 +143,8 @@ export default {
         },
       ]
 
-      // PWA 安装入口（条件展示：仅浏览器支持且未安装时出现）
-      if (this.isInstallable && !this.isInstalled) {
+      // PWA 安装入口（仅已安装为 PWA 时隐藏，其余情况始终展示）
+      if (!this.isInstalled) {
         staticOptions.push({
           label: '安装本站',
           key: 'pwa-install',
