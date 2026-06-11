@@ -36,8 +36,12 @@ export default {
         if (result.type === 'already-installed') return
 
         if (result.type === 'ios-manual' || result.type === 'openharmony-manual') {
-          message.info(
-            '请使用浏览器打开本站，点击分享按钮 -\n→ 添加到主屏幕，即可完成安装',
+          message.info(() =>
+            h('div', { style: { lineHeight: '1.6' } }, [
+              '使用系统浏览器打开本站，点击分享按钮-',
+              h('br'),
+              '→ 添加到主屏幕/桌面，即可完成安装',
+            ]),
             { duration: 8000, closable: true }
           )
           return
@@ -47,13 +51,13 @@ export default {
           if (result.outcome === 'accepted') {
             message.success('安装成功！小舟工具箱已添加到桌面')
           } else {
-            message.warning('手动取消安装或浏览器不支持')
+            message.warning('手动取消安装/浏览器不支持')
           }
           return
         }
 
         // unsupported — 浏览器不支持自动安装
-        message.error('当前浏览器不支持自动安装，请使用标准浏览器打开本站', {
+        message.error('当前浏览器不支持安装，请使用标准浏览器打开本站', {
           duration: 6000,
           closable: true,
         })
