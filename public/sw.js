@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.1.3'
+const CACHE_VERSION = '3.1.4'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
@@ -178,9 +178,10 @@ self.addEventListener('message', (event) => {
       popupData: {
         title: '有新版本可用',
         content: `
-        <h3>宣传视频已发布，还请多多三连呀~😭👊<br>⚠️ 3.1.0-更新前请务必导出您的T显编辑器的数据，更新不保证100%不造成损坏！</h3><br>
+        <h3>宣传视频已发布，还请多多三连呀~😭👊</h3><br>
         <h4>👾 更新日志：</h4>
-        <p>[+] 加入设置页，允许导出配置<br>[~] 优化文档页样式<br>[+] T显编辑器支持translate嵌套编辑<br>[+] 首页加入收藏卡片功能<br>[+] 部分元素圆角改用超椭圆(需浏览器支持)<br>[+] 重构T显可视化编辑器<br>[+] 新卡片：网易版存档解密、FMBE专区、Aura Music</p>
+        <p>[+] 指令音符盒同步新版本v2.5<br>[+] 加入设置页，允许导出配置<br>[+] T显编辑器支持translate嵌套编辑<br>[+] 首页加入收藏卡片功能<br>[+] 新卡片：网易版存档解密、FMBE专区、Aura Music</p>
+        <p style="font-size:13px"><em>⚠️反馈和建议请前往“关于本站”页面查看</em></p>
         `,
         buttons: [
           { text: '立即更新', style: 'fill', action: 'update_sw' },
