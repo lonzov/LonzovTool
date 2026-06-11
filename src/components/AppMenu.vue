@@ -1,8 +1,9 @@
 <script>
 import { h, markRaw, computed } from 'vue'
-import { NMenu, NIcon } from 'naive-ui'
-import { Home48Regular, Person24Regular, AddSquare24Regular, HeartCircle24Regular, CalendarWorkWeek24Regular } from '@vicons/fluent'
+import { NMenu, NIcon, useMessage } from 'naive-ui'
+import { Home48Regular, Person24Regular, AddSquare24Regular, HeartCircle24Regular, CalendarWorkWeek24Regular, DrawerArrowDownload24Regular } from '@vicons/fluent'
 import { getCategoryIcon } from '../config/categoryIcons'
+import { usePWAInstall } from '../composables/usePWAInstall'
 import toolsData from '../data/tools.json'
 import parentMenusData from '../data/parentMenus.json'
 
@@ -26,8 +27,46 @@ export default {
       return keys
     })
 
+    // PWA 安装
+    const { isInstallable, isInstalled, isIOS, isOpenHarmony, install: doInstall } = usePWAInstall()
+    const message = useMessage()
+
+    function handlePWAInstall() {
+      doInstall().then((result) => {
+        if (result.type === 'already-installed') return
+
+        if (result.type === 'ios-manual' || result.type === 'openharmony-manual') {
+          message.info(
+            '请使用浏览器打开本站，点击分享按钮 → 添加到主屏幕，即可完成安装',
+            { duration: 8000, closable: true }
+          )
+          return
+        }
+
+        if (result.type === 'prompted') {
+          if (result.outcome === 'accepted') {
+            message.success('安装成功！小舟工具箱已添加到桌面')
+          } else {
+            message.warning('请在浏览器弹出窗口中点击"安装"按钮即可完成')
+          }
+          return
+        }
+
+        // unsupported — 浏览器不支持自动安装
+        message.error('当前浏览器不支持自动安装，请使用 Chrome 或 Edge 浏览器打开本站', {
+          duration: 6000,
+          closable: true,
+        })
+      })
+    }
+
     return {
       defaultExpandedKeys,
+      isInstallable,
+      isInstalled,
+      isIOS,
+      isOpenHarmony,
+      handlePWAInstall,
     }
   },
   data() {
@@ -46,6 +85,12 @@ export default {
     if (this.observer) {
       this.observer.disconnect()
     }
+  },
+  watch: {
+    // beforeinstallprompt 事件是异步的，当 isInstallable 变为 true 时重建菜单
+    isInstallable() {
+      this.initMenuOptions()
+    },
   },
   methods: {
     observeTheme() {
@@ -99,11 +144,21 @@ export default {
           key: 'workspace',
           icon: this.renderIcon(markRaw(CalendarWorkWeek24Regular)),
         },
-        {
-          type: 'divider',
-          key: 'divider-categories',
-        },
       ]
+
+      // PWA 安装入口（条件展示：仅浏览器支持且未安装时出现）
+      if (this.isInstallable && !this.isInstalled) {
+        staticOptions.push({
+          label: '安装本站',
+          key: 'pwa-install',
+          icon: this.renderIcon(markRaw(DrawerArrowDownload24Regular)),
+        })
+      }
+
+      staticOptions.push({
+        type: 'divider',
+        key: 'divider-categories',
+      })
 
       // 构建父级菜单映射 (id -> parent配置)
       const parentMenuMap = new Map()
@@ -158,6 +213,12 @@ export default {
       this.menuOptions = [...staticOptions, ...categoryOptions]
     },
     handleUpdateValue(key, item) {
+      // PWA 安装：不导航，触发安装流程
+      if (key === 'pwa-install') {
+        this.handlePWAInstall()
+        return
+      }
+
       this.$emit('update:value', key)
       // 首页、关于、分类、网址提交都触发导航
       if (
