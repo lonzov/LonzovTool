@@ -42,7 +42,7 @@
         <div class="footer-section">
           <h3 class="footer-title">帮助支持</h3>
           <ul class="footer-list">
-            <li><a href="/docs/" @click.prevent="$router.push('/docs/')">常见问题</a></li>
+            <li><a href="/docs/" @click.prevent="$router.push('/docs/faq')">常见问题</a></li>
             <li><a href="https://stats.uptimerobot.com/E0cvH6yiGq" target="_blank" rel="noopener noreferrer">站点监控</a></li>
             <li><a href="/docs/privacy" @click.prevent="$router.push('/docs/privacy')">隐私政策</a></li>
             <li><a href="#" @click.prevent="handleUpdateCookie">更新 Cookie 选项</a></li>
