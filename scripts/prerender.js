@@ -15,8 +15,7 @@ const ROOT = join(__dirname, '..')
 const DIST_DIR = join(ROOT, 'dist')
 const PORT = 18789
 
-// 无法预渲染的路径（/c/raw-json/ 在路由守卫中 bypass SPA 直接跳转）
-const PRERENDER_EXCLUDE = ['/c/raw-json/']
+const PRERENDER_EXCLUDE = []
 
 // 需要预渲染的路由列表（自动从路由配置和数据目录提取）
 const ROUTES = getPages().filter(p => !PRERENDER_EXCLUDE.includes(p))

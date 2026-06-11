@@ -4,6 +4,15 @@ import 'nprogress/nprogress.css'
 import HomeView from '../components/HomeView.vue'
 import OfflineDiagnostic from '../components/OfflineDiagnostic.vue'
 
+// 预加载所有下载配置，提取 slug → name 映射用于 SEO 动态标题
+const downloadModules = import.meta.glob('../data/downloads/*.json', { eager: true })
+const DOWNLOAD_NAMES = {}
+for (const [path, mod] of Object.entries(downloadModules)) {
+  const slug = path.replace('../data/downloads/', '').replace('.json', '')
+  const data = mod.default || mod
+  DOWNLOAD_NAMES[slug] = data.name || slug
+}
+
 // 配置 NProgress
 NProgress.configure({
   showSpinner: false, // 不显示加载转圈
@@ -30,33 +39,28 @@ function clearNavTimer() {
 const TOOL_META_MAP = {
   qjzh: {
     title: '艺术字转换工具 - 小舟工具箱',
-    description: '在线 Minecraft 艺术字生成器，支持标准艺术字、上角标、下角标、拉丁文等多种模式，一键转换字母数字用于基岩版指令 UI 设计与美化，点击即复制。',
+    description: '在线 Minecraft 艺术字生成器，支持标准艺术字、上角标、下角标、拉丁文等多种模式，一键转换字母数字用于基岩版指令 UI 设计与美化。',
     keywords: 'Minecraft,艺术字,基岩版指令,UI美化,上角标,下角标,Unicode字符,小舟工具箱',
   },
   tr: {
     title: 'T显动画生成器 - 小舟工具箱',
-    description: 'Minecraft 基岩版 T显打字机动画在线生成工具。输入文本即可转换为 rawtext 动画序列，支持自定义计分板名称、初始分数、显示速度等参数，无需手动穷举命令。',
+    description: 'Minecraft 基岩版 T显打字机动画在线生成工具。输入文本即可转换为 rawtext 动画序列，支持自定义计分板名称、初始分数等参数，无需手动穷举命令。',
     keywords: 'Minecraft,T显动画,T显生成器,打字机动画,rawtext,基岩版指令,小舟工具箱',
   },
   'raw-json': {
     title: 'T显可视化编辑器 - 小舟工具箱',
     description: 'Minecraft 基岩版 T显 rawJSON 可视化编辑器，0代码轻松实现复杂嵌套文本结构。支持实时预览、导入导出 rawJSON，适用于标题、动作栏、Boss 栏等场景。',
-    keywords: 'Minecraft,T显编辑器,rawjson编辑器,可视化编辑器,rawtext,基岩版指令,MC工具,小舟工具箱',
+    keywords: 'Minecraft,T显编辑器,T显模板,rawjson编辑器,可视化编辑器,rawtext,基岩版指令,MC工具,雪球菜单,小舟工具箱',
   },
   execute: {
     title: 'Execute语法升级工具 - 小舟工具箱',
-    description: 'Minecraft 基岩版 execute 指令旧版本语法自动升级工具。一键将旧格式 execute 命令转换为新版本语法结构，支持 detect/align/run 等复杂嵌套，无需手动学习新版语法。',
+    description: 'Minecraft 基岩版 execute 指令旧版本语法自动升级工具，一键将旧格式 execute 命令转换为新版本语法结构。',
     keywords: 'Minecraft,execute,语法升级,指令转换,基岩版,MC命令,旧版语法,新版本语法,小舟工具箱',
   },
   fuhao: {
     title: 'MC特殊符号大全 - 小舟工具箱',
-    description: 'Minecraft 基岩版特殊符号合集，包含鸡腿、M币等私有区 Unicode 字符及常用特殊符号。点击即可复制到剪贴板，有效提升 MC 开发效率与聊天美化体验。',
-    keywords: 'Minecraft,特殊符号,特殊字符,MC符号,基岩版符号,私有区字符,Unicode,鸡腿符号,M币符号,小舟工具箱',
-  },
-  down: {
-    title: '文件下载 - 小舟工具箱',
-    description: '小舟工具箱文件下载页面，提供 Minecraft 相关资源下载，支持快捷直链解析和手动网盘下载。',
-    keywords: 'Minecraft,资源下载,蓝奏云,MC工具下载,小舟工具箱',
+    description: 'Minecraft 基岩版特殊符号合集，包含鸡腿、M币等私有区 Unicode 字符及常用特殊符号，以及空字符。点击即可复制到剪贴板，有效提升 MC 开发效率与聊天美化体验。',
+    keywords: 'Minecraft,特殊符号,特殊字符,MC符号,基岩版符号,私有区字符,Unicode,鸡腿符号,M币符号,空字符,小舟工具箱',
   },
 }
 
@@ -64,8 +68,18 @@ const TOOL_META_MAP = {
 const DOCS_META_MAP = {
   privacy: {
     title: '隐私政策 - 小舟工具箱',
-    description: '小舟工具箱隐私政策，说明网站的数据收集、使用及存储方式。本站为纯前端静态应用，不主动收集用户个人信息，所有数据本地存储。',
+    description: '小舟工具箱隐私政策，说明网站的数据收集、使用及存储方式。',
     keywords: '小舟工具箱,隐私政策,数据保护,用户隐私,Cookie设置,Minecraft工具',
+  },
+  dev: {
+    title: '开发文档 - 小舟工具箱',
+    description: '小舟工具箱开发文档，面向第三方开发者，包含 URL 参数等说明，提升双方用户体验。',
+    keywords: '小舟工具箱,文档,开发文档,开发规范,URL参数,第三方开发,Minecraft工具',
+  },
+  faq: {
+    title: '常见问题 - 小舟工具箱',
+    description: '小舟工具箱常见问题解答，包含使用技巧、常见疑问与解决方案。',
+    keywords: '小舟工具箱,常见问题,FAQ,使用帮助,Minecraft工具,故障排查',
   },
 }
 
@@ -86,10 +100,6 @@ function resolveDocsMeta(docName) {
  */
 function resolveToolMeta(path) {
   const slug = path.replace(/\/+$/, '')
-  // 下载页匹配 /down/xxx -> 'down'
-  if (slug.startsWith('down/') || slug === 'down') {
-    return TOOL_META_MAP['down'] || null
-  }
   return TOOL_META_MAP[slug] || null
 }
 
@@ -231,14 +241,13 @@ router.afterEach((to) => {
     }
   }
 
-  // /down/:path 下载页走工具映射（如 /down/指令音符盒）
-  if (!title && !description && !keywords && to.path.startsWith('/down/') && to.params.path) {
-    const toolMeta = resolveToolMeta(to.params.path)
-    if (toolMeta) {
-      title = toolMeta.title
-      description = toolMeta.description
-      keywords = toolMeta.keywords
-    }
+  // /down/:path 下载页动态拼接 SEO meta（名称取自下载 JSON 配置）
+  if (!title && !description && !keywords && to.path.startsWith('/down/')) {
+    const slug = to.params.path?.replace(/\/+$/, '') || ''
+    const name = DOWNLOAD_NAMES[slug] || slug
+    title = `${name} - 文件下载 - 小舟工具箱`
+    description = `小舟工具箱提供的${name}下载页面，支持快捷直链解析和手动网盘下载。`
+    keywords = `Minecraft,资源下载,${name},MC工具下载,小舟工具箱`
   }
 
   // /docs/:docName 子页走文档映射（如 /docs/privacy）
