@@ -10,7 +10,7 @@ const stats = ref({
   todayUV: null,
   yesterdayUV: null,
   monthUV: null,
-  yearUV: null,
+  yearPV: null,
 })
 
 const loading = ref(true)
@@ -38,7 +38,7 @@ function applyStatsData(data) {
   stats.value.todayUV = data.today_uv ?? null
   stats.value.yesterdayUV = data.yesterday_uv ?? null
   stats.value.monthUV = data.month_uv ?? null
-  stats.value.yearUV = data.year_uv ?? null
+  stats.value.yearPV = data.year_pv ?? null
 
   isMocked.value = data.is_mocked ?? null
   lastUpdate.value = data.last_update

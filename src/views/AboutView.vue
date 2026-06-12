@@ -57,10 +57,10 @@ onMounted(() => {
           </div>
           <!-- 本年访客 -->
           <div class="stat-card">
-            <div class="stat-label">本年访客</div>
+            <div class="stat-label">本年浏览</div>
             <div class="stat-value">
               <n-skeleton v-if="loading" :width="100" :height="36" :sharp="false" />
-              <n-number-animation v-else-if="stats.yearUV !== null" :from="0" :to="stats.yearUV" :duration="1500" />
+              <n-number-animation v-else-if="stats.yearPV !== null" :from="0" :to="stats.yearPV" :duration="1500" />
               <span v-else class="stat-null">-</span>
             </div>
           </div>
