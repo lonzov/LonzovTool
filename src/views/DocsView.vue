@@ -8,6 +8,7 @@ import NotFoundView from './NotFoundView.vue'
 import IframeForm from '../components/IframeForm.vue'
 import DonateCard from '../components/DonateCard.vue'
 import DonateRecords from '../components/DonateRecords.vue'
+import StatsInfoBar from '../components/StatsInfoBar.vue'
 
 const router = useRouter()
 
@@ -83,6 +84,14 @@ function mountComponentsToPlaceholders() {
       app.mount(placeholder)
       componentApps.push(app)
     })
+
+    // stats-info-bar 占位符
+    const statsPlaceholders = document.querySelectorAll('.stats-info-bar-placeholder')
+    statsPlaceholders.forEach(placeholder => {
+      const app = createApp(StatsInfoBar)
+      app.mount(placeholder)
+      componentApps.push(app)
+    })
   })
 }
 
@@ -120,6 +129,12 @@ async function loadDoc(name) {
     processedRaw = processedRaw.replace(
       /<donate-records\s*\/>/g,
       '<div class="donate-records-placeholder"></div>'
+    )
+
+    // 替换 stats-info-bar 组件标记
+    processedRaw = processedRaw.replace(
+      /<stats-info-bar\s*\/>/g,
+      '<div class="stats-info-bar-placeholder"></div>'
     )
 
     content.value = md.value.render(processedRaw)

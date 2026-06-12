@@ -21,6 +21,7 @@ src:
     ToolLoading.vue: 异步组件加载动画（旋转圆圈 + 加载文字），复用文档页加载样式
     UpdateDialog.vue: SW 更新确认弹窗，照搬 Cookie 弹窗样式
     WorkspaceView.vue: 工作区视图容器，管理多标签页
+    StatsInfoBar.vue: 访问统计信息栏，显示统计起始日、更新时间与数据来源
     tools:
       ArtTextTool.vue: 艺术字转换工具页
       DownloadModal.vue: 下载方式选择模态框
@@ -41,6 +42,7 @@ src:
     usePWAInstall.js: PWA 安装状态管理与安装触发，处理不同系统/浏览器的安装逻辑
     useRawJsonEditor.js: T显编辑器核心状态与逻辑（模块级单例）
     useSWUpdate.js: Service Worker 更新检测与版本比较组合式函数
+    useStats.js: 访问统计状态管理组合式函数（模块级单例，含内存/localsStorage双层缓存）
     useTheme.js: 主题状态管理组合式函数
     useToolStorage.js: 工具页 localStorage 持久化组合式函数
     useWorkspace.js: 工作区状态管理组合式函数

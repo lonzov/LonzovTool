@@ -1,4 +1,8 @@
-> 导航：[常见问题](/docs/faq) | [开发文档](/docs/dev)
+<stats-info-bar />
+
+---
+
+**导航**：[常见问题](/docs/faq) | [开发文档](/docs/dev)
 
 ---
 
