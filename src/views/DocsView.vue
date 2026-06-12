@@ -1,9 +1,10 @@
 <script setup>
-import { ref, watchEffect, shallowRef, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, watchEffect, shallowRef, nextTick, onMounted, onUnmounted, computed } from 'vue'
 import { createApp } from 'vue'
 import { useRouter } from 'vue-router'
 import MarkdownIt from 'markdown-it'
 import AboutView from './AboutView.vue'
+import NotFoundView from './NotFoundView.vue'
 import IframeForm from '../components/IframeForm.vue'
 import DonateCard from '../components/DonateCard.vue'
 import DonateRecords from '../components/DonateRecords.vue'
@@ -28,6 +29,7 @@ const md = shallowRef(new MarkdownIt({
 const content = ref('')
 const loading = ref(true)
 const error = ref(null)
+const docNotFound = computed(() => error.value && error.value.startsWith('文档不存在'))
 
 // 存储组件实例以便清理
 const componentApps = []
@@ -89,10 +91,13 @@ async function loadDoc(name) {
   error.value = null
 
   try {
-    const filePath = docMap[name] || docMap['']
+    const filePath = docMap[name]
+    if (!filePath) {
+      throw new Error(`文档不存在: ${name}`)
+    }
     const loader = docsModules[filePath]
     if (!loader) {
-      throw new Error(`文档不存在: ${name || 'index'}`)
+      throw new Error(`文档不存在: ${name}`)
     }
     const raw = await loader()
 
@@ -206,7 +211,8 @@ watchEffect(() => {
   <div class="docs-view">
     <AboutView v-if="!docName || docName === '' || docName === '/'" />
 
-    <div v-if="loading || error" class="docs-loading" :class="{ 'docs-loading--error': error }">
+    <NotFoundView v-if="docNotFound" />
+    <div v-else-if="loading || error" class="docs-loading" :class="{ 'docs-loading--error': error }">
       <div class="docs-loader-wrapper">
         <div class="docs-loader"></div>
       </div>

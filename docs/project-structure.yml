@@ -75,6 +75,7 @@ src:
     DocsView.vue: 文档页面，动态加载 Markdown 文档（支持组件占位符注入）
     DownView.vue: 下载页面，展示工具下载信息与下载选项
     SettingsView.vue: 设置页面，全局偏好设置（主题模式等）
+    NotFoundView.vue: 404 页面，注入 noindex meta 防止爬虫收录无效 URL
 public:
   sw.js: Service Worker，手写实现 StaleWhileRevalidate 缓存优先 + 离线诊断回退 + V2 兼容消息协议
   manifest.json: Web App Manifest，PWA 配置

@@ -1,11 +1,12 @@
 <script setup>
 import { computed, watch, onMounted, onBeforeUnmount, ref, defineAsyncComponent } from 'vue'
-import { NEmpty, NProgress, NDropdown, useMessage } from 'naive-ui'
+import { NProgress, NDropdown, useMessage } from 'naive-ui'
 import { useRouter, useRoute } from 'vue-router'
 import { ChevronDown16Filled } from '@vicons/fluent'
 import { useWorkspace } from '../composables/useWorkspace.js'
 import { useTheme } from '../composables/useTheme.js'
 import ToolLoading from './ToolLoading.vue'
+import NotFoundView from '../views/NotFoundView.vue'
 
 // 动态加载工具组件，实现按需加载
 const asyncOptions = {
@@ -656,7 +657,7 @@ onMounted(() => {
           :key="activeTab"
           :tab-path="activeTab"
         />
-        <NEmpty v-else description="暂无内容" />
+        <NotFoundView v-else />
       </div>
     </div>
 
