@@ -1,0 +1,18 @@
+{
+    "icon": "/logos/AIEX-FMBE.webp",
+    "name": "AIEX-FMBE 编辑器",
+    "version": "v1.85",
+    "tagline": "一句话 AI 生成 fmbe 模型",
+    "intro": "支持 AI 辅助建模的 EX-FMBE 编辑器，基于 EX-FMBE 编辑器开发，提供了 AI 辅助建模功能，可以通过输入文本描述来生成 FM-BE 模型，极大地降低了建模的门槛，让更多人能够轻松创建自己的 Minecraft 基岩版模型。\n\n作者Q群：<a href=\"https://qm.qq.com/q/M3q5XQoCQK\" target=\"_blank\" rel=\"noopener\" referrerpolicy=\"origin\">865739735</a>\nBilibili 主页：<a href=\"https://space.bilibili.com/437778690\" target=\"_blank\" rel=\"noopener\" referrerpolicy=\"origin\">波登可可</a>",
+    "developer": "波登可可",
+    "developerLink": "https://space.bilibili.com/437778690",
+    "lanzou": [
+        {
+            "version": "v1.85",
+            "url": "https://lonzov.lanzouu.com/iPBD93ry84li",
+            "password": "gnjb"
+        }
+    ],
+    "fileSize": "3.8",
+    "downloads": 0
+}

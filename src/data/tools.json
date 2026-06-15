@@ -139,6 +139,13 @@
           "link": "https://fairy-oracle-sanctuary.github.io/EX-FMBE-simulator/"
         },
         {
+          "id": "aiex-fmbe",
+          "title": "AIEX FMBE模拟器",
+          "description": "可视化预览+生成命令",
+          "logo": "/logos/AIEX-FMBE.webp",
+          "link": "/down/AIEX-FMBE"
+        },
+        {
           "id": "fmbe-sim",
           "title": "FMBE模拟器",
           "description": "FMBE模拟器,可视化预览+生成命令",
