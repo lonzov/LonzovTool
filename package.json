@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build && node scripts/generate-seo.js && node scripts/prerender.js && node scripts/minify-sw.js",
     "preview": "vite preview",
+    "deploy": "node scripts/deploy.js",
     "lint": "run-s lint:*",
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
@@ -35,6 +36,7 @@
     "oxfmt": "^0.35.0",
     "oxlint": "~1.50.0",
     "puppeteer": "^24.42.0",
+    "node-ssh": "^13.2.0",
     "serve-handler": "^6.1.7",
     "vite": "^7.3.1",
     "vite-plugin-vue-devtools": "^8.0.6"

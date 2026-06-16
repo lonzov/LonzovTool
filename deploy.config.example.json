@@ -1,0 +1,13 @@
+{
+  "host": "your-server-ip",
+  "port": 22,
+  "username": "root",
+  "privateKey": "C:/Users/xxx/.ssh/xxx",
+  "sitePath": "/www/wwwroot/your-site",
+  "distName": "dist1",
+  "owner": "www:www",
+  "afterCmd": "",
+  "keepArchives": 4,
+  "skipConfirm": false,
+  "maxRetries": 3
+}

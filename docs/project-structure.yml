@@ -90,8 +90,10 @@ public:
   .well-known/assetlinks.json: Android 数字资产链接验证文件
 docs:
   project-structure.yml: 项目结构描述文件（本文件）
+deploy.config.example.json: 部署配置模板，复制为 deploy.config.json 后填写服务器信息（不参与 git）
 scripts:
   route-list.js: 共享模块：从路由配置自动提取所有公开页面路径
   prerender.js: Puppeteer 预渲染脚本，并发爬取路由生成静态 HTML（SEO）
   generate-seo.js: SEO 文件生成脚本，输出 sitemap.xml 和 robots.txt
   minify-sw.js: Service Worker 压缩脚本，构建流程中使用
+  deploy.js: 部署脚本，SSH 上传构建产物到服务器并原子替换站点目录（pnpm deploy）

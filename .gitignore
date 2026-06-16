@@ -42,3 +42,4 @@ __screenshots__/
 # Project
 .claude/
 v2/
+deploy.config.json
