@@ -8,6 +8,7 @@
     "build": "vite build && node scripts/generate-seo.js && node scripts/prerender.js && node scripts/minify-sw.js",
     "preview": "vite preview",
     "deploy": "node scripts/deploy.js",
+    "b_d": "pnpm build && pnpm deploy",
     "lint": "run-s lint:*",
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
