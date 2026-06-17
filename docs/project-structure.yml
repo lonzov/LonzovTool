@@ -25,6 +25,7 @@ src:
     tools:
       ArtTextTool.vue: 艺术字转换工具页
       DownloadModal.vue: 下载方式选择模态框
+      DownloadIntro.vue: 下载页功能介绍区，支持 Markdown 渲染与字符串兼容
       DownloadTool.vue: 工具下载页（蓝奏云解析）
       TrAnimationTool.vue: T显动画编辑器工具页
       ExecuteTool.vue: 语法转换工具页
@@ -46,15 +47,14 @@ src:
     useTheme.js: 主题状态管理组合式函数
     useToolStorage.js: 工具页 localStorage 持久化组合式函数
     useWorkspace.js: 工作区状态管理组合式函数
+    useDownloadIntro.js: 下载页 Markdown 功能介绍渲染与链接拦截组合式函数
   config:
     categoryIcons.js: 分类图标配置
   data:
     downloads:
       index.js: 模块映射与动态导入配置
-      zhiling-yinfuhe.json: 指令音符盒下载配置
-      mc-yufabao.json: MC语法包下载配置
-      HOSDLA-toolbox.json: HOSDLA工具箱下载配置
-      AIEX-FMBE.json: AI辅助建模工具下载配置
+      '*.json': 下载页配置 JSON 文件，包含工具信息与下载链接
+      md/: 下载页功能介绍 Markdown 文件目录，通过 JSON 配置的 introMd 字段引用
     donateRecords.json: 打赏记录数据（带哈希异步加载）
     notices.json: 公告数据
     parentMenus.json: 父级菜单配置
