@@ -1,13 +1,18 @@
 {
     "icon": "/logos/AIEX-FMBE.webp",
     "name": "AIEX-FMBE 编辑器",
-    "version": "v1.85",
+    "version": "v2.05.1",
     "tagline": "一句话 AI 生成 fmbe 模型",
     "introMd": "AIEX-FMBE.md",
     "intro": "",
     "developer": "波登可可",
     "developerLink": "https://space.bilibili.com/437778690",
     "lanzou": [
+        {
+            "version": "v2.05.1-debug",
+            "url": "https://lonzov.lanzouu.com/iijVZ3s7k1qb",
+            "password": "94qh"
+        },
         {
             "version": "v1.85",
             "url": "https://lonzov.lanzouu.com/iPBD93ry84li",
