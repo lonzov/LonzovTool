@@ -430,6 +430,10 @@ watch(config, (val) => {
 .stat-dev-name {
   font-size: 13px;
   color: color-mix(in srgb, var(--text-primary) 50%, transparent);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ===== 下载按钮 ===== */
