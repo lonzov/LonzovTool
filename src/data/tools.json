@@ -295,7 +295,7 @@
         {
           "id": "HOSDLA-toolbox",
           "title": "HOSDLA工具箱",
-          "description": "音频/视频转指令，并半自动填入命令方块",
+          "description": "指令音乐视频合成器等自动复制文本其他工具",
           "logo": "/logos/HOSDLA_toolbox.webp",
           "link": "/down/HOSDLA-toolbox"
         },

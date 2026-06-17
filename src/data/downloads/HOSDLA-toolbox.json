@@ -2,7 +2,7 @@
     "icon": "/logos/HOSDLA_toolbox.webp",
     "name": "HOSDLA 工具箱",
     "version": "v1.0",
-    "tagline": "音频/视频转指令，并半自动填入命令方块",
+    "tagline": "指令音乐视频合成器等自动复制文本其他工具",
     "intro": "彩色视频转 T 显命令，mid 转 playsound 命令，支持半自动填入命令方块",
     "developer": "红令颠佬HOSDLA",
     "developerLink": "https://space.bilibili.com/2122214034",
