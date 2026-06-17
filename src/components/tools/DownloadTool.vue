@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { NIcon, NNumberAnimation, useMessage } from 'naive-ui'
 import { PersonBoard24Filled } from '@vicons/fluent'
 import DownloadModal from './DownloadModal.vue'
+import DownloadIntro from './DownloadIntro.vue'
 
 const props = defineProps({
   tabPath: {
@@ -254,10 +255,7 @@ watch(config, (val) => {
       <div class="disclaimer-divider"></div>
 
       <!-- 功能介绍 -->
-      <div class="download-intro">
-        <h2 class="intro-title">功能介绍</h2>
-        <p class="intro-text" v-html="config.intro.replace(/\n/g, '<br>')"></p>
-      </div>
+      <DownloadIntro :config="config" />
     </template>
   </div>
 </template>
@@ -525,81 +523,6 @@ watch(config, (val) => {
   background: var(--border-color);
 }
 
-/* ===== 功能介绍 ===== */
-.download-intro {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.intro-title {
-  font-size: 21px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: 0.5px;
-  margin: 0;
-}
-
-.intro-text {
-  font-size: 15px;
-  color: color-mix(in srgb, var(--text-primary) 87%, transparent);
-  line-height: 1.75;
-  margin: 0;
-}
-
-.intro-text :deep(a) {
-  color: var(--text-primary);
-  text-decoration: none;
-  position: relative;
-  padding-bottom: 2px;
-  cursor: pointer;
-  display: inline-block;
-  vertical-align: baseline;
-  background: none;
-}
-
-.intro-text :deep(a)::before {
-  content: '';
-  display: block;
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 5px;
-  height: 1px;
-  background-image: repeating-linear-gradient(to right,
-      color-mix(in srgb, var(--text-primary), transparent 30%) 0 4px,
-      transparent 4px 8px);
-  background-repeat: repeat-x;
-  background-size: 8px 1px;
-  opacity: 1;
-  transition: opacity 0.3s;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.intro-text :deep(a)::after {
-  content: '';
-  display: block;
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 5px;
-  height: 1px;
-  background-color: var(--text-primary);
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-  z-index: 3;
-}
-
-.intro-text :deep(a:hover::before) {
-  opacity: 0;
-}
-
-.intro-text :deep(a:hover::after) {
-  opacity: 1;
-}
-
 /* ===== 响应式 ===== */
 @media (max-width: 640px) {
   .download-tool {
@@ -647,12 +570,5 @@ watch(config, (val) => {
     font-size: 13px;
   }
 
-  .intro-title {
-    font-size: 16px;
-  }
-
-  .intro-text {
-    font-size: 14px;
-  }
 }
 </style>
