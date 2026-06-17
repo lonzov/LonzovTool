@@ -43,3 +43,4 @@ __screenshots__/
 .claude/
 v2/
 deploy.config.json
+dist.7z

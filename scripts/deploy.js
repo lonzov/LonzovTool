@@ -9,7 +9,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 const CONFIG_PATH = join(ROOT, 'deploy.config.json')
 const DIST_DIR = join(ROOT, 'dist')
-const TARBALL_LOCAL = join(ROOT, 'dist.tar.gz')
+const ARCHIVE_LOCAL = join(ROOT, 'dist.7z')
 
 // ── helpers ────────────────────────────────────────────
 
@@ -77,18 +77,40 @@ function saveConfig(config) {
   writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2) + '\n', 'utf-8')
 }
 
-// ── tarball ────────────────────────────────────────────
+// ── archive ────────────────────────────────────────────
 
-function createTarball() {
+function find7z() {
+  // 优先用 PATH 里的，否则搜常见路径
+  try {
+    execSync('7z --help', { stdio: 'pipe' })
+    return '7z'
+  } catch {
+    /* PATH 中找不到，继续搜常见路径 */
+  }
+  const candidates = [
+    'C:/Program Files/7-Zip/7z.exe',
+    'C:/Program Files (x86)/7-Zip/7z.exe',
+    '/usr/bin/7z',
+    '/usr/local/bin/7z',
+  ]
+  for (const c of candidates) {
+    if (existsSync(c)) return `"${c}"`
+  }
+  console.log('❌ 未找到 7z，请安装 7-Zip 并添加到 PATH')
+  process.exit(1)
+}
+
+function createArchive() {
   if (!existsSync(DIST_DIR)) {
     console.log(`❌ 未找到构建产物 ${DIST_DIR}，请先执行 pnpm build`)
     process.exit(1)
   }
   // 删除旧压缩包
-  if (existsSync(TARBALL_LOCAL)) unlinkSync(TARBALL_LOCAL)
-  console.log('  📦 打包构建产物...')
-  execSync(`tar -czf "${TARBALL_LOCAL}" -C "${DIST_DIR}" .`, { cwd: ROOT, stdio: 'pipe' })
-  const size = statSync(TARBALL_LOCAL).size
+  if (existsSync(ARCHIVE_LOCAL)) unlinkSync(ARCHIVE_LOCAL)
+  console.log('  📦 打包构建产物 (7z)...')
+  const cmd7z = find7z()
+  execSync(`${cmd7z} a -mx=9 "${ARCHIVE_LOCAL}" .`, { cwd: DIST_DIR, stdio: 'pipe' })
+  const size = statSync(ARCHIVE_LOCAL).size
   console.log(`  ✓ 打包完成 (${formatSize(size)})`)
   return size
 }
@@ -148,9 +170,9 @@ async function connectSSH(config) {
 }
 
 async function uploadWithProgress(ssh, config) {
-  const size = statSync(TARBALL_LOCAL).size
-  const tmpPath = `${config.sitePath}/dist.tar.gz.tmp`
-  const finalPath = `${config.sitePath}/dist.tar.gz`
+  const size = statSync(ARCHIVE_LOCAL).size
+  const tmpPath = `${config.sitePath}/dist.7z.tmp`
+  const finalPath = `${config.sitePath}/dist.7z`
 
   // 清理远端残留 .tmp
   await ssh.execCommand(`rm -f "${tmpPath}"`)
@@ -158,7 +180,7 @@ async function uploadWithProgress(ssh, config) {
   console.log(`  ⬆ 上传中...`)
   let lastLineLen = 0
 
-  await ssh.putFile(TARBALL_LOCAL, tmpPath, null, {
+  await ssh.putFile(ARCHIVE_LOCAL, tmpPath, null, {
     step(totalTransferred) {
       const pct = size > 0 ? (totalTransferred / size) * 100 : 0
       const bar = renderBar(pct)
@@ -183,7 +205,7 @@ async function runRemote(ssh, config) {
   const sp = config.sitePath
   const dn = config.distName
   const ts = timestamp()
-  const archiveName = `${dn}-${ts}.tar.gz`
+  const archiveName = `${dn}-${ts}.7z`
   const archiveDir = `${sp}/archives`
 
   console.log('  🔧 远端部署中...')
@@ -192,11 +214,11 @@ async function runRemote(ssh, config) {
   await ssh.execCommand(`mkdir -p "${archiveDir}"`)
 
   // 2. 移动压缩包到 archives/
-  await ssh.execCommand(`mv "${sp}/dist.tar.gz" "${archiveDir}/${archiveName}"`)
+  await ssh.execCommand(`mv "${sp}/dist.7z" "${archiveDir}/${archiveName}"`)
 
   // 3. 清理旧存档（保留最近 N 个）
   await ssh.execCommand(
-    `cd "${archiveDir}" && ls -1t *.tar.gz 2>/dev/null | tail -n +${config.keepArchives + 1} | xargs -r rm -f`,
+    `cd "${archiveDir}" && ls -1t *.7z 2>/dev/null | tail -n +${config.keepArchives + 1} | xargs -r rm -f`,
   )
 
   // 4. 清理上次可能残留的临时目录
@@ -204,7 +226,7 @@ async function runRemote(ssh, config) {
 
   // 5. 创建临时目录并解压
   await ssh.execCommand(`mkdir -p "${sp}/${dn}-new"`)
-  await ssh.execCommand(`tar -xzf "${archiveDir}/${archiveName}" -C "${sp}/${dn}-new"`)
+  await ssh.execCommand(`7z x "${archiveDir}/${archiveName}" -o"${sp}/${dn}-new"`)
 
   // 6. 原子替换
   const distPath = `${sp}/${dn}`
@@ -264,7 +286,7 @@ async function main() {
   const config = loadConfig()
 
   // 1. 打包
-  createTarball()
+  createArchive()
 
   // 2. 确认
   await confirmDeploy(config)
@@ -294,8 +316,8 @@ async function main() {
   } finally {
     if (ssh) ssh.dispose()
     // 清理本地压缩包
-    if (existsSync(TARBALL_LOCAL)) {
-      unlinkSync(TARBALL_LOCAL)
+    if (existsSync(ARCHIVE_LOCAL)) {
+      unlinkSync(ARCHIVE_LOCAL)
       console.log('  🧹 已清理本地临时文件')
     }
   }
