@@ -79,6 +79,7 @@ const lanzouList = computed(() => {
 })
 
 const hasMultiVersion = computed(() => lanzouList.value.length > 1)
+const hasNoLinks = computed(() => lanzouList.value.length === 0)
 
 const currentLanzou = computed(() => {
   const list = lanzouList.value
@@ -199,9 +200,9 @@ onUnmounted(() => unsubGlow(handleGlow))
       :auto-focus="false"
     >
       <div class="dl-modal-header-row">
-        <span class="dl-modal-desc">{{ hasMultiVersion ? '请选择下载方式和版本' : '选择一个适合你的下载方式' }}</span>
+        <span class="dl-modal-desc">{{ hasNoLinks ? '暂无可用下载' : hasMultiVersion ? '请选择下载方式和版本' : '选择一个适合你的下载方式' }}</span>
         <NCascader
-          v-if="hasMultiVersion"
+          v-if="hasMultiVersion && !hasNoLinks"
           v-model:value="selectedVersionIndex"
           :options="cascaderOptions"
           placeholder="选择版本"
@@ -213,7 +214,10 @@ onUnmounted(() => unsubGlow(handleGlow))
         />
       </div>
 
-      <div class="dl-options">
+      <div v-if="hasNoLinks" class="dl-no-links">
+        <span class="dl-no-links-text">暂不提供下载</span>
+      </div>
+      <div v-else class="dl-options">
         <div class="dl-option" @click="handleDirectParse">
           <NIcon :component="Link24Filled" :size="22" class="dl-option-icon" />
           <div class="dl-option-text">
@@ -340,6 +344,26 @@ onUnmounted(() => unsubGlow(handleGlow))
     rgba(180, 180, 180, 0.01) 70%,
     transparent                100%
   );
+}
+
+/* ===== 无下载链接 ===== */
+.dl-no-links {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.dl-no-links-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.45);
+  letter-spacing: 0.5px;
+}
+
+[data-theme='dark'] .dl-no-links-text {
+  color: rgba(255, 255, 255, 0.45);
 }
 
 /* ===== 下载选项 ===== */

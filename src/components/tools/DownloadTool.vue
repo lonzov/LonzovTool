@@ -57,9 +57,6 @@ onMounted(() => { loadConfig() })
 const showDownloadModal = ref(false)
 
 function openDownloadModal() {
-  const lz = config.value?.lanzou
-  if (!lz) return
-  if (Array.isArray(lz) && lz.length === 0) return
   showDownloadModal.value = true
 }
 
