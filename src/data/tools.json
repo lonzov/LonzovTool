@@ -293,11 +293,11 @@
           "link": "https://projectxero.top/ca/"
         },
         {
-          "id": "matrix-block",
-          "title": "矩阵方块",
-          "description": "雪球T显生成器、动态菜单生成器等",
-          "logo": "/logos/jzfk_wuaze_com.webp",
-          "link": "https://jzfk.indevs.in/"
+          "id": "HOSDLA-toolbox",
+          "title": "HOSDLA工具箱",
+          "description": "音频/视频转指令，并半自动填入命令方块",
+          "logo": "/logos/HOSDLA_toolbox.webp",
+          "link": "/down/HOSDLA-toolbox"
         },
         {
           "id": "zhiling-yinfuhe",
@@ -305,6 +305,13 @@
           "description": "mid转指令,并半自动填入命令方块",
           "logo": "/logos/command_plus.webp",
           "link": "/down/zhiling-yinfuhe"
+        },
+        {
+          "id": "matrix-block",
+          "title": "矩阵方块",
+          "description": "雪球T显生成器、动态菜单生成器等",
+          "logo": "/logos/jzfk_wuaze_com.webp",
+          "link": "https://jzfk.indevs.in/"
         },
         {
           "id": "command-simulator",

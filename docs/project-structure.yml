@@ -53,6 +53,8 @@ src:
       index.js: 模块映射与动态导入配置
       zhiling-yinfuhe.json: 指令音符盒下载配置
       mc-yufabao.json: MC语法包下载配置
+      HOSDLA-toolbox.json: HOSDLA工具箱下载配置
+      AIEX-FMBE.json: AI辅助建模工具下载配置
     donateRecords.json: 打赏记录数据（带哈希异步加载）
     notices.json: 公告数据
     parentMenus.json: 父级菜单配置
