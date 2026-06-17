@@ -19,3 +19,5 @@
 | ASCII字符生成                                                      | 盲文字符/Lite:                                                             | MC真彩色生成                                 |
 | ------------------------------------------------------------------ | -------------------------------------------------------------------------- | -------------------------------------------- |
 | 排版不统一，文件大小一致，灰度调整极佳，适用于黑白灰度视频生成文本 | 一种是抖动算法灰度盲文，还有一种纯黑白(0和255字色)，排版统一，文件大小统一 | 作者让我自己写，不会写qwq 就字面意思，真彩色 |
+
+<iframe src="//player.bilibili.com/player.html?isOutside=true&amp;aid=116760715987162&amp;bvid=BV1W6jG6HEFV&amp;cid=39170083634&amp;p=1&amp;autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width:100%;aspect-ratio:20/9;"></iframe>
