@@ -18,16 +18,15 @@ const DIST_DIR = join(ROOT, 'dist')
 const SITE_URL = 'https://tool.lonzov.top'
 
 // 唯一需要手动配置的部分：robots.txt 禁止的路径，同时也会从 sitemap 中排除
-const DISALLOW_PATHS = ['/submit']
+const DISALLOW_PATHS = ['/submit', '/offline', '/settings']
 
 function generateSitemap(pages) {
-  const now = new Date().toISOString()
+  // const now = new Date().toISOString() <lastmod>${now}</lastmod>
   const urls = pages
     .filter(p => !DISALLOW_PATHS.some(d => p.startsWith(d)))
     .map((path) => {
       return `    <url>
         <loc>${SITE_URL}${path}</loc>
-        <lastmod>${now}</lastmod>
     </url>`
     }).join('\n')
 
