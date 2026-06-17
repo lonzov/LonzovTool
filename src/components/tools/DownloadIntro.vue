@@ -1,24 +1,38 @@
 <script setup>
 import { useDownloadIntro } from '../../composables/useDownloadIntro'
+import ToolLoading from '../ToolLoading.vue'
 
 const props = defineProps({
   config: { type: Object, default: null },
 })
 
-const { introHtml } = useDownloadIntro(() => props.config)
+const { introHtml, introMdLoading } = useDownloadIntro(() => props.config)
 </script>
 
 <template>
   <div class="download-intro">
     <h2 class="intro-title">功能介绍</h2>
+    <!-- Markdown 加载中 -->
+    <div v-if="config.introMd && introMdLoading" class="intro-loading-wrap">
+      <ToolLoading />
+    </div>
     <!-- Markdown 渲染 -->
-    <div v-if="config.introMd" class="dl-intro-md" v-html="introHtml"></div>
+    <div v-else-if="config.introMd" class="dl-intro-md" v-html="introHtml"></div>
     <!-- 字符串形式（兼容旧配置） -->
     <p v-else class="intro-text" v-html="config.intro.replace(/\n/g, '<br>')"></p>
   </div>
 </template>
 
 <style scoped>
+/* ===== 加载动画包装 ===== */
+.intro-loading-wrap {
+  padding: 70px 0 120px 0;
+}
+
+.intro-loading-wrap :deep(.tool-loading) {
+  padding: 0;
+}
+
 /* ===== 功能介绍 ===== */
 .download-intro {
   display: flex;
