@@ -40,6 +40,9 @@ function generateRobotsTxt() {
   const disallowRules = DISALLOW_PATHS.map((p) => `Disallow: ${p}`).join('\n')
   return `User-agent: *
 ${disallowRules}
+
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+
 Sitemap: ${SITE_URL}/sitemap.xml`
 }
 
