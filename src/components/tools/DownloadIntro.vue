@@ -309,3 +309,23 @@ const { introHtml, introMdLoading } = useDownloadIntro(() => props.config)
   }
 }
 </style>
+
+<style>
+.dl-intro-md iframe {
+  border-radius: 18px;
+  corner-shape: squircle;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 100%;
+}
+
+@supports (corner-shape: squircle) {
+  .dl-intro-md iframe {
+    border-radius: 30px;
+  }
+}
+
+[data-theme='dark'] .dl-intro-md iframe {
+  filter: brightness(0.6);
+}
+</style>
