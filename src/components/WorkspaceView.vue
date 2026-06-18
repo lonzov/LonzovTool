@@ -705,6 +705,8 @@ onMounted(() => {
   border-bottom: 1px solid var(--border-color);
   overflow: hidden;
   margin-bottom: 24px;
+  transition: background-color 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1)),
+    border-color 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1));
 }
 
 /* 标签下拉菜单触发按钮（最左侧，与标签等高） */
@@ -730,7 +732,8 @@ onMounted(() => {
   inset: 0;
   border-radius: inherit;
   background-color: var(--bg-card);
-  transition: opacity 0.15s ease;
+  transition: background-color 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1)),
+    opacity 0.15s ease;
 }
 
 .tab-dropdown-trigger:focus::before,
@@ -751,14 +754,30 @@ onMounted(() => {
   transition: opacity 0.25s ease;
 }
 
+.scroll-fade::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--bg-color);
+  transition: background-color 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1));
+}
+
 .scroll-fade--left {
   left: 49px;
-  background: linear-gradient(to right, var(--bg-color), transparent);
+}
+
+.scroll-fade--left::after {
+  mask-image: linear-gradient(to right, black, transparent);
+  -webkit-mask-image: linear-gradient(to right, black, transparent);
 }
 
 .scroll-fade--right {
   right: 0;
-  background: linear-gradient(to left, var(--bg-color), transparent);
+}
+
+.scroll-fade--right::after {
+  mask-image: linear-gradient(to left, black, transparent);
+  -webkit-mask-image: linear-gradient(to left, black, transparent);
 }
 
 .scroll-fade--visible {
@@ -794,6 +813,7 @@ onMounted(() => {
   color: var(--text-secondary);
   background: transparent;
   border: none;
+  border-color: var(--border-color);
   border-radius: 8px 8px 0 0;
   cursor: pointer;
   white-space: nowrap;
@@ -802,7 +822,16 @@ onMounted(() => {
   flex-shrink: 0;
   min-height: 39px;
   box-sizing: border-box;
-  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  /*
+    与 Naive UI layout 的 0.3s + cubic-bezier(.4,0,.2,1) 主题过渡保持一致：
+    - 交互属性（背景/文字）→ 0.15s ease 跟手
+    - 主题属性（边框/阴影）→ 0.3s，贝塞尔曲线与 NLayout 同步
+    - 拖拽位移 → 0.15s ease
+  */
+  transition: background-color 0.15s ease, color 0.15s ease,
+    border-color 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1)),
+    box-shadow 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1)),
+    transform 0.15s ease;
 }
 
 .tab-item:hover {
@@ -817,6 +846,15 @@ onMounted(() => {
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
   border-bottom: none;
+  /*
+    焦点标签的 background-color 跟随主题变化，使用与 NLayout 一致的
+    0.3s + Naive 贝塞尔曲线；其余属性继承 .tab-item 的过渡
+  */
+  transition: background-color 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1)),
+    color 0.15s ease,
+    border-color 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1)),
+    box-shadow 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1)),
+    transform 0.15s ease;
 }
 
 /* 被拖拽的标签：隐藏（保留占位供排序计算），视觉由 visual-drag-tag 替代 */
@@ -832,7 +870,9 @@ onMounted(() => {
 
 /* 拖拽松手瞬间：禁用 transform 动画，偏移量瞬间归零避免多余回弹 */
 .tabs-list--snapping .tab-item {
-  transition: background-color 0.15s ease, color 0.15s ease !important;
+  transition: background-color 0.15s ease, color 0.15s ease,
+    border-color 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1)),
+    box-shadow 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1)) !important;
 }
 
 .tab-label {

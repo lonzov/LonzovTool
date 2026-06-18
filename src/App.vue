@@ -444,7 +444,7 @@ export default {
     </div>
 
     <!-- 移动端 -->
-    <div v-else :style="{ minHeight: '100vh', background: 'var(--bg-color)' }">
+    <div v-else :style="{ minHeight: '100vh', background: 'var(--bg-color)', transition: 'background-color 0.3s cubic-bezier(.4, 0, .2, 1)' }">
       <NLayoutHeader
         :style="{
           display: 'flex',
