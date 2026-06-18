@@ -504,7 +504,7 @@ let isTouchMove = false
 
 function onTouchStart(e) {
   // 拖拽模式下不接管触摸
-  if (isDraggingTab.value || _pressInfo) return
+  if (isDraggingTab.value) return
   touchStartX = e.touches[0].clientX
   touchStartScroll = tabsListEl.value?.scrollLeft || 0
   isTouchMove = false
