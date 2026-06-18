@@ -395,12 +395,12 @@ export default {
               height: '40px',
               borderRadius: '10px',
               cornerShape: 'squircle',
-              background: 'var(--logo-gradient)',
+              background: 'var(--bg-card)',
               marginRight: '12px',
               flexShrink: 0,
               overflow: 'hidden',
               position: 'relative',
-              transition: 'background 0.4s ease',
+              transition: 'background-color 0.3s ease',
             },
           },
           [
@@ -575,14 +575,7 @@ export default {
 </script>
 
 <style>
-/* ---- Logo 渐变背景深浅色模式变量 ---- */
-:root {
-  --logo-gradient: linear-gradient(135deg, #f0f2f5 0%, #e0e0e0 100%);
-}
-[data-theme="dark"] {
-  --logo-gradient: linear-gradient(135deg, #232526 0%, #414345 100%);
-}
-/* -------------------------------------- */
+/* ---- Logo 背景：跟随卡片背景色，纯色保证过渡动画 ---- */
 
 /* 卡片悬浮效果 */
 .tool-card:hover {
@@ -631,7 +624,7 @@ export default {
 }
 
 .tool-card-logo {
-  transition: background 0.4s ease !important;
+  transition: background-color 0.3s ease !important;
 }
 
 @supports (corner-shape: squircle) {
