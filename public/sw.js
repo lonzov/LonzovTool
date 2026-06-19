@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.2.1.0'
+const CACHE_VERSION = '3.2.2'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
@@ -180,7 +180,7 @@ self.addEventListener('message', (event) => {
         content: `
         <h3>宣传视频已发布，还请多多三连呀~😭👊</h3><br>
         <h4>👾 更新日志：</h4>
-        <p>[+] 下载页+2：HOSDLA工具箱、AIEX-FMBE编辑器<br>[+] 本站支持作为PWA应用安装到本地<br>[+] 指令音符盒同步新版本v2.5<br>[+] 加入设置页，允许导出配置<br>[+] 新卡片：HOSDLA工具箱、AIEX-FMBE编辑器、网易版存档解密、FMBE专区、Aura Music</p>
+        <p>[~] 修复标签页栏滑动时基点异常导致乱飘<br>[+] 下载页+2：HOSDLA工具箱、AIEX-FMBE编辑器<br>[+] 本站支持作为PWA应用安装到本地<br>[+] 新卡片：HOSDLA工具箱、AIEX-FMBE编辑器、网易版存档解密、FMBE专区、Aura Music</p>
         <p style="font-size:13px"><em>⚠️反馈和建议请前往“关于本站”页面查看</em></p>
         `,
         buttons: [
