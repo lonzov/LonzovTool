@@ -328,6 +328,7 @@ watchEffect(() => {
   border-radius: 0.75rem;
   corner-shape: squircle;
   overflow: hidden;
+  transition: border-color 0.3s cubic-bezier(.4, 0, .2, 1);
 }
 
 .docs-content :deep(th),
@@ -336,6 +337,7 @@ watchEffect(() => {
   border-right: 1px solid var(--border-color);
   padding: 8px 12px;
   text-align: left;
+  transition: border-color 0.3s cubic-bezier(.4, 0, .2, 1);
 }
 
 .docs-content :deep(tr:last-child td) {
@@ -350,6 +352,8 @@ watchEffect(() => {
 .docs-content :deep(th) {
   background: var(--bg-sub);
   font-weight: 600;
+  transition: background-color 0.3s cubic-bezier(.4, 0, .2, 1),
+    border-color 0.3s cubic-bezier(.4, 0, .2, 1);
 }
 
 .docs-content :deep(hr) {
