@@ -48,6 +48,13 @@
           "link": "https://dislink.github.io/rawJSONEditor/"
         },
         {
+          "id": "selector",
+          "title": "选择器参数编辑器",
+          "description": "可视化编辑目标选择器参数",
+          "logo": "/logos/1tool_lonzov_top.webp",
+          "link": "/c/selector/"
+        },
+        {
           "id": "execute",
           "title": "语法转换",
           "description": "execute指令语法升级",
@@ -81,6 +88,13 @@
           "description": "通过种子号定位群系、结构、史莱姆区块等",
           "logo": "/logos/www_chunkbase_com.webp",
           "link": "https://www.chunkbase.com/apps/seed-map#seed=%E7%A7%8D%E5%AD%90%E5%8F%B7&platform=bedrock_1_21_50&dimension=overworld&x=0&z=0&zoom=0.5"
+        },
+        {
+          "id": "mcseedmap",
+          "title": "种子查找器",
+          "description": "寻找在给定范围内具有特定群系结构的种子",
+          "logo": "/logos/mcseedmap.webp",
+          "link": "https://mcseedmap.net/"
         },
         {
           "id": "blockcolors",
