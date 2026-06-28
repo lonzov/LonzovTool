@@ -99,6 +99,7 @@ export default {
 
 <template>
   <div class="home-view">
+    <h1 class="sr-only">小舟工具箱</h1>
     <NoticeBar />
     <SearchBar ref="searchBar" v-model="searchQuery" @internalSearch="handleInternalSearch" @toggleFavorites="handleToggleFavorites" />
     <SearchGrid :searchQuery="searchQuery" />

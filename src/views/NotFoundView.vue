@@ -1,11 +1,37 @@
 <script setup>
-import { useHead } from '@vueuse/head'
+import { onMounted, onUnmounted } from 'vue'
 
-useHead({
-  title: '页面不存在 - 小舟工具箱',
-  meta: [
-    { name: 'robots', content: 'noindex' },
-  ],
+let observer = null
+
+onMounted(() => {
+  document.title = '页面不存在 - 小舟工具箱'
+
+  // robots noindex 置顶
+  let robots = document.querySelector('meta[name="robots"]')
+  if (!robots) {
+    robots = document.createElement('meta')
+    robots.name = 'robots'
+  }
+  robots.content = 'noindex'
+  document.head.prepend(robots)
+
+  // 即时移除
+  document.querySelector('meta[name="description"]')?.remove()
+  document.querySelector('meta[name="keywords"]')?.remove()
+
+  // 持续拦截：@vueuse/head / router.afterEach 可能在之后重新插入 meta 或覆盖标题
+  observer = new MutationObserver(() => {
+    document.querySelector('meta[name="description"]')?.remove()
+    document.querySelector('meta[name="keywords"]')?.remove()
+    if (document.title !== '页面不存在 - 小舟工具箱') {
+      document.title = '页面不存在 - 小舟工具箱'
+    }
+  })
+  observer.observe(document.head, { childList: true, subtree: true, characterData: true })
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
 })
 </script>
 

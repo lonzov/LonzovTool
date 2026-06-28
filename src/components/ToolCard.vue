@@ -438,7 +438,7 @@ export default {
                   ? h('img', {
                       key: `logo-${this.imgKey}`,
                       src: this.logo,
-                      alt: '',
+                      alt: this.title,
                       crossorigin: 'anonymous',
                       style: {
                         width: '100%',
