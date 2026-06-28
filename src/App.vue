@@ -219,10 +219,26 @@ export default {
     function scrollToCategory(index) {
       setTimeout(() => {
         const categoryElements = document.querySelectorAll('.tool-category')
-        if (categoryElements[index]) {
+        const target = categoryElements[index]
+        if (target) {
           const scrollMarginTop = isMobile.value ? '80px' : '24px'
-          categoryElements[index].style.scrollMarginTop = scrollMarginTop
-          categoryElements[index].scrollIntoView({ behavior: 'smooth', block: 'start' })
+          target.style.scrollMarginTop = scrollMarginTop
+          // 移动端 Chrome 的 scrollIntoView({ behavior: 'smooth' }) 存在 Bug：
+          // 第一次调用后浏览器内部会标记元素"已滚动到"，后续对同一/相邻元素的滚动会被忽略。
+          // 通过临时赋予 tabindex 并 focus({ preventScroll: true }) 重置 Chrome 的滚动状态机。
+          if (isMobile.value) {
+            const prevTabIndex = target.getAttribute('tabindex')
+            target.setAttribute('tabindex', '-1')
+            target.focus({ preventScroll: true })
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            if (prevTabIndex === null) {
+              target.removeAttribute('tabindex')
+            } else {
+              target.setAttribute('tabindex', prevTabIndex)
+            }
+          } else {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
         }
       }, 100)
     }
