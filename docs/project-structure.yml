@@ -84,6 +84,7 @@ public:
   sw.js: Service Worker，手写实现 StaleWhileRevalidate 缓存优先 + 离线诊断回退 + V2 兼容消息协议
   manifest.json: Web App Manifest，PWA 配置
   favicon.ico: 网站图标
+  opensearch.xml: OpenSearch 协议描述文件，浏览器搜索引擎注册
   app-icon/: PWA 应用图标
   logos/: 首页工具卡片 Logo 图片
   img/: 图片资源

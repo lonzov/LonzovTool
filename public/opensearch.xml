@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/"
+                       xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>小舟工具箱</ShortName>
+  <Description>小舟工具箱 - Minecraft 基岩版指令工具聚合平台</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image width="16" height="16" type="image/x-icon">https://tool.lonzov.top/favicon.ico</Image>
+  <Url type="text/html" template="https://tool.lonzov.top/?search={searchTerms}" />
+  <Url type="application/x-suggestions+json" rel="suggestions" template="https://tool.lonzov.top/?search={searchTerms}" />
+  <moz:SearchForm>https://tool.lonzov.top/</moz:SearchForm>
+</OpenSearchDescription>
