@@ -5,6 +5,7 @@ import { NIcon, NNumberAnimation, useMessage } from 'naive-ui'
 import { PersonBoard24Filled } from '@vicons/fluent'
 import DownloadModal from './DownloadModal.vue'
 import DownloadIntro from './DownloadIntro.vue'
+import NotFoundView from '../../views/NotFoundView.vue'
 
 const props = defineProps({
   tabPath: {
@@ -29,18 +30,23 @@ const pageName = computed(() => {
 
 const config = ref(null)
 const loading = ref(true)
+const notFound = ref(false)
 
 import { getDownloadConfig } from '../../data/downloads/index.js'
 
 async function loadConfig() {
   loading.value = true
   config.value = null
+  notFound.value = false
 
   try {
     const slug = pageName.value
 
     const loader = getDownloadConfig(slug)
-    if (!loader) throw new Error(`下载页配置不存在: ${slug}`)
+    if (!loader) {
+      notFound.value = true
+      return
+    }
 
     const mod = await loader()
     config.value = mod.default || mod
@@ -186,9 +192,12 @@ watch(config, (val) => {
       <span>加载中...</span>
     </div>
 
-    <!-- 错误/无配置 -->
+    <!-- 404：下载配置不存在 -->
+    <NotFoundView v-else-if="notFound" />
+
+    <!-- 加载错误 -->
     <div v-else-if="!config" class="download-empty">
-      <p>下载页不存在</p>
+      <p>加载失败</p>
     </div>
 
     <template v-else>
