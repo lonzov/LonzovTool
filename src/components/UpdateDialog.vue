@@ -1,5 +1,5 @@
 <script setup>
-import { watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { NModal, NConfigProvider, useMessage } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { useTheme } from '../composables/useTheme'
@@ -34,6 +34,26 @@ const darkOverrides = {
   Card: { colorModal: '#191919' },
 }
 
+const isCompact = ref(false)
+let _mq
+function _onMqChange(e) { isCompact.value = e.matches }
+onMounted(() => {
+  _mq = window.matchMedia('(max-width: 640px)')
+  isCompact.value = _mq.matches
+  _mq.addEventListener('change', _onMqChange)
+})
+onUnmounted(() => {
+  if (_mq) _mq.removeEventListener('change', _onMqChange)
+})
+
+const modalStyle = computed(() => ({
+  maxWidth: '540px',
+  width: 'calc(100% - 32px)',
+  maxHeight: isCompact.value ? '670px' : 'calc(100vh - 48px)',
+  borderRadius: '16px',
+  cornerShape: 'squircle',
+}))
+
 // 模糊遮罩（与 cookie 弹窗一致）
 watch(showUpdateModal, (val) => {
   if (val) {
@@ -67,12 +87,13 @@ watch(showUpdateModal, (val) => {
     <NModal
       v-model:show="showUpdateModal"
       preset="card"
-      :style="{ maxWidth: '540px', width: 'calc(100% - 32px)', borderRadius: '16px', cornerShape: 'squircle' }"
+      :style="modalStyle"
       :title="popupTitle || '发现新版本'"
       :bordered="false"
       :closable="true"
       @close="deferUpdate"
       :auto-focus="false"
+      content-scrollable
     >
       <div class="update-desc" v-html="popupContent || '小舟工具箱已更新，点击&quot;立即更新&quot;刷新页面获取最新体验。'"></div>
       <template #footer>

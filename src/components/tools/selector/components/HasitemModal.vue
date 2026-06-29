@@ -4,7 +4,7 @@
       v-model:show="showHasitemModal"
       preset="card"
       :title="modalTitle"
-      :style="{ maxWidth: '620px', width: 'calc(100% - 32px)', maxHeight: 'calc(100vh - 48px)', borderRadius: '16px', cornerShape: 'squircle' }"
+      :style="modalStyle"
       :segmented="{ content: true, footer: 'soft' }"
       content-scrollable
       @after-enter="onModalEntered"
@@ -73,7 +73,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { NModal, NConfigProvider, NInput, NIcon, darkTheme } from 'naive-ui'
 import { Add16Filled, Delete24Filled } from '@vicons/fluent'
 import { useTheme } from '../../../../composables/useTheme.js'
@@ -98,6 +98,26 @@ const darkOverrides = {
   common: { neutralModal: '#191919' },
   Card: { colorModal: '#191919' },
 }
+
+const isCompact = ref(false)
+let _mq
+function _onMqChange(e) { isCompact.value = e.matches }
+onMounted(() => {
+  _mq = window.matchMedia('(max-width: 640px)')
+  isCompact.value = _mq.matches
+  _mq.addEventListener('change', _onMqChange)
+})
+onUnmounted(() => {
+  if (_mq) _mq.removeEventListener('change', _onMqChange)
+})
+
+const modalStyle = computed(() => ({
+  maxWidth: '620px',
+  width: 'calc(100% - 32px)',
+  maxHeight: isCompact.value ? '670px' : 'calc(100vh - 48px)',
+  borderRadius: '16px',
+  cornerShape: 'squircle',
+}))
 
 const showHasitemModal = computed({
   get: () => !!hasitemEditId.value,

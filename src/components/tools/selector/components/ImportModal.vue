@@ -4,7 +4,7 @@
       v-model:show="showImportModal"
       preset="card"
       title="导入选择器"
-      :style="{ maxWidth: '520px', width: 'calc(100% - 32px)', maxHeight: 'calc(100vh - 48px)', borderRadius: '16px', cornerShape: 'squircle' }"
+      :style="modalStyle"
       :segmented="{ content: true, footer: 'soft' }"
       content-scrollable
     >
@@ -29,6 +29,7 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { NModal, NConfigProvider, darkTheme } from 'naive-ui'
 import { useTheme } from '../../../../composables/useTheme.js'
 import { importText, importError, showImportModal } from '../composables/useState.js'
@@ -40,6 +41,26 @@ const darkOverrides = {
   common: { neutralModal: '#191919' },
   Card: { colorModal: '#191919' },
 }
+
+const isCompact = ref(false)
+let _mq
+function _onMqChange(e) { isCompact.value = e.matches }
+onMounted(() => {
+  _mq = window.matchMedia('(max-width: 640px)')
+  isCompact.value = _mq.matches
+  _mq.addEventListener('change', _onMqChange)
+})
+onUnmounted(() => {
+  if (_mq) _mq.removeEventListener('change', _onMqChange)
+})
+
+const modalStyle = computed(() => ({
+  maxWidth: '520px',
+  width: 'calc(100% - 32px)',
+  maxHeight: isCompact.value ? '670px' : 'calc(100vh - 48px)',
+  borderRadius: '16px',
+  cornerShape: 'squircle',
+}))
 </script>
 
 <style scoped>
