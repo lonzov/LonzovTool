@@ -55,6 +55,13 @@
           "link": "/c/selector/"
         },
         {
+          "id": "dxdydz",
+          "title": "dxdydz计算",
+          "description": "可视化编辑目标选择器参数",
+          "logo": "/logos/dxdydz.webp",
+          "link": "https://hinge-texx.upma.site/"
+        },
+        {
           "id": "execute",
           "title": "语法转换",
           "description": "execute指令语法升级",
