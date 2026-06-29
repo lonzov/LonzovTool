@@ -101,14 +101,12 @@ function handleStartAdd() {
   align-items: center;
   gap: 0;
   min-height: 34px;
-  padding-right: 36px;
+  padding-right: 8px;
   position: relative;
 }
 .code-line--header {
   gap: 4px;
-}
-.code-line--footer {
-  /* empty */
+  margin-bottom: 8px;
 }
 .code-line--add {
   margin-left: 28px;

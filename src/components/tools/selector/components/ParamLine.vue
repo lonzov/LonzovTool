@@ -4,7 +4,7 @@
     @click="$emit('edit', param.id)"
   >
     <span class="code-key">{{ getParamKey(param) }}</span>
-    <span class="code-eq"> = </span>
+    <span class="code-eq">=</span>
     <span class="code-value">{{ getParamValueText(param) }}</span>
     <span class="code-comma">,</span>
     <div class="code-actions">
@@ -47,7 +47,9 @@ defineEmits(['edit'])
 .code-line--param {
   cursor: pointer;
   border-radius: 4px;
-  margin-left: 28px;
+  margin-left: 22px;
+  padding-left: 6px;
+  padding-right: 40px;
   transition: background-color 0.12s ease;
 }
 .code-line--param:hover {
@@ -65,16 +67,21 @@ defineEmits(['edit'])
 }
 .code-eq {
   color: var(--text-tertiary);
-  margin: 0 2px;
+  margin: 0 0.35em;
   transition: color 0.4s ease;
   flex-shrink: 0;
 }
 .code-value {
   color: var(--text-secondary);
   transition: color 0.4s ease;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .code-comma {
   color: var(--text-tertiary);
+  margin-right: 0.35em;
   transition: color 0.4s ease;
 }
 
@@ -84,7 +91,9 @@ defineEmits(['edit'])
   align-items: center;
   gap: 2px;
   position: absolute;
-  right: 0;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
   opacity: 0;
   transition: opacity 0.12s ease;
 }
@@ -96,21 +105,25 @@ defineEmits(['edit'])
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: none;
   background: transparent;
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--text-secondary);
   cursor: pointer;
   transition:
     background-color 0.12s ease,
-    color 0.12s ease;
+    color 0.12s ease,
+    transform 0.12s ease;
 }
 .code-act-btn:hover {
   background: var(--bg-sub);
   color: var(--text-primary);
+}
+.code-act-btn:active {
+  transform: scale(0.95);
 }
 .code-delete-confirmed,
 .code-delete-confirmed:hover {
@@ -121,7 +134,8 @@ defineEmits(['edit'])
 
 @media (max-width: 640px) {
   .code-line--param {
-    margin-left: 16px;
+    margin-left: 10px;
+    padding-left: 6px;
   }
 }
 </style>

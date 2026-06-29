@@ -1,7 +1,7 @@
 <template>
   <div class="code-line code-line--editing" @click.stop>
     <span class="code-key code-key--editing">{{ getParamKey(param) }}</span>
-    <span class="code-eq"> = </span>
+    <span class="code-eq">=</span>
 
     <div class="code-edit-area">
       <!-- text / text-not -->
@@ -19,6 +19,7 @@
           v-model:value="editValue"
           size="tiny"
           class="code-edit-input"
+          :style="inputWidthStyle(editValue)"
           :placeholder="editor === 'text-not' ? '实体类型' : '值'"
           @keydown="handleKeydown"
         />
@@ -39,6 +40,7 @@
           v-model:value="editValue"
           size="tiny"
           class="code-edit-input code-edit-input--name"
+          :style="inputWidthStyle(editValue, { min: 100 })"
           placeholder="实体名称"
           @keydown="handleKeydown"
         />
@@ -59,6 +61,7 @@
           v-model:value="editValue"
           size="tiny"
           class="code-edit-input"
+          :style="inputWidthStyle(editValue)"
           placeholder="标签"
           @keydown="handleKeydown"
         />
@@ -81,6 +84,7 @@
           v-model:value="editValue"
           size="tiny"
           class="code-edit-input code-edit-input--brace"
+          :style="inputWidthStyle(editValue, { min: 120, max: 300 })"
           :placeholder="editor === 'scores' ? 'a=1..,b=2' : 'property=value'"
           @keydown="handleKeydown"
         />
@@ -133,6 +137,7 @@
           v-model:value="editCustomKey"
           size="tiny"
           class="code-edit-input code-edit-input--key"
+          :style="inputWidthStyle(editCustomKey, { min: 70, max: 140 })"
           placeholder="参数名"
           @keydown="handleKeydown"
         />
@@ -141,22 +146,33 @@
           v-model:value="editValue"
           size="tiny"
           class="code-edit-input"
+          :style="inputWidthStyle(editValue)"
           placeholder="值"
           @keydown="handleKeydown"
         />
       </template>
     </div>
 
-    <button class="code-edit-confirm-btn" title="确认" @click="commitCurrentState">
-      <NIcon :component="Checkmark24Filled" :size="14" />
-    </button>
+    <div class="code-edit-actions">
+      <button class="code-edit-confirm-btn" title="确认" @click="commitCurrentState">
+        <NIcon :component="Checkmark24Filled" :size="18" />
+      </button>
+      <button
+        class="code-edit-delete-btn"
+        :class="{ 'code-delete-confirmed': deleteConfirmId === param.id }"
+        :title="deleteConfirmId === param.id ? '再次点击确认删除' : '删除参数'"
+        @click.stop="deleteParam(param.id)"
+      >
+        <NIcon :component="Delete24Filled" :size="18" />
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { NIcon, NSelect, NInput } from 'naive-ui'
-import { Checkmark24Filled, Edit24Filled } from '@vicons/fluent'
+import { Checkmark24Filled, Edit24Filled, Delete24Filled } from '@vicons/fluent'
 import { GAMEMODE_OPTIONS, PERM_VALUE_OPTIONS, PARAM_KINDS } from '../constants.js'
 import {
   editNot,
@@ -164,6 +180,7 @@ import {
   editCustomKey,
   editPermCamera,
   editPermMovement,
+  deleteConfirmId,
 } from '../composables/useState.js'
 import { getParamKey } from '../composables/useParams.js'
 import { getParamValueText } from '../composables/useOutput.js'
@@ -172,6 +189,7 @@ import {
   cancelEdit,
   openHasitemEditor,
   commitCurrentState,
+  deleteParam,
 } from '../composables/useParams.js'
 
 const props = defineProps({
@@ -199,6 +217,13 @@ function openHasitem() {
   cancelEdit()
 }
 
+function inputWidthStyle(val, opts = {}) {
+  const min = opts.min ?? 80
+  const extra = opts.extra ?? 2
+  const len = String(val ?? '').length
+  return { width: `max(${min}px, ${len + extra}ch)`, maxWidth: '100%' }
+}
+
 function handleKeydown(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
@@ -217,17 +242,17 @@ function handleKeydown(e) {
   padding-right: 36px;
   position: relative;
 }
-.code-line--editing {
-  display: inline-flex;
-  width: fit-content;
+.code-line.code-line--editing {
+  display: flex;
+  width: calc(100% - 28px);
   align-items: center;
-  height: 39px;
+  height: 36px;
   box-sizing: border-box;
   margin-left: 28px;
   margin-top: 1px;
   margin-bottom: 1px;
   border-radius: 6px;
-  padding: 0 8px;
+  padding: 0 8px 0 8px;
   background: var(--bg-sub);
   border: 1px solid var(--border-color);
   transition:
@@ -243,46 +268,53 @@ function handleKeydown(e) {
 }
 .code-eq {
   color: var(--text-tertiary);
-  margin: 0 2px;
+  margin: 0 0.35em;
   transition: color 0.4s ease;
   flex-shrink: 0;
 }
 .code-edit-area {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
 }
 
-/* 编辑区内 NInput / NSelect / NCascader 统一高度 31px */
+/* 编辑区内 NInput / NSelect / NCascader 统一高度 28px，输入文字放大 */
 .code-edit-area :deep(.n-input) {
-  height: 31px !important;
-  --n-height: 31px !important;
+  height: 28px !important;
+  --n-height: 28px !important;
+}
+.code-edit-area :deep(.n-input__input-el) {
+  font-size: 14px;
+  padding: 2px 0px;
 }
 .code-edit-area :deep(.n-base-selection) {
-  height: 31px !important;
-  --n-height: 31px !important;
+  height: 28px !important;
+  --n-height: 28px !important;
 }
 
 .code-edit-input {
   width: auto;
   min-width: 80px;
-  max-width: 200px;
+  max-width: 100%;
 }
 .code-edit-input--name {
   min-width: 100px;
+  max-width: 100%;
 }
 .code-edit-input--key {
   min-width: 70px;
-  max-width: 140px;
+  max-width: 100%;
 }
 .code-edit-input--brace {
   min-width: 120px;
-  max-width: 240px;
+  max-width: 100%;
 }
 
 .code-edit-select {
   min-width: 140px;
-  max-width: 200px;
+  max-width: 100%;
 }
 
 .code-quote {
@@ -300,6 +332,11 @@ function handleKeydown(e) {
   color: var(--text-primary);
   font-size: 13px;
   transition: color 0.4s ease;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .code-edit-hasitem-btn {
@@ -330,7 +367,16 @@ function handleKeydown(e) {
   vertical-align: middle;
 }
 
-.code-edit-confirm-btn {
+.code-edit-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.code-edit-confirm-btn,
+.code-edit-delete-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -339,18 +385,29 @@ function handleKeydown(e) {
   padding: 0;
   border: none;
   background: transparent;
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--text-secondary);
   cursor: pointer;
   flex-shrink: 0;
-  margin-left: 8px;
   transition:
     background-color 0.12s ease,
-    color 0.12s ease;
+    color 0.12s ease,
+    transform 0.12s ease;
 }
-.code-edit-confirm-btn:hover {
+.code-edit-confirm-btn:hover,
+.code-edit-delete-btn:hover {
   background: var(--bg-sub);
   color: var(--text-primary);
+}
+.code-edit-confirm-btn:active,
+.code-edit-delete-btn:active {
+  transform: scale(0.95);
+}
+.code-delete-confirmed,
+.code-delete-confirmed:hover {
+  background: #dc2626 !important;
+  color: #fff !important;
+  opacity: 1 !important;
 }
 
 /* 反选开关 */
@@ -358,28 +415,29 @@ function handleKeydown(e) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  font-size: 14px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--text-tertiary);
+  line-height: 1;
+  padding-bottom: 1px;
+  color: var(--text-secondary);
   cursor: pointer;
   user-select: none;
   flex-shrink: 0;
-  border: 1px solid transparent;
+  border: 1px dashed var(--border-color);
   transition:
-    color 0.15s ease,
-    background-color 0.15s ease,
-    border-color 0.15s ease;
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 .not-toggle:hover {
+  border-color: var(--text-secondary);
   color: var(--text-primary);
-  background: var(--bg-card);
 }
 .not-active {
   color: #dc2626 !important;
-  border-color: #dc2626 !important;
+  border: 1px solid #dc2626 !important;
   background: rgba(220, 38, 38, 0.08) !important;
 }
 
@@ -398,20 +456,33 @@ function handleKeydown(e) {
 }
 .perm-select {
   min-width: 110px;
+  max-width: 100%;
 }
 
 @media (max-width: 640px) {
-  .code-line--editing {
+  .code-line.code-line--editing {
+    display: flex;
     margin-left: 16px;
-    width: auto;
+    width: calc(100% - 16px);
+    padding-right: 0;
   }
-  .code-edit-input {
-    min-width: 60px;
-    max-width: 140px;
+  .code-edit-area {
+    flex: 1;
+    min-width: 0;
+  }
+  .code-edit-input,
+  .code-edit-input--name,
+  .code-edit-input--key,
+  .code-edit-input--brace,
+  .code-edit-select,
+  .perm-select {
+    flex: 1;
+    min-width: 0;
+    width: auto !important;
+    max-width: none;
   }
   .code-edit-input--brace {
     min-width: 80px;
-    max-width: 160px;
   }
 }
 </style>

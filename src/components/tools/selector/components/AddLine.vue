@@ -30,6 +30,7 @@
           v-model:value="newCustomKey"
           size="tiny"
           class="code-edit-input code-edit-input--key"
+          :style="inputWidthStyle(newCustomKey, { min: 70, max: 140 })"
           placeholder="参数名"
           @keydown="handleKeydown"
         />
@@ -38,6 +39,7 @@
           v-model:value="newValue"
           size="tiny"
           class="code-edit-input"
+          :style="inputWidthStyle(newValue)"
           placeholder="值"
           @keydown="handleKeydown"
         />
@@ -59,6 +61,7 @@
           v-model:value="newValue"
           size="tiny"
           class="code-edit-input"
+          :style="inputWidthStyle(newValue)"
           :placeholder="addingKindEditor === 'text-not' ? '实体类型' : '值'"
           @keydown="handleKeydown"
         />
@@ -80,6 +83,7 @@
           v-model:value="newValue"
           size="tiny"
           class="code-edit-input code-edit-input--name"
+          :style="inputWidthStyle(newValue, { min: 100 })"
           placeholder="实体名称"
           @keydown="handleKeydown"
         />
@@ -101,6 +105,7 @@
           v-model:value="newValue"
           size="tiny"
           class="code-edit-input"
+          :style="inputWidthStyle(newValue)"
           placeholder="标签"
           @keydown="handleKeydown"
         />
@@ -125,6 +130,7 @@
           v-model:value="newValue"
           size="tiny"
           class="code-edit-input code-edit-input--brace"
+          :style="inputWidthStyle(newValue, { min: 120, max: 300 })"
           :placeholder="addingKindEditor === 'scores' ? 'a=1..,b=2' : 'property=value'"
           @keydown="handleKeydown"
         />
@@ -175,7 +181,7 @@
     </div>
 
     <button class="code-edit-confirm-btn" title="确认添加" @click="commitCurrentState">
-      <NIcon :component="Checkmark24Filled" :size="14" />
+      <NIcon :component="Checkmark24Filled" :size="18" />
     </button>
   </div>
 </template>
@@ -201,6 +207,13 @@ const addingKindEditor = computed(() => {
   if (newKind.value === 'custom') return 'text'
   return (PARAM_KINDS[newKind.value] && PARAM_KINDS[newKind.value].editor) || 'text'
 })
+
+function inputWidthStyle(val, opts = {}) {
+  const min = opts.min ?? 80
+  const extra = opts.extra ?? 2
+  const len = String(val ?? '').length
+  return { width: `max(${min}px, ${len + extra}ch)`, maxWidth: '100%' }
+}
 
 function handleKindSelect(key) {
   newKind.value = key
@@ -274,17 +287,17 @@ function handleKeydown(e) {
   padding-right: 36px;
   position: relative;
 }
-.code-line--editing {
-  display: inline-flex;
-  width: fit-content;
+.code-line.code-line--editing {
+  display: flex;
+  width: calc(100% - 28px);
   align-items: center;
-  height: 39px;
+  height: 36px;
   box-sizing: border-box;
   margin-left: 28px;
   margin-top: 1px;
   margin-bottom: 1px;
   border-radius: 6px;
-  padding: 0 8px;
+  padding: 0 8px 0 8px;
   background: var(--bg-sub);
   border: 1px solid var(--border-color);
   transition:
@@ -294,15 +307,21 @@ function handleKeydown(e) {
 .code-edit-area {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
 }
 .code-edit-area :deep(.n-input) {
-  height: 31px !important;
-  --n-height: 31px !important;
+  height: 28px !important;
+  --n-height: 28px !important;
+}
+.code-edit-area :deep(.n-input__input-el) {
+  font-size: 14px;
+  padding: 2px 0px;
 }
 .code-edit-area :deep(.n-base-selection) {
-  height: 31px !important;
-  --n-height: 31px !important;
+  height: 28px !important;
+  --n-height: 28px !important;
 }
 .kind-trigger {
   display: flex;
@@ -317,26 +336,27 @@ function handleKeydown(e) {
 .code-edit-input {
   width: auto;
   min-width: 80px;
-  max-width: 200px;
+  max-width: 100%;
 }
 .code-edit-input--name {
   min-width: 100px;
+  max-width: 100%;
 }
 .code-edit-input--key {
   min-width: 70px;
-  max-width: 140px;
+  max-width: 100%;
 }
 .code-edit-input--brace {
   min-width: 120px;
-  max-width: 240px;
+  max-width: 100%;
 }
 .code-edit-select {
   min-width: 140px;
-  max-width: 200px;
+  max-width: 100%;
 }
 .code-eq {
   color: var(--text-tertiary);
-  margin: 0 2px;
+  margin: 0 0.35em;
   transition: color 0.4s ease;
   flex-shrink: 0;
 }
@@ -350,6 +370,11 @@ function handleKeydown(e) {
   color: var(--text-primary);
   font-size: 13px;
   transition: color 0.4s ease;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .code-edit-hasitem-btn {
@@ -391,28 +416,29 @@ function handleKeydown(e) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  font-size: 14px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--text-tertiary);
+  line-height: 1;
+  padding-bottom: 1px;
+  color: var(--text-secondary);
   cursor: pointer;
   user-select: none;
   flex-shrink: 0;
-  border: 1px solid transparent;
+  border: 1px dashed var(--border-color);
   transition:
-    color 0.15s ease,
-    background-color 0.15s ease,
-    border-color 0.15s ease;
+    border-color 0.15s ease,
+    color 0.15s ease;
 }
 .not-toggle:hover {
+  border-color: var(--text-secondary);
   color: var(--text-primary);
-  background: var(--bg-card);
 }
 .not-active {
   color: #dc2626 !important;
-  border-color: #dc2626 !important;
+  border: 1px solid #dc2626 !important;
   background: rgba(220, 38, 38, 0.08) !important;
 }
 
@@ -431,6 +457,7 @@ function handleKeydown(e) {
 }
 .perm-select {
   min-width: 110px;
+  max-width: 100%;
 }
 
 .code-edit-confirm-btn {
@@ -457,17 +484,29 @@ function handleKeydown(e) {
 }
 
 @media (max-width: 640px) {
-  .code-line--editing {
+  .code-line.code-line--editing {
+    display: flex;
     margin-left: 16px;
-    width: auto;
+    width: calc(100% - 16px);
+    padding-right: 0;
   }
-  .code-edit-input {
-    min-width: 60px;
-    max-width: 140px;
+  .code-edit-area {
+    flex: 1;
+    min-width: 0;
+  }
+  .code-edit-input,
+  .code-edit-input--name,
+  .code-edit-input--key,
+  .code-edit-input--brace,
+  .code-edit-select,
+  .perm-select {
+    flex: 1;
+    min-width: 0;
+    width: auto !important;
+    max-width: none;
   }
   .code-edit-input--brace {
     min-width: 80px;
-    max-width: 160px;
   }
 }
 </style>
