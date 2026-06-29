@@ -24,6 +24,10 @@ const TrAnimationTool = defineAsyncComponent({
   loader: () => import('./tools/TrAnimationTool.vue'),
   ...asyncOptions,
 })
+const SelectorTool = defineAsyncComponent({
+  loader: () => import('./tools/selector/index.vue'),
+  ...asyncOptions,
+})
 const ExecuteTool = defineAsyncComponent({
   loader: () => import('./tools/ExecuteTool.vue'),
   ...asyncOptions,
@@ -50,6 +54,7 @@ const componentMap = {
   '/c/execute': ExecuteTool,
   '/c/fuhao': FuhaoTool,
   '/c/raw-json': RawJsonTool,
+  '/c/selector': SelectorTool,
 }
 
 function getComponent(path) {

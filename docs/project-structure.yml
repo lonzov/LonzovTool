@@ -37,6 +37,25 @@ src:
       RawJsonEditModal.vue: T显编辑器：编辑/添加元素弹窗
       RawJsonImportModal.vue: T显编辑器：导入指令弹窗
       RawJsonColorModal.vue: T显编辑器：颜色参考表弹窗
+      selector:
+        index.vue: 选择器参数编辑器入口，NConfigProvider 深色覆盖 + 组件组装
+        constants.js: 参数种类定义(PARAM_KINDS)、游戏模式选项、权限选项等配置
+        composables:
+          useState.js: 模块级共享状态（所有 ref 与内部变量）
+          useParams.js: 参数 CRUD、编辑工作流（beginEdit/saveEdit/commitCurrentState）
+          useOutput.js: 输出格式化、复制导出、加载示例、清空
+          useImport.js: 导入弹窗与选择器字符串解析
+          usePersistence.js: localStorage 读写与防抖持久化
+          useSelectorEditor.js: 组合式函数入口（useMessage 注入 + 生命周期挂载）
+        components:
+          PageHeader.vue: 页面标题区
+          Toolbar.vue: 工具栏按钮（导入/导出/示例/清空）
+          CodeView.vue: 代码卡片容器，编排参数行渲染与点击提交逻辑
+          ParamLine.vue: 参数显示行（key = value），点击进入编辑
+          EditLine.vue: 参数编辑行（所有编辑器类型：文本/反选/游戏模式/计分板/物品/权限/自定义）
+          AddLine.vue: 添加参数表单行（NCascader 类型选择 + 各编辑器类型）
+          HasitemModal.vue: hasitem 嵌套物品编辑器弹窗
+          ImportModal.vue: 选择器字符串导入弹窗
   composables:
     useMouseGlow.js: 卡片边框高光平滑跟随鼠标效果（lerp 插值）
     usePrivacyModal.js: 隐私弹窗状态共享组合式函数

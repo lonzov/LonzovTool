@@ -52,6 +52,11 @@ const TOOL_META_MAP = {
     description: 'Minecraft 基岩版 T显 rawJSON 可视化编辑器，0代码轻松实现复杂嵌套文本结构。支持实时预览、导入导出 rawJSON，适用于标题、动作栏、Boss 栏等场景。',
     keywords: 'Minecraft,T显编辑器,T显模板,rawjson编辑器,可视化编辑器,rawtext,基岩版指令,MC工具,雪球菜单,小舟工具箱',
   },
+  selector: {
+    title: '选择器参数编辑器 - 小舟工具箱',
+    description: 'Minecraft 基岩版目标选择器参数可视化编辑器，支持嵌套结构。直观编辑 @a/@e/@p/@r/@s 选择器参数，实时预览生成的选择器指令。',
+    keywords: 'Minecraft,选择器,目标选择器,参数编辑器,基岩版指令,@a,@e,@p,@r,@s,指令生成,小舟工具箱',
+  },
   execute: {
     title: 'Execute语法升级工具 - 小舟工具箱',
     description: 'Minecraft 基岩版 execute 指令旧版本语法自动升级工具，一键将旧格式 execute 命令转换为新版本语法结构。',
