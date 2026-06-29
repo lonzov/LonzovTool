@@ -208,6 +208,13 @@ function onModalEntered() {
   transition: none !important;
 }
 
+[data-theme='dark'] .tab-container {
+  background: var(--bg-color);
+}
+[data-theme='dark'] .tab-indicator {
+  background: var(--bg-sub);
+}
+
 .tab-item {
   position: relative;
   z-index: 2;
