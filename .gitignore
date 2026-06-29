@@ -44,6 +44,6 @@ __screenshots__/
 v2/
 deploy.config.json
 dist.7z
-docs/
+docs/*
 !docs/project-structure.yml
 !docs/image/
