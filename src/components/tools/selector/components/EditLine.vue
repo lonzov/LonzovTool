@@ -115,26 +115,6 @@
         <span class="code-value--static">{{ haspermissionParts.suffix }}</span>
       </template>
 
-      <!-- custom -->
-      <template v-if="param.kind === 'custom'">
-        <NInput
-          v-model:value="editCustomKey"
-          size="tiny"
-          class="code-edit-input code-edit-input--key"
-          :style="inputWidthStyle(editCustomKey, { min: 70, max: 140 })"
-          placeholder="参数名"
-          @keydown="handleKeydown"
-        />
-        <span class="code-eq">=</span>
-        <NInput
-          v-model:value="editValue"
-          size="tiny"
-          class="code-edit-input"
-          :style="inputWidthStyle(editValue)"
-          placeholder="值"
-          @keydown="handleKeydown"
-        />
-      </template>
     </div>
 
     <div class="code-edit-actions">
@@ -161,7 +141,6 @@ import { GAMEMODE_OPTIONS, PARAM_KINDS } from '../constants.js'
 import {
   editNot,
   editValue,
-  editCustomKey,
   deleteConfirmId,
 } from '../composables/useState.js'
 import { getParamKey } from '../composables/useParams.js'
