@@ -7,6 +7,7 @@
       :style="modalStyle"
       :segmented="{ content: true, footer: 'soft' }"
       content-scrollable
+      :mask-closable="false"
       @after-enter="onModalEntered"
       @after-leave="onAfterLeave"
     >

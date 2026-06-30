@@ -7,6 +7,7 @@
       :style="modalStyle"
       :segmented="{ content: true, footer: 'soft' }"
       content-scrollable
+      :mask-closable="false"
       @after-leave="onAfterLeave"
     >
       <div v-if="contentVisible" @click.stop class="perm-modal-body">
