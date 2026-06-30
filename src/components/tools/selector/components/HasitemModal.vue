@@ -167,7 +167,7 @@ function switchMode(isArray) {
 }
 
 function onAddItem() {
-  animateHeightChange(() => addHasitemSubItem())
+  animateHeightChange(() => addHasitemSubItem(), { scrollToBottom: true })
 }
 
 function onRemoveItem(idx) {
@@ -179,18 +179,29 @@ function onRemoveItem(idx) {
  * 高度 = 卡片可用内容区 = card.clientHeight − header − footer − 内容 padding
  * @param {() => void} changeFn 触发数据变更的回调
  */
-function animateHeightChange(changeFn) {
+function animateHeightChange(changeFn, { scrollToBottom = false } = {}) {
   const el = contentRef.value
   if (!el) {
     changeFn()
     return
   }
 
+  // 保存滚动位置
+  const scrollEl = findScrollParent(el)
+  const saveScroll = () => scrollEl ? scrollEl.scrollTop : 0
+  const restoreScroll = (top) => { if (scrollEl) scrollEl.scrollTop = top }
+  console.log('[HasitemModal] scrollEl:', scrollEl ? scrollEl.className || scrollEl.tagName : 'NOT FOUND')
+
+  const savedTop = saveScroll()
+
   // 1. 锁定前测量：内容自然高度 vs 卡片可用区域，取较小值
   const cap = getAvailableHeight(el)
   const fromHeight = Math.min(el.scrollHeight, cap)
   el.style.height = fromHeight + 'px'
   el.style.overflow = 'hidden'
+
+  // 锁定后立即恢复滚动（overflow hidden 可能触发回顶）
+  restoreScroll(savedTop)
 
   // 2. 变更数据
   changeFn()
@@ -204,23 +215,37 @@ function animateHeightChange(changeFn) {
       const toHeight = Math.min(el.scrollHeight, newCap)
       console.log('[HasitemModal] 高度过渡:', Math.round(fromHeight), '→', Math.round(toHeight), '(cap:', Math.round(newCap), ')')
 
+      // 解锁后立即恢复滚动位置
+      restoreScroll(savedTop)
+
       if (Math.abs(fromHeight - toHeight) < 2) {
         el.style.height = ''
         el.style.overflow = ''
         el.style.transition = ''
+        if (scrollToBottom && scrollEl) {
+          scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' })
+        }
         return
       }
 
       el.style.height = fromHeight + 'px'
+      // 锁回后恢复滚动
+      restoreScroll(savedTop)
       void el.offsetHeight
       el.style.transition = 'height 0.3s cubic-bezier(0.2, 0, 0, 1)'
       el.style.height = toHeight + 'px'
+      // 动画开始前恢复
+      restoreScroll(savedTop)
 
       const onEnd = (e) => {
         if (e.propertyName !== 'height') return
         el.style.height = ''
         el.style.overflow = ''
         el.style.transition = ''
+        restoreScroll(savedTop)
+        if (scrollToBottom && scrollEl) {
+          scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' })
+        }
         el.removeEventListener('transitionend', onEnd)
       }
       el.addEventListener('transitionend', onEnd)
@@ -247,6 +272,17 @@ function getAvailableHeight(el) {
   }
 
   return card.clientHeight - headerH - footerH - padTop - padBottom
+}
+
+/** 向上查找第一个可滚动的父元素 */
+function findScrollParent(el) {
+  let node = el.parentElement
+  while (node) {
+    const s = getComputedStyle(node)
+    if (s.overflowY === 'auto' || s.overflowY === 'scroll') return node
+    node = node.parentElement
+  }
+  return null
 }
 
 /** 数学预计算：两 tab 均为 flex:1，各占一半宽度，无需测量 DOM */
