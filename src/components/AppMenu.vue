@@ -1,5 +1,6 @@
 <script>
 import { h, markRaw, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { NMenu, NIcon, useMessage } from 'naive-ui'
 import { Home48Regular, Person24Regular, AddSquare24Regular, HeartCircle24Regular, CalendarWorkWeek24Regular, DrawerArrowDownload24Regular } from '@vicons/fluent'
 import { getCategoryIcon } from '../config/categoryIcons'
@@ -30,6 +31,7 @@ export default {
     // PWA 安装
     const { isInstalled, install: doInstall } = usePWAInstall()
     const message = useMessage()
+    const router = useRouter()
 
     function handlePWAInstall() {
       doInstall().then((result) => {
@@ -52,6 +54,7 @@ export default {
             message.success('安装成功！小舟工具箱已添加到桌面')
           } else {
             message.warning('手动取消安装/浏览器不支持')
+            router.push('/down/LonzovTool')
           }
           return
         }
@@ -61,6 +64,7 @@ export default {
           duration: 6000,
           closable: true,
         })
+        router.push('/down/LonzovTool')
       })
     }
 
@@ -216,6 +220,7 @@ export default {
     handleUpdateValue(key, item) {
       // PWA 安装：不导航，触发安装流程
       if (key === 'pwa-install') {
+        this.$emit('update:value', key)
         this.handlePWAInstall()
         return
       }

@@ -1,0 +1,24 @@
+{
+    "icon": "/logos/1tool_lonzov_top.webp",
+    "name": "小舟工具箱",
+    "version": "v3.3",
+    "tagline": "小舟工具箱本地安卓应用版本",
+    "introMd": "LonzovTool.md",
+    "intro": "",
+    "developer": "浪小舟",
+    "developerLink": "https://blog.lonzov.top/",
+    "lanzou": [
+        {
+            "version": "WTP",
+            "url": "https://lonzov.lanzouu.com/idYi03tqylnc",
+            "password": "5jmn"
+        },
+        {
+            "version": "PWA",
+            "url": "https://lonzov.lanzouu.com/iQNBN3tqx86b",
+            "password": "bxwf"
+        }
+    ],
+    "fileSize": "14",
+    "downloads": 0
+}
