@@ -32,7 +32,7 @@
 
         <div class="hasitem-items-list">
           <div v-if="hasitemEditItems.length === 0" class="hasitem-empty">暂无物品，请添加</div>
-          <div v-for="(it, ii) in hasitemEditItems" :key="ii" class="hasitem-item-row">
+          <div v-for="(it, ii) in displayItems" :key="ii" class="hasitem-item-row">
             <span class="hasitem-item-label"
               >物品 {{ hasitemEditIsArray ? '#' + (ii + 1) : '' }}</span
             >
@@ -135,6 +135,11 @@ const showHasitemModal = computed({
 })
 
 const modalTitle = computed(() => hasitemEditIsAdd.value ? '添加 hasitem 物品项' : '编辑 hasitem 物品项')
+
+const displayItems = computed(() => {
+  if (hasitemEditIsArray.value) return hasitemEditItems.value
+  return hasitemEditItems.value.length > 0 ? [hasitemEditItems.value[0]] : []
+})
 
 function onCancel() {
   if (hasitemEditIsAdd.value) closeHasitemAddModal()
