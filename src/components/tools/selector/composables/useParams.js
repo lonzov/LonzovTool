@@ -20,6 +20,10 @@ import {
   hasitemEditItems,
   hasitemEditIsArray,
   hasitemEditIsAdd,
+  haspermissionEditId,
+  haspermissionEditIsAdd,
+  haspermissionEditCamera,
+  haspermissionEditMovement,
   internals,
 } from './useState.js'
 import { PARAM_KINDS } from '../constants.js'
@@ -240,4 +244,53 @@ export function saveHasitemAddModal() {
   newHasitemItems.value = JSON.parse(JSON.stringify(hasitemEditItems.value))
   newHasitemIsArray.value = hasitemEditIsArray.value
   closeHasitemAddModal()
+}
+
+// ========== haspermission 子项编辑 ==========
+
+export function openHaspermissionEditor(id) {
+  const p = params.value.find(p => p.id === id)
+  if (!p || p.kind !== 'haspermission') return
+  haspermissionEditId.value = id
+  haspermissionEditIsAdd.value = false
+  haspermissionEditCamera.value = p.permCamera
+  haspermissionEditMovement.value = p.permMovement
+}
+
+export function closeHaspermissionEditor() {
+  haspermissionEditId.value = null
+  haspermissionEditIsAdd.value = false
+  haspermissionEditCamera.value = null
+  haspermissionEditMovement.value = null
+}
+
+export function saveHaspermissionEditor() {
+  const p = params.value.find(p => p.id === haspermissionEditId.value)
+  if (!p) return
+  p.permCamera = haspermissionEditCamera.value
+  p.permMovement = haspermissionEditMovement.value
+  closeHaspermissionEditor()
+  triggerSave()
+}
+
+// ========== haspermission 添加模式弹窗 ==========
+
+export function openHaspermissionAddModal() {
+  haspermissionEditId.value = '__add__'
+  haspermissionEditIsAdd.value = true
+  haspermissionEditCamera.value = newPermCamera.value
+  haspermissionEditMovement.value = newPermMovement.value
+}
+
+export function closeHaspermissionAddModal() {
+  haspermissionEditId.value = null
+  haspermissionEditIsAdd.value = false
+  haspermissionEditCamera.value = null
+  haspermissionEditMovement.value = null
+}
+
+export function saveHaspermissionAddModal() {
+  newPermCamera.value = haspermissionEditCamera.value
+  newPermMovement.value = haspermissionEditMovement.value
+  closeHaspermissionAddModal()
 }

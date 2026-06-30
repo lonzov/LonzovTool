@@ -153,30 +153,14 @@
       <!-- haspermission -->
       <template v-else-if="addingKindEditor === 'haspermission'">
         <span class="code-eq">=</span>
-        <span class="code-brace">{</span>
-        <div class="perm-edit-group">
-          <label class="perm-label">camera</label>
-          <NSelect
-            v-model:value="newPermCamera"
-            :options="PERM_VALUE_OPTIONS"
-            size="tiny"
-            class="perm-select"
-            :clearable="true"
-            placeholder="未设置"
-          />
-        </div>
-        <div class="perm-edit-group">
-          <label class="perm-label">movement</label>
-          <NSelect
-            v-model:value="newPermMovement"
-            :options="PERM_VALUE_OPTIONS"
-            size="tiny"
-            class="perm-select"
-            :clearable="true"
-            placeholder="未设置"
-          />
-        </div>
-        <span class="code-brace">}</span>
+        <span class="code-value--static">{{ haspermissionAddParts.prefix }}</span>
+        <button
+          class="code-edit-hasitem-btn code-edit-hasitem-btn--inline"
+          @click="openHaspermissionAddModal"
+        >
+          <NIcon :component="Edit24Filled" :size="13" />
+        </button>
+        <span class="code-value--static">{{ haspermissionAddParts.suffix }}</span>
       </template>
     </div>
 
@@ -190,7 +174,7 @@
 import { computed, watch } from 'vue'
 import { NIcon, NInput, NSelect, NDropdown } from 'naive-ui'
 import { Checkmark24Filled, ChevronDown20Filled, Edit24Filled } from '@vicons/fluent'
-import { PARAM_KINDS, GAMEMODE_OPTIONS, PERM_VALUE_OPTIONS, kindDropdownOptions } from '../constants.js'
+import { PARAM_KINDS, GAMEMODE_OPTIONS, kindDropdownOptions } from '../constants.js'
 import {
   newKind,
   newCustomKey,
@@ -201,7 +185,7 @@ import {
   newPermCamera,
   newPermMovement,
 } from '../composables/useState.js'
-import { confirmAdd, cancelAdd, openHasitemAddModal, commitCurrentState } from '../composables/useParams.js'
+import { confirmAdd, cancelAdd, openHasitemAddModal, openHaspermissionAddModal, commitCurrentState } from '../composables/useParams.js'
 
 const addingKindEditor = computed(() => {
   if (newKind.value === 'custom') return 'text'
@@ -257,6 +241,15 @@ const hasitemAddParts = computed(() => {
     return { prefix: text.slice(0, -1), suffix: lastChar }
   }
   return { prefix: text, suffix: '' }
+})
+
+const haspermissionAddParts = computed(() => {
+  const parts = []
+  if (newPermCamera.value) parts.push(`camera=${newPermCamera.value}`)
+  if (newPermMovement.value) parts.push(`movement=${newPermMovement.value}`)
+  const text = '{' + parts.join(',') + '}'
+  if (text.length < 2) return { prefix: text, suffix: '' }
+  return { prefix: text.slice(0, -1), suffix: '}' }
 })
 
 watch(newKind, () => {
@@ -440,24 +433,6 @@ function handleKeydown(e) {
   color: #dc2626 !important;
   border: 1px solid #dc2626 !important;
   background: rgba(220, 38, 38, 0.08) !important;
-}
-
-/* haspermission */
-.perm-edit-group {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-.perm-label {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
-  transition: color 0.4s ease;
-  flex-shrink: 0;
-}
-.perm-select {
-  min-width: 110px;
-  max-width: 100%;
 }
 
 .code-edit-confirm-btn {

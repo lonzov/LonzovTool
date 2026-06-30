@@ -105,30 +105,14 @@
 
       <!-- haspermission -->
       <template v-if="editor === 'haspermission'">
-        <span class="code-brace">{</span>
-        <div class="perm-edit-group">
-          <label class="perm-label">camera</label>
-          <NSelect
-            v-model:value="editPermCamera"
-            :options="PERM_VALUE_OPTIONS"
-            size="tiny"
-            class="perm-select"
-            :clearable="true"
-            placeholder="未设置"
-          />
-        </div>
-        <div class="perm-edit-group">
-          <label class="perm-label">movement</label>
-          <NSelect
-            v-model:value="editPermMovement"
-            :options="PERM_VALUE_OPTIONS"
-            size="tiny"
-            class="perm-select"
-            :clearable="true"
-            placeholder="未设置"
-          />
-        </div>
-        <span class="code-brace">}</span>
+        <span class="code-value--static">{{ haspermissionParts.prefix }}</span>
+        <button
+          class="code-edit-hasitem-btn code-edit-hasitem-btn--inline"
+          @click="openHaspermission"
+        >
+          <NIcon :component="Edit24Filled" :size="13" />
+        </button>
+        <span class="code-value--static">{{ haspermissionParts.suffix }}</span>
       </template>
 
       <!-- custom -->
@@ -173,13 +157,11 @@
 import { computed } from 'vue'
 import { NIcon, NSelect, NInput } from 'naive-ui'
 import { Checkmark24Filled, Edit24Filled, Delete24Filled } from '@vicons/fluent'
-import { GAMEMODE_OPTIONS, PERM_VALUE_OPTIONS, PARAM_KINDS } from '../constants.js'
+import { GAMEMODE_OPTIONS, PARAM_KINDS } from '../constants.js'
 import {
   editNot,
   editValue,
   editCustomKey,
-  editPermCamera,
-  editPermMovement,
   deleteConfirmId,
 } from '../composables/useState.js'
 import { getParamKey } from '../composables/useParams.js'
@@ -188,6 +170,7 @@ import {
   saveEdit,
   cancelEdit,
   openHasitemEditor,
+  openHaspermissionEditor,
   commitCurrentState,
   deleteParam,
 } from '../composables/useParams.js'
@@ -214,6 +197,21 @@ const hasitemParts = computed(() => {
 
 function openHasitem() {
   openHasitemEditor(props.param.id)
+  cancelEdit()
+}
+
+const haspermissionParts = computed(() => {
+  const text = getParamValueText(props.param)
+  if (!text || text.length < 2) return { prefix: text || '', suffix: '' }
+  const lastChar = text.slice(-1)
+  if (lastChar === '}' || lastChar === ']') {
+    return { prefix: text.slice(0, -1), suffix: lastChar }
+  }
+  return { prefix: text, suffix: '' }
+})
+
+function openHaspermission() {
+  openHaspermissionEditor(props.param.id)
   cancelEdit()
 }
 
@@ -441,24 +439,6 @@ function handleKeydown(e) {
   background: rgba(220, 38, 38, 0.08) !important;
 }
 
-/* haspermission */
-.perm-edit-group {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-.perm-label {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
-  transition: color 0.4s ease;
-  flex-shrink: 0;
-}
-.perm-select {
-  min-width: 110px;
-  max-width: 100%;
-}
-
 @media (max-width: 640px) {
   .code-line.code-line--editing {
     display: flex;
@@ -474,8 +454,7 @@ function handleKeydown(e) {
   .code-edit-input--name,
   .code-edit-input--key,
   .code-edit-input--brace,
-  .code-edit-select,
-  .perm-select {
+  .code-edit-select {
     flex: 1;
     min-width: 0;
     width: auto !important;

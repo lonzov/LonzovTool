@@ -56,6 +56,7 @@ src:
           AddLine.vue: 添加参数表单行（NCascader 类型选择 + 各编辑器类型）
           HasitemModal.vue: hasitem 嵌套物品编辑器弹窗
           ImportModal.vue: 选择器字符串导入弹窗
+          HaspermissionModal.vue: haspermission 编辑器弹窗
   composables:
     useMouseGlow.js: 卡片边框高光平滑跟随鼠标效果（lerp 插值）
     usePrivacyModal.js: 隐私弹窗状态共享组合式函数

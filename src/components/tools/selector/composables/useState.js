@@ -43,6 +43,12 @@ export const hasitemEditItems = ref([])
 export const hasitemEditIsArray = ref(false)
 export const hasitemEditIsAdd = ref(false)
 
+// ========== haspermission 子编辑弹窗 ==========
+export const haspermissionEditId = ref(null)
+export const haspermissionEditIsAdd = ref(false)
+export const haspermissionEditCamera = ref(null)
+export const haspermissionEditMovement = ref(null)
+
 // ========== 内部非响应式变量 ==========
 // 使用对象包裹以允许跨模块赋值（ES module 不允许直接重新赋值 import binding）
 export const internals = {
