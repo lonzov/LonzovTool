@@ -194,6 +194,10 @@ export function openHasitemEditor(id) {
 export function closeHasitemEditor() {
   hasitemEditId.value = null
   hasitemEditIsAdd.value = false
+}
+
+/** 动画结束后清理编辑数据（由 useModalContent 的 onAfterLeave 调用） */
+export function cleanupHasitemModal() {
   hasitemEditItems.value = []
   hasitemEditIsArray.value = true
 }
@@ -236,8 +240,6 @@ export function openHasitemAddModal() {
 export function closeHasitemAddModal() {
   hasitemEditId.value = null
   hasitemEditIsAdd.value = false
-  hasitemEditItems.value = []
-  hasitemEditIsArray.value = true
 }
 
 export function saveHasitemAddModal() {
@@ -260,6 +262,10 @@ export function openHaspermissionEditor(id) {
 export function closeHaspermissionEditor() {
   haspermissionEditId.value = null
   haspermissionEditIsAdd.value = false
+}
+
+/** 动画结束后清理编辑数据（由 useModalContent 的 onAfterLeave 调用） */
+export function cleanupHaspermissionModal() {
   haspermissionEditCamera.value = null
   haspermissionEditMovement.value = null
 }
@@ -285,8 +291,6 @@ export function openHaspermissionAddModal() {
 export function closeHaspermissionAddModal() {
   haspermissionEditId.value = null
   haspermissionEditIsAdd.value = false
-  haspermissionEditCamera.value = null
-  haspermissionEditMovement.value = null
 }
 
 export function saveHaspermissionAddModal() {

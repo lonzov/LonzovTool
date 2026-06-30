@@ -8,8 +8,9 @@
       :segmented="{ content: true, footer: 'soft' }"
       content-scrollable
       @after-enter="onModalEntered"
+      @after-leave="onAfterLeave"
     >
-      <div v-if="hasitemEditId" @click.stop>
+      <div v-if="contentVisible" @click.stop>
         <!-- 模式切换胶囊 -->
         <div ref="tabContainerRef" class="tab-container">
           <div class="tab-indicator" :class="{ locked: indicatorLocked }" :style="indicatorStyle"></div>
@@ -90,7 +91,9 @@ import {
   saveHasitemAddModal,
   addHasitemSubItem,
   removeHasitemSubItem,
+  cleanupHasitemModal,
 } from '../composables/useParams.js'
+import { useModalContent } from '../composables/useModalContent.js'
 
 const { isDark } = useTheme()
 
@@ -98,6 +101,8 @@ const darkOverrides = {
   common: { neutralModal: '#191919' },
   Card: { colorModal: '#191919' },
 }
+
+const { contentVisible, onAfterLeave } = useModalContent(hasitemEditId, cleanupHasitemModal)
 
 const isCompact = ref(false)
 let _mq

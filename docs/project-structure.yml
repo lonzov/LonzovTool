@@ -47,6 +47,7 @@ src:
           useImport.js: 导入弹窗与选择器字符串解析
           usePersistence.js: localStorage 读写与防抖持久化
           useSelectorEditor.js: 组合式函数入口（useMessage 注入 + 生命周期挂载）
+          useModalContent.js: 模态框内容延迟销毁 Hook，关闭时等待 @after-leave 动画完成再移除 DOM
         components:
           PageHeader.vue: 页面标题区
           Toolbar.vue: 工具栏按钮（导入/导出/示例/清空）

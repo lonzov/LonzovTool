@@ -7,8 +7,9 @@
       :style="modalStyle"
       :segmented="{ content: true, footer: 'soft' }"
       content-scrollable
+      @after-leave="onAfterLeave"
     >
-      <div v-if="haspermissionEditId" @click.stop class="perm-modal-body">
+      <div v-if="contentVisible" @click.stop class="perm-modal-body">
         <div class="perm-field">
           <label class="perm-label">camera</label>
           <NSelect
@@ -59,7 +60,9 @@ import {
   saveHaspermissionEditor,
   closeHaspermissionAddModal,
   saveHaspermissionAddModal,
+  cleanupHaspermissionModal,
 } from '../composables/useParams.js'
+import { useModalContent } from '../composables/useModalContent.js'
 
 const { isDark } = useTheme()
 
@@ -67,6 +70,8 @@ const darkOverrides = {
   common: { neutralModal: '#191919' },
   Card: { colorModal: '#191919' },
 }
+
+const { contentVisible, onAfterLeave } = useModalContent(haspermissionEditId, cleanupHaspermissionModal)
 
 const isCompact = ref(false)
 let _mq
