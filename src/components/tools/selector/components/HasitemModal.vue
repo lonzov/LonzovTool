@@ -11,7 +11,7 @@
       @after-enter="onModalEntered"
       @after-leave="onAfterLeave"
     >
-      <div v-if="contentVisible" @click.stop>
+      <div v-if="contentVisible" ref="contentRef" class="hasitem-modal-body" @click.stop>
         <!-- 模式切换胶囊 -->
         <div ref="tabContainerRef" class="tab-container">
           <div class="tab-indicator" :class="{ locked: indicatorLocked }" :style="indicatorStyle"></div>
@@ -48,7 +48,7 @@
               v-if="hasitemEditIsArray || hasitemEditItems.length > 1"
               class="code-act-btn code-act-btn--danger-sm"
               title="删除此物品"
-              @click="removeHasitemSubItem(ii)"
+              @click="onRemoveItem(ii)"
             >
               <NIcon :component="Delete24Filled" :size="14" />
             </button>
@@ -57,7 +57,7 @@
         <button
           v-if="(!hasitemEditIsArray && hasitemEditItems.length === 0) || hasitemEditIsArray"
           class="add-hasitem-sub-btn"
-          @click="addHasitemSubItem"
+          @click="onAddItem"
         >
           <NIcon :component="Add16Filled" :size="12" />
           <span>添加物品</span>
@@ -154,13 +154,99 @@ function onSave() {
 
 // ========== 模式切换胶囊 ==========
 const tabContainerRef = ref(null)
+const contentRef = ref(null)
 const indicatorStyle = ref({ width: '0px', transform: 'translateX(0px)', opacity: '0' })
 const indicatorLocked = ref(false)
 
 const PADDING = 4
 
 function switchMode(isArray) {
-  hasitemEditIsArray.value = isArray
+  animateHeightChange(() => {
+    hasitemEditIsArray.value = isArray
+  })
+}
+
+function onAddItem() {
+  animateHeightChange(() => addHasitemSubItem())
+}
+
+function onRemoveItem(idx) {
+  animateHeightChange(() => removeHasitemSubItem(idx))
+}
+
+/**
+ * FLIP 高度过渡：记录旧高度 → 执行数据变更 → 测量新高度 → 动画过渡
+ * 高度 = 卡片可用内容区 = card.clientHeight − header − footer − 内容 padding
+ * @param {() => void} changeFn 触发数据变更的回调
+ */
+function animateHeightChange(changeFn) {
+  const el = contentRef.value
+  if (!el) {
+    changeFn()
+    return
+  }
+
+  // 1. 锁定前测量：内容自然高度 vs 卡片可用区域，取较小值
+  const cap = getAvailableHeight(el)
+  const fromHeight = Math.min(el.scrollHeight, cap)
+  el.style.height = fromHeight + 'px'
+  el.style.overflow = 'hidden'
+
+  // 2. 变更数据
+  changeFn()
+
+  // 3. 下一帧：解锁 → 测量新高度 → 锁回 → 动画
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      el.style.transition = 'none'
+      el.style.height = ''
+      const newCap = getAvailableHeight(el)
+      const toHeight = Math.min(el.scrollHeight, newCap)
+      console.log('[HasitemModal] 高度过渡:', Math.round(fromHeight), '→', Math.round(toHeight), '(cap:', Math.round(newCap), ')')
+
+      if (Math.abs(fromHeight - toHeight) < 2) {
+        el.style.height = ''
+        el.style.overflow = ''
+        el.style.transition = ''
+        return
+      }
+
+      el.style.height = fromHeight + 'px'
+      void el.offsetHeight
+      el.style.transition = 'height 0.3s cubic-bezier(0.2, 0, 0, 1)'
+      el.style.height = toHeight + 'px'
+
+      const onEnd = (e) => {
+        if (e.propertyName !== 'height') return
+        el.style.height = ''
+        el.style.overflow = ''
+        el.style.transition = ''
+        el.removeEventListener('transitionend', onEnd)
+      }
+      el.addEventListener('transitionend', onEnd)
+    })
+  })
+}
+
+/** 计算卡片可用内容区高度 = 卡片总高 − 标题栏 − 按钮栏 − 内容 padding */
+function getAvailableHeight(el) {
+  const card = el.closest('.n-card')
+  if (!card) return Infinity
+
+  const header = card.querySelector(':scope > .n-card-header')
+  const footer = card.querySelector(':scope > .n-card-footer')
+  const headerH = header ? header.getBoundingClientRect().height : 68
+  const footerH = footer ? footer.getBoundingClientRect().height : 83
+
+  const scrollContent = el.closest('.n-scrollbar-content')
+  let padTop = 20, padBottom = 20
+  if (scrollContent) {
+    const cs = getComputedStyle(scrollContent)
+    padTop = parseFloat(cs.paddingTop) || 20
+    padBottom = parseFloat(cs.paddingBottom) || 20
+  }
+
+  return card.clientHeight - headerH - footerH - padTop - padBottom
 }
 
 /** 数学预计算：两 tab 均为 flex:1，各占一半宽度，无需测量 DOM */
@@ -274,6 +360,10 @@ function onModalEntered() {
 
 .tab-item.active:hover {
   color: var(--text-primary);
+}
+
+.hasitem-modal-body {
+  transition: height 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .hasitem-empty {
