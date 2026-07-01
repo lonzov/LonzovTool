@@ -258,6 +258,13 @@
       "parentMenuId": "websites",
       "tools": [
         {
+          "id": "commandlab",
+          "title": "CommandLab",
+          "description": "在线指令库，专注于命令存储、分享等",
+          "logo": "/logos/commandlab.webp",
+          "link": "https://abyssous.site/app"
+        },
+        {
           "id": "paul-community",
           "title": "Paul 指令社区",
           "description": "针对网易版指令创作者的交易与答疑平台",

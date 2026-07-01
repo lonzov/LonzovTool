@@ -179,7 +179,7 @@ self.addEventListener('message', (event) => {
         title: '有新版本可用',
         content: `
         <h4>👾 更新日志：</h4>
-        <p>[+] 新工具：选择器参数编辑器<br>[+] PWA安装增加安装包备选方案<br>[~] 修复标签页栏滑动时基点异常导致乱飘<br>[+] 本站支持作为PWA应用安装到本地<br>[+] 新卡片：种子查找器、dxdydz计算</p>
+        <p>[+] 新工具：选择器参数编辑器<br>[+] PWA安装增加安装包备选方案<br>[~] 修复标签页栏滑动时基点异常导致乱飘<br>[+] 本站支持作为PWA应用安装到本地<br>[+] 新卡片：种子查找器、dxdydz计算、CommandLab</p>
         <p style="font-size:13px"><em>⚠️反馈和建议请前往“关于本站”页面查看</em></p>
         `,
         buttons: [
