@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.3.2'
+const CACHE_VERSION = '3.3.2.0'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
@@ -224,7 +224,7 @@ self.addEventListener('message', (event) => {
         title: '有新版本可用',
         content: `
         <h4>👾 更新日志：</h4>
-        <p>[~] 优化设置页布局和样式<br><b>[+] 新工具：选择器参数编辑器</b><br>[+] PWA安装增加安装包备选方案<br>[~] 修复标签页栏滑动时基点异常导致乱飘<br>[+] 本站支持作为PWA应用安装到本地<br>[+] 新卡片：种子查找器、dxdydz计算、CommandLab</p>
+        <p>[~] 优化设置页布局和样式<br><b>[+] 新工具：选择器参数编辑器</b><br>[+] PWA安装增加安装包备选方案<br>[~] 修复标签页栏滑动时基点异常导致乱飘<br>[+] 本站支持作为PWA应用安装到本地<br>[+] 新卡片：种子查找器、dxdydz计算、CommandLab、网易敏感词检测</p>
         <p style="font-size:13px"><em>⚠️反馈和建议请前往“关于本站”页面查看</em></p>
         `,
         buttons: [

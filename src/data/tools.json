@@ -130,6 +130,13 @@
           "description": "网易版加密存档解密工具",
           "logo": "/logos/HAIMING.webp",
           "link": "https://mc.hm0.top/"
+        },
+        {
+          "id": "n-sensitive-words",
+          "title": "网易敏感词检测",
+          "description": "检测输入内容是否命中网易敏感词规则",
+          "logo": "/logos/null.webp",
+          "link": "https://neteasemcapi.theconsole.top/SensitiveWords"
         }
       ]
     },
