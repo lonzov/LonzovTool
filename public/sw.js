@@ -3,6 +3,15 @@ const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
 
+// ===== 静态资源长期缓存：不随版本更新删除 =====
+const STATIC_CACHE_NAME = 'lt-static'
+const STATIC_CACHE_PATHS = ['/logos/', '/fonts/', '/img/', '/sprites/']
+
+// ===== 二级版本缓存：仅在 minor 版本变更时清除（如 3.3.x → 3.4.x） =====
+const MINOR_VERSION = CACHE_VERSION.split('.').slice(0, 2).join('.')
+const MINOR_CACHE_NAME = `lt-v3-minor-${MINOR_VERSION}`
+const MINOR_CACHE_PATHS = ['/app-icon/', '/assets/']
+
 // ===== Install: 预缓存 SPA shell (index.html) =====
 // 确保首次安装后 INDEX_KEY 就有值，离线时总能找到 SPA shell
 self.addEventListener('install', (event) => {
@@ -25,13 +34,13 @@ self.addEventListener('install', (event) => {
   }
 })
 
-// ===== Activate: 清理旧缓存 + 接管客户端 =====
+// ===== Activate: 清理旧缓存 + 接管客户端（保留静态资源长期缓存） =====
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((names) =>
       Promise.all(
         names
-          .filter((n) => n !== CACHE_NAME)
+          .filter((n) => n !== CACHE_NAME && n !== STATIC_CACHE_NAME && n !== MINOR_CACHE_NAME)
           .map((n) => {
             console.log('[SW] Deleting old cache:', n)
             return caches.delete(n)
@@ -116,6 +125,18 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // 静态资源长期缓存路径: CacheFirst（独立于版本缓存，更新时不删除）
+  if (STATIC_CACHE_PATHS.some((p) => url.pathname.startsWith(p))) {
+    event.respondWith(staticCacheFirst(request))
+    return
+  }
+
+  // 二级版本缓存路径: CacheFirst（仅在 minor 版本升级时清除）
+  if (MINOR_CACHE_PATHS.some((p) => url.pathname.startsWith(p))) {
+    event.respondWith(minorCacheFirst(request))
+    return
+  }
+
   // 带 hash 的 JS/CSS: CacheFirst (内容不变，长期缓存)
   if (url.pathname.startsWith('/assets/') && /\.(js|css)$/.test(url.pathname)) {
     event.respondWith(cacheFirst(request))
@@ -140,6 +161,30 @@ async function cacheFirst(request) {
   if (response.ok) {
     const clone = response.clone()
     caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+  }
+  return response
+}
+
+/** minorCacheFirst: 使用二级版本缓存（仅在 minor 版本升级时清除） */
+async function minorCacheFirst(request) {
+  const cached = await caches.match(request)
+  if (cached) return cached
+  const response = await fetch(request)
+  if (response.ok) {
+    const clone = response.clone()
+    caches.open(MINOR_CACHE_NAME).then((cache) => cache.put(request, clone))
+  }
+  return response
+}
+
+/** staticCacheFirst: 使用静态长期缓存（不随版本更新删除） */
+async function staticCacheFirst(request) {
+  const cached = await caches.match(request)
+  if (cached) return cached
+  const response = await fetch(request)
+  if (response.ok) {
+    const clone = response.clone()
+    caches.open(STATIC_CACHE_NAME).then((cache) => cache.put(request, clone))
   }
   return response
 }
