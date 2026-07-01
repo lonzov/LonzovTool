@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { NSelect, NConfigProvider, darkTheme, NModal, NIcon, useMessage } from 'naive-ui'
-import { ArrowDownload16Regular, ArrowExportUp24Filled } from '@vicons/fluent'
+import { ArrowDownload16Regular, ArrowExportUp24Filled, Settings24Regular, ChevronUp16Regular, ArrowCounterclockwise24Filled } from '@vicons/fluent'
 import { useTheme } from '../composables/useTheme'
 
 const { themeMode, setThemeMode, isDark } = useTheme()
@@ -17,6 +17,34 @@ const themeValue = computed({
   get: () => themeMode.value,
   set: (val) => setThemeMode(val),
 })
+
+/* ========== 折叠状态（持久化）========== */
+const COLLAPSED_KEY = 'settings-collapsed'
+const savedCollapsed = (() => {
+  try {
+    const raw = localStorage.getItem(COLLAPSED_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+})()
+
+const collapsedSections = ref({
+  personalization: savedCollapsed?.personalization ?? false,
+  config: savedCollapsed?.config ?? false,
+})
+
+function toggleSection(key) {
+  const newVal = !collapsedSections.value[key]
+  collapsedSections.value[key] = newVal
+  localStorage.setItem(COLLAPSED_KEY, JSON.stringify(collapsedSections.value))
+}
+
+/* ========== 重置所有设置 ========== */
+function handleReset() {
+  if (!confirm('确定要重置所有设置吗？此操作不可恢复。')) return
+  localStorage.clear()
+  message.success('已重置所有设置，页面即将刷新')
+  setTimeout(() => window.location.reload(), 800)
+}
 
 /* ========== 配置管理 ========== */
 
@@ -214,52 +242,97 @@ const darkOverrides = {
   <div>
     <NConfigProvider :theme="isDark ? darkTheme : null" style="display: contents">
       <div class="settings-container">
-        <h1 class="settings-h1">设置</h1>
+        <!-- 页面头部 -->
+        <div class="settings-page-header">
+          <div class="page-title-row">
+            <NIcon :component="Settings24Regular" class="page-title-icon" />
+            <h1 class="settings-h1">设置</h1>
+          </div>
+          <div class="header-actions">
+            <p class="settings-subtitle">自定义你的使用体验</p>
+            <button class="reset-btn" @click="handleReset">
+              <NIcon :component="ArrowCounterclockwise24Filled" size="14" />
+              重置
+            </button>
+          </div>
+        </div>
 
         <!-- 外观 -->
         <div class="settings-card">
-          <div class="card-header">个性化</div>
-          <div class="setting-row">
-            <div class="setting-info">
-              <span class="setting-title">主题模式</span>
-              <p class="setting-desc">设置全站的深浅色模式</p>
-            </div>
-            <div class="setting-control">
-              <NSelect
-                v-model:value="themeValue"
-                :options="themeOptions"
-                placement="bottom-end"
-                size="medium"
-                class="settings-select"
-              />
-            </div>
+          <div
+            class="card-header"
+            :class="{ 'card-header--collapsed': collapsedSections.personalization }"
+            @click="toggleSection('personalization')"
+          >
+            <span>个性化</span>
+            <NIcon
+              :component="ChevronUp16Regular"
+              size="16"
+              class="chevron-icon"
+              :class="{ 'chevron-icon--rotated': collapsedSections.personalization }"
+            />
           </div>
+          <Transition name="collapse">
+            <div v-show="!collapsedSections.personalization" class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <span class="setting-title">主题模式</span>
+                  <p class="setting-desc">设置全站的深浅色模式</p>
+                </div>
+                <div class="setting-control">
+                  <NSelect
+                    v-model:value="themeValue"
+                    :options="themeOptions"
+                    placement="bottom-end"
+                    size="medium"
+                    class="settings-select"
+                  />
+                </div>
+              </div>
+            </div>
+          </Transition>
         </div>
 
         <!-- 配置管理 -->
         <div class="settings-card">
-          <div class="card-header">配置管理</div>
           <div
-            v-for="(scope, key) in CONFIG_SCOPES"
-            :key="key"
-            class="setting-row"
+            class="card-header"
+            :class="{ 'card-header--collapsed': collapsedSections.config }"
+            @click="toggleSection('config')"
           >
-            <div class="setting-info">
-              <span class="setting-title">{{ scope.label }}</span>
-              <p class="setting-desc">{{ scope.desc }}</p>
-            </div>
-            <div class="setting-control">
-              <div class="config-pill">
-                <button class="config-pill-btn" title="导入" @click="handleImport(key)">
-                  <NIcon :component="ArrowDownload16Regular" size="16" />
-                </button>
-                <span class="config-pill-divider"></span>
-                <button class="config-pill-btn" title="导出" @click="handleExport(key)">
-                  <NIcon :component="ArrowExportUp24Filled" size="16" />
-                </button>
+            <span>配置管理</span>
+            <NIcon
+              :component="ChevronUp16Regular"
+              size="16"
+              class="chevron-icon"
+              :class="{ 'chevron-icon--rotated': collapsedSections.config }"
+            />
+          </div>
+          <Transition name="collapse">
+            <div v-show="!collapsedSections.config" class="card-body">
+              <div
+                v-for="(scope, key) in CONFIG_SCOPES"
+                :key="key"
+                class="setting-row"
+              >
+                <div class="setting-info">
+                  <span class="setting-title">{{ scope.label }}</span>
+                  <p class="setting-desc">{{ scope.desc }}</p>
+                </div>
+                <div class="setting-control">
+                  <div class="config-pill">
+                    <button class="config-pill-btn" title="导入" @click="handleImport(key)">
+                      <NIcon :component="ArrowDownload16Regular" size="16" />
+                    </button>
+                    <span class="config-pill-divider"></span>
+                    <button class="config-pill-btn" title="导出" @click="handleExport(key)">
+                      <NIcon :component="ArrowExportUp24Filled" size="16" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </Transition>
         </div>
       </div>
     </NConfigProvider>
@@ -316,50 +389,156 @@ const darkOverrides = {
   padding-top: 24px;
 }
 
-.settings-h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 1.25rem;
-  letter-spacing: -0.02em;
-  transition: color 0.4s ease;
+/* ========== 页面头部 ========== */
+.settings-page-header {
+  margin-bottom: 1.5rem;
 }
 
-/* 卡片容器 */
+.page-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-title-icon {
+  font-size: 26px;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.settings-h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 3px;
+}
+
+.settings-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.825rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s, color 0.2s, border-color 0.4s;
+}
+
+.reset-btn:hover {
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  color: var(--text-primary);
+}
+
+/* ========== 卡片容器 ========== */
 .settings-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
+  padding-top: 15px;
+  padding-bottom: 15px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
 .settings-card + .settings-card {
-  margin-top: 1.25rem;
+  margin-top: 1rem;
 }
 
-/* 卡片头部 */
+/* ========== 卡片头部（可折叠）========== */
 .card-header {
-  padding: 0.625rem 1.25rem;
-  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  font-size: 0.92rem;
   font-weight: 600;
-  color: color-mix(in srgb, var(--text-primary) 87%, transparent);
-  border-bottom: 1px solid var(--border-color);
-  background: color-mix(in srgb, var(--bg-sub) 50%, transparent);
-  transition: color 0.4s ease, border-color 0.4s ease, background-color 0.4s ease;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.4s ease, opacity 0.2s;
 }
 
-/* 设置行 */
+.card-header:hover {
+  opacity: 0.85;
+}
+
+.card-header--collapsed {
+  border-bottom: none;
+}
+
+.chevron-icon {
+  color: var(--text-tertiary);
+  transition: transform 0.25s ease, color 0.4s ease;
+}
+
+.chevron-icon--rotated {
+  transform: rotate(180deg);
+}
+
+/* ========== 卡片内容区 ========== */
+.card-body {
+  overflow: hidden;
+}
+
+/* ========== 折叠过渡动画 ========== */
+.collapse-enter-active,
+.collapse-leave-active {
+  transition: max-height 0.3s ease, opacity 0.25s ease;
+  overflow: hidden;
+}
+
+.collapse-enter-from,
+.collapse-leave-to {
+  max-height: 0 !important;
+  opacity: 0;
+}
+
+.collapse-enter-to,
+.collapse-leave-from {
+  max-height: 500px; /* 足够大的值，实际高度由内容决定 */
+  opacity: 1;
+}
+
+/* ========== 设置行 ========== */
 .setting-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.25rem;
+  padding: 14px 20px;
   gap: 2rem;
+  position: relative;
 }
 
-.setting-row + .setting-row {
-  border-top: 1px solid var(--border-color);
+.setting-row + .setting-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: var(--border-color);
+  transition: background-color 0.4s ease;
 }
 
 .setting-info {
@@ -369,17 +548,17 @@ const darkOverrides = {
 
 .setting-title {
   display: block;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 500;
   color: var(--text-primary);
   transition: color 0.4s ease;
 }
 
 .setting-desc {
-  font-size: 0.825rem;
-  color: color-mix(in srgb, var(--text-primary) 55%, transparent);
-  line-height: 1.4;
-  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  line-height: 1.45;
+  margin: 3px 0 0;
   transition: color 0.4s ease;
 }
 
@@ -527,24 +706,37 @@ const darkOverrides = {
 /* 响应式 */
 @media (max-width: 768px) {
   .settings-h1 {
-    font-size: 1.5rem;
+    font-size: 20px;
+  }
+
+  .page-title-icon {
+    font-size: 22px;
+  }
+
+  .settings-subtitle {
+    font-size: 13px;
   }
 
   .card-header {
-    padding: 0.5rem 1rem;
+    padding: 12px 16px;
   }
 
   .setting-row {
     gap: 1rem;
-    padding: 0.875rem 1rem;
+    padding: 12px 16px;
+  }
+
+  .setting-row + .setting-row::before {
+    left: 16px;
+    right: 16px;
   }
 
   .setting-title {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
   }
 
   .setting-desc {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
   }
 }
 
