@@ -69,15 +69,21 @@ jobs:
                   })
                   
                   clearTimeout(timer)
-                  
-                  // 请求成功
+
+                  // 非 2xx 响应：如果还有重试机会则重试，否则记为失败
+                  if (!resp.ok && attempt < CONFIG.MAX_RETRIES) {
+                    console.log(`   ⏳ HTTP ${resp.status}，第 ${attempt + 1} 次尝试，${CONFIG.RETRY_DELAY / 1000}秒后重试...`)
+                    await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY))
+                    continue
+                  }
+
                   return {
                     ...entry,
                     status: resp.status,
                     ok: resp.ok,
                     attempt: attempt + 1,
                     maxAttempts: CONFIG.MAX_RETRIES + 1,
-                    message: '成功'
+                    message: resp.ok ? '成功' : `HTTP ${resp.status}`
                   }
                   
                 } catch (e) {
