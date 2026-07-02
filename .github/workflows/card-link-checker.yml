@@ -169,7 +169,7 @@ jobs:
             for (const r of results) {
               const icon = r.ok ? '🟢' : '🔴'
               const statusText = `\`${r.status}\``
-              const retryNote = (!r.ok && r.attempt > 1) ? ` *(重试${r.attempt - 1}次)*` : ''
+              const retryNote = (!r.ok && r.attempt > 1) ? ` \\*${r.attempt - 1}` : ''
               summary += `| ${icon} | ${statusText}${retryNote} | ${r.category} | ${r.title} | [点击访问](${r.link}) |\n`
             }
 
