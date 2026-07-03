@@ -24,6 +24,9 @@ import {
   haspermissionEditIsAdd,
   haspermissionEditCamera,
   haspermissionEditMovement,
+  coordCalcModalOpen,
+  coordCalcStart,
+  coordCalcEnd,
   internals,
 } from './useState.js'
 import { PARAM_KINDS } from '../constants.js'
@@ -297,4 +300,45 @@ export function saveHaspermissionAddModal() {
   newPermCamera.value = haspermissionEditCamera.value
   newPermMovement.value = haspermissionEditMovement.value
   closeHaspermissionAddModal()
+}
+
+// ========== 坐标自动计算弹窗 ==========
+
+export function openCoordCalcModal() {
+  coordCalcStart.x = ''
+  coordCalcStart.y = ''
+  coordCalcStart.z = ''
+  coordCalcEnd.x = ''
+  coordCalcEnd.y = ''
+  coordCalcEnd.z = ''
+  coordCalcModalOpen.value = true
+}
+
+export function closeCoordCalcModal() {
+  coordCalcModalOpen.value = false
+}
+
+export function confirmCoordCalc() {
+  const sx = Number(coordCalcStart.x) || 0
+  const sy = Number(coordCalcStart.y) || 0
+  const sz = Number(coordCalcStart.z) || 0
+  const ex = Number(coordCalcEnd.x) || 0
+  const ey = Number(coordCalcEnd.y) || 0
+  const ez = Number(coordCalcEnd.z) || 0
+
+  const dx = ex - sx
+  const dy = ey - sy
+  const dz = ez - sz
+
+  params.value.push(
+    makeParam('x', { value: String(sx) }),
+    makeParam('y', { value: String(sy) }),
+    makeParam('z', { value: String(sz) }),
+    makeParam('dx', { value: String(dx) }),
+    makeParam('dy', { value: String(dy) }),
+    makeParam('dz', { value: String(dz) }),
+  )
+
+  closeCoordCalcModal()
+  triggerSave()
 }

@@ -185,7 +185,7 @@ import {
   newPermCamera,
   newPermMovement,
 } from '../composables/useState.js'
-import { confirmAdd, cancelAdd, openHasitemAddModal, openHaspermissionAddModal, commitCurrentState } from '../composables/useParams.js'
+import { confirmAdd, cancelAdd, openHasitemAddModal, openHaspermissionAddModal, openCoordCalcModal, commitCurrentState } from '../composables/useParams.js'
 
 const addingKindEditor = computed(() => {
   if (newKind.value === 'custom') return 'text'
@@ -200,6 +200,10 @@ function inputWidthStyle(val, opts = {}) {
 }
 
 function handleKindSelect(key) {
+  if (key === 'auto_calc') {
+    openCoordCalcModal()
+    return
+  }
   newKind.value = key
 }
 

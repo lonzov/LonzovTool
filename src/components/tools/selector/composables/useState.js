@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 
 // ========== 选择器类型 ==========
 export const selectorType = ref('@a')
@@ -48,6 +48,11 @@ export const haspermissionEditId = ref(null)
 export const haspermissionEditIsAdd = ref(false)
 export const haspermissionEditCamera = ref(null)
 export const haspermissionEditMovement = ref(null)
+
+// ========== 坐标自动计算弹窗 ==========
+export const coordCalcModalOpen = ref(false)
+export const coordCalcStart = reactive({ x: '', y: '', z: '' })
+export const coordCalcEnd = reactive({ x: '', y: '', z: '' })
 
 // ========== 内部非响应式变量 ==========
 // 使用对象包裹以允许跨模块赋值（ES module 不允许直接重新赋值 import binding）

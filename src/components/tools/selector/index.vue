@@ -9,6 +9,7 @@
       <CodeView />
       <HasitemModal />
       <HaspermissionModal />
+      <CoordinateCalcModal />
       <ImportModal />
     </div>
   </NConfigProvider>
@@ -25,6 +26,7 @@ import Toolbar from './components/Toolbar.vue'
 import CodeView from './components/CodeView.vue'
 import HasitemModal from './components/HasitemModal.vue'
 import HaspermissionModal from './components/HaspermissionModal.vue'
+import CoordinateCalcModal from './components/CoordinateCalcModal.vue'
 import ImportModal from './components/ImportModal.vue'
 
 defineProps({

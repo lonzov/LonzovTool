@@ -37,11 +37,12 @@ export const PARAM_KINDS = {
   hasitem: { label: 'hasitem', category: '物品', editor: 'hasitem', desc: '持有物品检测' },
   haspermission: { label: 'haspermission', category: '权限', editor: 'haspermission', desc: '权限检测' },
   has_property: { label: 'has_property', category: '属性', editor: 'has_property', desc: '实体属性筛选' },
+  auto_calc: { label: '自动计算', category: '坐标', editor: 'auto_calc', desc: '通过起终点坐标自动计算坐标参数' },
 }
 
 // 参数种类分组（决定添加时下拉菜单的顺序）
 export const PARAM_KIND_GROUPS = [
-  { label: '坐标', keys: ['x', 'y', 'z', 'dx', 'dy', 'dz'] },
+  { label: '坐标', keys: ['x', 'y', 'z', 'dx', 'dy', 'dz', 'auto_calc'] },
   { label: '范围', keys: ['r', 'rm', 'C'] },
   { label: '实体', keys: ['type', 'name', 'tag', 'm', 'family'] },
   { label: '实体属性', keys: ['rx', 'ry', 'rxm', 'rym', 'l', 'lm', 'haspermission', 'has_property'] },
