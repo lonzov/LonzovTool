@@ -135,7 +135,7 @@
           "id": "n-sensitive-words",
           "title": "网易敏感词检测",
           "description": "检测输入内容是否命中网易敏感词规则",
-          "logo": "/logos/null.webp",
+          "logo": "/logos/n-sensitive-words.webp",
           "link": "https://neteasemcapi.theconsole.top/SensitiveWords"
         }
       ]
