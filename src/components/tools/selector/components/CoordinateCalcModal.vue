@@ -12,42 +12,38 @@
     >
       <div v-if="contentVisible" class="coord-calc-body">
         <!-- 起始坐标 -->
-        <div class="coord-card">
-          <div class="coord-card-title">起始坐标</div>
-          <div class="coord-row">
+        <div class="coord-row">
+          <label class="coord-row-label">起始坐标</label>
+          <div class="coord-inputs">
             <div class="coord-field">
-              <label class="coord-label">X</label>
+              <span class="coord-label">X</span>
               <NInput v-model:value="coordCalcStart.x" size="small" placeholder="0" />
             </div>
-            <div class="coord-divider"></div>
             <div class="coord-field">
-              <label class="coord-label">Y</label>
+              <span class="coord-label">Y</span>
               <NInput v-model:value="coordCalcStart.y" size="small" placeholder="0" />
             </div>
-            <div class="coord-divider"></div>
             <div class="coord-field">
-              <label class="coord-label">Z</label>
+              <span class="coord-label">Z</span>
               <NInput v-model:value="coordCalcStart.z" size="small" placeholder="0" />
             </div>
           </div>
         </div>
 
         <!-- 终点坐标 -->
-        <div class="coord-card">
-          <div class="coord-card-title">终点坐标</div>
-          <div class="coord-row">
+        <div class="coord-row">
+          <label class="coord-row-label">终点坐标</label>
+          <div class="coord-inputs">
             <div class="coord-field">
-              <label class="coord-label">X</label>
+              <span class="coord-label">X</span>
               <NInput v-model:value="coordCalcEnd.x" size="small" placeholder="0" />
             </div>
-            <div class="coord-divider"></div>
             <div class="coord-field">
-              <label class="coord-label">Y</label>
+              <span class="coord-label">Y</span>
               <NInput v-model:value="coordCalcEnd.y" size="small" placeholder="0" />
             </div>
-            <div class="coord-divider"></div>
             <div class="coord-field">
-              <label class="coord-label">Z</label>
+              <span class="coord-label">Z</span>
               <NInput v-model:value="coordCalcEnd.z" size="small" placeholder="0" />
             </div>
           </div>
@@ -128,59 +124,60 @@ function onConfirm() {
 .coord-calc-body {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-}
-
-.coord-card {
-  padding: 14px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  background: var(--bg-sub);
-  transition:
-    background-color 0.4s ease,
-    border-color 0.4s ease;
-}
-
-.coord-card-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  margin-bottom: 10px;
-  transition: color 0.4s ease;
+  gap: 20px;
 }
 
 .coord-row {
   display: flex;
-  align-items: flex-end;
-  gap: 0;
+  align-items: center;
+  gap: 16px;
+}
+
+.coord-row-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  min-width: 64px;
+  transition: color 0.4s ease;
+}
+
+.coord-inputs {
+  display: flex;
+  flex: 1;
+  gap: 12px;
+  align-items: center;
 }
 
 .coord-field {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
 }
 
 .coord-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
   transition: color 0.4s ease;
 }
 
-.coord-divider {
-  width: 1px;
-  height: 28px;
-  background: var(--border-color);
-  margin: 0 10px;
-  align-self: center;
-  transition: background-color 0.4s ease;
-  flex-shrink: 0;
+/* 移动端适配 */
+@media (max-width: 480px) {
+  .coord-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .coord-row-label {
+    min-width: auto;
+  }
+  .coord-inputs {
+    width: 100%;
+  }
 }
 
 /* 页脚操作按钮 */
