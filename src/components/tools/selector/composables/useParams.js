@@ -318,7 +318,9 @@ export function closeCoordCalcModal() {
   coordCalcModalOpen.value = false
 }
 
-export function confirmCoordCalc() {
+const COORD_KEYS = ['x', 'y', 'z', 'dx', 'dy', 'dz']
+
+function doCoordCalcAdd() {
   const sx = Number(coordCalcStart.x) || 0
   const sy = Number(coordCalcStart.y) || 0
   const sz = Number(coordCalcStart.z) || 0
@@ -329,6 +331,9 @@ export function confirmCoordCalc() {
   const dx = ex - sx
   const dy = ey - sy
   const dz = ez - sz
+
+  // 移除已有的坐标参数
+  params.value = params.value.filter(p => !COORD_KEYS.includes(p.kind))
 
   params.value.push(
     makeParam('x', { value: String(sx) }),
@@ -341,4 +346,24 @@ export function confirmCoordCalc() {
 
   closeCoordCalcModal()
   triggerSave()
+}
+
+export function confirmCoordCalc() {
+  // 关闭当前编辑/添加状态
+  cancelEdit()
+  cancelAdd()
+
+  // 检查哪些坐标参数已存在
+  const existingKeys = COORD_KEYS.filter(key =>
+    params.value.some(p => p.kind === key)
+  )
+
+  if (existingKeys.length > 0) {
+    const duplicateNames = existingKeys.join('、')
+    if (!confirm(`继续添加将覆盖以下参数，是否确认覆盖？\n${duplicateNames}`)) {
+      return
+    }
+  }
+
+  doCoordCalcAdd()
 }
