@@ -47,3 +47,4 @@ dist.7z
 docs/*
 !docs/project-structure.yml
 !docs/image/
+public/o/
