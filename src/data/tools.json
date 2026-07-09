@@ -42,10 +42,10 @@
         },
         {
           "id": "rawjson-editor",
-          "title": "T显编辑器",
-          "description": "可视化T显编辑器",
+          "title": "Dislink工具集",
+          "description": "mid/图片/文本转命令、命令链结构生成等",
           "logo": "/logos/dislink_github_io.webp",
-          "link": "https://dislink.github.io/rawJSONEditor/"
+          "link": "https://dislink.github.io/"
         },
         {
           "id": "selector",
@@ -407,7 +407,7 @@
           "id": "honghe",
           "title": "红河资源站",
           "description": "针对Minecraft视频创作的资源站",
-          "logo": "/logos/honghemc_cn.webp",
+          "logo": "/logos/1honghemc_cn.webp",
           "link": "https://honghemc.cn/"
         },
         {
