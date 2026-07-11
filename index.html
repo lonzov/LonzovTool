@@ -94,6 +94,30 @@
       letter-spacing: 2px;
       text-shadow: 0 0 8px rgba(255, 255, 255, 0.3), 0 0 18px rgba(255, 255, 255, 0.12);
     }
+
+    .loading-timeout-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #CC3333;
+      color: #ffffff;
+      padding: 10px 16px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      z-index: 100000;
+      opacity: 0;
+      animation: bannerFadeIn 0.3s ease-in forwards;
+      animation-delay: 5s;
+    }
+
+    @keyframes bannerFadeIn {
+      to {
+        opacity: 1;
+      }
+    }
   </style>
   <script>
     // 预渲染兼容：仅浏览器环境执行
@@ -117,6 +141,7 @@
   <div id="loading-overlay">
     <div class="loader"></div>
     <div class="loading-text">LOADING…</div>
+    <div class="loading-timeout-banner">检测到加载过久，请尝试刷新页面</div>
   </div>
   <div id="app"></div>
   <script type="module" src="/src/main.js"></script>
