@@ -2,17 +2,17 @@ import './assets/main.css'
 
 import { createApp } from 'vue'
 import {
-    NConfigProvider,
-    NLayout,
-    NLayoutSider,
-    NLayoutContent,
-    NLayoutHeader,
-    NButton,
-    NIcon,
-    NDrawer,
-    NDrawerContent,
-    NMenu,
-    NScrollbar,
+  NConfigProvider,
+  NLayout,
+  NLayoutSider,
+  NLayoutContent,
+  NLayoutHeader,
+  NButton,
+  NIcon,
+  NDrawer,
+  NDrawerContent,
+  NMenu,
+  NScrollbar,
 } from 'naive-ui'
 import App from './App.vue'
 import router from './router'
@@ -54,12 +54,23 @@ app.mount('#app')
 // SPA 内部页面切换时，懒加载 chunk 加载失败（如离线）的处理
 router.onError((error) => {
   if (error.message.includes('Failed to fetch dynamically imported module') ||
-      error.message.includes('Importing a module script failed') ||
-      error.message.includes('error loading dynamically imported module')) {
+    error.message.includes('Importing a module script failed') ||
+    error.message.includes('error loading dynamically imported module')) {
     NProgress.done()
-    // 硬跳转：绕过 Vue Router 软导航，直接让浏览器发起完整导航请求
-    // SW 会捕获这个 /offline 导航并返回 SPA shell + __SW_OFFLINE 标记
-    window.location.href = '/offline'
+
+      // 跳转离线页前先检测服务器连通性
+      ; (async () => {
+        try {
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 10000)
+          await fetch('https://tool.lonzov.top/', { mode: 'no-cors', signal: controller.signal, cache: 'no-store' })
+          clearTimeout(timeoutId)
+          // 服务器可达，不做任何处理
+        } catch {
+          // 服务器不可达，跳转离线诊断页
+          window.location.href = '/offline'
+        }
+      })()
   }
 })
 
