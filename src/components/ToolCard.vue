@@ -339,6 +339,7 @@ export default {
       transform: 'translateY(-1px)',
       minHeight: '86px',
       WebkitTapHighlightColor: 'transparent',
+      WebkitTouchCallout: 'none',
       userSelect: 'none',
       WebkitUserSelect: 'none',
       position: 'relative',
