@@ -160,12 +160,13 @@ export function useWorkspace() {
 
   // 将指定路径加入 tabs（用于路由同步场景）
   function ensureTabForPath(path) {
-    const exists = tabs.value.find((t) => t.path === path)
-    if (!exists) {
-      const title = getTitleFromPath(path)
-      tabs.value.push({ path, title })
+    const normalized = path.replace(/\/+$/, '')
+    const exists = findTabIndexByPath(normalized)
+    if (exists === -1) {
+      const title = getTitleFromPath(normalized)
+      tabs.value.push({ path: normalized, title })
     }
-    activeTab.value = path
+    activeTab.value = normalized
   }
 
   // 仅设置活跃标签但不持久化（用于无效工具页：UI 显示"暂无内容"但不写入 localStorage）
