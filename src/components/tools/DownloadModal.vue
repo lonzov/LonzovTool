@@ -4,7 +4,7 @@ import { NIcon, NModal, NConfigProvider, NCascader, useMessage } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { Link24Filled, ArrowDownload24Filled, ArrowUpRight20Filled } from '@vicons/fluent'
 import { useTheme } from '../../composables/useTheme'
-import { useMouseGlow } from '../../composables/useMouseGlow'
+import { useMouseGlow, applyGlow } from '../../composables/useMouseGlow'
 
 const props = defineProps({
   show: Boolean,
@@ -164,23 +164,10 @@ const GLOW_SELECTORS = '.dl-version-cascader .n-base-selection, .dl-option'
 
 function handleGlow(mouseX, mouseY) {
   if (!props.show) return
-  const els = document.querySelectorAll(GLOW_SELECTORS)
-  els.forEach((el) => {
-    const rect = el.getBoundingClientRect()
-    const x = mouseX - rect.left
-    const y = mouseY - rect.top
-    const centerX = rect.width / 2
-    const centerY = rect.height / 2
-    const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
-    const threshold = Math.sqrt(rect.width ** 2 + rect.height ** 2) * 1.8
-
-    if (dist < threshold) {
-      el.style.setProperty('--mouse-x', `${x}px`)
-      el.style.setProperty('--mouse-y', `${y}px`)
-      el.classList.add('glow-active')
-    } else {
-      el.classList.remove('glow-active')
-    }
+  document.querySelectorAll(GLOW_SELECTORS).forEach((el) => {
+    // .n-base-selection 在 Naive UI 内部，需 JS 补上 glow-border 类
+    el.classList.add('glow-border')
+    applyGlow(el, mouseX, mouseY)
   })
 }
 
@@ -218,7 +205,7 @@ onUnmounted(() => unsubGlow(handleGlow))
         <span class="dl-no-links-text">暂不提供下载</span>
       </div>
       <div v-else class="dl-options">
-        <div class="dl-option" @click="handleDirectParse">
+        <div class="dl-option glow-border" @click="handleDirectParse">
           <NIcon :component="Link24Filled" :size="22" class="dl-option-icon" />
           <div class="dl-option-text">
             <span class="dl-option-title">直链解析（推荐）</span>
@@ -226,7 +213,7 @@ onUnmounted(() => unsubGlow(handleGlow))
           </div>
           <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
         </div>
-        <div class="dl-option" @click="handleBackupParse">
+        <div class="dl-option glow-border" @click="handleBackupParse">
           <NIcon :component="Link24Filled" :size="22" class="dl-option-icon" />
           <div class="dl-option-text">
             <span class="dl-option-title">备用解析</span>
@@ -234,7 +221,7 @@ onUnmounted(() => unsubGlow(handleGlow))
           </div>
           <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
         </div>
-        <div class="dl-option" @click="handleOriginalLink">
+        <div class="dl-option glow-border" @click="handleOriginalLink">
           <NIcon :component="ArrowDownload24Filled" :size="22" class="dl-option-icon" />
           <div class="dl-option-text">
             <span class="dl-option-title">蓝奏云网盘</span>
@@ -293,57 +280,16 @@ onUnmounted(() => unsubGlow(handleGlow))
   z-index: 0;
 }
 
-/* ===== 鼠标跟随边框高光 ===== */
-.dl-version-cascader :deep(.n-base-selection)::before,
-.dl-option::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: radial-gradient(
-    250px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(255, 255, 255, 1)     0%,
-    rgba(255, 255, 255, 0.55) 5%,
-    rgba(255, 255, 255, 0.31) 10%,
-    rgba(255, 255, 255, 0.18) 15%,
-    rgba(255, 255, 255, 0.12) 20%,
-    rgba(255, 255, 255, 0.07) 30%,
-    rgba(255, 255, 255, 0.04) 40%,
-    rgba(255, 255, 255, 0.02) 55%,
-    rgba(255, 255, 255, 0.01) 70%,
-    transparent                 100%
-  );
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask-composite: destination-out;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 10;
-  transition: opacity 0.2s ease;
+/* ===== 鼠标跟随边框高光（覆盖公共变量的差异化参数） ===== */
+.dl-version-cascader :deep(.n-base-selection),
+.dl-option {
+  --glow-size: 250px;
 }
 
-.dl-version-cascader :deep(.n-base-selection.glow-active)::before,
-.dl-option.glow-active::before {
-  opacity: 1;
-}
-
-[data-theme='light'] .dl-version-cascader :deep(.n-base-selection)::before,
-[data-theme='light'] .dl-option::before {
-  background: radial-gradient(
-    300px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(180, 180, 180, 1)     0%,
-    rgba(180, 180, 180, 0.55)  5%,
-    rgba(180, 180, 180, 0.31) 10%,
-    rgba(180, 180, 180, 0.18) 15%,
-    rgba(180, 180, 180, 0.12) 20%,
-    rgba(180, 180, 180, 0.07) 30%,
-    rgba(180, 180, 180, 0.04) 40%,
-    rgba(180, 180, 180, 0.02) 55%,
-    rgba(180, 180, 180, 0.01) 70%,
-    transparent                100%
-  );
+[data-theme='light'] .dl-version-cascader :deep(.n-base-selection),
+[data-theme='light'] .dl-option {
+  --glow-color: 180, 180, 180;
+  --glow-size: 300px;
 }
 
 /* ===== 无下载链接 ===== */

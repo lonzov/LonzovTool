@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { NIcon, useMessage, NSwitch } from 'naive-ui'
 import { CurrencyDollarEuro20Regular } from '@vicons/fluent'
-import { useMouseGlow } from '../../composables/useMouseGlow.js'
+import { useMouseGlow, applyGlow } from '../../composables/useMouseGlow.js'
 import { useToolStorage } from '../../composables/useToolStorage.js'
 
 defineProps({
@@ -201,22 +201,7 @@ const glowCards = ref(new Map())
 
 function handleGlow(mouseX, mouseY) {
   glowCards.value.forEach((el) => {
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const x = mouseX - rect.left
-    const y = mouseY - rect.top
-    const centerX = rect.width / 2
-    const centerY = rect.height / 2
-    const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
-    const threshold = Math.sqrt(rect.width ** 2 + rect.height ** 2) * 1.8
-
-    if (dist < threshold) {
-      el.style.setProperty('--mouse-x', `${x}px`)
-      el.style.setProperty('--mouse-y', `${y}px`)
-      el.classList.add('glow-active')
-    } else {
-      el.classList.remove('glow-active')
-    }
+    if (el) applyGlow(el, mouseX, mouseY)
   })
 }
 
@@ -300,7 +285,7 @@ onBeforeUnmount(() => {
         v-for="(icon, idx) in iconsData"
         :key="icon.codePointHex"
         :ref="(el) => registerCardRef(el, idx)"
-        class="symbol-card tool-card"
+        class="symbol-card tool-card glow-border"
         @click="handleCardClick(icon, $event)"
       >
         <div
@@ -556,46 +541,14 @@ onBeforeUnmount(() => {
   .tool-card {
     border-radius: 25px;
   }
+  .tool-card.glow-border::before {
+    corner-shape: squircle;
+  }
 }
 
 [data-theme="dark"] .tool-card {
   background: #191919;
   border-color: #2B2B2B;
-}
-
-/* 高光跟随边框效果 */
-.tool-card::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  corner-shape: squircle;
-  padding: 1px;
-  background: radial-gradient(
-    150px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(255, 255, 255, 1)     0%,
-    rgba(255, 255, 255, 0.55) 5%,
-    rgba(255, 255, 255, 0.31) 10%,
-    rgba(255, 255, 255, 0.18) 15%,
-    rgba(255, 255, 255, 0.12) 20%,
-    rgba(255, 255, 255, 0.07) 30%,
-    rgba(255, 255, 255, 0.04) 40%,
-    rgba(255, 255, 255, 0.02) 55%,
-    rgba(255, 255, 255, 0.01) 70%,
-    transparent                 100%
-  );
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask-composite: destination-out;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 10;
-  transition: opacity 0.2s ease;
-}
-
-.tool-card.glow-active::before {
-  opacity: 1;
 }
 
 /* ===== 精灵图图标 ===== */

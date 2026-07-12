@@ -41,6 +41,33 @@ function onMouseMove(e) {
   }
 }
 
+/**
+ * 对单个元素应用鼠标跟随边框高光
+ * @param {HTMLElement} el - 目标元素（需 position: relative，并挂载 .glow-border 类）
+ * @param {number} mouseX - 鼠标 clientX
+ * @param {number} mouseY - 鼠标 clientY
+ * @param {Object} [options]
+ * @param {number} [options.thresholdMultiplier=1.8] - 距离阈值倍数（元素对角线长度 * 此值）
+ */
+export function applyGlow(el, mouseX, mouseY, options = {}) {
+  const { thresholdMultiplier = 1.8 } = options
+  const rect = el.getBoundingClientRect()
+  const x = mouseX - rect.left
+  const y = mouseY - rect.top
+  const centerX = rect.width / 2
+  const centerY = rect.height / 2
+  const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
+  const threshold = Math.sqrt(rect.width ** 2 + rect.height ** 2) * thresholdMultiplier
+
+  if (dist < threshold) {
+    el.style.setProperty('--mouse-x', `${x}px`)
+    el.style.setProperty('--mouse-y', `${y}px`)
+    el.classList.add('glow-active')
+  } else {
+    el.classList.remove('glow-active')
+  }
+}
+
 export function useMouseGlow() {
   function subscribe(callback) {
     if (subscribers.has(callback)) return

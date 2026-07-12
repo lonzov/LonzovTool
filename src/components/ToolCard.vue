@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { NHighlight, NIcon, useMessage } from 'naive-ui'
 import { Star24Filled } from '@vicons/fluent'
 import { useWorkspace } from '../composables/useWorkspace.js'
-import { useMouseGlow } from '../composables/useMouseGlow.js'
+import { useMouseGlow, applyGlow } from '../composables/useMouseGlow.js'
 
 export default {
   components: {
@@ -213,24 +213,7 @@ export default {
       }
     },
     handleGlow(mouseX, mouseY) {
-      const el = this.$el
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      const x = mouseX - rect.left
-      const y = mouseY - rect.top
-      const centerX = rect.width / 2
-      const centerY = rect.height / 2
-      const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2)
-      // 阈值：卡片对角线的 1.8 倍范围
-      const threshold = Math.sqrt(rect.width ** 2 + rect.height ** 2) * 1.8
-
-      if (dist < threshold) {
-        el.style.setProperty('--mouse-x', `${x}px`)
-        el.style.setProperty('--mouse-y', `${y}px`)
-        el.classList.add('glow-active')
-      } else {
-        el.classList.remove('glow-active')
-      }
+      applyGlow(this.$el, mouseX, mouseY)
     },
     checkFavoriteStatus() {
       try {
@@ -350,7 +333,7 @@ export default {
     return h(
       this.link ? 'a' : 'div',
       {
-        class: 'tool-card',
+        class: 'tool-card glow-border',
         style: cardStyle,
         onContextmenu: (e) => this.handleContextMenu(e),
         onTouchstart: this.handleTouchStart,
@@ -584,40 +567,6 @@ export default {
   border-color: var(--border-color) !important;
   transform: translateY(-4px) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
-}
-
-/* 高光跟随边框效果 */
-.tool-card::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: radial-gradient(
-    150px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(255, 255, 255, 1)     0%,
-    rgba(255, 255, 255, 0.55) 5%,
-    rgba(255, 255, 255, 0.31) 10%,
-    rgba(255, 255, 255, 0.18) 15%,
-    rgba(255, 255, 255, 0.12) 20%,
-    rgba(255, 255, 255, 0.07) 30%,
-    rgba(255, 255, 255, 0.04) 40%,
-    rgba(255, 255, 255, 0.02) 55%,
-    rgba(255, 255, 255, 0.01) 70%,
-    transparent                 100%
-  );
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask-composite: destination-out;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 10;
-  transition: opacity 0.2s ease;
-}
-
-.tool-card.glow-active::before {
-  opacity: 1;
 }
 
 .tool-card:hover .tool-card-logo-inner {
