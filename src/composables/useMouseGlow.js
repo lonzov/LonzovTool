@@ -10,6 +10,11 @@ let listenerCount = 0
 // 平滑系数：越小越丝滑但越迟钝，越大越跟手但越生硬
 const LERP_FACTOR = 0.15
 
+// 触控状态：区分鼠标（一直跟随）与移动端触控（手指离开即消失）
+let touchActive = false
+let touchJustEnded = false
+let touchEndTimer = null
+
 function tick() {
   // 每帧向目标位置差值靠近
   const dx = targetX - currentX
@@ -33,12 +38,51 @@ function tick() {
 }
 
 function onMouseMove(e) {
+  if (touchJustEnded) return // 忽略触控结束后的模拟 mousemove
+  touchActive = false
   targetX = e.clientX
   targetY = e.clientY
-  // 首次或静止后重启动画循环
   if (!rafId) {
     rafId = requestAnimationFrame(tick)
   }
+}
+
+function onTouchStart(e) {
+  touchActive = true
+  touchJustEnded = false
+  clearTimeout(touchEndTimer)
+  const touch = e.touches[0]
+  targetX = touch.clientX
+  targetY = touch.clientY
+  if (!rafId) {
+    rafId = requestAnimationFrame(tick)
+  }
+}
+
+function onTouchMove(e) {
+  if (!touchActive) return
+  const touch = e.touches[0]
+  targetX = touch.clientX
+  targetY = touch.clientY
+  if (!rafId) {
+    rafId = requestAnimationFrame(tick)
+  }
+}
+
+function onTouchEnd() {
+  touchActive = false
+  touchJustEnded = true
+  // 停止 RAF 循环
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
+  // 通知订阅者隐藏高光（(-1, -1) 为清除信号）
+  for (const cb of subscribers) {
+    cb(-1, -1)
+  }
+  // 延迟重置标记以忽略触控后的模拟 mousemove
+  touchEndTimer = setTimeout(() => { touchJustEnded = false }, 500)
 }
 
 /**
@@ -50,6 +94,12 @@ function onMouseMove(e) {
  * @param {number} [options.thresholdMultiplier=1.8] - 距离阈值倍数（元素对角线长度 * 此值）
  */
 export function applyGlow(el, mouseX, mouseY, options = {}) {
+  if (!el) return
+  // 负值信号：触控结束，隐藏高光
+  if (mouseX < 0) {
+    el.classList.remove('glow-active')
+    return
+  }
   const { thresholdMultiplier = 1.8 } = options
   const rect = el.getBoundingClientRect()
   const x = mouseX - rect.left
@@ -75,6 +125,9 @@ export function useMouseGlow() {
     listenerCount++
     if (listenerCount === 1) {
       document.addEventListener('mousemove', onMouseMove, { passive: true })
+      document.addEventListener('touchstart', onTouchStart, { passive: true })
+      document.addEventListener('touchmove', onTouchMove, { passive: true })
+      document.addEventListener('touchend', onTouchEnd, { passive: true })
     }
   }
 
@@ -84,6 +137,10 @@ export function useMouseGlow() {
     listenerCount--
     if (listenerCount === 0) {
       document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('touchstart', onTouchStart)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend', onTouchEnd)
+      clearTimeout(touchEndTimer)
       if (rafId !== null) {
         cancelAnimationFrame(rafId)
         rafId = null
