@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { NSelect, NConfigProvider, darkTheme, NModal, NIcon, useMessage } from 'naive-ui'
 import { ArrowDownload16Regular, ArrowExportUp24Filled, Settings24Regular, ChevronUp16Regular, ArrowCounterclockwise24Filled } from '@vicons/fluent'
 import { useTheme } from '../composables/useTheme'
@@ -30,6 +30,7 @@ const savedCollapsed = (() => {
 const collapsedSections = ref({
   personalization: savedCollapsed?.personalization ?? false,
   config: savedCollapsed?.config ?? false,
+  cache: savedCollapsed?.cache ?? false,
 })
 
 function toggleSection(key) {
@@ -232,6 +233,158 @@ function cancelImport() {
   importModal.value.show = false
 }
 
+/* ========== 缓存管理 ========== */
+
+const cacheClearModal = ref({
+  show: false,
+  sizeMB: '0.0',
+})
+
+async function handleCheckUpdate() {
+  if (!('serviceWorker' in navigator)) {
+    message.warning('当前浏览器不支持此功能', { duration: 2000 })
+    return
+  }
+
+  const loadingMsg = message.loading('正在检查更新...', { duration: 0 })
+
+  try {
+    const registration = await navigator.serviceWorker.getRegistration()
+    if (!registration) {
+      loadingMsg.destroy()
+      message.warning('未检测到 Service Worker', { duration: 2000 })
+      return
+    }
+
+    let updateFound = false
+    const onUpdateFound = () => { updateFound = true }
+    registration.addEventListener('updatefound', onUpdateFound, { once: true })
+
+    await registration.update()
+
+    // 延迟判断：若 1.5s 内没触发 updatefound 则无更新
+    setTimeout(() => {
+      loadingMsg.destroy()
+      registration.removeEventListener('updatefound', onUpdateFound)
+      if (!updateFound) {
+        message.success('当前已是最新版本', { duration: 2000 })
+      }
+      // 有更新时 useSWUpdate 会自动弹出更新弹窗，此处不做额外处理
+    }, 1500)
+  } catch (error) {
+    loadingMsg.destroy()
+    console.error('更新检查失败:', error)
+    message.error('检查更新失败，请检查网络连接', { duration: 2500 })
+  }
+}
+
+async function handleResetVersionCache() {
+  try {
+    const cacheNames = await caches.keys()
+    let count = 0
+    for (const name of cacheNames) {
+      // 清除 lt-v3-xxx 版本缓存，但保留 lt-v3-minor-xxx 和 lt-static
+      if (name.startsWith('lt-v3-') && !name.startsWith('lt-v3-minor-')) {
+        await caches.delete(name)
+        count++
+      }
+    }
+    if (count > 0) {
+      message.success(`已清除 ${count} 个版本缓存，刷新页面后将重新加载`, { duration: 2500 })
+    } else {
+      message.info('没有版本缓存需要清除', { duration: 1800 })
+    }
+  } catch (e) {
+    message.error('重置失败：' + e.message, { duration: 1800 })
+  }
+}
+
+async function calcResourceCacheSize() {
+  const allNames = await caches.keys()
+  const targetNames = allNames.filter(
+    (n) => n === 'lt-static' || n.startsWith('lt-v3-minor-')
+  )
+  let totalSize = 0
+  for (const name of targetNames) {
+    const cache = await caches.open(name)
+    const keys = await cache.keys()
+    for (const request of keys) {
+      const response = await cache.match(request)
+      if (response) {
+        totalSize += (await response.blob()).size
+      }
+    }
+  }
+  return (totalSize / (1024 * 1024)).toFixed(1)
+}
+
+async function handleClearResourceCache() {
+  try {
+    const sizeMB = await calcResourceCacheSize()
+    cacheClearModal.value = { show: true, sizeMB }
+  } catch (e) {
+    message.error('获取缓存信息失败：' + e.message, { duration: 1800 })
+  }
+}
+
+async function confirmClearResourceCache() {
+  try {
+    const allNames = await caches.keys()
+    const targetNames = allNames.filter(
+      (n) => n === 'lt-static' || n.startsWith('lt-v3-minor-')
+    )
+    let totalSize = 0
+    for (const name of targetNames) {
+      const cache = await caches.open(name)
+      const keys = await cache.keys()
+      for (const request of keys) {
+        const response = await cache.match(request)
+        if (response) {
+          totalSize += (await response.blob()).size
+        }
+      }
+      await caches.delete(name)
+    }
+    const actualMB = (totalSize / (1024 * 1024)).toFixed(1)
+    cacheClearModal.value.show = false
+    message.success(`已清理 ${actualMB}MB 资源`, { duration: 2500 })
+  } catch (e) {
+    cacheClearModal.value.show = false
+    message.error('清理失败：' + e.message, { duration: 1800 })
+  }
+}
+
+function cancelClearResourceCache() {
+  cacheClearModal.value.show = false
+}
+
+// 缓存清理模态框模糊遮罩
+watch(() => cacheClearModal.value.show, (val) => {
+  if (val) {
+    nextTick(() => {
+      if (document.getElementById('cache-clear-blur-overlay')) return
+      const overlay = document.createElement('div')
+      overlay.id = 'cache-clear-blur-overlay'
+      overlay.style.cssText = [
+        'position: fixed', 'top: 0', 'left: 0', 'right: 0', 'bottom: 0',
+        'z-index: 1000',
+        '-webkit-backdrop-filter: blur(8px)', 'backdrop-filter: blur(8px)',
+        'background: rgba(0, 0, 0, 0.1)',
+        'pointer-events: none',
+        'opacity: 0', 'transition: opacity 0.3s ease',
+      ].join(';')
+      document.body.appendChild(overlay)
+      requestAnimationFrame(() => { overlay.style.opacity = '1' })
+    })
+  } else {
+    const overlay = document.getElementById('cache-clear-blur-overlay')
+    if (overlay) {
+      overlay.style.opacity = '0'
+      setTimeout(() => overlay.remove(), 300)
+    }
+  }
+})
+
 const darkOverrides = {
   common: { neutralModal: '#191919' },
   Card: { colorModal: '#191919' },
@@ -334,6 +487,54 @@ const darkOverrides = {
             </div>
           </Transition>
         </div>
+
+        <!-- 缓存管理 -->
+        <div class="settings-card">
+          <div
+            class="card-header"
+            :class="{ 'card-header--collapsed': collapsedSections.cache }"
+            @click="toggleSection('cache')"
+          >
+            <span>缓存管理</span>
+            <NIcon
+              :component="ChevronUp16Regular"
+              size="16"
+              class="chevron-icon"
+              :class="{ 'chevron-icon--rotated': collapsedSections.cache }"
+            />
+          </div>
+          <Transition name="collapse">
+            <div v-show="!collapsedSections.cache" class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <span class="setting-title">检查更新</span>
+                  <p class="setting-desc">强制触发更新检查</p>
+                </div>
+                <div class="setting-control">
+                  <button class="cache-btn" @click="handleCheckUpdate">检查</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <span class="setting-title">重置版本缓存</span>
+                  <p class="setting-desc">无法更新时可尝试重置</p>
+                </div>
+                <div class="setting-control">
+                  <button class="cache-btn cache-btn--danger" @click="handleResetVersionCache">重置</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <span class="setting-title">清理资源缓存</span>
+                  <p class="setting-desc">清理所有资源缓存释放空间，下次加载会变慢</p>
+                </div>
+                <div class="setting-control">
+                  <button class="cache-btn cache-btn--danger" @click="handleClearResourceCache">清理</button>
+                </div>
+              </div>
+            </div>
+          </Transition>
+        </div>
       </div>
     </NConfigProvider>
 
@@ -376,6 +577,36 @@ const darkOverrides = {
             <button class="import-btn import-btn--fill" @click="confirmImport">
               {{ importModal.hasLocalData ? '覆盖并导入' : '确认导入' }}
             </button>
+          </div>
+        </template>
+      </NModal>
+    </NConfigProvider>
+
+    <!-- 缓存清理确认模态框（照搬版本更新模态框样式） -->
+    <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
+      <NModal
+        v-model:show="cacheClearModal.show"
+        preset="card"
+        :style="{
+          maxWidth: '420px',
+          width: 'calc(100% - 32px)',
+          borderRadius: '16px',
+          cornerShape: 'squircle',
+        }"
+        title="清理资源缓存"
+        :bordered="false"
+        :closable="true"
+        @close="cancelClearResourceCache"
+        :auto-focus="false"
+      >
+        <div class="cache-clear-modal-body">
+          资源共占用 {{ cacheClearModal.sizeMB }} MB，确认要清理吗？<br />
+          下次打开网站时加载速度可能变慢
+        </div>
+        <template #footer>
+          <div class="import-modal-actions">
+            <button class="import-btn import-btn--outline" @click="cancelClearResourceCache">取消</button>
+            <button class="import-btn import-btn--fill" @click="confirmClearResourceCache">确认清理</button>
           </div>
         </template>
       </NModal>
@@ -609,6 +840,39 @@ const darkOverrides = {
   transition: background-color 0.4s ease;
 }
 
+/* ========== 缓存管理按钮 ========== */
+.cache-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 16px;
+  border-radius: 100px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s, color 0.2s, border-color 0.4s;
+}
+
+.cache-btn:hover {
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  color: var(--text-primary);
+}
+
+.cache-btn--danger {
+  color: #E46962;
+  border-color: color-mix(in srgb, #E46962 35%, transparent);
+}
+
+.cache-btn--danger:hover {
+  background: color-mix(in srgb, #E46962 10%, transparent);
+  color: #E46962;
+}
+
 /* ========== 导入模态框 ========== */
 
 .import-modal-body {
@@ -642,6 +906,14 @@ const darkOverrides = {
   font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
   font-size: 12px;
   word-break: break-all;
+}
+
+/* ========== 缓存清理模态框 ========== */
+.cache-clear-modal-body {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--n-text-color-2);
+  padding: 4px 2px;
 }
 
 .import-modal-actions {
