@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.3.4'
+const CACHE_VERSION = '3.3.5'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
@@ -224,7 +224,7 @@ self.addEventListener('message', (event) => {
         title: '有新版本可用',
         content: `
         <h4>👾 更新日志：</h4>
-        <p>[~] 优化触控端的卡片边缘高光效果<br>[~] 修复加载过久误判为离线状态<br>[~] 优化设置页布局和样式<br><b>[+] 新工具：选择器参数编辑器</b><br>[+] 新卡片：Dislink工具集</p>
+        <p>[+] 设置页支持缓存管理<br><b>[+] 指令音符盒同步至3.0版本，支持导入建筑</b><br>[~] 优化触控端的卡片边缘高光效果<br>[~] 修复加载过久误判为离线状态<br><b>[+] 新工具：选择器参数编辑器</b><br>[+] 新卡片：Dislink工具集</p>
         <p style="font-size:13px"><em>⚠️反馈和建议请前往“关于本站”页面查看</em></p>
         `,
         buttons: [
