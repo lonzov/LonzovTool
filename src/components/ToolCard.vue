@@ -335,6 +335,7 @@ export default {
       {
         class: 'tool-card glow-border',
         style: cardStyle,
+        ...(this.toolId ? { 'data-umami-event': this.toolId } : {}),
         onContextmenu: (e) => this.handleContextMenu(e),
         onTouchstart: this.handleTouchStart,
         onTouchend: () => this.handleTouchEnd(),
