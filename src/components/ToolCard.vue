@@ -335,7 +335,6 @@ export default {
       {
         class: 'tool-card glow-border',
         style: cardStyle,
-        ...(this.toolId ? { 'data-umami-event': this.toolId } : {}),
         onContextmenu: (e) => this.handleContextMenu(e),
         onTouchstart: this.handleTouchStart,
         onTouchend: () => this.handleTouchEnd(),
@@ -351,6 +350,10 @@ export default {
               e.preventDefault()
               this.longPressed = false
               return
+            }
+            // Umami 事件上报
+            if (this.toolId && window.umami) {
+              window.umami.track(this.toolId)
             }
             // 站内链接：拦截默认行为，走 SPA 路由（预渲染时 JS 未执行则正常跳转 <a>）
             if (isInternal) {
