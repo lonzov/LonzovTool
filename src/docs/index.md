@@ -2,13 +2,13 @@
 
 ---
 
-**导航**：**<span class="trigger-feedback" style="color: #d84b28;">在线反馈</span>** | [常见问题](/docs/faq) | [开发文档](/docs/dev)
+**导航**：**<span class="trigger-feedback"><gradient-text color="bluered">在线反馈</gradient-text></span>** | [常见问题](/docs/faq) | [开发文档](/docs/dev)
 
 ## <iframe-form src="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnSkK8TS3y8eR4bnHkI1wmlc" height="600" key="feedback" />
 
 # 关于本站
 
-这是一个<a href="https://minecraft.net" target="_blank" rel="noopener" referrerpolicy="origin">Minecraft</a>基岩版 **指令工具聚合平台**​​。提供**在线** [ID查询](/?search=id)、[智能补全](/?search=命令助手) 与各种快捷工具，浏览器点开即用，让复杂重复变得简单高效。
+这是一个<a href="https://minecraft.net" target="_blank" rel="noopener" referrerpolicy="origin">Minecraft</a>基岩版 指令工具聚合平台​。提供**在线** [ID查询](/?search=id)、[智能补全](/?search=命令助手) 与各种快捷工具，浏览器点开即用，让复杂重复变得简单高效。
 
 <iframe src="//player.bilibili.com/player.html?isOutside=true&amp;aid=116619267281992&amp;bvid=BV1i6Ga6EELe&amp;cid=38536282740&amp;p=1&amp;autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" style="width:100%;aspect-ratio:16/9;"></iframe>
 
@@ -34,7 +34,7 @@
 本项目源码以 [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) 协议开源，仓库地址：[lonzov/lonzovtool](https://github.com/lonzov/lonzovtool)，具体条款见 [LICENSE-APACHE](https://github.com/lonzov/lonzovtool/blob/main/LICENSE-APACHE)；文档及非代码内容采用 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) 协议。
 
 如果你发现 Bug、有功能建议——  
-欢迎通过下面的反馈渠道反馈。你的每一条反馈，都会让这个网站变得更好！
+<gradient-text color="redgreen">欢迎通过下面的反馈渠道反馈。你的每一条反馈，都会让这个网站变得更好！</gradient-text>
 
 （毕竟，它最初就是为了“让复杂变简单”而生的嘛）
 

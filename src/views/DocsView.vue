@@ -137,6 +137,15 @@ async function loadDoc(name) {
       '<div class="stats-info-bar-placeholder"></div>'
     )
 
+    // 处理美味流光渐变文字标签
+    processedRaw = processedRaw.replace(
+      /<gradient-text(?:\s+color="(\w+)")?\s*>(.+?)<\/gradient-text>/gs,
+      (match, color, text) => {
+        const cls = color ? `shimmer shimmer-${color}` : 'shimmer'
+        return `<span class="${cls}">${text}</span>`
+      }
+    )
+
     content.value = md.value.render(processedRaw)
 
     // DOM 更新后渲染组件到占位符
@@ -421,6 +430,66 @@ watchEffect(() => {
 }
 
 /* 错误状态样式已合并到 .docs-loading--error */
+
+/* ===== 震撼美味流光劣质渐变文字 ===== */
+.docs-content :deep(.shimmer),
+.docs-content :deep(.shimmer-bluered),
+.docs-content :deep(.shimmer-redgreen) {
+  display: inline-block;
+  font-weight: 700;
+  color: transparent;
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer-flow 2.8s linear infinite;
+}
+
+/* 经典蓝紫科技（默认） */
+.docs-content :deep(.shimmer) {
+  background-image: linear-gradient(
+    105deg,
+    #3B5EF5 0%,
+    #6D5AF6 18%,
+    #9B6CFA 36%,
+    #C0A0FC 50%,
+    #9B6CFA 64%,
+    #6D5AF6 82%,
+    #3B5EF5 100%
+  );
+}
+
+/* 蓝红光谱 */
+.docs-content :deep(.shimmer-bluered) {
+  background-image: linear-gradient(
+    105deg,
+    #2563EB 0%,
+    #7C3AED 18%,
+    #DC2626 38%,
+    #F87171 50%,
+    #DC2626 62%,
+    #7C3AED 82%,
+    #2563EB 100%
+  );
+}
+
+/* 红绿跃迁 */
+.docs-content :deep(.shimmer-redgreen) {
+  background-image: linear-gradient(
+    105deg,
+    #E04040 0%,
+    #F59E0B 18%,
+    #10B981 38%,
+    #6EE7B7 50%,
+    #10B981 62%,
+    #F59E0B 82%,
+    #E04040 100%
+  );
+}
+
+@keyframes shimmer-flow {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
 
 @supports (corner-shape: squircle) {
   .docs-content :deep(table) {
