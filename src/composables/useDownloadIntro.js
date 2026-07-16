@@ -1,33 +1,24 @@
-import { ref, watch, nextTick, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import MarkdownIt from 'markdown-it'
+import { ref, watch } from 'vue'
 
 const mdModules = import.meta.glob('../data/downloads/md/*.md', { query: '?raw', import: 'default' })
 
-const md = new MarkdownIt({
-  html: true,
-  linkTarget: '_blank',
-  highlight(str, lang) {
-    return `<pre><code class="hljs language-${lang || ''}">${md.utils.escapeHtml(str)}</code></pre>`
-  },
-})
-
 export function useDownloadIntro(getConfig) {
-  const router = useRouter()
-
-  const introHtml = ref('')
+  const introRaw = ref('')
   const introMdLoading = ref(false)
+  const introError = ref(null)
 
   async function loadIntroMd(introMdPath) {
     introMdLoading.value = true
+    introError.value = null
     try {
       const key = `../data/downloads/md/${introMdPath}`
       const loader = mdModules[key]
       if (!loader) throw new Error(`Markdown 文件不存在: ${introMdPath}`)
       const raw = await loader()
-      introHtml.value = md.render(raw)
+      introRaw.value = raw
     } catch (e) {
-      introHtml.value = `<p style="color:var(--text-tertiary)">加载功能介绍失败：${e.message}</p>`
+      introError.value = e.message
+      introRaw.value = ''
     } finally {
       introMdLoading.value = false
     }
@@ -38,61 +29,10 @@ export function useDownloadIntro(getConfig) {
     if (val?.introMd) {
       loadIntroMd(val.introMd)
     } else {
-      introHtml.value = ''
+      introRaw.value = ''
+      introError.value = null
     }
   }, { immediate: true })
 
-  // ===== 链接拦截（照抄文档页） =====
-  let introLinkHandler = null
-
-  function setupIntroLinkInterception() {
-    if (introLinkHandler) {
-      document.removeEventListener('click', introLinkHandler)
-    }
-    nextTick(() => {
-      const container = document.querySelector('.dl-intro-md')
-      if (!container) return
-
-      introLinkHandler = (e) => {
-        const link = e.target.closest('a')
-        if (!link) return
-
-        const href = link.getAttribute('href')
-        if (!href) return
-
-        let targetURL
-        try {
-          targetURL = new URL(href, window.location.origin)
-        } catch {
-          return
-        }
-
-        if (targetURL.protocol !== 'http:' && targetURL.protocol !== 'https:') return
-
-        if (targetURL.origin === window.location.origin) {
-          e.preventDefault()
-          router.push(targetURL.pathname + targetURL.search + targetURL.hash)
-          return
-        }
-
-        link.setAttribute('target', '_blank')
-        link.setAttribute('rel', 'noopener')
-        link.setAttribute('referrerpolicy', 'origin')
-      }
-
-      document.addEventListener('click', introLinkHandler)
-    })
-  }
-
-  watch(introHtml, (val) => {
-    if (val) setupIntroLinkInterception()
-  })
-
-  onUnmounted(() => {
-    if (introLinkHandler) {
-      document.removeEventListener('click', introLinkHandler)
-    }
-  })
-
-  return { introHtml, introMdLoading }
+  return { introRaw, introMdLoading, introError }
 }

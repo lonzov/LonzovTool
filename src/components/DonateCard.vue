@@ -355,8 +355,8 @@ observer.observe(document.documentElement, {
 </style>
 
 <style>
-/* 覆盖 docs-content 对爱发电按钮的下划线 ::before 样式（保留扫光动画） */
-.docs-content .donate-afdian-btn::before {
+/* 覆盖 md-content 对爱发电按钮的下划线 ::before 样式（保留扫光动画） */
+.md-content .donate-afdian-btn::before {
   background-image: linear-gradient(
     120deg,
     rgba(255, 255, 255, 0) 30%,

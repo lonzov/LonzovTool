@@ -10,6 +10,7 @@ src:
     Footer.vue: 页脚组件，包含版权信息、运行时间、隐私政策入口
     HomeView.vue: 首页视图容器，集成搜索栏、工具网格、页脚
     IframeForm.vue: iframe 表单封装组件
+    MarkdownRenderer.vue: 共享 Markdown 渲染组件，封装 markdown-it、链接拦截、统一内容样式
     OfflineDiagnostic.vue: 离线诊断页，ping 检测区分服务端异常/网络断开
     NoticeBar.vue: 公告通知栏，支持多公告自动轮播与高度自适应
     PrivacyBanner.vue: 隐私横幅与 Cookie 设置弹窗，管理用户同意选项
@@ -25,7 +26,7 @@ src:
     tools:
       ArtTextTool.vue: 艺术字转换工具页
       DownloadModal.vue: 下载方式选择模态框
-      DownloadIntro.vue: 下载页功能介绍区，支持 Markdown 渲染与字符串兼容
+      DownloadIntro.vue: 下载页功能介绍区，加载 Markdown 后交 MarkdownRenderer 渲染，兼容旧字符串配置
       DownloadTool.vue: 工具下载页（蓝奏云解析）
       TrAnimationTool.vue: T显动画编辑器工具页
       ExecuteTool.vue: 语法转换工具页
@@ -69,7 +70,7 @@ src:
     useTheme.js: 主题状态管理组合式函数
     useToolStorage.js: 工具页 localStorage 持久化组合式函数
     useWorkspace.js: 工作站状态管理组合式函数，包括标签页处理
-    useDownloadIntro.js: 下载页 Markdown 功能介绍渲染与链接拦截组合式函数
+    useDownloadIntro.js: 下载页 Markdown 功能介绍加载组合式函数（按需加载原始 md 字符串）
   config:
     categoryIcons.js: 分类图标配置
   data:
@@ -98,7 +99,7 @@ src:
     index.js: Vue Router 路由配置，包含 NProgress 集成、SEO meta 映射与 @vueuse/head 动态更新
   views:
     AboutView.vue: 关于页面，展示项目信息与统计数据
-    DocsView.vue: 文档页面，动态加载 Markdown 文档（支持组件占位符注入）
+    DocsView.vue: 文档页面，动态加载 Markdown 文档（预处理组件占位符后交 MarkdownRenderer 渲染）
     DownView.vue: 下载页面，展示工具下载信息与下载选项
     SettingsView.vue: 设置页面，全局偏好设置（主题模式等）
     NotFoundView.vue: 404 页面，注入 noindex meta 防止爬虫收录无效 URL
