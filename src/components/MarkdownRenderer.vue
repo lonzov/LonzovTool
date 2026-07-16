@@ -290,8 +290,11 @@ onUnmounted(() => {
 
 /* ===== 流光渐变文字 ===== */
 .md-content :deep(.shimmer),
+.md-content :deep(.shimmer *),
 .md-content :deep(.shimmer-bluered),
-.md-content :deep(.shimmer-redgreen) {
+.md-content :deep(.shimmer-bluered *),
+.md-content :deep(.shimmer-redgreen),
+.md-content :deep(.shimmer-redgreen *) {
   display: inline-block;
   font-weight: 700;
   color: transparent;
@@ -302,7 +305,8 @@ onUnmounted(() => {
 }
 
 /* 蓝紫科技（默认） */
-.md-content :deep(.shimmer) {
+.md-content :deep(.shimmer),
+.md-content :deep(.shimmer *) {
   background-image: linear-gradient(
     105deg,
     #3B5EF5 0%,
@@ -316,7 +320,8 @@ onUnmounted(() => {
 }
 
 /* 蓝红光谱 */
-.md-content :deep(.shimmer-bluered) {
+.md-content :deep(.shimmer-bluered),
+.md-content :deep(.shimmer-bluered *) {
   background-image: linear-gradient(
     105deg,
     #2563EB 0%,
@@ -330,7 +335,8 @@ onUnmounted(() => {
 }
 
 /* 红绿跃迁 */
-.md-content :deep(.shimmer-redgreen) {
+.md-content :deep(.shimmer-redgreen),
+.md-content :deep(.shimmer-redgreen *) {
   background-image: linear-gradient(
     105deg,
     #E04040 0%,

@@ -2,9 +2,9 @@
 
 ---
 
-**导航**：**<span class="trigger-feedback"><gradient-text color="bluered">在线反馈</gradient-text></span>** | [常见问题](/docs/faq) | [开发文档](/docs/dev)
+**导航**：**<gradient-text color="bluered"><span class="trigger-feedback">在线反馈</span></gradient-text>** | [常见问题](/docs/faq) | [开发文档](/docs/dev)
 
-## <iframe-form src="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnSkK8TS3y8eR4bnHkI1wmlc" height="600" key="feedback" />
+<iframe-form src="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnSkK8TS3y8eR4bnHkI1wmlc" height="600" key="feedback" />
 
 # 关于本站
 
