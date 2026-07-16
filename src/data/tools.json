@@ -90,6 +90,20 @@
           "link": "https://teshuzifu.cn/"
         },
         {
+          "id": "n-sensitive-words",
+          "title": "网易敏感词检测",
+          "description": "检测输入内容是否命中网易敏感词规则",
+          "logo": "/logos/n-sensitive-words.webp",
+          "link": "https://neteasemcapi.theconsole.top/SensitiveWords"
+        },
+        {
+          "id": "mc-hm0-top",
+          "title": "网易版存档解密",
+          "description": "网易版加密存档解密工具",
+          "logo": "/logos/HAIMING.webp",
+          "link": "https://mc.hm0.top/"
+        },
+        {
           "id": "chunkbase",
           "title": "ChunkBase",
           "description": "通过种子号定位群系、结构、史莱姆区块等",
@@ -116,27 +130,6 @@
           "description": "在线制作像素画、地图画、雕塑和红石音乐",
           "logo": "/logos/mcpixelart_com.webp",
           "link": "https://mcpixelart.com/"
-        },
-        {
-          "id": "3d-text",
-          "title": "3D字生成",
-          "description": "轻松制作mc风格中文3D文本",
-          "logo": "/logos/3dt_easecation_net.webp",
-          "link": "https://3dt.easecation.net/"
-        },
-        {
-          "id": "mc-hm0-top",
-          "title": "网易版存档解密",
-          "description": "网易版加密存档解密工具",
-          "logo": "/logos/HAIMING.webp",
-          "link": "https://mc.hm0.top/"
-        },
-        {
-          "id": "n-sensitive-words",
-          "title": "网易敏感词检测",
-          "description": "检测输入内容是否命中网易敏感词规则",
-          "logo": "/logos/n-sensitive-words.webp",
-          "link": "https://neteasemcapi.theconsole.top/SensitiveWords"
         }
       ]
     },
@@ -272,6 +265,13 @@
           "link": "https://abyssous.site/app"
         },
         {
+          "id": "cbergit",
+          "title": "CBerGit",
+          "description": "国内首个 MC 指令托管和研发交流平台",
+          "logo": "/logos/cbergit_com.png",
+          "link": "https://cbergit.com/"
+        },
+        {
           "id": "paul-community",
           "title": "Paul 指令社区",
           "description": "针对网易版指令创作者的交易与答疑平台",
@@ -291,13 +291,6 @@
           "description": "简洁好用的交流讨论和资源分享平台",
           "logo": "/logos/www_minebbs_com.webp",
           "link": "https://www.minebbs.com/"
-        },
-        {
-          "id": "cbergit",
-          "title": "CBerGit",
-          "description": "国内首个 MC 指令托管和研发交流平台",
-          "logo": "/logos/cbergit_com.png",
-          "link": "https://cbergit.com/"
         }
       ]
     },
@@ -307,18 +300,25 @@
       "parentMenuId": "localtools",
       "tools": [
         {
-          "id": "command-cube",
-          "title": "命令魔方",
-          "description": "强大的命令辅助应用",
-          "logo": "/logos/www_viqu_com.webp",
-          "link": "https://www.viqu.com/"
-        },
-        {
           "id": "ca-reforged",
           "title": "命令助手·Reforged",
           "description": "命令助手 | 社区重铸版",
           "logo": "/logos/ca_nycx_top.webp",
           "link": "https://ca.nycx.top"
+        },
+        {
+          "id": "zhiling-yinfuhe",
+          "title": "指令音符盒",
+          "description": "mid转指令,并半自动填入命令方块",
+          "logo": "/logos/command_plus.webp",
+          "link": "/down/zhiling-yinfuhe"
+        },
+        {
+          "id": "command-cube",
+          "title": "命令魔方",
+          "description": "强大的命令辅助应用",
+          "logo": "/logos/www_viqu_com.webp",
+          "link": "https://www.viqu.com/"
         },
         {
           "id": "ca",
@@ -333,13 +333,6 @@
           "description": "指令音乐视频合成器等自动复制文本其他工具",
           "logo": "/logos/HOSDLA_toolbox.webp",
           "link": "/down/HOSDLA-toolbox"
-        },
-        {
-          "id": "zhiling-yinfuhe",
-          "title": "指令音符盒",
-          "description": "mid转指令,并半自动填入命令方块",
-          "logo": "/logos/command_plus.webp",
-          "link": "/down/zhiling-yinfuhe"
         },
         {
           "id": "matrix-block",
@@ -370,6 +363,13 @@
           "link": "https://mt2.cn/"
         },
         {
+          "id": "mc-yufabao",
+          "title": "指令语法高亮包",
+          "description": "适用于MT管理器的指令语法高亮包",
+          "logo": "/logos/mt2_cn.webp",
+          "link": "/down/mc-yufabao"
+        },
+        {
           "id": "blockbench",
           "title": "Blockbench",
           "description": "一款强大的3D建模工具,支持mc模型制作",
@@ -383,11 +383,18 @@
       "icon": "Edit24Filled",
       "tools": [
         {
-          "id": "mc-yufabao",
-          "title": "指令语法高亮包",
-          "description": "适用于MT管理器的指令语法高亮包",
-          "logo": "/logos/mt2_cn.webp",
-          "link": "/down/mc-yufabao"
+          "id": "3d-text",
+          "title": "3D字生成",
+          "description": "轻松制作mc风格中文3D文本",
+          "logo": "/logos/3dt_easecation_net.webp",
+          "link": "https://3dt.easecation.net/"
+        },
+        {
+          "id": "honghe",
+          "title": "红河资源站",
+          "description": "针对Minecraft视频创作的资源站",
+          "logo": "/logos/1honghemc_cn.webp",
+          "link": "https://honghemc.cn/"
         },
         {
           "id": "mcsounds",
@@ -402,13 +409,6 @@
           "description": "MC资源集合, 包括皮肤头像、贴图等",
           "logo": "/logos/ccvaults_com.webp",
           "link": "https://ccvaults.com/"
-        },
-        {
-          "id": "honghe",
-          "title": "红河资源站",
-          "description": "针对Minecraft视频创作的资源站",
-          "logo": "/logos/1honghemc_cn.webp",
-          "link": "https://honghemc.cn/"
         },
         {
           "id": "mc-note",

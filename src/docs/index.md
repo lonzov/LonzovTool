@@ -2,9 +2,9 @@
 
 ---
 
-**导航**：[常见问题](/docs/faq) | [开发文档](/docs/dev)
+**导航**：**<span class="trigger-feedback" style="color: #d84b28;">在线反馈</span>** | [常见问题](/docs/faq) | [开发文档](/docs/dev)
 
----
+## <iframe-form src="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnSkK8TS3y8eR4bnHkI1wmlc" height="600" key="feedback" />
 
 # 关于本站
 
@@ -52,8 +52,6 @@
 
 **有问题和建议要提啊🥶不提我可能永远也发现不了**
 
-- 在线反馈：<span class="trigger-feedback">点击填写</span>
+- 在线反馈：[点击前往](https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnSkK8TS3y8eR4bnHkI1wmlc)
 - 邮件：<a href="mailto:i@lonzov.top" target="_blank" rel="noopener" referrerpolicy="origin">i@lonzov.top</a>
 - QQ群: <a href="https://qm.qq.com/q/hjTqUyIKEo" target="_blank" rel="noopener" referrerpolicy="origin">587984701</a>
-
-<iframe-form src="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnSkK8TS3y8eR4bnHkI1wmlc" height="600" key="feedback" />
