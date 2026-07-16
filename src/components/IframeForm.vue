@@ -30,6 +30,7 @@ export default {
     return {
       isLoaded: false,
       isVisible: false,
+      iframeLoaded: false,
     }
   },
   computed: {
@@ -72,6 +73,38 @@ export default {
     },
   },
   render() {
+    const children = []
+
+    if (this.isLoaded) {
+      // 骨架屏
+      if (!this.iframeLoaded) {
+        children.push(
+          h('div', {
+            class: 'iframe-skeleton',
+            style: { height: this.heightStyle },
+          })
+        )
+      }
+
+      // iframe（加载完成后才可见）
+      children.push(
+        h('iframe', {
+          src: this.src,
+          frameborder: '0',
+          allowfullscreen: true,
+          class: 'iframe-form',
+          style: {
+            width: '100%',
+            height: this.heightStyle,
+            display: this.iframeLoaded ? 'block' : 'none',
+          },
+          onLoad: () => {
+            this.iframeLoaded = true
+          },
+        })
+      )
+    }
+
     return h(
       'div',
       {
@@ -82,27 +115,41 @@ export default {
           marginTop: '16px',
         },
       },
-      this.isLoaded
-        ? [
-            h('iframe', {
-              src: this.src,
-              frameborder: '0',
-              allowfullscreen: true,
-              class: 'iframe-form',
-              style: {
-                width: '100%',
-                height: this.heightStyle,
-                display: 'block',
-              },
-            }),
-          ]
-        : []
+      children
     )
   },
 }
 </script>
 
 <style scoped>
+/* 骨架屏扫光动画 */
+.iframe-skeleton {
+  width: 100%;
+  border-radius: 18px;
+  corner-shape: squircle;
+  background: linear-gradient(
+    105deg,
+    var(--bg-sub) 0%,
+    var(--bg-sub) 35%,
+    var(--bg-card) 50%,
+    var(--bg-sub) 65%,
+    var(--bg-sub) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+@supports (corner-shape: squircle) {
+  .iframe-skeleton {
+    border-radius: 30px;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
 /* 深色模式下 iframe 变暗 */
 [data-theme='dark'] :deep(.iframe-form) {
   filter: brightness(0.7);
