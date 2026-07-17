@@ -224,70 +224,6 @@ onUnmounted(() => {
   margin-bottom: 0;
 }
 
-/* ===== 超链接下划线样式 ===== */
-.md-content :deep(a),
-.md-content :deep(.trigger-feedback),
-.md-content :deep(.trigger-url-tj) {
-  color: var(--text-primary);
-  text-decoration: none;
-  position: relative;
-  padding-bottom: 2px;
-  cursor: pointer;
-  display: inline-block;
-  vertical-align: baseline;
-  background: none;
-}
-
-.md-content :deep(a)::before,
-.md-content :deep(.trigger-feedback)::before,
-.md-content :deep(.trigger-url-tj)::before {
-  content: '';
-  display: block;
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 5px;
-  height: 1px;
-  background-image: repeating-linear-gradient(to right,
-      color-mix(in srgb, var(--text-primary), transparent 30%) 0 4px,
-      transparent 4px 8px);
-  background-repeat: repeat-x;
-  background-size: 8px 1px;
-  opacity: 1;
-  transition: opacity 0.3s;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.md-content :deep(a)::after,
-.md-content :deep(.trigger-feedback)::after,
-.md-content :deep(.trigger-url-tj)::after {
-  content: '';
-  display: block;
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 5px;
-  height: 1px;
-  background-color: var(--text-primary);
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-  z-index: 3;
-}
-
-.md-content :deep(a):hover::before,
-.md-content :deep(.trigger-feedback):hover::before,
-.md-content :deep(.trigger-url-tj):hover::before {
-  opacity: 0;
-}
-
-.md-content :deep(a):hover::after,
-.md-content :deep(.trigger-feedback):hover::after,
-.md-content :deep(.trigger-url-tj):hover::after {
-  opacity: 1;
-}
-
 /* ===== 流光渐变文字 ===== */
 .md-content :deep(.shimmer),
 .md-content :deep(.shimmer *),
@@ -362,6 +298,70 @@ onUnmounted(() => {
 </style>
 
 <style>
+/* ===== 超链接下划线样式（unscoped，避免 scoped :deep 提优先级压过子挂载组件） ===== */
+.md-content a,
+.md-content .trigger-feedback,
+.md-content .trigger-url-tj {
+  color: var(--text-primary);
+  text-decoration: none;
+  position: relative;
+  padding-bottom: 2px;
+  cursor: pointer;
+  display: inline-block;
+  vertical-align: baseline;
+  background: none;
+}
+
+.md-content a::before,
+.md-content .trigger-feedback::before,
+.md-content .trigger-url-tj::before {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5px;
+  height: 1px;
+  background-image: repeating-linear-gradient(to right,
+      color-mix(in srgb, var(--text-primary), transparent 30%) 0 4px,
+      transparent 4px 8px);
+  background-repeat: repeat-x;
+  background-size: 8px 1px;
+  opacity: 1;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.md-content a::after,
+.md-content .trigger-feedback::after,
+.md-content .trigger-url-tj::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5px;
+  height: 1px;
+  background-color: var(--text-primary);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.md-content a:hover::before,
+.md-content .trigger-feedback:hover::before,
+.md-content .trigger-url-tj:hover::before {
+  opacity: 0;
+}
+
+.md-content a:hover::after,
+.md-content .trigger-feedback:hover::after,
+.md-content .trigger-url-tj:hover::after {
+  opacity: 1;
+}
+
 /* iframe 全局超椭圆圆角 */
 .md-content iframe {
   border-radius: 18px;
