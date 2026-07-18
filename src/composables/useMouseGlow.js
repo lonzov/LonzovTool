@@ -16,25 +16,17 @@ let touchJustEnded = false
 let touchEndTimer = null
 
 function tick() {
-  if (touchActive) {
-    // 触屏场景：直接跟随，不做平滑插值，避免延迟感
+  const dx = targetX - currentX
+  const dy = targetY - currentY
+
+  if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
     currentX = targetX
     currentY = targetY
     rafId = null
   } else {
-    // 鼠标场景：lerp 平滑跟随
-    const dx = targetX - currentX
-    const dy = targetY - currentY
-
-    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
-      currentX = targetX
-      currentY = targetY
-      rafId = null
-    } else {
-      currentX += dx * LERP_FACTOR
-      currentY += dy * LERP_FACTOR
-      rafId = requestAnimationFrame(tick)
-    }
+    currentX += dx * LERP_FACTOR
+    currentY += dy * LERP_FACTOR
+    rafId = requestAnimationFrame(tick)
   }
 
   for (const cb of subscribers) {
@@ -57,8 +49,9 @@ function onTouchStart(e) {
   touchJustEnded = false
   clearTimeout(touchEndTimer)
   const touch = e.touches[0]
-  targetX = touch.clientX
-  targetY = touch.clientY
+  // 直接从触点位置出现，不做从旧位置平滑过渡
+  currentX = targetX = touch.clientX
+  currentY = targetY = touch.clientY
   if (!rafId) {
     rafId = requestAnimationFrame(tick)
   }
@@ -82,6 +75,9 @@ function onTouchEnd() {
     cancelAnimationFrame(rafId)
     rafId = null
   }
+  // 重置位置到当前触点，避免下次触控从旧位置过渡
+  currentX = targetX
+  currentY = targetY
   // 通知订阅者隐藏高光（(-1, -1) 为清除信号）
   for (const cb of subscribers) {
     cb(-1, -1)
@@ -123,12 +119,24 @@ export function applyGlow(el, mouseX, mouseY, options = {}) {
   }
 }
 
+// 是否启用高光效果（localStorage 开关，默认开）
+function isGlowEnabled() {
+  try {
+    const v = localStorage.getItem('mouse_glow_enabled')
+    return v === null ? true : v === 'true'
+  } catch { return true }
+}
+
 export function useMouseGlow() {
+  let listenersActive = false
+
   function subscribe(callback) {
     if (subscribers.has(callback)) return
     subscribers.add(callback)
+    if (!isGlowEnabled()) return
     listenerCount++
     if (listenerCount === 1) {
+      listenersActive = true
       document.addEventListener('mousemove', onMouseMove, { passive: true })
       document.addEventListener('touchstart', onTouchStart, { passive: true })
       document.addEventListener('touchmove', onTouchMove, { passive: true })
@@ -139,6 +147,7 @@ export function useMouseGlow() {
   function unsubscribe(callback) {
     if (!subscribers.has(callback)) return
     subscribers.delete(callback)
+    if (!listenersActive) return
     listenerCount--
     if (listenerCount === 0) {
       document.removeEventListener('mousemove', onMouseMove)

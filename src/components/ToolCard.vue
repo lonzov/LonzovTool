@@ -135,9 +135,7 @@ export default {
   mounted() {
     this.initIntersectionObserver()
     this.checkViewport()
-    if (this.isGlowEnabled()) {
-      this.subGlow(this.handleGlow)
-    }
+    this.subGlow(this.handleGlow)
   },
   beforeUnmount() {
     if (this.observer) {
@@ -213,12 +211,6 @@ export default {
         this.isLoading = false
         this.retryCount = 0
       }
-    },
-    isGlowEnabled() {
-      try {
-        const v = localStorage.getItem('mouse_glow_enabled')
-        return v === null ? true : v === 'true'
-      } catch { return true }
     },
     handleGlow(mouseX, mouseY) {
       applyGlow(this.$el, mouseX, mouseY)
