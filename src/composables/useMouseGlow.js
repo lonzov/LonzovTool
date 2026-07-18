@@ -16,20 +16,25 @@ let touchJustEnded = false
 let touchEndTimer = null
 
 function tick() {
-  // 每帧向目标位置差值靠近
-  const dx = targetX - currentX
-  const dy = targetY - currentY
-
-  // 当距离小于 0.5px 时直接吸附，避免无限抖动
-  if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+  if (touchActive) {
+    // 触屏场景：直接跟随，不做平滑插值，避免延迟感
     currentX = targetX
     currentY = targetY
-    // 无运动时停止循环，等下次 mousemove 再启动
     rafId = null
   } else {
-    currentX += dx * LERP_FACTOR
-    currentY += dy * LERP_FACTOR
-    rafId = requestAnimationFrame(tick)
+    // 鼠标场景：lerp 平滑跟随
+    const dx = targetX - currentX
+    const dy = targetY - currentY
+
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+      currentX = targetX
+      currentY = targetY
+      rafId = null
+    } else {
+      currentX += dx * LERP_FACTOR
+      currentY += dy * LERP_FACTOR
+      rafId = requestAnimationFrame(tick)
+    }
   }
 
   for (const cb of subscribers) {

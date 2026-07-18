@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
-import { NSelect, NConfigProvider, darkTheme, NModal, NIcon, useMessage } from 'naive-ui'
+import { NSelect, NSwitch, NConfigProvider, darkTheme, NModal, NIcon, useMessage } from 'naive-ui'
 import { ArrowDownload16Regular, ArrowExportUp24Filled, Settings24Regular, ChevronUp16Regular, ArrowCounterclockwise24Filled } from '@vicons/fluent'
 import { useTheme } from '../composables/useTheme'
 
@@ -17,6 +17,35 @@ const themeValue = computed({
   get: () => themeMode.value,
   set: (val) => setThemeMode(val),
 })
+
+/* ========== 卡片高光效果开关 ========== */
+const GLOW_KEY = 'mouse_glow_enabled'
+const glowEnabled = ref(
+  (() => {
+    try {
+      const v = localStorage.getItem(GLOW_KEY)
+      return v === null ? true : v === 'true'
+    } catch { return true }
+  })(),
+)
+
+function onGlowToggle(val) {
+  glowEnabled.value = val
+  localStorage.setItem(GLOW_KEY, String(val))
+  message.info('刷新页面后生效', { duration: 1800 })
+}
+
+/* ========== 开关轨道颜色（参考特殊符号页） ========== */
+function switchRailStyle({ focused, checked }) {
+  if (checked) {
+    const style = { background: '#333' }
+    if (focused) style.boxShadow = '0 0 0 2px #33340'
+    return style
+  }
+  const style = { background: '#a0a0a0' }
+  if (focused) style.boxShadow = '0 0 0 2px #a0a0a040'
+  return style
+}
 
 /* ========== 折叠状态（持久化）========== */
 const COLLAPSED_KEY = 'settings-collapsed'
@@ -439,6 +468,20 @@ const darkOverrides = {
                     placement="bottom-end"
                     size="medium"
                     class="settings-select"
+                  />
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <span class="setting-title">卡片高光效果</span>
+                  <p class="setting-desc">首页卡片边框跟随鼠标的光晕动画</p>
+                </div>
+                <div class="setting-control">
+                  <NSwitch
+                    :value="glowEnabled"
+                    @update:value="onGlowToggle"
+                    :rail-style="switchRailStyle"
+                    class="settings-switch"
                   />
                 </div>
               </div>
@@ -1073,4 +1116,5 @@ html:not([data-theme='dark']) .n-select-menu {
     min-width: 102px !important;
   }
 }
+
 </style>
