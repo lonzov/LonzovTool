@@ -1,10 +1,10 @@
 <script setup>
 import { NIcon } from 'naive-ui'
-import { ArrowUp24Regular, ArrowDown24Regular, Edit24Filled, Delete24Regular } from '@vicons/fluent'
+import { ArrowUp24Regular, ArrowDown24Regular, Copy24Regular, Edit24Filled, Delete24Regular } from '@vicons/fluent'
 import {
   data, validationResult, deleteConfirmIdx,
   getElTypeClass, getElTypeLabel, getElPreviewText,
-  addElement, editElement, deleteElement, moveElement,
+  addElement, editElement, deleteElement, copyElement, moveElement,
 } from '../../composables/useRawJsonEditor.js'
 </script>
 
@@ -43,6 +43,9 @@ import {
             </button>
             <button class="act-btn" :disabled="i === data.length - 1" title="下移" @click="moveElement(i, 'down')">
               <NIcon :component="ArrowDown24Regular" :size="14" />
+            </button>
+            <button class="act-btn" title="复制" @click="copyElement(i)">
+              <NIcon :component="Copy24Regular" :size="14" />
             </button>
             <button class="act-btn act-btn--primary" title="编辑" @click="editElement(i)">
               <NIcon :component="Edit24Filled" :size="14" />

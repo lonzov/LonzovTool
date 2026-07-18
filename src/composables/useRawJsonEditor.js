@@ -461,6 +461,13 @@ export function deleteElement(idx) {
   }
 }
 
+export function copyElement(idx) {
+  pushUndo()
+  const cloned = JSON.parse(JSON.stringify(data.value[idx]))
+  data.value.splice(idx + 1, 0, cloned)
+  triggerSave()
+}
+
 export function moveElement(idx, dir) {
   pushUndo()
   if (dir === 'up' && idx > 0) {
@@ -839,7 +846,7 @@ export function useRawJsonEditor() {
     pushUndo, undo, redo, triggerSave,
     validate, col, escHtml,
     getElType, getElTypeLabel, getElPreviewText, getElTypeClass,
-    addElement, editElement, deleteElement, moveElement,
+    addElement, editElement, deleteElement, copyElement, moveElement,
     resetEditForm, closeEditModal, saveElement, addWithParam, removeWithParam,
     startNestedEdit, saveNestedEdit, cancelNestedEdit, deleteWithEl, moveWithEl,
     addNestedWithParam, removeNestedWithParam, addNestedWithRawtextEl,
