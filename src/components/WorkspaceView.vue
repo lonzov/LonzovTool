@@ -126,8 +126,21 @@ function syncFromRoute() {
   setTimeout(() => { syncingFromRoute = false }, 0)
 }
 
+// SSR 期间 onMounted 不执行，直接在 setup 中根据路由初始化 activeTab，
+// 确保预渲染时工具页渲染正确的工具组件而非 NotFoundView
+if (route.path.startsWith('/c/')) {
+  const normalizedRoute = route.path.replace(/\/+$/, '')
+  if (normalizedRoute !== '/c') {
+    if (getComponent(route.path)) {
+      ensureTabForPath(route.path)
+    } else {
+      setActiveTabWithoutPersist(route.path)
+    }
+  }
+}
+
 onMounted(() => {
-  if (!route.path.startsWith('/c/')) return
+  if (typeof window === 'undefined' || !route.path.startsWith('/c/')) return
 
   // restoreTabs 是幂等的：tabs 已有数据时直接跳过
   restoreTabs()

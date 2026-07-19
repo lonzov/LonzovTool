@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
+import { useHead } from '@unhead/vue'
 import HomeView from '../components/HomeView.vue'
 import OfflineDiagnostic from '../components/OfflineDiagnostic.vue'
 
@@ -13,14 +14,16 @@ for (const [path, mod] of Object.entries(downloadModules)) {
   DOWNLOAD_NAMES[slug] = data.name || slug
 }
 
-// 配置 NProgress
-NProgress.configure({
-  showSpinner: false, // 不显示加载转圈
-  trickleSpeed: 200,  // 自动递增间隔
-  minimum: 0.2,       // 初始最小百分比 20%
-  speed: 150,         // 消失动画速度 150ms
-  easing: 'ease',     // 缓动函数
-})
+// 配置 NProgress（仅在客户端执行）
+if (typeof window !== 'undefined') {
+  NProgress.configure({
+    showSpinner: false,
+    trickleSpeed: 200,
+    minimum: 0.2,
+    speed: 150,
+    easing: 'ease',
+  })
+}
 
 // ===== 路由导航超时机制 =====
 // 防止 chunk 加载挂起导致 NProgress 永久卡住（如离线/网络极差场景）
@@ -108,7 +111,44 @@ function resolveToolMeta(path) {
   return TOOL_META_MAP[slug] || null
 }
 
-const routes = [
+// 懒加载组件引用（复用实例避免重复 import）
+const DocsView = () => import('../views/DocsView.vue')
+const DownView = () => import('../views/DownView.vue')
+const WorkspaceView = () => import('../components/WorkspaceView.vue')
+const SettingsView = () => import('../views/SettingsView.vue')
+const NotFoundView = () => import('../views/NotFoundView.vue')
+
+// 已知的文档页面路径（具体静态路由，用于 SSG 预渲染）
+const KNOWN_DOCS = [
+  { slug: 'privacy', meta: DOCS_META_MAP.privacy },
+  { slug: 'faq', meta: DOCS_META_MAP.faq },
+  { slug: 'dev', meta: DOCS_META_MAP.dev },
+]
+
+// 已知的下载页面路径（具体静态路由，用于 SSG 预渲染）
+const KNOWN_DOWNLOADS = Object.keys(DOWNLOAD_NAMES).map((slug) => {
+  const name = DOWNLOAD_NAMES[slug]
+  return {
+    slug,
+    meta: {
+      title: `${name} - 文件下载 - 小舟工具箱`,
+      description: `小舟工具箱提供的${name}下载页面，支持快捷直链解析和手动网盘下载。`,
+      keywords: `Minecraft,资源下载,${name},MC工具下载,小舟工具箱`,
+    },
+  }
+})
+
+// 已知的工具页面路径（具体静态路由，用于 SSG 预渲染）
+const KNOWN_TOOLS = [
+  { slug: 'qjzh', meta: TOOL_META_MAP.qjzh },
+  { slug: 'tr', meta: TOOL_META_MAP.tr },
+  { slug: 'raw-json', meta: TOOL_META_MAP['raw-json'] },
+  { slug: 'selector', meta: TOOL_META_MAP.selector },
+  { slug: 'execute', meta: TOOL_META_MAP.execute },
+  { slug: 'fuhao', meta: TOOL_META_MAP.fuhao },
+]
+
+export const routes = [
   {
     path: '/',
     name: 'home',
@@ -122,7 +162,7 @@ const routes = [
   {
     path: '/docs',
     name: 'docs-index',
-    component: () => import('../views/DocsView.vue'),
+    component: DocsView,
     props: { docName: '' },
     meta: {
       title: '关于本站 - 小舟工具箱',
@@ -130,16 +170,25 @@ const routes = [
       keywords: '小舟工具箱,项目文档,使用指南,隐私政策',
     },
   },
+  // 已知文档页的具体静态路由（SSG 预渲染）
+  ...KNOWN_DOCS.map(({ slug, meta }) => ({
+    path: `/docs/${slug}`,
+    name: `docs-${slug}`,
+    component: DocsView,
+    props: { docName: slug },
+    meta,
+  })),
+  // 未知文档页的兜底动态路由（客户端 SPA 处理）
   {
     path: '/docs/:docName(.*)',
     name: 'docs',
-    component: () => import('../views/DocsView.vue'),
+    component: DocsView,
     props: true,
   },
   {
     path: '/submit',
     name: 'submit',
-    component: () => import('../views/DocsView.vue'),
+    component: DocsView,
     props: { docName: 'url-tj' },
     meta: {
       title: '网址提交 - 小舟工具箱',
@@ -150,7 +199,7 @@ const routes = [
   {
     path: '/donate',
     name: 'donate',
-    component: () => import('../views/DocsView.vue'),
+    component: DocsView,
     props: { docName: 'donate' },
     meta: {
       title: '打赏支持 - 小舟工具箱',
@@ -158,22 +207,40 @@ const routes = [
       keywords: '小舟工具箱,打赏,赞助,爱发电,捐赠,支持',
     },
   },
+  // 已知下载页的具体静态路由（SSG 预渲染）
+  ...KNOWN_DOWNLOADS.map(({ slug, meta }) => ({
+    path: `/down/${slug}`,
+    name: `download-${slug}`,
+    component: DownView,
+    props: { path: slug },
+    meta,
+  })),
+  // 未知下载页的兜底动态路由（客户端 SPA 处理）
   {
     path: '/down/:path(.*)',
     name: 'download',
-    component: () => import('../views/DownView.vue'),
+    component: DownView,
     props: true,
   },
+  // 已知工具页的具体静态路由（SSG 预渲染）
+  ...KNOWN_TOOLS.map(({ slug, meta }) => ({
+    path: `/c/${slug}`,
+    name: `tool-${slug}`,
+    component: WorkspaceView,
+    props: { path: slug },
+    meta,
+  })),
+  // 未知工具页的兜底动态路由（客户端 SPA 处理）
   {
     path: '/c/:path(.*)',
     name: 'workspace',
-    component: () => import('../components/WorkspaceView.vue'),
+    component: WorkspaceView,
     props: true,
   },
   {
     path: '/settings',
     name: 'settings',
-    component: () => import('../views/SettingsView.vue'),
+    component: SettingsView,
     meta: {
       title: '设置 - 小舟工具箱',
       description: '小舟工具箱全局设置，自定义主题模式等偏好。',
@@ -191,98 +258,114 @@ const routes = [
   {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
-    component: () => import('../views/NotFoundView.vue'),
+    component: NotFoundView,
   },
 ]
 
-const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes,
-})
+export { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES }
+export default routes
 
-// 路由前置守卫：开始进度条 + 启动超时计时器
-router.beforeEach((to, from, next) => {
-  if (to.path !== from.path && to.name !== 'offline') {
+/**
+ * 为给定 router 实例附加导航守卫（NProgress + SEO head）
+ * ViteSSG 回调中调用此函数，客户端/SSR 共用
+ */
+export function setupRouterGuards(router) {
+  // 路由前置守卫：开始进度条 + 启动超时计时器（仅客户端）
+  router.beforeEach((to, from, next) => {
+    if (typeof window === 'undefined') { next(); return }
+
+    if (to.path !== from.path && to.name !== 'offline') {
+      clearNavTimer()
+      navTimer = setTimeout(() => {
+        NProgress.done()
+        window.location.href = '/offline'
+      }, NAV_TIMEOUT_MS)
+
+      NProgress.start()
+      setTimeout(() => {
+        const bar = document.querySelector('#nprogress .bar')
+        if (bar) {
+          bar.style.zIndex = '9999999'
+        }
+        NProgress.set(0.2)
+      }, 30)
+    }
+    next()
+  })
+
+  // 路由后置守卫：完成进度条 + 更新页面 head 信息
+  router.afterEach((to) => {
     clearNavTimer()
-    // 导航超时兜底：8 秒内未完成则强制跳转离线页（覆盖 chunk 挂起场景）
-    navTimer = setTimeout(() => {
-      NProgress.done()
-      window.location.href = '/offline'
-    }, NAV_TIMEOUT_MS)
 
-    NProgress.start()
-    // 确保进度条在最高层（延迟设置以确保 DOM 已创建）
-    setTimeout(() => {
-      const bar = document.querySelector('#nprogress .bar')
-      if (bar) {
-        bar.style.zIndex = '9999999'
+    const meta = to.meta || {}
+    let title = meta.title
+    let description = meta.description
+    let keywords = meta.keywords
+
+    if (!title && !description && !keywords && to.path.startsWith('/c/')) {
+      const toolMeta = resolveToolMeta(to.params.path)
+      if (toolMeta) {
+        title = toolMeta.title
+        description = toolMeta.description
+        keywords = toolMeta.keywords
       }
-      // 确保进度条至少显示 20%
-      NProgress.set(0.2)
-    }, 30)
-  }
-  next()
-})
-
-// 路由后置守卫：完成进度条 + 更新页面 head 信息
-import { useHead } from '@vueuse/head'
-
-router.afterEach((to) => {
-  // 导航完成，清除超时计时器
-  clearNavTimer()
-
-  // 解析 SEO head 信息：优先使用 route meta，动态路由走工具映射
-  const meta = to.meta || {}
-  let title = meta.title
-  let description = meta.description
-  let keywords = meta.keywords
-
-  if (!title && !description && !keywords && to.path.startsWith('/c/')) {
-    const toolMeta = resolveToolMeta(to.params.path)
-    if (toolMeta) {
-      title = toolMeta.title
-      description = toolMeta.description
-      keywords = toolMeta.keywords
     }
-  }
 
-  // /down/:path 下载页动态拼接 SEO meta（名称取自下载 JSON 配置）
-  if (!title && !description && !keywords && to.path.startsWith('/down/')) {
-    const slug = to.params.path?.replace(/\/+$/, '') || ''
-    const name = DOWNLOAD_NAMES[slug] || slug
-    title = `${name} - 文件下载 - 小舟工具箱`
-    description = `小舟工具箱提供的${name}下载页面，支持快捷直链解析和手动网盘下载。`
-    keywords = `Minecraft,资源下载,${name},MC工具下载,小舟工具箱`
-  }
-
-  // /docs/:docName 子页走文档映射（如 /docs/privacy）
-  if (!title && !description && !keywords && to.path.startsWith('/docs/') && to.params.docName) {
-    const docsMeta = resolveDocsMeta(to.params.docName)
-    if (docsMeta) {
-      title = docsMeta.title
-      description = docsMeta.description
-      keywords = docsMeta.keywords
+    if (!title && !description && !keywords && to.path.startsWith('/down/')) {
+      const slug = to.params.path?.replace(/\/+$/, '') || ''
+      const name = DOWNLOAD_NAMES[slug] || slug
+      title = `${name} - 文件下载 - 小舟工具箱`
+      description = `小舟工具箱提供的${name}下载页面，支持快捷直链解析和手动网盘下载。`
+      keywords = `Minecraft,资源下载,${name},MC工具下载,小舟工具箱`
     }
-  }
 
-  if (title || description || keywords) {
-    useHead({
-      title: title || '小舟工具箱',
-      meta: [
-        ...(description ? [{ name: 'description', content: description }] : []),
-        ...(keywords ? [{ name: 'keywords', content: keywords }] : []),
-      ],
-    })
-  }
-
-  setTimeout(() => {
-    // 在 done 前强制提升 z-index，避免离场动画期间被覆盖
-    const bar = document.querySelector('#nprogress .bar')
-    if (bar) {
-      bar.style.zIndex = '9999999'
+    if (!title && !description && !keywords && to.path.startsWith('/docs/') && to.params.docName) {
+      const docsMeta = resolveDocsMeta(to.params.docName)
+      if (docsMeta) {
+        title = docsMeta.title
+        description = docsMeta.description
+        keywords = docsMeta.keywords
+      }
     }
-    NProgress.done()
-  }, 100)
-})
 
-export default router
+    if (title || description || keywords) {
+      useHead({
+        title: title || '小舟工具箱',
+        meta: [
+          ...(description ? [{ name: 'description', content: description }] : []),
+          ...(keywords ? [{ name: 'keywords', content: keywords }] : []),
+        ],
+      })
+    }
+
+    // NProgress done 仅在客户端执行
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        const bar = document.querySelector('#nprogress .bar')
+        if (bar) {
+          bar.style.zIndex = '9999999'
+        }
+        NProgress.done()
+      }, 100)
+    }
+  })
+
+  return router
+}
+
+/**
+ * 创建完整的 router 实例（用于 vite-ssg 和传统 dev 模式）
+ * @returns {import('vue-router').Router}
+ */
+export function createRouterInstance() {
+  const router = createRouter({
+    history: createWebHistory(import.meta.env.BASE_URL),
+    routes,
+  })
+  return setupRouterGuards(router)
+}
+
+// 向后兼容：默认导出一个已创建好的 router 实例（仅客户端可用）
+// vite-ssg 在 SSR 构建时使用 createMemoryHistory，不依赖此实例
+const router = typeof window !== 'undefined' ? createRouterInstance() : null
+export { router }

@@ -41,6 +41,9 @@ const docMap = {
 
 // 将组件渲染到 markdown 中的占位符位置
 function mountComponentsToPlaceholders() {
+  // SSR 安全：DOM 操作仅在客户端执行
+  if (typeof window === 'undefined') return
+
   // 清理旧的组件实例
   componentApps.forEach(app => app.unmount())
   componentApps.length = 0

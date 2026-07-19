@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/generate-seo.js && node scripts/prerender.js && node scripts/minify-sw.js",
+    "build": "vite-ssg build && node scripts/generate-seo.js && node scripts/minify-sw.js",
     "preview": "vite preview",
     "deploy": "node scripts/deploy.js",
     "b_d": "pnpm build && pnpm deploy",
@@ -15,12 +15,14 @@
     "format": "oxfmt src/"
   },
   "dependencies": {
+    "@css-render/vue3-ssr": "^0.15.14",
     "@remixicon/vue": "^4.9.0",
+    "@unhead/vue": "^2.1.2",
     "@vicons/ionicons5": "^0.13.0",
-    "@vueuse/head": "^2.0.0",
     "markdown-it": "^14.1.1",
     "naive-ui": "^2.44.1",
     "nprogress": "^0.2.0",
+    "vite-ssg": "^28.3.0",
     "vue": "^3.5.29",
     "vue-router": "^4.6.4"
   },
@@ -33,12 +35,10 @@
     "eslint-plugin-oxlint": "~1.50.0",
     "eslint-plugin-vue": "~10.8.0",
     "globals": "^17.3.0",
+    "node-ssh": "^13.2.0",
     "npm-run-all2": "^8.0.4",
     "oxfmt": "^0.35.0",
     "oxlint": "~1.50.0",
-    "puppeteer": "^24.42.0",
-    "node-ssh": "^13.2.0",
-    "serve-handler": "^6.1.7",
     "vite": "^7.3.1",
     "vite-plugin-vue-devtools": "^8.0.6"
   },

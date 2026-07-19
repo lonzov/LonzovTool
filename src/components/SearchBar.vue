@@ -143,18 +143,19 @@ export default {
     const STORAGE_KEY = 'search_engine_selected'
 
     // 先检查 URL 是否有 search 参数，有则强制使用站内搜索
-    const urlParams = new URLSearchParams(window.location.search)
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams('')
     const hasSearchParam = urlParams.has('search')
     const internalEngine = searchEngines.find((e) => e.type === 'internal')
 
     let initialEngine
+    const ssrSafeLS = typeof localStorage !== 'undefined'
     if (hasSearchParam && internalEngine) {
       // URL 有 search 参数，强制使用站内搜索并保存
       initialEngine = internalEngine
-      localStorage.setItem(STORAGE_KEY, internalEngine.id)
+      if (ssrSafeLS) localStorage.setItem(STORAGE_KEY, internalEngine.id)
     } else {
       // 从 localStorage 读取上次选择的搜索方式
-      const savedEngineId = localStorage.getItem(STORAGE_KEY)
+      const savedEngineId = ssrSafeLS ? localStorage.getItem(STORAGE_KEY) : null
       const savedEngine = savedEngineId ? searchEngines.find((e) => e.id === savedEngineId) : null
       initialEngine = savedEngine || searchEngines[0]
     }

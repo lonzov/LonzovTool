@@ -27,13 +27,12 @@ export default {
       }
     }
 
-    const stored = parseConsent(localStorage.getItem(STORAGE_KEY))
+    const stored = typeof localStorage !== 'undefined' ? parseConsent(localStorage.getItem(STORAGE_KEY)) : null
 
     // 兜底修复：必要 Cookie 位不应为 0，自动修正为 1
     if (stored && stored[0] !== 1) {
       stored[0] = 1
-      localStorage.setItem(STORAGE_KEY, `${stored[0]},${stored[1]}`)
-      console.log('[隐私控制] 冷知识：我没写必要位为 0 的逻辑，不用试了awa')
+      try { localStorage.setItem(STORAGE_KEY, `${stored[0]},${stored[1]}`) } catch { /* SSR safe */ }
     }
 
     const hasConsent = !!stored
@@ -196,7 +195,7 @@ export default {
         <NIcon :component="WarningShield20Regular" :size="18" class="banner-icon" />
         <span class="banner-text">
           在继续使用前，请先阅读并同意
-          <a href="/docs/privacy" @click="handlePrivacyLink">隐私政策</a>
+          <a href="/docs/privacy/" @click="handlePrivacyLink">隐私政策</a>
           ，若不同意请停止使用本站
         </span>
       </div>

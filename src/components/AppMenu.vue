@@ -54,7 +54,7 @@ export default {
             message.success('安装成功！小舟工具箱已添加到桌面')
           } else {
             message.warning('手动取消安装/浏览器不支持')
-            router.push('/down/LonzovTool')
+            router.push('/down/LonzovTool/')
           }
           return
         }
@@ -64,7 +64,7 @@ export default {
           duration: 6000,
           closable: true,
         })
-        router.push('/down/LonzovTool')
+        router.push('/down/LonzovTool/')
       })
     }
 
@@ -78,7 +78,7 @@ export default {
     return {
       menuOptions: [],
       expandedKeys: [],
-      isDark: document.documentElement.getAttribute('data-theme') === 'dark',
+      isDark: typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') === 'dark' : true,
     }
   },
   mounted() {

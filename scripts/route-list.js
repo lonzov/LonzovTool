@@ -54,10 +54,14 @@ export function getPages() {
       .map(f => basename(f, '.json'))
   } catch { /* 目录不存在则跳过 */ }
 
+  function ensureSlash(p) {
+    return p === '/' ? p : p.replace(/\/?$/, '/')
+  }
+
   return [
-    ...staticRoutes,
+    ...staticRoutes.map(ensureSlash),
     ...toolKeys.map(k => `/c/${k}/`),
-    ...docKeys.map(k => `/docs/${k}`),
-    ...downloadSlugs.map(s => `/down/${s}`),
+    ...docKeys.map(k => `/docs/${k}/`),
+    ...downloadSlugs.map(s => `/down/${s}/`),
   ]
 }

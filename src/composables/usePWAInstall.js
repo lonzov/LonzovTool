@@ -86,13 +86,13 @@ export function usePWAInstall() {
     deferredPrompt.value = null
   }
 
-  // 初始化检测
-  detectPlatform()
-  if (checkInstalled()) {
-    isInstalled.value = true
-  }
-
   onMounted(() => {
+    // 初始化检测（仅在客户端执行）
+    detectPlatform()
+    if (checkInstalled()) {
+      isInstalled.value = true
+    }
+
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
     window.addEventListener('appinstalled', onAppInstalled)
   })

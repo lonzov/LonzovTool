@@ -15,7 +15,7 @@ export default {
     const lastSearchQuery = ref('')
     const message = useMessage()
 
-    const isDark = ref(document.documentElement.getAttribute('data-theme') === 'dark')
+    const isDark = ref(typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') === 'dark' : true)
 
     onMounted(() => {
       new MutationObserver(() => {

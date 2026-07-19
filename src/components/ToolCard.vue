@@ -51,7 +51,7 @@ export default {
     const retryTimer = ref(null)
     const imgKey = ref(0)
 
-    const isDark = ref(document.documentElement.getAttribute('data-theme') === 'dark')
+    const isDark = ref(typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') === 'dark' : true)
 
     // 监听主题变化
     const observeTheme = () => {

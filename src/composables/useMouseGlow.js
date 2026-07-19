@@ -95,7 +95,7 @@ function onTouchEnd() {
  * @param {number} [options.thresholdMultiplier=1.8] - 距离阈值倍数（元素对角线长度 * 此值）
  */
 export function applyGlow(el, mouseX, mouseY, options = {}) {
-  if (!el) return
+  if (!el || typeof window === 'undefined') return
   // 负值信号：触控结束，隐藏高光
   if (mouseX < 0) {
     el.classList.remove('glow-active')
@@ -128,6 +128,13 @@ function isGlowEnabled() {
 }
 
 export function useMouseGlow() {
+  if (typeof window === 'undefined') {
+    return {
+      subscribe: () => {},
+      unsubscribe: () => {},
+    }
+  }
+
   let listenersActive = false
 
   function subscribe(callback) {

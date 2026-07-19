@@ -164,7 +164,7 @@
           "title": "AIEX FMBE模拟器",
           "description": "可视化预览+生成命令",
           "logo": "/logos/AIEX-FMBE.webp",
-          "link": "/down/AIEX-FMBE"
+          "link": "/down/AIEX-FMBE/"
         },
         {
           "id": "fmbe-sim",
@@ -311,7 +311,7 @@
           "title": "指令音符盒",
           "description": "mid转指令,并半自动填入命令方块",
           "logo": "/logos/command_plus.webp",
-          "link": "/down/zhiling-yinfuhe"
+          "link": "/down/zhiling-yinfuhe/"
         },
         {
           "id": "command-cube",
@@ -332,7 +332,7 @@
           "title": "HOSDLA工具箱",
           "description": "指令音乐视频合成器等自动复制文本其他工具",
           "logo": "/logos/HOSDLA_toolbox.webp",
-          "link": "/down/HOSDLA-toolbox"
+          "link": "/down/HOSDLA-toolbox/"
         },
         {
           "id": "matrix-block",
@@ -367,7 +367,7 @@
           "title": "指令语法高亮包",
           "description": "适用于MT管理器的指令语法高亮包",
           "logo": "/logos/mt2_cn.webp",
-          "link": "/down/mc-yufabao"
+          "link": "/down/mc-yufabao/"
         },
         {
           "id": "blockbench",

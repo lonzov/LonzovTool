@@ -49,3 +49,4 @@ docs/*
 !docs/image/
 public/o/
 CLAUDE.md
+AGENTS.md

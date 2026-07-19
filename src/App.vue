@@ -1,6 +1,7 @@
 <script>
 import { computed, ref, provide, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { useHead } from '@unhead/vue'
 import { NMessageProvider, NIcon, NTooltip } from 'naive-ui'
 import { Settings24Regular } from '@vicons/fluent'
 import AppMenu from './components/AppMenu.vue'
@@ -10,17 +11,92 @@ import UpdateDialog from './components/UpdateDialog.vue'
 import { useTheme } from './composables/useTheme'
 import { useWorkspace } from './composables/useWorkspace.js'
 import { useSWUpdate } from './composables/useSWUpdate'
+import { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES } from './router'
 
 export default {
   components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog, NIcon, NTooltip },
   setup() {
     const router = useRouter()
+    const route = useRoute()
     const { themeMode, cycleTheme, isDark } = useTheme()
     const { initSW } = useSWUpdate()
 
+    // SSR 期间在组件上下文中设置 SEO head（router.afterEach 中的 useHead 在 SSR 时
+    // 不在 Vue 组件上下文中导致 inject 失败，必须在组件 setup 内调用）
+    watch(
+      () => [route.path, route.meta],
+      () => {
+        const meta = route.meta || {}
+        let title = meta.title
+        let description = meta.description
+        let keywords = meta.keywords
+
+        // 动态解析工具页 meta
+        if (!title && !description && !keywords && route.path.startsWith('/c/')) {
+          const toolMeta = resolveToolMeta(route.params.path)
+          if (toolMeta) {
+            title = toolMeta.title
+            description = toolMeta.description
+            keywords = toolMeta.keywords
+          }
+        }
+
+        // 动态解析下载页 meta
+        if (!title && !description && !keywords && route.path.startsWith('/down/')) {
+          const slug = (route.params.path || '').replace(/\/+$/, '')
+          const name = DOWNLOAD_NAMES[slug] || slug
+          title = `${name} - 文件下载 - 小舟工具箱`
+          description = `小舟工具箱提供的${name}下载页面，支持快捷直链解析和手动网盘下载。`
+          keywords = `Minecraft,资源下载,${name},MC工具下载,小舟工具箱`
+        }
+
+        // 动态解析文档页 meta
+        if (!title && !description && !keywords && route.path.startsWith('/docs/') && route.params.docName) {
+          const docsMeta = resolveDocsMeta(route.params.docName)
+          if (docsMeta) {
+            title = docsMeta.title
+            description = docsMeta.description
+            keywords = docsMeta.keywords
+          }
+        }
+
+        if (title || description || keywords) {
+          const seoTitle = title || '小舟工具箱'
+          // 构建 canonical URL（统一带尾部斜杠，与 sitemap 一致）
+          const pathname = route.path === '/' ? '/' : route.path.replace(/\/?$/, '/')
+          const canonicalUrl = `https://tool.lonzov.top${pathname}`
+
+          useHead({
+            title: seoTitle,
+            meta: [
+              ...(description ? [{ name: 'description', content: description }] : []),
+              ...(keywords ? [{ name: 'keywords', content: keywords }] : []),
+              // Open Graph
+              { property: 'og:title', content: seoTitle },
+              ...(description ? [{ property: 'og:description', content: description }] : []),
+              { property: 'og:url', content: canonicalUrl },
+              { property: 'og:type', content: 'website' },
+              { property: 'og:image', content: 'https://tool.lonzov.top/app-icon/ios/512.png' },
+              { property: 'og:image:width', content: '512' },
+              { property: 'og:image:height', content: '512' },
+              // Twitter Card
+              { name: 'twitter:card', content: 'summary' },
+              { name: 'twitter:title', content: seoTitle },
+              ...(description ? [{ name: 'twitter:description', content: description }] : []),
+              { name: 'twitter:image', content: 'https://tool.lonzov.top/app-icon/ios/512.png' },
+            ],
+            link: [
+              { rel: 'canonical', href: canonicalUrl },
+            ],
+          })
+        }
+      },
+      { immediate: true, deep: true },
+    )
+
     const activeKey = ref('home')
     const mobileMenuOpen = ref(false)
-    const isMobile = ref(window.innerWidth < 771)
+    const isMobile = ref(typeof window !== 'undefined' ? window.innerWidth < 771 : false)
     const fakeTitleOpacity = ref(0)
     const fakeTitleTransition = ref('opacity 0.15s ease')
     let pendingCategoryIndex = null // 待处理的分类索引

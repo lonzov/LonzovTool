@@ -13,20 +13,22 @@ export function useToolStorage(key, refs, options = {}) {
 
   let hasRestored = false
 
-  // 从 localStorage 恢复
-  try {
-    const raw = localStorage.getItem(key)
-    if (raw) {
-      const data = JSON.parse(raw)
-      for (const [name, ref] of Object.entries(refs)) {
-        if (data[name] !== undefined && data[name] !== null) {
-          ref.value = data[name]
+  // 从 localStorage 恢复（SSR 安全）
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(key)
+      if (raw) {
+        const data = JSON.parse(raw)
+        for (const [name, ref] of Object.entries(refs)) {
+          if (data[name] !== undefined && data[name] !== null) {
+            ref.value = data[name]
+          }
         }
+        hasRestored = true
       }
-      hasRestored = true
+    } catch {
+      // 解析失败则忽略
     }
-  } catch {
-    // 解析失败则忽略
   }
 
   // 恢复成功后，在 nextTick 中触发回调（确保响应式数据已更新）
@@ -60,11 +62,15 @@ export function useToolStorage(key, refs, options = {}) {
   }
 
   // 页面关闭前立即保存一次（防止防抖未落地的数据丢失）
-  window.addEventListener('beforeunload', save)
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', save)
+  }
 
   // 返回清理函数（组件一般不需要调用，因为 composable 生命周期与页面一致）
   return function cleanup() {
     clearTimeout(timer)
-    window.removeEventListener('beforeunload', save)
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('beforeunload', save)
+    }
   }
 }

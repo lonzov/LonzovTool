@@ -1,5 +1,4 @@
 allowBuilds:
   cpu-features: false
   esbuild: true
-  puppeteer: true
   ssh2: false

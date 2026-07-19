@@ -33,7 +33,7 @@
 | 框架     | Vue 3、Vite                                       |
 | UI 库    | Naive UI                                          |
 | 路由     | Vue Router                                        |
-| SEO      | @vueuse/head、Puppeteer 预渲染                    |
+| SEO      | @unhead/vue、vite-ssg 静态站点生成                |
 | PWA      | Service Worker (手动)、Web App Manifest           |
 | 图标     | @vicons/fluent、@vicons/ionicons5、@remixicon/vue |
 | 工具     | markdown-it、nprogress                            |
@@ -47,22 +47,6 @@
 - **[矩阵方块 - T显编译器](https://jzfk.indevs.in/)**： T显编辑器参考了此项目。
 - **[Minecraft 格式化代码渲染器](https://github.com/Spectrollay/minecraft_formatting_code_online)**： T显编辑器 § 颜色代码渲染基于此项目 (MIT)。
 
-## 开发
-
-```bash
-pnpm install          # 安装依赖
-
-pnpm dev              # 启动开发服务器
-
-pnpm build            # 构建生产版本
-pnpm preview          # 预览构建结果
-
-pnpm lint             # 代码检查
-pnpm format           # 代码格式化
-```
-
-> Node.js >= 20.19.0 或 >= 22.12.0
-
 ---
 
 <details>
@@ -75,18 +59,17 @@ pnpm format           # 代码格式化
 <details>
 <summary>⚙️ 核心实现机制（面向 AI Agent 维护）</summary>
 
-### SEO 预渲染
+### SSG 预渲染
 
-- **目的**：为爬虫提供完整的页面内容，提升搜索引擎收录效果。
+- **目的**：为爬虫提供完整的静态 HTML 页面内容，提升搜索引擎收录效果。
 - **实现**：
-  - `vite build` 完成后运行 `scripts/generate-seo.js`，自动从路由配置中提取所有公开页面路径生成 `sitemap.xml` 和 `robots.txt`。
-  - 随后执行 `scripts/prerender.js`，使用 Puppeteer **并发**爬取自动检测到的路由，等待异步组件完全渲染后生成静态 HTML。
+  - `vite-ssg build` 在构建时直接渲染 Vue 组件为静态 HTML，无需 headless 浏览器。
+  - `scripts/generate-seo.js` 随后自动从路由配置提取所有公开页面路径生成 `sitemap.xml` 和 `robots.txt`。
 - **关键细节**：
-  - 并发控制（默认 5 个路由同时渲染），大幅缩短构建时间。
-  - 等待 `router.isReady()` 和 `defineAsyncComponent` 解析完成，确保工具页面内容完整。
-  - 重新注入 `#loading-overlay`，保持真实用户访问时的加载动画体验。
-  - 清空 localStorage 隔离，避免页面间缓存污染。
-  - 输出预渲染总耗时统计。
+  - 所有静态路由自动预渲染，工具页和下载页通过显式静态路由加入。
+  - 输出格式为 `dirStyle: 'nested'`，即 `/path/index.html`，兼容带/不带尾部斜杠的 URL。
+  - 预渲染时注入 Naive UI CSS-in-JS 样式（`@css-render/vue3-ssr`），确保首屏无样式闪烁。
+  - 全站页面包含 canonical、Open Graph、Twitter Card 标签，统一 sitemap 尾部斜杠。
 
 ### 加载动画（Loading Overlay）
 
@@ -94,7 +77,7 @@ pnpm format           # 代码格式化
 - **实现**：
   - `index.html` 内嵌 `#loading-overlay`，包含旋转图标和"LOADING…"文本。
   - `main.js` 中 Vue 应用挂载后，为 `#loading-overlay` 添加 `.hidden` 类触发淡出动画，420ms 后移除元素。
-  - 预渲染时重新注入该元素，确保静态 HTML 也包含加载遮罩。
+  - vite-ssg 构建时自动保留 index.html 中的 `#loading-overlay`，确保静态 HTML 也包含加载遮罩。
 
 ### 页面切换与滚动行为
 
@@ -104,10 +87,10 @@ pnpm format           # 代码格式化
 
 ### SEO Head 管理
 
-- **目的**：每个路由页面动态设置 `<title>`、`<meta name="description">`、`<meta name="keywords">`，提升搜索引擎收录效果。
-- **实现**：基于 `@vueuse/head` 插件，在 `router.afterEach` 中根据路由 `meta` 或动态工具页映射自动更新 head 标签。
-- **静态路由 meta**：直接在路由配置中声明 `meta.title / description / keywords`（首页、文档页、提交页）。
-- **动态工具页映射**：`/c/:path` 路径通过 `TOOL_META_MAP` 按 path slug 匹配对应 SEO 信息（艺术字、T显动画、T显编辑器、语法转换、特殊符号、RawJSON 编辑器）。
+- **目的**：每个路由页面在预渲染时输出正确的 `<title>`、`<meta name="description">`、`<meta name="keywords">`、canonical、Open Graph、Twitter Card 标签，提升搜索引擎收录和社交分享效果。
+- **实现**：基于 `@unhead/vue`，在 `App.vue` 组件 `setup` 中通过 `watch` + `useHead()` 在 Vue 组件上下文内动态更新 head 标签（SSR 安全）。
+- **静态路由 meta**：直接在路由配置中声明 `meta.title / description / keywords`（首页、文档页、提交页、下载页）。
+- **动态工具页映射**：`/c/:path` 路径通过 `TOOL_META_MAP` 按 path slug 匹配对应 SEO 信息，下载页通过 `DOWNLOAD_NAMES` 自动生成。
 
 ### 工作区标签系统
 

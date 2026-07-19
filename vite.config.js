@@ -9,6 +9,13 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
+  ssgOptions: {
+    dirStyle: 'nested',
+  },
+  ssr: {
+    // Bundle naive-ui into SSR build (needed for @css-render/vue3-ssr integration)
+    noExternal: ['naive-ui', '@css-render/vue3-ssr'],
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
@@ -17,13 +24,11 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vue 核心库 - 最高优先级，最先加载
-          'vue-core': ['vue'],
-          // naive-ui 核心 - 单独分包，按需加载
-          'naive-ui': ['naive-ui'],
-          // 图标库 - 较大，单独分包
-          'vicons-fluent': ['@vicons/fluent'],
+        manualChunks(id) {
+          // 仅对 node_modules 进行分包；避免 naive-ui ↔ vue 循环引用
+          if (id.includes('node_modules')) {
+            if (id.includes('@vicons/fluent')) return 'vicons-fluent'
+          }
         },
         // 入口文件（index.js 等）
         entryFileNames: 'assets/js/[name]-[hash].js',

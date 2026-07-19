@@ -11,15 +11,17 @@ const qrImages = {
 
 const currentImage = computed(() => qrImages[activeTab.value])
 
-const isDark = ref(document.documentElement.getAttribute('data-theme') === 'dark')
+const isDark = ref(typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') === 'dark' : true)
 
-const observer = new MutationObserver(() => {
-  isDark.value = document.documentElement.getAttribute('data-theme') === 'dark'
-})
-observer.observe(document.documentElement, {
-  attributes: true,
-  attributeFilter: ['data-theme'],
-})
+if (typeof document !== 'undefined') {
+  const observer = new MutationObserver(() => {
+    isDark.value = document.documentElement.getAttribute('data-theme') === 'dark'
+  })
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  })
+}
 </script>
 
 <template>
