@@ -1,8 +1,9 @@
 <script setup>
 import { ref } from 'vue'
-import { NIcon, useMessage } from 'naive-ui'
+import { NIcon, NSelect, NConfigProvider, darkTheme, useMessage } from 'naive-ui'
 import { Copy24Regular, Delete24Regular, TextGrammarWand24Regular, ConvertRange24Regular } from '@vicons/fluent'
 import { useToolStorage } from '../../composables/useToolStorage.js'
+import { useTheme } from '../../composables/useTheme'
 
 defineProps({
   tabPath: {
@@ -12,6 +13,48 @@ defineProps({
 })
 
 const message = useMessage()
+const { isDark } = useTheme()
+
+/** NSelect 主题覆盖：增强下拉菜单阴影 + 深色模式 peer 覆盖（按 customize-theme.md 文档方式） */
+const lightSelectOverrides = {
+  Select: {
+    menuBoxShadow: '0 8px 24px -6px rgba(0, 0, 0, .14), 0 12px 32px 4px rgba(0, 0, 0, .08), 0 16px 48px 16px rgba(0, 0, 0, .05)',
+  },
+}
+
+const darkSelectOverrides = {
+  Select: {
+    menuBoxShadow: '0 8px 24px -6px rgba(0, 0, 0, .6), 0 12px 32px 4px rgba(0, 0, 0, .4), 0 16px 48px 16px rgba(0, 0, 0, .3)',
+    peers: {
+      InternalSelection: {
+        color: '#191919',
+        textColor: '#E8E8E8',
+        border: '1px solid #333333',
+        borderHover: '1px solid #555555',
+        borderFocus: '1px solid #E8E8E8',
+        borderActive: '1px solid #E8E8E8',
+        boxShadowFocus: 'none',
+        boxShadowActive: 'none',
+      },
+      InternalSelectMenu: {
+        color: '#1E1E1E',
+        optionTextColor: '#E8E8E8',
+        optionTextColorActive: '#E8E8E8',
+        optionTextColorPressed: '#E8E8E8',
+        optionCheckColor: '#E8E8E8',
+        optionColorActive: '#2A2A2A',
+        optionColorActivePending: '#2A2A2A',
+        optionColorPending: '#2A2A2A',
+        loadingColor: '#E8E8E8',
+      },
+    },
+  },
+}
+
+const initOptions = [
+  { label: '否', value: false },
+  { label: '是', value: true },
+]
 
 const inputText = ref('')
 const outputText = ref('')
@@ -182,48 +225,53 @@ function handleClear() {
 </script>
 
 <template>
-  <div class="tr-tool">
-    <!-- 页面主标题与简介 -->
-    <div class="page-header">
-      <div class="page-title-row">
-        <NIcon :component="TextGrammarWand24Regular" class="page-title-icon" />
-        <h1 class="page-title">T显动画生成</h1>
-      </div>
-      <p class="page-desc">生成打字机动画效果的rawJSON</p>
-    </div>
-
-    <!-- 配置+输入+按钮 合并卡片 -->
-    <div class="tool-card">
-      <div class="form-field">
-        <label for="startScoreInput">初始的分数</label>
-        <input
-          id="startScoreInput"
-          v-model="startScore"
-          type="number"
-          class="field-input"
-          placeholder="不填默认为0"
-          min="0"
-        />
+  <NConfigProvider
+    :theme="isDark ? darkTheme : null"
+    :theme-overrides="isDark ? darkSelectOverrides : lightSelectOverrides"
+  >
+    <div class="tr-tool">
+      <!-- 页面主标题与简介 -->
+      <div class="page-header">
+        <div class="page-title-row">
+          <NIcon :component="TextGrammarWand24Regular" class="page-title-icon" />
+          <h1 class="page-title">T显动画生成</h1>
+        </div>
+        <p class="page-desc">生成打字机动画效果的rawJSON</p>
       </div>
 
-      <div class="form-field">
-        <label for="scoreboardInput">计分板名称</label>
-        <input
-          id="scoreboardInput"
-          v-model="scoreboardName"
-          type="text"
-          class="field-input"
-          placeholder="例如: T显"
-        />
-      </div>
+      <!-- 配置+输入+按钮 合并卡片 -->
+      <div class="tool-card">
+        <div class="form-field">
+          <label for="startScoreInput">初始的分数</label>
+          <input
+            id="startScoreInput"
+            v-model="startScore"
+            type="number"
+            class="field-input"
+            placeholder="不填默认为0"
+            min="0"
+          />
+        </div>
 
-      <div class="form-field">
-        <label for="initSelect">是否初始化</label>
-        <select id="initSelect" v-model="initialize" class="field-select">
-          <option :value="false">否</option>
-          <option :value="true">是</option>
-        </select>
-      </div>
+        <div class="form-field">
+          <label for="scoreboardInput">计分板名称</label>
+          <input
+            id="scoreboardInput"
+            v-model="scoreboardName"
+            type="text"
+            class="field-input"
+            placeholder="例如: T显"
+          />
+        </div>
+
+        <div class="form-field">
+          <label>是否初始化</label>
+          <NSelect
+            v-model:value="initialize"
+            :options="initOptions"
+            class="field-select"
+          />
+        </div>
 
       <textarea
         v-model="inputText"
@@ -260,7 +308,8 @@ function handleClear() {
         readonly
       ></textarea>
     </div>
-  </div>
+    </div>
+  </NConfigProvider>
 </template>
 
 <style scoped>
@@ -348,7 +397,6 @@ function handleClear() {
   color: var(--text-secondary);
 }
 
-.field-select,
 .field-input {
   width: 100%;
   padding: 9px 12px;
@@ -362,21 +410,13 @@ function handleClear() {
 }
 
 .field-select {
-  appearance: auto;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23525252' d='M3 4l3 3 3-3'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  padding-right: 28px;
-  cursor: pointer;
+  width: 100%;
 }
 
-[data-theme="dark"] .field-select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23A0A0A0' d='M3 4l3 3 3-3'/%3E%3C/svg%3E");
+.field-select :deep(.n-base-selection) {
+  transition: border-color 0.4s ease, background-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
 }
 
-.field-select:focus,
 .field-input:focus {
   outline: none;
   border-color: var(--text-secondary);
