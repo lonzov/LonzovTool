@@ -1,13 +1,18 @@
 {
   "icon": "/logos/command_plus.webp",
   "name": "指令音符盒",
-  "version": "v3.0",
+  "version": "v3.5",
   "tagline": "MID音乐转指令音符盒，半自动填入命令方块",
   "introMd": "zhiling-yinfuhe.md",
   "intro": "",
   "developer": "QQ3762024811",
   "developerLink": "mailto:3762024811@qq.com",
   "lanzou": [
+    {
+      "version": "v3.5",
+      "url": "https://lonzov.lanzouu.com/iO1z93xkdo1a",
+      "password": "bsy6"
+    },
     {
       "version": "v3.0",
       "url": "https://lonzov.lanzouu.com/iQqjQ3wefz6b",
