@@ -21,10 +21,20 @@ import { routes, setupRouterGuards } from './router'
 // 模块级变量：存储 Naive UI CSS 收集器引用，供 onPageRendered 使用
 let collectCss = null
 
+// 模块级变量：存储 vite-ssg 创建的 head 实例，供 App.vue 客户端侧绕过
+// inject(headSymbol) 直接调用 head.push()（避免 Vite Dev 模式下 @unhead/vue
+// 与 @unhead/vue/client 内部 headSymbol 因分包导致符号不一致）
+let globalHead = null
+export function getGlobalHead() {
+  return globalHead
+}
+
 export const createApp = ViteSSG(
   App,
   { routes },
-  ({ app, router, isClient }) => {
+  ({ app, router, isClient, head }) => {
+    // 捕获 head 实例供 App.vue 客户端侧使用
+    if (head) globalHead = head
     // ---- Naive UI 全局组件注册 ----
     app.component('NConfigProvider', NConfigProvider)
     app.component('NLayout', NLayout)

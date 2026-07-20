@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
-import { useHead } from '@unhead/vue'
+
 import HomeView from '../components/HomeView.vue'
 import OfflineDiagnostic from '../components/OfflineDiagnostic.vue'
 
@@ -293,50 +293,9 @@ export function setupRouterGuards(router) {
     next()
   })
 
-  // 路由后置守卫：完成进度条 + 更新页面 head 信息
-  router.afterEach((to) => {
+  // 路由后置守卫：完成进度条（head 更新已由 App.vue useHead watcher 统一处理）
+  router.afterEach(() => {
     clearNavTimer()
-
-    const meta = to.meta || {}
-    let title = meta.title
-    let description = meta.description
-    let keywords = meta.keywords
-
-    if (!title && !description && !keywords && to.path.startsWith('/c/')) {
-      const toolMeta = resolveToolMeta(to.params.path)
-      if (toolMeta) {
-        title = toolMeta.title
-        description = toolMeta.description
-        keywords = toolMeta.keywords
-      }
-    }
-
-    if (!title && !description && !keywords && to.path.startsWith('/down/')) {
-      const slug = to.params.path?.replace(/\/+$/, '') || ''
-      const name = DOWNLOAD_NAMES[slug] || slug
-      title = `${name} - 文件下载 - 小舟工具箱`
-      description = `小舟工具箱提供的${name}下载页面，支持快捷直链解析和手动网盘下载。`
-      keywords = `Minecraft,资源下载,${name},MC工具下载,小舟工具箱`
-    }
-
-    if (!title && !description && !keywords && to.path.startsWith('/docs/') && to.params.docName) {
-      const docsMeta = resolveDocsMeta(to.params.docName)
-      if (docsMeta) {
-        title = docsMeta.title
-        description = docsMeta.description
-        keywords = docsMeta.keywords
-      }
-    }
-
-    if (title || description || keywords) {
-      useHead({
-        title: title || '小舟工具箱',
-        meta: [
-          ...(description ? [{ name: 'description', content: description }] : []),
-          ...(keywords ? [{ name: 'keywords', content: keywords }] : []),
-        ],
-      })
-    }
 
     // NProgress done 仅在客户端执行
     if (typeof window !== 'undefined') {

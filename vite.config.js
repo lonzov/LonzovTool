@@ -12,6 +12,11 @@ export default defineConfig({
   ssgOptions: {
     dirStyle: 'nested',
   },
+  optimizeDeps: {
+    // @unhead/vue 与 @unhead/vue/client 共享内部 headSymbol，必须排除预构建
+    // 否则 Vite Dev 模式下两个入口分别打包，符号不同导致 useHead() inject 失败
+    exclude: ['@unhead/vue'],
+  },
   ssr: {
     // Bundle naive-ui into SSR build (needed for @css-render/vue3-ssr integration)
     noExternal: ['naive-ui', '@css-render/vue3-ssr'],

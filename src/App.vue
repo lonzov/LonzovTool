@@ -2,6 +2,7 @@
 import { computed, ref, provide, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
+import { getGlobalHead } from './main.js'
 import { NMessageProvider, NIcon, NTooltip } from 'naive-ui'
 import { Settings24Regular } from '@vicons/fluent'
 import AppMenu from './components/AppMenu.vue'
@@ -66,7 +67,7 @@ export default {
           const pathname = route.path === '/' ? '/' : route.path.replace(/\/?$/, '/')
           const canonicalUrl = `https://tool.lonzov.top${pathname}`
 
-          useHead({
+          const headInput = {
             title: seoTitle,
             meta: [
               ...(description ? [{ name: 'description', content: description }] : []),
@@ -88,7 +89,21 @@ export default {
             link: [
               { rel: 'canonical', href: canonicalUrl },
             ],
-          })
+          }
+
+          // 客户端侧通过全局 head 实例直接 push，绕过 @unhead/vue 的 inject(headSymbol)
+          // （Vite Dev 预构建导致符号与 vite-ssg 内部的 /client 入口不一致）
+          // SSR 使用 useHead() 确保 vite-ssg head 提取正常工作
+          if (typeof window !== 'undefined') {
+            // 客户端：使用捕获的全局 head 实例（若尚未初始化则跳过此帧，
+            // 等 router.isReady() 触发 watcher 再次执行时 globalHead 已就绪）
+            const head = getGlobalHead()
+            if (head) {
+              head.push(headInput)
+            }
+          } else {
+            useHead(headInput)
+          }
         }
       },
       { immediate: true, deep: true },

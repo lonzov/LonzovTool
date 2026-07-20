@@ -50,3 +50,4 @@ docs/*
 public/o/
 CLAUDE.md
 AGENTS.md
+.vite-ssg-temp/*
