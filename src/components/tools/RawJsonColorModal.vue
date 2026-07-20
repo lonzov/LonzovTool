@@ -1,4 +1,5 @@
 <script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { NModal, NConfigProvider } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { useTheme } from '../../composables/useTheme'
@@ -13,6 +14,26 @@ const darkOverrides = {
   common: { neutralModal: '#191919' },
   Card: { colorModal: '#191919' },
 }
+
+const isCompact = ref(false)
+let _mq
+function _onMqChange(e) { isCompact.value = e.matches }
+onMounted(() => {
+  _mq = window.matchMedia('(max-width: 640px)')
+  isCompact.value = _mq.matches
+  _mq.addEventListener('change', _onMqChange)
+})
+onUnmounted(() => {
+  if (_mq) _mq.removeEventListener('change', _onMqChange)
+})
+
+const modalStyle = computed(() => ({
+  maxWidth: '640px',
+  width: 'calc(100% - 32px)',
+  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 110px)',
+  borderRadius: '16px',
+  cornerShape: 'squircle',
+}))
 </script>
 
 <template>
@@ -21,7 +42,7 @@ const darkOverrides = {
       v-model:show="showColorModal"
       preset="card"
       title="颜色代码参考表"
-      :style="{ maxWidth: '640px', width: 'calc(100% - 32px)', maxHeight: 'calc(100vh - 110px)', borderRadius: '16px', cornerShape: 'squircle' }"
+      :style="modalStyle"
       :segmented="{ content: true, footer: 'soft' }"
       content-scrollable
     >

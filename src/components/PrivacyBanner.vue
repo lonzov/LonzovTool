@@ -1,5 +1,5 @@
 <script>
-import { ref, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { NIcon, NModal, NCheckbox, NConfigProvider } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
@@ -158,6 +158,27 @@ export default {
       router.push('/docs/privacy')
     }
 
+    // 移动端弹窗高度响应式：60px 上下间距
+    const isCompact = ref(false)
+    let _mq
+    function _onMqChange(e) { isCompact.value = e.matches }
+    onMounted(() => {
+      _mq = window.matchMedia('(max-width: 640px)')
+      isCompact.value = _mq.matches
+      _mq.addEventListener('change', _onMqChange)
+    })
+    onUnmounted(() => {
+      if (_mq) _mq.removeEventListener('change', _onMqChange)
+    })
+
+    const modalStyle = computed(() => ({
+      maxWidth: '540px',
+      width: 'calc(100% - 32px)',
+      maxHeight: isCompact.value ? 'calc(100vh - 120px)' : undefined,
+      borderRadius: '16px',
+      cornerShape: 'squircle',
+    }))
+
     return {
       showBanner,
       showCookieModal,
@@ -165,6 +186,7 @@ export default {
       analyticsChecked,
       isDark,
       darkTheme,
+      modalStyle,
       // 覆盖Naive弹窗背景色为主区域卡片同色（--bg-card: 浅色#FFFFFF, 深色#191919）
       darkOverrides: {
         common: { neutralModal: '#191919' },
@@ -217,11 +239,12 @@ export default {
   <NModal
     v-model:show="showCookieModal"
     preset="card"
-    :style="{ maxWidth: '540px', width: 'calc(100% - 32px)', borderRadius: '16px', cornerShape: 'squircle' }"
+    :style="modalStyle"
     title="Cookie 偏好设置"
     :bordered="false"
     closable
     :auto-focus="false"
+    content-scrollable
     @close="handleCloseModal"
   >
 

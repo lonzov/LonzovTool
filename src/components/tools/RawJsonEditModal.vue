@@ -1,4 +1,5 @@
 <script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { NModal, NConfigProvider, NIcon, NSelect } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { Delete24Regular, ArrowUp24Regular, ArrowDown24Regular, Add24Regular, Edit24Filled } from '@vicons/fluent'
@@ -22,6 +23,26 @@ const darkOverrides = {
   common: { neutralModal: '#191919' },
   Card: { colorModal: '#191919' },
 }
+
+const isCompact = ref(false)
+let _mq
+function _onMqChange(e) { isCompact.value = e.matches }
+onMounted(() => {
+  _mq = window.matchMedia('(max-width: 640px)')
+  isCompact.value = _mq.matches
+  _mq.addEventListener('change', _onMqChange)
+})
+onUnmounted(() => {
+  if (_mq) _mq.removeEventListener('change', _onMqChange)
+})
+
+const modalStyle = computed(() => ({
+  maxWidth: '520px',
+  width: 'calc(100% - 32px)',
+  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
+  borderRadius: '16px',
+  cornerShape: 'squircle',
+}))
 
 const typeOptions = [
   { label: '文本 (text)', value: 'text' },
@@ -49,7 +70,7 @@ function nestedElPreview(el) {
       v-model:show="showEditModal"
       preset="card"
       :title="nestedIdx !== null ? '编辑 With 元素' : (editIdx !== null ? '编辑元素' : '添加元素')"
-      :style="{ maxWidth: '520px', width: 'calc(100% - 32px)', maxHeight: 'calc(100vh - 48px)', borderRadius: '16px', cornerShape: 'squircle' }"
+      :style="modalStyle"
       :segmented="{ content: true, footer: 'soft' }"
       content-scrollable
       @esc="nestedIdx !== null ? cancelNestedEdit() : closeEditModal()"

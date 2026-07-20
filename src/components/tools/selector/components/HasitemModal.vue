@@ -120,7 +120,7 @@ onUnmounted(() => {
 const modalStyle = computed(() => ({
   maxWidth: '620px',
   width: 'calc(100% - 32px)',
-  maxHeight: isCompact.value ? '670px' : 'calc(100vh - 48px)',
+  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
   borderRadius: '16px',
   cornerShape: 'squircle',
 }))
