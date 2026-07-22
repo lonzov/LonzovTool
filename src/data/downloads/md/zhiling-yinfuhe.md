@@ -9,5 +9,5 @@
 ### 相关资源
 
 - **📺 视频教程**：[v1.0 版本教程 (BV13HAtzXECM)](https://www.bilibili.com/video/BV13HAtzXECM/)  
-  _(Tip：v2.0+ 版本的教程请查看 B站评论区置顶笔记)_
+  _(Tip：v2.0~3.0 版本的教程请查看 B站评论区置顶笔记，v1.0和v3.5+内置配置编辑)_
 - **💻 开源仓库**：[xukun142857/Music-Minecraft](https://github.com/xukun142857/Music-Minecraft)

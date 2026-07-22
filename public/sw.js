@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.3.7'
+const CACHE_VERSION = '3.3.8'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
@@ -224,7 +224,7 @@ self.addEventListener('message', (event) => {
         title: '有新版本可用',
         content: `
         <h4>👾 更新日志：</h4>
-        <p><b>[+] 指令音符盒同步至3.5版本，支持导入建筑，配置更方便</b><br>[~] 重构SSG方案，针对SEO优化<br>[+] 优化反馈入口<br>[~] 首页卡片排序小调整<br>[+] 设置页支持缓存管理、开关高光效果<br>[~] 优化触控端的卡片边缘高光效果<br><b>[+] 新工具：选择器参数编辑器</b><br>[+] 新卡片：Dislink工具集</p>
+        <p>[~] 完整重构关于页，加入贡献者列表<br><b>[+] 指令音符盒同步至3.5版本，支持导入建筑，配置更方便</b><br>[~] 重构SSG方案，针对SEO优化<br>[+] 优化反馈入口<br>[~] 首页卡片排序小调整<br>[+] 设置页支持缓存管理、开关高光效果<br><b>[+] 新工具：选择器参数编辑器</b><br>[+] 新卡片：种子地图</p>
         <p style="font-size:13px"><em>⚠️反馈和建议请前往“关于本站”页面查看</em></p>
         `,
         buttons: [

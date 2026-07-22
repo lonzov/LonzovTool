@@ -104,6 +104,13 @@
           "link": "https://mc.hm0.top/"
         },
         {
+          "id": "minecraftsearch",
+          "title": "种子地图",
+          "description": "类似ChunkBase，支持多语言、更多功能",
+          "logo": "/logos/minecraftsearch.webp",
+          "link": "https://minecraftsearch.com/zh-CN/%E5%B7%A5%E5%85%B7/%E7%A7%8D%E5%AD%90%E5%9C%B0%E5%9B%BE"
+        },
+        {
           "id": "chunkbase",
           "title": "ChunkBase",
           "description": "通过种子号定位群系、结构、史莱姆区块等",
