@@ -3,11 +3,38 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
+/* 构建时剔除 contributors.json 中的 qq 隐私字段，并压缩为单行 */
+function stripContributorQQ() {
+  return {
+    name: 'strip-contributor-qq',
+    enforce: 'post',
+    transform(code, id) {
+      if (!id.includes('contributors.json')) return
+      const match = code.match(/^export default (\[[\s\S]*\])\s*$/)
+      if (!match) return
+      try {
+        const data = JSON.parse(match[1])
+        const stripped = data.map((c) => {
+          if (c && typeof c === 'object' && !Array.isArray(c)) {
+            const { qq: _qq, ...rest } = c
+            return rest
+          }
+          return c
+        })
+        return `export default ${JSON.stringify(stripped)}`
+      } catch {
+        return null
+      }
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
     vueDevTools(),
+    stripContributorQQ(),
   ],
   ssgOptions: {
     dirStyle: 'nested',

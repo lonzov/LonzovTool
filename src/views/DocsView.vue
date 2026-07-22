@@ -149,7 +149,14 @@ async function loadDoc(name) {
 
 // 当 docName 变化时自动加载
 watchEffect(() => {
-  loadDoc(props.docName || '')
+  const name = props.docName || ''
+  if (name === '' || name === '/') {
+    loading.value = false
+    error.value = null
+    processedRaw.value = ''
+    return
+  }
+  loadDoc(name)
 })
 </script>
 

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite-ssg build && node scripts/generate-seo.js && node scripts/minify-sw.js",
+    "build": "node scripts/fetch-contributor-avatars.js && vite-ssg build && node scripts/generate-seo.js && node scripts/minify-sw.js",
     "preview": "vite preview",
     "deploy": "node scripts/deploy.js",
     "b_d": "pnpm build && pnpm deploy",

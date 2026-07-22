@@ -51,3 +51,5 @@ public/o/
 CLAUDE.md
 AGENTS.md
 .vite-ssg-temp/*
+src/data/contributors.json
+public/logos/avatars/*

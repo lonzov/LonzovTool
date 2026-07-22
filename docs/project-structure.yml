@@ -79,13 +79,13 @@ src:
       '*.json': 下载页配置 JSON 文件，包含工具信息与下载链接
       md/: 下载页功能介绍 Markdown 文件目录，通过 JSON 配置的 introMd 字段引用
     donateRecords.json: 打赏记录数据（带哈希异步加载）
+    contributors.json: 贡献者数据（avatar/name/link，异步加载）
     notices.json: 公告数据
     parentMenus.json: 父级菜单配置
     searchEngines.json: 搜索引擎配置
     tools.json: 工具数据（分类与工具项）
   docs:
     dev.md: 开发文档
-    index.md: 项目文档首页
     donate.md: 打赏支持页面
     faq.md: 常见问题文档
     privacy.md: 隐私政策
@@ -122,4 +122,5 @@ scripts:
   prerender.js: Puppeteer 预渲染脚本，并发爬取路由生成静态 HTML（SEO）
   generate-seo.js: SEO 文件生成脚本，输出 sitemap.xml 和 robots.txt
   minify-sw.js: Service Worker 压缩脚本，构建流程中使用
+  fetch-contributor-avatars.js: 预构建脚本，为配置了 qq 字段的贡献者拉取 QQ 头像，哈希命名存入 public/avatars/，更新 contributors.json 的 avatar 字段
   deploy.js: 部署脚本，SSH 上传构建产物到服务器并原子替换站点目录（pnpm deploy）
