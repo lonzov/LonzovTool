@@ -60,5 +60,6 @@ const cmd = [
 
 console.log('[subset-font] 子集化中...')
 execSync(cmd, { stdio: 'inherit', cwd: ROOT })
+mkdirSync(dirname(CACHE_FILE), { recursive: true })
 writeFileSync(CACHE_FILE, text, 'utf-8')
 console.log('[subset-font] 完成:', OUTPUT_FILE)
