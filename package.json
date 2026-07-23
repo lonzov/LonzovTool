@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/fetch-contributor-avatars.js && vite-ssg build && node scripts/generate-seo.js && node scripts/minify-sw.js",
-    "preview": "vite preview",
+    "preview": "vite preview --host",
     "deploy": "node scripts/deploy.js",
     "b_d": "pnpm build && pnpm deploy",
     "lint": "run-s lint:*",
