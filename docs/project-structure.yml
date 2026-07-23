@@ -122,5 +122,6 @@ scripts:
   prerender.js: Puppeteer 预渲染脚本，并发爬取路由生成静态 HTML（SEO）
   generate-seo.js: SEO 文件生成脚本，输出 sitemap.xml 和 robots.txt
   minify-sw.js: Service Worker 压缩脚本，构建流程中使用
-  fetch-contributor-avatars.js: 预构建脚本，为配置了 qq 字段的贡献者拉取 QQ 头像，哈希命名存入 public/avatars/，更新 contributors.json 的 avatar 字段
+  fetch-contributor-avatars.js: 预构建脚本，为配置了 qq 字段的贡献者拉取 QQ 头像，哈希命名存入 public/logos/avatars/，更新 contributors.json 的 avatar 字段
+  subset-hollow-font.js: 预构建脚本，从系统 HarmonyOS_Sans_SC_Bold.ttf 提取描边文字字形，子集化为 woff2 到 public/fonts/
   deploy.js: 部署脚本，SSH 上传构建产物到服务器并原子替换站点目录（pnpm deploy）

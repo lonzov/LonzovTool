@@ -566,6 +566,14 @@ const statCluster = computed(() => ([
 </template>
 
 <style scoped>
+/* 子集化鸿蒙体：仅含描边文字所需字形，构建时由 subset-hollow-font.js 生成 */
+@font-face {
+  font-family: 'HarmonyOS Hollow';
+  src: url('/fonts/harmonyos-hollow.woff2') format('woff2');
+  font-weight: bold;
+  font-display: swap;
+}
+
 /* ===== 局部变量：映射到项目变量 ===== */
 .about-page {
   --mono: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
@@ -815,6 +823,7 @@ const statCluster = computed(() => ([
   margin-left: clamp(0px, 7vw, 90px);
   color: transparent;
   -webkit-text-stroke: 1.5px var(--text-primary);
+  font-family: "HarmonyOS Hollow", "PingFang SC", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
 }
 
 @media (min-width: 760px) {
@@ -1367,6 +1376,7 @@ const statCluster = computed(() => ([
 .cta-title .o {
   color: transparent;
   -webkit-text-stroke: 1.5px var(--text-primary);
+  font-family: "HarmonyOS Hollow", "PingFang SC", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
 }
 
 .cta-row {
