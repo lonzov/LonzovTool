@@ -4,18 +4,19 @@ import { useRouter, useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
 import { getGlobalHead } from './main.js'
 import { NMessageProvider, NIcon, NTooltip } from 'naive-ui'
-import { Settings24Regular } from '@vicons/fluent'
+import { Settings24Regular, ShareAndroid20Regular } from '@vicons/fluent'
 import AppMenu from './components/AppMenu.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import PrivacyBanner from './components/PrivacyBanner.vue'
 import UpdateDialog from './components/UpdateDialog.vue'
+import ShareModal from './components/ShareModal.vue'
 import { useTheme } from './composables/useTheme'
 import { useWorkspace } from './composables/useWorkspace.js'
 import { useSWUpdate } from './composables/useSWUpdate'
 import { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES } from './router'
 
 export default {
-  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog, NIcon, NTooltip },
+  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog, ShareModal, NIcon, NTooltip },
   setup() {
     const router = useRouter()
     const route = useRoute()
@@ -110,6 +111,7 @@ export default {
     )
 
     const activeKey = ref('home')
+    const showShareModal = ref(false)
     const mobileMenuOpen = ref(false)
     const isMobile = ref(typeof window !== 'undefined' ? window.innerWidth < 771 : false)
     const fakeTitleOpacity = ref(0)
@@ -394,6 +396,7 @@ export default {
       isDark,
       themeOverrides,
       activeKey,
+      showShareModal,
       mobileMenuOpen,
       isMobile,
       fakeTitleOpacity,
@@ -406,6 +409,7 @@ export default {
       handleMenuNavigate,
       goSettings,
       SettingsIcon: Settings24Regular,
+      ShareIcon: ShareAndroid20Regular,
       initSW,
     }
   },
@@ -526,6 +530,29 @@ export default {
                 设置
               </NTooltip>
               <ThemeToggle :mode="themeMode" @click="cycleTheme" />
+              <NTooltip placement="right">
+                <template #trigger>
+                  <button
+                    type="button"
+                    aria-label="分享"
+                    :style="{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      border: 'none',
+                      background: 'transparent',
+                      cursor: 'pointer',
+                    }"
+                    @click="showShareModal = true"
+                  >
+                    <NIcon :component="ShareIcon" :size="22" :color="'var(--theme-icon-color)'" />
+                  </button>
+                </template>
+                分享
+              </NTooltip>
             </div>
           </div>
         </NLayoutSider>
@@ -581,7 +608,29 @@ export default {
           }"
           >小舟工具箱</span
         >
-        <ThemeToggle :mode="themeMode" @click="cycleTheme" :for-mobile="true" />
+          <NTooltip placement="bottom">
+            <template #trigger>
+              <button
+                type="button"
+                aria-label="分享"
+                :style="{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '40px',
+                  height: '40px',
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                }"
+                @click="showShareModal = true"
+              >
+                <NIcon :component="ShareIcon" :size="20" :color="'var(--theme-icon-color)'" />
+              </button>
+            </template>
+            分享
+          </NTooltip>
+          <ThemeToggle :mode="themeMode" @click="cycleTheme" :for-mobile="true" />
       </NLayoutHeader>
 
       <button
@@ -697,8 +746,8 @@ export default {
                   margin: '0 auto 16px auto',
                 }"
               ></div>
-              <div style="display: flex; justify-content: center; align-items: center; gap: 2px">
-                <NTooltip placement="right">
+              <div style="display: flex; justify-content: center; align-items: center; gap: 3px">
+                <NTooltip placement="top">
                   <template #trigger>
                     <button
                       type="button"
@@ -722,6 +771,29 @@ export default {
                   设置
                 </NTooltip>
                 <ThemeToggle :mode="themeMode" @click="cycleTheme" />
+                <NTooltip placement="top">
+                  <template #trigger>
+                    <button
+                      type="button"
+                      aria-label="分享"
+                      :style="{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                      }"
+                      @click="showShareModal = true"
+                    >
+                      <NIcon :component="ShareIcon" :size="20" :color="'var(--theme-icon-color)'" />
+                    </button>
+                  </template>
+                  分享
+                </NTooltip>
               </div>
             </div>
           </div>
@@ -730,6 +802,7 @@ export default {
     </div>
     <PrivacyBanner />
     <UpdateDialog />
+    <ShareModal v-model:show="showShareModal" />
     </NMessageProvider>
   </NConfigProvider>
 </template>

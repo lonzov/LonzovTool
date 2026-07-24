@@ -21,6 +21,7 @@ src:
     ToolGrid.vue: 工具网格布局，管理分类展示与视线引导
     ToolLoading.vue: 异步组件加载动画（旋转圆圈 + 加载文字），复用文档页加载样式
     UpdateDialog.vue: SW 更新确认弹窗，照搬 Cookie 弹窗样式
+    ShareModal.vue: 分享海报模态框，Canvas 渲染海报含标题/简介/Logo/二维码，支持复制链接与保存图片
     WorkspaceView.vue: 工作站视图容器，管理多标签页
     StatsInfoBar.vue: 访问统计信息栏，显示统计起始日、更新时间与数据来源
     tools:
