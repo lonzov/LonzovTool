@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { NIcon, NNumberAnimation, useMessage } from 'naive-ui'
 import { PersonBoard24Filled } from '@vicons/fluent'
 import DownloadModal from './DownloadModal.vue'
+import DownloadDisclaimer from './DownloadDisclaimer.vue'
 import DownloadIntro from './DownloadIntro.vue'
 import NotFoundView from '../../views/NotFoundView.vue'
 
@@ -62,8 +63,29 @@ onMounted(() => { loadConfig() })
 
 // ===== 下载逻辑 =====
 const showDownloadModal = ref(false)
+const showDisclaimer = ref(false)
 
 function openDownloadModal() {
+  // 针对小舟工具箱自身不弹出声明
+  if (pageName.value === 'LonzovTool') {
+    showDownloadModal.value = true
+    return
+  }
+
+  // 检查声明弹窗是否已被标记为不再提醒
+  const DISMISSED_KEY = 'dl_disclaimer_dismissed'
+  let dismissed = false
+  try {
+    dismissed = localStorage.getItem(DISMISSED_KEY) === 'true'
+  } catch { /* ignore */ }
+  if (dismissed) {
+    showDownloadModal.value = true
+  } else {
+    showDisclaimer.value = true
+  }
+}
+
+function onDisclaimerContinue() {
   showDownloadModal.value = true
 }
 
@@ -259,6 +281,9 @@ watch(config, (val) => {
 
       <!-- 下载选项模态框 -->
       <DownloadModal v-model:show="showDownloadModal" :config="config" :page-name="pageName" @download="reportDownload" />
+
+      <!-- 声明弹窗 -->
+      <DownloadDisclaimer v-model:show="showDisclaimer" :developer="config.developer" @continue="onDisclaimerContinue" />
 
       <p class="download-disclaimer">第三方内容，与本站无关，本站无法保证其100%的安全性和可靠性</p>
       <div class="disclaimer-divider"></div>
