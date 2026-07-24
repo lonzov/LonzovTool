@@ -490,6 +490,7 @@ export default {
               right: 0,
               padding: '0 14px 16px 14px',
               background: 'var(--bg-color)',
+              zIndex: 1,
             }"
           >
             <div
