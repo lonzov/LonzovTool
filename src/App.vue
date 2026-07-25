@@ -596,14 +596,13 @@ export default {
           zIndex: 1000,
         }"
       >
-        <div style="width: 40px; height: 40px; margin-right: 8px; flex-shrink: 0"></div>
+        <div style="width: 53px; height: 40px; margin-right: 8px; flex-shrink: 0"></div>
         <span
           :style="{
             fontWeight: 'bold',
             fontSize: '18px',
             flex: 1,
             textAlign: 'center',
-            marginRight: '32px',
             color: 'var(--text-primary)',
           }"
           >小舟工具箱</span
@@ -702,14 +701,13 @@ export default {
                   boxSizing: 'border-box',
                 }"
               >
-                <div style="width: 40px; height: 40px; margin-right: 8px; flex-shrink: 0"></div>
+                <div style="width: 53px; height: 40px; margin-right: 8px; flex-shrink: 0"></div>
                 <span
                   :style="{
                     fontWeight: 'bold',
                     fontSize: '18px',
                     flex: 1,
                     textAlign: 'center',
-                    marginRight: '32px',
                     color: 'var(--text-primary)',
                     whiteSpace: 'nowrap',
                   }"
