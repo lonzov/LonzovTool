@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, nextTick, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { NModal, NConfigProvider } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { useTheme } from '../composables/useTheme'
@@ -20,6 +20,20 @@ const posterImage = ref(null)
 const generating = ref(false)
 const copied = ref(false)
 let copyTimer = null
+
+// 移动端自适应高度（参考 UpdateDialog）
+const isCompact = ref(false)
+let mq = null
+function onMqChange(e) { isCompact.value = e.matches }
+onMounted(() => {
+  mq = window.matchMedia('(max-width: 640px)')
+  isCompact.value = mq.matches
+  mq.addEventListener('change', onMqChange)
+})
+onUnmounted(() => {
+  clearTimeout(copyTimer)
+  if (mq) mq.removeEventListener('change', onMqChange)
+})
 
 // 动态数据
 const shareTitle = ref('小舟工具箱')
@@ -143,8 +157,6 @@ watch(() => props.show, (val) => {
   }
 })
 
-onUnmounted(() => clearTimeout(copyTimer))
-
 // ---- 模糊遮罩 ----
 watch(() => props.show, (val) => {
   const id = 'share-modal-blur'
@@ -178,6 +190,14 @@ const darkOverrides = {
   common: { neutralModal: '#191919' },
   Card: { colorModal: '#191919' },
 }
+
+const modalStyle = computed(() => ({
+  maxWidth: '560px',
+  width: 'calc(100% - 32px)',
+  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
+  borderRadius: '16px',
+  cornerShape: 'squircle',
+}))
 </script>
 
 <template>
@@ -228,13 +248,7 @@ const darkOverrides = {
     <NModal
       v-model:show="showLocal"
       preset="card"
-      :style="{
-        maxWidth: '560px',
-        width: 'calc(100% - 32px)',
-        maxHeight: 'calc(100vh - 48px)',
-        borderRadius: '16px',
-        cornerShape: 'squircle',
-      }"
+      :style="modalStyle"
       title="分享"
       :bordered="false"
       :closable="true"
