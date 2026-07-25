@@ -163,8 +163,7 @@ export function parseMinecraftText(text, defaultColor = '#FFFFFF') {
                 const hex = colorMap[code]
                 strokeColor = getStrokeColor(hex)
                 currentColor = `color: ${hex};`
-                currentStyles = ''
-                obfuscated = false
+                // 颜色样式只覆盖颜色，不重置非颜色样式（§l/§M/§N/§o/§k），让样式可以被继承
             } else if (styleMap[code]) {
                 if (code === 'M' || code === 'N') {
                     currentStyles += styleMap[code] + `text-decoration-color: ${parseColorToHexCached(defaultColor)};`
@@ -179,6 +178,13 @@ export function parseMinecraftText(text, defaultColor = '#FFFFFF') {
             } else if (code === 'k') {
                 obfuscated = true
             }
+            continue
+        }
+
+        // 换行：输出 <br>，样式状态保持不变（继承到下一行）
+        if (text[i] === '\n') {
+            const br = document.createElement('br')
+            container.appendChild(br)
             continue
         }
 

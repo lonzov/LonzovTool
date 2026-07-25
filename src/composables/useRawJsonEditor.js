@@ -335,8 +335,8 @@ export function col(text) {
   if (!text) return ''
   // 兼容旧数据：字面量 \n → 真实换行
   text = text.replace(/\\n/g, '\n')
-  // 按换行分割，每段用 mcfc 渲染，中间插 <br>
-  return text.split('\n').map(line => parseMinecraftTextToHtml(line, '#FFFFFF')).join('<br>')
+  // 整体渲染，mcfc 内部处理换行和样式继承
+  return parseMinecraftTextToHtml(text, '#FFFFFF')
 }
 
 // ========== 预览输出 ==========
