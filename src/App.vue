@@ -71,8 +71,6 @@ export default {
           const headInput = {
             title: seoTitle,
             meta: [
-              ...(description ? [{ name: 'description', content: description }] : []),
-              ...(keywords ? [{ name: 'keywords', content: keywords }] : []),
               // Open Graph
               { property: 'og:title', content: seoTitle },
               ...(description ? [{ property: 'og:description', content: description }] : []),
@@ -86,6 +84,13 @@ export default {
               { name: 'twitter:title', content: seoTitle },
               ...(description ? [{ name: 'twitter:description', content: description }] : []),
               { name: 'twitter:image', content: 'https://tool.lonzov.top/app-icon/ios/512.png' },
+              // itemprop
+              { itemprop: 'name', content: seoTitle },
+              ...(description ? [{ itemprop: 'description', content: description }] : []),
+              { itemprop: 'image', content: 'https://tool.lonzov.top/app-icon/ios/512.png' },
+              // Standard SEO
+              ...(description ? [{ name: 'description', content: description }] : []),
+              ...(keywords ? [{ name: 'keywords', content: keywords }] : []),
             ],
             link: [
               { rel: 'canonical', href: canonicalUrl },
