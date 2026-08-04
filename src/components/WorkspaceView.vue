@@ -186,9 +186,18 @@ function updateScrollFades() {
 }
 
 // ===== 长按拖拽排序系统 =====
-// 流程：按下 → 500ms内松开=普通点击 / 500ms后显示进度环 → 0.7s倒计时 → 进入拖拽模式 → 松手完成排序
+// 流程：按下 → 500ms内松开=普通点击 / 500ms后显示进度环 → 可配置倒计时 → 进入拖拽模式 → 松手完成排序
 const LONG_PRESS_DELAY = 500     // 长按判定时间 ms
-const PROGRESS_DURATION = 700    // 进度环计时时间 ms
+const PROGRESS_DURATION_DEFAULT = 700
+
+function getProgressDuration() {
+  try {
+    if (typeof localStorage === 'undefined') return PROGRESS_DURATION_DEFAULT
+    const val = localStorage.getItem('tab_drag_delay')
+    const num = parseInt(val, 10)
+    return (num >= 100 && num <= 2000) ? num : PROGRESS_DURATION_DEFAULT
+  } catch { return PROGRESS_DURATION_DEFAULT }
+}
 const MOVE_THRESHOLD_Y = 8       // 纵向移动超过此距离取消长按 px
 const MOVE_THRESHOLD_X = 18      // 横向移动超过此距离视为滑动（取消长按）px
 
@@ -358,8 +367,9 @@ function _onLongPressConfirmed(x, y) {
   longPressState.value.ringX = x
   longPressState.value.ringY = y + 30  // 点击位置下方 20px
 
-  // 每 100ms 更新百分比，1.3s 内走完 0→100
-  const step = 100 / Math.ceil(PROGRESS_DURATION / 100)
+  // 每 100ms 更新百分比，在配置的时长内走完 0→100
+  const duration = getProgressDuration()
+  const step = 100 / Math.ceil(duration / 100)
   _progressRafId = setInterval(() => {
     longPressState.value.ringPercent += step
     if (longPressState.value.ringPercent >= 100) {

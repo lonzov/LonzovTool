@@ -47,6 +47,32 @@ function switchRailStyle({ focused, checked }) {
   return style
 }
 
+/* ========== 标签页拖拽触发时长 ========== */
+const DRAG_DELAY_KEY = 'tab_drag_delay'
+const DRAG_DELAY_DEFAULT = 700
+const dragDelay = ref(
+  (() => {
+    try {
+      const v = localStorage.getItem(DRAG_DELAY_KEY)
+      const num = parseInt(v, 10)
+      return (num >= 100 && num <= 2000) ? num : DRAG_DELAY_DEFAULT
+    } catch { return DRAG_DELAY_DEFAULT }
+  })(),
+)
+
+function onDragDelayChange(val) {
+  if (val === null || val === undefined || val === '') {
+    dragDelay.value = DRAG_DELAY_DEFAULT
+    localStorage.setItem(DRAG_DELAY_KEY, String(DRAG_DELAY_DEFAULT))
+    return
+  }
+  const num = parseInt(val, 10)
+  if (isNaN(num)) return
+  const clamped = Math.max(100, Math.min(2000, Math.round(num)))
+  dragDelay.value = clamped
+  localStorage.setItem(DRAG_DELAY_KEY, String(clamped))
+}
+
 /* ========== 折叠状态（持久化）========== */
 const COLLAPSED_KEY = 'settings-collapsed'
 const savedCollapsed = (() => {
@@ -93,7 +119,7 @@ const CONFIG_SCOPES = {
   personalization: {
     label: '个性化设置',
     desc: '例如深浅主题、搜索偏好',
-    keys: ['theme_mode', 'search_engine_selected'],
+    keys: ['theme_mode', 'search_engine_selected', 'tab_drag_delay'],
   },
   all: {
     label: '所有配置',
@@ -473,8 +499,8 @@ const darkOverrides = {
               </div>
               <div class="setting-row">
                 <div class="setting-info">
-                  <span class="setting-title">卡片高光效果</span>
-                  <p class="setting-desc">首页卡片边框跟随鼠标的光晕动画</p>
+                  <span class="setting-title">边缘高光效果</span>
+                  <p class="setting-desc">元素边缘跟随鼠标移动的高光效果</p>
                 </div>
                 <div class="setting-control">
                   <NSwitch
@@ -483,6 +509,25 @@ const darkOverrides = {
                     :rail-style="switchRailStyle"
                     class="settings-switch"
                   />
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <span class="setting-title">标签页拖拽触发时长</span>
+                  <p class="setting-desc">长按标签页进入拖拽模式的时长，默认700ms</p>
+                </div>
+                <div class="setting-control setting-control--drag-delay">
+                  <span class="drag-delay-input-wrap">
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      class="drag-delay-input"
+                      :value="dragDelay"
+                      placeholder="700"
+                      @input="onDragDelayChange($event.target.value)"
+                    />
+                    <span class="drag-delay-unit">ms</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -846,6 +891,57 @@ const darkOverrides = {
   min-width: 102px;
 }
 
+/* 拖拽延迟：胶囊输入框，尺寸与主题选择器一致 */
+.setting-control--drag-delay {
+  display: flex;
+  align-items: center;
+}
+
+.drag-delay-input-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 102px;
+  height: 34px;
+  border: 1px solid var(--border-color);
+  border-radius: 100px;
+  box-sizing: border-box;
+  transition: border-color 0.4s ease;
+}
+
+.drag-delay-input-wrap:focus-within {
+  border-color: var(--text-tertiary);
+}
+
+.drag-delay-input {
+  width: 100%;
+  height: 100%;
+  padding: 0 34px 0 12px;
+  border: none;
+  border-radius: 100px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  transition: color 0.4s ease;
+}
+
+.drag-delay-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.drag-delay-unit {
+  position: absolute;
+  right: 11px;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  white-space: nowrap;
+  transition: color 0.4s ease;
+}
+
 /* ========== 配置管理胶囊按钮 ========== */
 
 .config-pill {
@@ -1058,7 +1154,8 @@ const darkOverrides = {
 /* 小屏控件缩放 */
 @media (max-width: 400px) {
   .config-pill,
-  .settings-select {
+  .settings-select,
+  .drag-delay-input-wrap {
     transform: scale(0.9);
     transform-origin: right center;
   }
