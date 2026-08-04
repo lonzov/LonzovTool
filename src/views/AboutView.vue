@@ -95,19 +95,23 @@ function applyVideoData(d) {
 }
 
 onMounted(async () => {
-  /* 1. 内存缓存 */
+  /* 1. 内存缓存（有效期内直接使用，不请求） */
   if (videoMemCache.value && Date.now() - videoMemCache.value.ts < VIDEO_CACHE_TTL) {
     applyVideoData(videoMemCache.value.data)
     return
   }
-  /* 2. localStorage 缓存 */
+  /* 2. localStorage 缓存（有效期内直接使用，不请求） */
   const local = readVideoLocalCache()
   if (local && Date.now() - local.ts < VIDEO_CACHE_TTL) {
     applyVideoData(local.data)
     videoMemCache.value = { data: local.data, ts: local.ts }
     return
   }
-  /* 3. 请求 API */
+  /* 3. 缓存过期或不存在，先展示缓存数据（如有） */
+  if (local && local.data) {
+    applyVideoData(local.data)
+  }
+  /* 4. 请求 API（后台更新，收到新数据后自动重新激活数字增长动画） */
   try {
     const res = await fetch('https://api.lonzov.top/u/api/bilibili')
     if (res.ok) {
@@ -118,7 +122,7 @@ onMounted(async () => {
       writeVideoLocalCache(d, now)
     }
   } catch {
-    /* 静默失败，保留 null */
+    /* 静默失败，保留缓存数据 */
   }
 })
 
@@ -221,15 +225,17 @@ function setupCountUp() {
   })
 }
 
-/* 数据到达后：把正在爬升的元素加速冲到目标 */
+/* 数据到达后：把正在爬升的元素加速冲到目标；已完成动画的元素若值有变化则重新冲刺 */
 function onDataReady() {
   countEls.forEach((el) => {
+    const raw = el._getter()
+    const target = raw == null ? null : +raw
+    if (target == null || !Number.isFinite(target)) return
     if (el._state === 'crawling') {
-      const raw = el._getter()
-      const target = raw == null ? null : +raw
-      if (target != null && Number.isFinite(target)) {
-        rushToTarget(el, target)
-      }
+      rushToTarget(el, target)
+    } else if (el._state === 'done' && Math.round(el._current) !== target) {
+      console.log(`[访问统计] 数据有更新，重新激活数字增长动画：${Math.round(el._current)} → ${target}`)
+      rushToTarget(el, target)
     }
   })
 }
