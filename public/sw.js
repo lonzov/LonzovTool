@@ -1,7 +1,14 @@
-const CACHE_VERSION = '3.3.10.0'
+const CACHE_VERSION = '3.3.10.1'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
+
+// ===== 强制更新机制：检测从 3.0 以下版本（v2）升级，展示遮罩引导更新 =====
+// 使用持久化标记（Cache 条目）而非内存变量，确保 SW 重启/崩溃后仍能恢复
+const FORCE_UPDATE_CACHE = 'lt-force-update'
+const FORCE_UPDATE_KEY = '/__sw_force_update'
+// 内存缓存：本次 SW 生命周期内是否已完成启动检测，避免每次导航都读 Cache
+let _forceUpdateChecked = false
 
 // ===== 静态资源长期缓存：不随版本更新删除 =====
 const STATIC_CACHE_NAME = 'lt-static'
@@ -12,35 +19,56 @@ const MINOR_VERSION = CACHE_VERSION.split('.').slice(0, 2).join('.')
 const MINOR_CACHE_NAME = `lt-v3-minor-${MINOR_VERSION}`
 const MINOR_CACHE_PATHS = ['/app-icon/', '/assets/']
 
-// ===== Install: 预缓存 SPA shell (index.html) =====
-// 确保首次安装后 INDEX_KEY 就有值，离线时总能找到 SPA shell
+// ===== 激活时保留的缓存白名单 =====
+const PROTECTED_CACHES = [CACHE_NAME, STATIC_CACHE_NAME, MINOR_CACHE_NAME, FORCE_UPDATE_CACHE]
+
+// ===== Install: 预缓存 SPA shell (index.html) + v2→v3 升级检测 =====
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    fetch(new Request('/'))
-      .then((response) => {
-        if (response.ok) {
-          return caches.open(CACHE_NAME).then((cache) => {
-            console.log('[SW] Pre-cached index.html to INDEX_KEY')
-            return cache.put(INDEX_KEY, response)
-          })
+    (async () => {
+      let shouldSkip = !self.registration.active
+
+      // 检测是否从 3.0 以下版本升级：存在活跃旧 SW 但无 lt-v3- 前缀缓存 → 旧版本 < 3.0
+      if (self.registration.active) {
+        const cacheNames = await caches.keys()
+        const hasV3Cache = cacheNames.some((n) => n.startsWith('lt-v3-'))
+        if (!hasV3Cache) {
+          console.log('[SW] Detected upgrade from version below 3.0, force updating')
+          shouldSkip = true
+          // 写入持久化标记：即使 SW 在激活前崩溃，下次 fetch 也能恢复
+          const fc = await caches.open(FORCE_UPDATE_CACHE)
+          await fc.put(FORCE_UPDATE_KEY, new Response('1'))
         }
-      })
-      .catch(() => console.warn('[SW] Pre-cache failed, will fallback on first navigation'))
+      }
+
+      // 预缓存 SPA shell
+      try {
+        const response = await fetch(new Request('/'))
+        if (response.ok) {
+          const cache = await caches.open(CACHE_NAME)
+          await cache.put(INDEX_KEY, response)
+          console.log('[SW] Pre-cached index.html to INDEX_KEY')
+        }
+      } catch {
+        console.warn('[SW] Pre-cache failed, will fallback on first navigation')
+      }
+
+      // 首次安装或 v2→v3 升级时立即激活
+      if (shouldSkip) {
+        console.log('[SW] skipWaiting')
+        self.skipWaiting()
+      }
+    })()
   )
-  // 首次安装时跳过等待立即激活；后续更新由客户端根据版本号决定是否 skipWaiting
-  if (!self.registration.active) {
-    console.log('[SW] First install, skipWaiting')
-    self.skipWaiting()
-  }
 })
 
-// ===== Activate: 清理旧缓存 + 接管客户端（保留静态资源长期缓存） =====
+// ===== Activate: 清理旧缓存 + 接管客户端 =====
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((names) =>
       Promise.all(
         names
-          .filter((n) => n !== CACHE_NAME && n !== STATIC_CACHE_NAME && n !== MINOR_CACHE_NAME)
+          .filter((n) => !PROTECTED_CACHES.includes(n))
           .map((n) => {
             console.log('[SW] Deleting old cache:', n)
             return caches.delete(n)
@@ -49,11 +77,18 @@ self.addEventListener('activate', (event) => {
     ).then(() => {
       console.log(`[SW] v${CACHE_VERSION} activated, claiming clients`)
       return self.clients.claim()
+    }).then(() => {
+      // 通知所有已打开的标签页 SW 已更新
+      return self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'SW_ACTIVATED', version: CACHE_VERSION })
+        })
+      })
     })
   )
 })
 
-// ===== Fetch: 缓存优先策略（始终先让用户用上） =====
+// ===== Fetch: 缓存优先策略 =====
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
@@ -63,10 +98,64 @@ self.addEventListener('fetch', (event) => {
   // 仅处理同源请求
   if (url.origin !== self.location.origin) return
 
-  // 导航请求: StaleWhileRevalidate + 离线兜底到 SPA 诊断页
+  // 导航请求: 强制更新遮罩 > StaleWhileRevalidate > 离线兜底
   if (request.mode === 'navigate') {
     event.respondWith(
       (async () => {
+        // —— 启动时检测一次：是否存在持久化标记或 v2 环境 ——
+        if (!_forceUpdateChecked) {
+          _forceUpdateChecked = true
+          const fc = await caches.open(FORCE_UPDATE_CACHE)
+          const marker = await fc.match(FORCE_UPDATE_KEY)
+
+          if (!marker && self.registration.active) {
+            // 无标记但存在活跃 SW：检查是否为 v2 环境（install 事件未触发的情况，如测试/SW 重启）
+            const cacheNames = await caches.keys()
+            const hasV3Cache = cacheNames.some((n) => n.startsWith('lt-v3-'))
+            if (!hasV3Cache) {
+              console.log('[SW] Detected version below 3.0 at runtime, force updating')
+              await fc.put(FORCE_UPDATE_KEY, new Response('1'))
+            }
+          }
+        }
+
+        // —— 强制更新标记存在，且不是遮罩页的回跳 ——
+        const fc = await caches.open(FORCE_UPDATE_CACHE)
+        const marker = await fc.match(FORCE_UPDATE_KEY)
+
+        if (marker && !url.searchParams.has('__sw_updated')) {
+          // 先清理所有旧版本缓存（v2 残留），确保升级后不留垃圾
+          const cacheNames = await caches.keys()
+          await Promise.all(
+            cacheNames
+              .filter((n) => !PROTECTED_CACHES.includes(n))
+              .map((n) => caches.delete(n))
+          )
+
+          // 返回遮罩页：4 秒后携带 __sw_updated 参数自动刷新
+          return new Response(
+            '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>更新中</title>'
+            + '<style>*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}'
+            + 'body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;-webkit-font-smoothing:antialiased}'
+            + '.overlay{text-align:center;padding:40px}'
+            + '.overlay .title{color:#fff;font-size:18px;letter-spacing:2px;animation:pulse 2s ease-in-out infinite;user-select:none}'
+            + '.overlay .hint{color:rgba(255,255,255,.35);font-size:13px;margin-top:16px;user-select:none}'
+            + '@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}'
+            + '</style></head><body><div class="overlay">'
+            + '<p class="title">版本过低，正在强制更新…</p>'
+            + '<p class="hint">请不要刷新网页</p>'
+            + '</div><script>setTimeout(function(){location.href=location.origin+location.pathname+"?__sw_updated=1"},4000)</script></body></html>',
+            { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+          )
+        }
+
+        // —— 遮罩页回跳：删除强制更新标记，302 重定向到干净 URL ——
+        if (url.searchParams.has('__sw_updated')) {
+          await caches.delete(FORCE_UPDATE_CACHE)
+          return Response.redirect(url.origin + url.pathname, 302)
+        }
+
+        // —— 正常导航逻辑 ——
         const cached = await caches.match(request)
 
         // 有缓存：立即返回 + 后台更新
@@ -225,7 +314,7 @@ self.addEventListener('message', (event) => {
         content: `
         <h4>👾 更新日志：</h4>
         <p>[~] 修复T显编辑器跨元素未继承样式<br>[+] 允许自定义标签页的拖拽触发时间，见设置页<br>[+] 添加分享海报功能<br><b>[+] 指令音符盒同步至4.0版本，支持导入建筑，配置更方便</b><br>[~] 完整重构关于页，加入贡献者列表<br>[~] 重构SSG方案，针对SEO优化</p>
-        <p style="font-size:13px"><em>⚠️反馈和建议请前往“关于本站”页面查看</em></p>
+        <p style="font-size:13px"><em>⚠️反馈和建议请前往"关于本站"页面查看</em></p>
         `,
         buttons: [
           { text: '暂不更新', style: 'outline', action: 'close' },
