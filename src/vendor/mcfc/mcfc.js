@@ -92,26 +92,7 @@ function getRandomChar(baseChar) {
 
 // 颜色缓存
 const colorCache = {
-    rgb: new Map(),
-    hex: new Map()
-}
-
-// 将颜色字符串转为十六进制并缓存
-function parseColorToHex(color) {
-    if (color.startsWith('#')) return color.length === 7 ? color.toUpperCase() : null
-    const match = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/)
-    if (match) {
-        const [r, g, b] = match.slice(1).map(Number)
-        return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('').toUpperCase()
-    }
-    return null
-}
-
-function parseColorToHexCached(color) {
-    if (colorCache.hex.has(color)) return colorCache.hex.get(color)
-    const hex = parseColorToHex(color)
-    colorCache.hex.set(color, hex)
-    return hex
+    rgb: new Map()
 }
 
 // 将颜色转为RGB数组并缓存
@@ -147,14 +128,26 @@ function getStrokeColor(color) {
  * 核心：将带有 § 代码的字符串解析为 DOM 元素树
  * @param {string} text - 含 § 格式化代码的文本
  * @param {string} defaultColor - 默认颜色（CSS color 值）
- * @returns {HTMLSpanElement}
+ * @param {object|null} initialState - 初始样式状态（用于跨元素继承）
+ * @returns {HTMLSpanElement} 返回的 DOM 元素附带 _finalState 属性
  */
-export function parseMinecraftText(text, defaultColor = '#FFFFFF') {
+export function parseMinecraftText(text, defaultColor = '#FFFFFF', initialState = null) {
     const container = document.createElement('span')
-    let currentColor = `color: ${defaultColor};`
-    let strokeColor = getStrokeColor(defaultColor)
-    let currentStyles = ''
-    let obfuscated = false
+    let currentColor, strokeColor, currentStyles, obfuscated, currentHex
+
+    if (initialState) {
+        currentColor = initialState.currentColor
+        strokeColor = initialState.strokeColor
+        currentStyles = initialState.currentStyles
+        obfuscated = initialState.obfuscated
+        currentHex = initialState.currentHex || defaultColor
+    } else {
+        currentColor = `color: ${defaultColor};`
+        strokeColor = getStrokeColor(defaultColor)
+        currentStyles = ''
+        obfuscated = false
+        currentHex = defaultColor
+    }
 
     for (let i = 0; i < text.length; i++) {
         if (text[i] === '§' && i + 1 < text.length) {
@@ -163,10 +156,11 @@ export function parseMinecraftText(text, defaultColor = '#FFFFFF') {
                 const hex = colorMap[code]
                 strokeColor = getStrokeColor(hex)
                 currentColor = `color: ${hex};`
+                currentHex = hex
                 // 颜色样式只覆盖颜色，不重置非颜色样式（§l/§M/§N/§o/§k），让样式可以被继承
             } else if (styleMap[code]) {
                 if (code === 'M' || code === 'N') {
-                    currentStyles += styleMap[code] + `text-decoration-color: ${parseColorToHexCached(defaultColor)};`
+                    currentStyles += styleMap[code] + `text-decoration-color: ${currentHex};`
                 } else {
                     currentStyles += styleMap[code]
                 }
@@ -175,6 +169,7 @@ export function parseMinecraftText(text, defaultColor = '#FFFFFF') {
                 strokeColor = getStrokeColor(defaultColor)
                 currentStyles = ''
                 obfuscated = false
+                currentHex = defaultColor
             } else if (code === 'k') {
                 obfuscated = true
             }
@@ -215,6 +210,8 @@ export function parseMinecraftText(text, defaultColor = '#FFFFFF') {
         container.appendChild(outerSpan)
     }
 
+    // 将最终状态挂到 DOM 元素上，供调用方获取
+    container._finalState = { currentColor, strokeColor, currentStyles, obfuscated, currentHex }
     return container
 }
 
@@ -222,11 +219,24 @@ export function parseMinecraftText(text, defaultColor = '#FFFFFF') {
  * 与 parseMinecraftText 相同，但返回 HTML 字符串（供 v-html 使用）
  * @param {string} text
  * @param {string} defaultColor
+ * @param {object|null} initialState - 初始样式状态
  * @returns {string}
  */
-export function parseMinecraftTextToHtml(text, defaultColor = '#FFFFFF') {
-    const el = parseMinecraftText(text, defaultColor)
+export function parseMinecraftTextToHtml(text, defaultColor = '#FFFFFF', initialState = null) {
+    const el = parseMinecraftText(text, defaultColor, initialState)
     return el.innerHTML
+}
+
+/**
+ * 返回 { html, finalState }，用于跨元素样式继承
+ * @param {string} text
+ * @param {string} defaultColor
+ * @param {object|null} initialState
+ * @returns {{ html: string, finalState: object }}
+ */
+export function parseMinecraftTextToHtmlWithState(text, defaultColor = '#FFFFFF', initialState = null) {
+    const el = parseMinecraftText(text, defaultColor, initialState)
+    return { html: el.innerHTML, finalState: el._finalState }
 }
 
 // 每 30ms 更新乱码字符

@@ -1,6 +1,6 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useMessage } from 'naive-ui'
-import { parseMinecraftTextToHtml } from '../vendor/mcfc/mcfc.js'
+import { parseMinecraftTextToHtmlWithState } from '../vendor/mcfc/mcfc.js'
 
 // ========== 模块级状态（单例，所有组件共享） ==========
 
@@ -335,20 +335,36 @@ export function col(text) {
   if (!text) return ''
   // 兼容旧数据：字面量 \n → 真实换行
   text = text.replace(/\\n/g, '\n')
-  // 整体渲染，mcfc 内部处理换行和样式继承
-  return parseMinecraftTextToHtml(text, '#FFFFFF')
+  const result = parseMinecraftTextToHtmlWithState(text, '#FFFFFF', null)
+  return result.html
 }
 
 // ========== 预览输出 ==========
 export const previewHtml = computed(() => {
+  // 统一预处理：把所有元素拉到一起，用共享状态串联渲染，实现跨元素样式继承
+  let state = null
   let html = ''
+
   data.value.forEach(el => {
-    if (el.text !== undefined) html += col(el.text)
-    else if (el.selector !== undefined) html += `<span style="color:#999">[${escHtml(el.selector)}]</span>`
-    else if (el.score !== undefined) html += '<span style="color:#999">0</span>'
-    else if (el.translate !== undefined) html += `<span style="color:#999">{${escHtml(el.translate)}}</span>`
-    else html += '<span style="color:#666">[错误]</span>'
+    if (el.text !== undefined) {
+      const result = parseMinecraftTextToHtmlWithState(el.text, '#FFFFFF', state)
+      html += result.html
+      state = result.finalState
+    } else {
+      // 非文本元素：继承当前的非颜色样式（§l/§M/§N/§o），使用自身固定颜色
+      const inheritStyles = state ? state.currentStyles : ''
+      if (el.selector !== undefined) {
+        html += `<span style="${inheritStyles}color:#999">[${escHtml(el.selector)}]</span>`
+      } else if (el.score !== undefined) {
+        html += `<span style="${inheritStyles}color:#999">0</span>`
+      } else if (el.translate !== undefined) {
+        html += `<span style="${inheritStyles}color:#999">{${escHtml(el.translate)}}</span>`
+      } else {
+        html += '<span style="color:#666">[错误]</span>'
+      }
+    }
   })
+
   return html || '<span style="color:#AAAAAA">预览</span>'
 })
 
