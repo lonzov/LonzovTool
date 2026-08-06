@@ -369,7 +369,7 @@ const statCluster = computed(() => ([
         <p class="hero-sub">聚合各类命令相关工具、文档与社区资源——<br>让复杂重复，变得简单高效。</p>
 
         <div class="hero-cta">
-          <button class="btn btn-solid" @click="router.push('/')">浏览工具</button>
+          <button class="btn btn-solid" @click="router.push('/docs/faq/')">常见问题</button>
           <button class="btn btn-ghost" @click="scrollToFeedback">我要反馈</button>
         </div>
       </header>
