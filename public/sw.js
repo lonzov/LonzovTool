@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.3.10.2'
+const CACHE_VERSION = '3.3.10.4'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
@@ -105,8 +105,13 @@ self.addEventListener('fetch', (event) => {
         // —— 启动时检测一次：是否存在持久化标记或 v2 环境 ——
         if (!_forceUpdateChecked) {
           _forceUpdateChecked = true
-          const fc = await caches.open(FORCE_UPDATE_CACHE)
-          const marker = await fc.match(FORCE_UPDATE_KEY)
+          let marker = null
+
+          // 只在缓存已存在时才打开，避免 caches.open() 凭空创建空缓存
+          if (await caches.has(FORCE_UPDATE_CACHE)) {
+            const fc = await caches.open(FORCE_UPDATE_CACHE)
+            marker = await fc.match(FORCE_UPDATE_KEY)
+          }
 
           if (!marker && self.registration.active) {
             // 无标记但存在活跃 SW：检查是否为 v2 环境（install 事件未触发的情况，如测试/SW 重启）
@@ -114,14 +119,18 @@ self.addEventListener('fetch', (event) => {
             const hasV3Cache = cacheNames.some((n) => n.startsWith('lt-v3-'))
             if (!hasV3Cache) {
               console.log('[SW] Detected version below 3.0 at runtime, force updating')
+              const fc = await caches.open(FORCE_UPDATE_CACHE)
               await fc.put(FORCE_UPDATE_KEY, new Response('1'))
             }
           }
         }
 
         // —— 强制更新标记存在，且不是遮罩页的回跳 ——
-        const fc = await caches.open(FORCE_UPDATE_CACHE)
-        const marker = await fc.match(FORCE_UPDATE_KEY)
+        let marker = null
+        if (await caches.has(FORCE_UPDATE_CACHE)) {
+          const fc = await caches.open(FORCE_UPDATE_CACHE)
+          marker = await fc.match(FORCE_UPDATE_KEY)
+        }
 
         if (marker && !url.searchParams.has('__sw_updated')) {
           // 先清理所有旧版本缓存（v2 残留），确保升级后不留垃圾
