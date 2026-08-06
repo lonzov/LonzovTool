@@ -105,7 +105,8 @@ src:
     SettingsView.vue: 设置页面，全局偏好设置（主题模式等）
     NotFoundView.vue: 404 页面，注入 noindex meta 防止爬虫收录无效 URL
 public:
-  sw.js: Service Worker，手写实现 StaleWhileRevalidate 缓存优先 + 离线诊断回退 + V2 兼容消息协议
+  sw.js: Service Worker，手写实现 StaleWhileRevalidate 缓存优先 + 离线诊断回退 + 消息协议
+  changelog.md: 更新日志，按三级版本号分章节，SW 运行时不缓存，用于更新弹窗内容
   manifest.json: Web App Manifest，PWA 配置
   favicon.ico: 网站图标
   opensearch.xml: OpenSearch 协议描述文件，浏览器搜索引擎注册

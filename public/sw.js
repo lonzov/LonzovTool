@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.3.10.1'
+const CACHE_VERSION = '3.3.10.2'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
@@ -238,6 +238,12 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // changelog.md: 始终走网络，不缓存
+  if (url.pathname === '/changelog.md') {
+    event.respondWith(fetch(request))
+    return
+  }
+
   // 其他同源: StaleWhileRevalidate
   event.respondWith(staleWhileRevalidate(request))
 })
@@ -293,7 +299,7 @@ async function staleWhileRevalidate(request) {
   return cached || fetchPromise
 }
 
-// ===== V2 消息协议兼容 =====
+// ===== 消息处理 =====
 self.addEventListener('message', (event) => {
   if (!event.data) return
 
@@ -307,21 +313,99 @@ self.addEventListener('message', (event) => {
   }
 
   if (event.data?.type === 'GET_POPUP_DATA') {
-    event.ports[0]?.postMessage({
-      type: 'POPUP_DATA_RESPONSE',
-      popupData: {
-        title: '有新版本可用',
-        content: `
-        <h4>👾 更新日志：</h4>
-        <p>[~] 修复T显编辑器跨元素未继承样式<br>[+] 允许自定义标签页的拖拽触发时间，见设置页<br>[+] 添加分享海报功能<br><b>[+] 指令音符盒同步至4.0版本，支持导入建筑，配置更方便</b><br>[~] 完整重构关于页，加入贡献者列表<br>[~] 重构SSG方案，针对SEO优化</p>
-        <p style="font-size:13px"><em>⚠️反馈和建议请前往"关于本站"页面查看</em></p>
-        `,
-        buttons: [
-          { text: '暂不更新', style: 'outline', action: 'close' },
-          { text: '立即更新', style: 'fill', action: 'update_sw' },
-        ],
-      },
-      version: CACHE_VERSION,
-    })
+    const currentVersion = event.data.currentVersion || 'v0.0.0'
+    const port = event.ports[0]
+    if (!port) return
+
+    event.waitUntil(
+      (async () => {
+        try {
+          const response = await fetch('/changelog.md')
+          if (!response.ok) throw new Error('Failed to fetch changelog')
+          const md = await response.text()
+          const content = extractChangelog(md, currentVersion, CACHE_VERSION)
+          port.postMessage({
+            type: 'POPUP_DATA_RESPONSE',
+            popupData: {
+              title: '发现新版本',
+              content,
+              buttons: [
+                { text: '暂不更新', style: 'outline', action: 'close' },
+                { text: '立即更新', style: 'fill', action: 'update_sw' },
+              ],
+            },
+            version: CACHE_VERSION,
+          })
+        } catch (e) {
+          console.warn('[SW] Failed to load changelog:', e)
+          port.postMessage({
+            type: 'POPUP_DATA_RESPONSE',
+            popupData: {
+              title: '发现新版本',
+              content: '',
+              buttons: [
+                { text: '暂不更新', style: 'outline', action: 'close' },
+                { text: '立即更新', style: 'fill', action: 'update_sw' },
+              ],
+            },
+            version: CACHE_VERSION,
+          })
+        }
+      })()
+    )
   }
 })
+
+// ===== 更新日志解析 =====
+
+/** 解析版本字符串为数字数组 */
+function parseVersion(v) {
+  return v.replace(/^v/, '').split('.').map(Number)
+}
+
+/** 比较两个版本数组：a > b 返回 1，a < b 返回 -1，相等返回 0 */
+function cmpVersion(a, b) {
+  const len = Math.max(a.length, b.length)
+  for (let i = 0; i < len; i++) {
+    const aa = a[i] || 0
+    const bb = b[i] || 0
+    if (aa > bb) return 1
+    if (aa < bb) return -1
+  }
+  return 0
+}
+
+/**
+ * 从 changelog markdown 中提取版本范围内的更新内容
+ * @param {string} md - markdown 原文
+ * @param {string} currentVersion - 当前版本号
+ * @param {string} targetVersion - 目标版本号
+ * @returns {string} 筛选后的 markdown 片段
+ */
+function extractChangelog(md, currentVersion, targetVersion) {
+  const cur = parseVersion(currentVersion)
+  const tgt = parseVersion(targetVersion)
+
+  const sections = []
+  const re = /^###\s+v?(\d+\.\d+\.\d+)\s*$/gm
+  let match
+  let lastEnd = 0
+
+  while ((match = re.exec(md)) !== null) {
+    if (sections.length > 0) {
+      sections[sections.length - 1].raw = md.slice(lastEnd, match.index).trim()
+    }
+    sections.push({ version: match[1], raw: '' })
+    lastEnd = match.index + match[0].length
+  }
+  if (sections.length > 0) {
+    sections[sections.length - 1].raw = md.slice(lastEnd).trim()
+  }
+
+  const filtered = sections.filter((s) => {
+    const v = parseVersion(s.version)
+    return cmpVersion(v, cur) > 0 && cmpVersion(v, tgt) <= 0
+  })
+
+  return filtered.map((s) => `### v${s.version}\n\n${s.raw}`).join('\n\n')
+}

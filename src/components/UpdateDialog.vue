@@ -1,13 +1,20 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { NModal, NConfigProvider, useMessage } from 'naive-ui'
+import { NModal, NConfigProvider, NTooltip, useMessage } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { useTheme } from '../composables/useTheme'
 import { useSWUpdate } from '../composables/useSWUpdate'
+import MarkdownRenderer from './MarkdownRenderer.vue'
 
 const { isDark } = useTheme()
-const { showUpdateModal, popupTitle, popupContent, popupButtons, applyUpdate, deferUpdate } = useSWUpdate()
+const { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, applyUpdate, deferUpdate } = useSWUpdate()
 const message = useMessage()
+
+/** 版本号只保留前三位，如 3.3.10.1 → 3.3.10 */
+const displayVersion = computed(() => {
+  const raw = popupNewVersion.value.replace(/^v/, '')
+  return 'v' + raw.split('.').slice(0, 3).join('.')
+})
 
 /** 处理按钮点击 */
 function handleButtonClick(btn) {
@@ -87,29 +94,46 @@ watch(showUpdateModal, (val) => {
     <NModal
       v-model:show="showUpdateModal"
       preset="card"
-      :style="modalStyle"
       :title="popupTitle || '发现新版本'"
-      :bordered="false"
+      :style="modalStyle"
+      :segmented="{ content: true, footer: 'soft' }"
       :closable="true"
       @close="deferUpdate"
       :auto-focus="false"
       content-scrollable
     >
-      <div class="update-desc" v-html="popupContent || '小舟工具箱已更新，点击&quot;立即更新&quot;刷新页面获取最新体验。'"></div>
+      <div class="update-desc">
+        <p class="new-version-banner">{{ displayVersion || '新版本' }} 版本现已可用</p>
+        <p class="guide-text">反馈或建议请前往 「侧边栏-关于本站-我要反馈」或 <a href="https://qm.qq.com/q/hjTqUyIKEo" target="_blank" rel="noopener" class="guide-link">加入QQ群</a>。</p>
+        <p class="changelog-label">👾 更新日志：</p>
+        <MarkdownRenderer v-if="popupContent" :raw="popupContent" />
+        <p v-else>小舟工具箱已更新，点击"立即更新"刷新页面获取最新体验。</p>
+      </div>
       <template #footer>
-        <div class="modal-actions">
-          <template v-if="popupButtons.length > 0">
-            <button
-              v-for="(btn, i) in popupButtons"
-              :key="i"
-              :class="getBtnClass(btn)"
-              @click="handleButtonClick(btn)"
-            >{{ btn.text }}</button>
-          </template>
-          <template v-else>
-            <button class="btn btn-outline" @click="deferUpdate">暂不更新</button>
-            <button class="btn btn-fill" @click="applyUpdate">立即更新</button>
-          </template>
+        <div class="update-footer">
+          <p v-if="popupVersionInfo" class="version-info">{{ popupVersionInfo }}</p>
+          <div class="modal-actions">
+            <template v-if="popupButtons.length > 0">
+              <template v-for="(btn, i) in popupButtons" :key="i">
+                <NTooltip v-if="btn.action === 'close'" placement="top">
+                  <template #trigger>
+                    <button :class="getBtnClass(btn)" @click="handleButtonClick(btn)">{{ btn.text }}</button>
+                  </template>
+                  若选择暂不更新，将在下次打开网站时自动更新
+                </NTooltip>
+                <button v-else :class="getBtnClass(btn)" @click="handleButtonClick(btn)">{{ btn.text }}</button>
+              </template>
+            </template>
+            <template v-else>
+              <NTooltip placement="top">
+                <template #trigger>
+                  <button class="btn btn-outline" @click="deferUpdate">暂不更新</button>
+                </template>
+                若选择暂不更新，将在下次打开网站时自动更新
+              </NTooltip>
+              <button class="btn btn-fill" @click="applyUpdate">立即更新</button>
+            </template>
+          </div>
         </div>
       </template>
     </NModal>
@@ -118,67 +142,102 @@ watch(showUpdateModal, (val) => {
 
 <style scoped>
 .update-desc {
-  font-size: 15px;
-  line-height: 1.75;
-  letter-spacing: 0.02em;
-  color: var(--n-text-color-2);
   padding: 4px 2px;
 }
 
-.update-desc :deep(p) {
-  margin: 0 0 12px 0;
+.new-version-banner {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  color: var(--n-text-color);
+  margin: 0 0 8px 0;
 }
 
-.update-desc :deep(p:last-child) {
-  margin-bottom: 0;
+.guide-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--n-text-color) 78%, transparent);
+  margin: 0 0 16px 0;
 }
 
-.update-desc :deep(ul),
-.update-desc :deep(ol) {
-  padding-left: 20px;
-  margin: 8px 0;
+.guide-text :deep(.guide-link) {
+  color: var(--n-text-color);
+  text-decoration: none;
+  position: relative;
+  padding-bottom: 2px;
+  display: inline-block;
+  vertical-align: baseline;
+  opacity: 1;
 }
 
-.update-desc :deep(li) {
-  margin-bottom: 6px;
-  line-height: 1.7;
+.guide-text :deep(.guide-link::before) {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5px;
+  height: 1px;
+  background-image: repeating-linear-gradient(to right,
+      color-mix(in srgb, var(--n-text-color), transparent 30%) 0 4px,
+      transparent 4px 8px);
+  background-repeat: repeat-x;
+  background-size: 8px 1px;
+  opacity: 1;
+  transition: opacity 0.3s;
+  pointer-events: none;
 }
 
-.update-desc :deep(li:last-child) {
-  margin-bottom: 0;
+.guide-text :deep(.guide-link::after) {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5px;
+  height: 1px;
+  background-color: var(--n-text-color);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
 }
 
-.update-desc :deep(strong),
-.update-desc :deep(b) {
+.guide-text :deep(.guide-link:hover::before) {
+  opacity: 0;
+}
+
+.guide-text :deep(.guide-link:hover::after) {
+  opacity: 1;
+}
+
+.changelog-label {
+  font-size: 15px;
   font-weight: 600;
   color: var(--n-text-color);
+  margin: 0 0 8px 0;
 }
 
-.update-desc :deep(code) {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+/* 消除 changelog 第一个 h3 的顶部大间距 */
+.update-desc :deep(.md-content h3:first-of-type) {
+  margin-top: 0;
+}
+
+.update-footer {
+  width: 100%;
+}
+
+.version-info {
   font-size: 13px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--n-tag-color);
-  color: var(--n-text-color);
-}
-
-.update-desc :deep(a) {
-  color: var(--n-primary-color);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s;
-}
-
-.update-desc :deep(a:hover) {
-  border-bottom-color: var(--n-primary-color);
+  color: var(--n-text-color-3);
+  margin: 0 0 6px 0;
+  text-align: right;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  padding-top: 8px;
 }
 
 .btn {
@@ -252,5 +311,18 @@ watch(showUpdateModal, (val) => {
 
 [data-theme="dark"] .btn-text:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+</style>
+
+<style>
+/* 更新弹窗 Tooltip 深浅色覆盖（popover 渲染到 body，须全局样式） */
+.n-popover {
+  --n-color: #fff !important;
+  --n-text-color: #1A1A1A !important;
+}
+
+[data-theme="dark"] .n-popover {
+  --n-color: #2A2A2A !important;
+  --n-text-color: rgba(255, 255, 255, 0.87) !important;
 }
 </style>

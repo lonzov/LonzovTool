@@ -3,6 +3,8 @@ import { ref } from 'vue'
 const showUpdateModal = ref(false)
 const popupTitle = ref('')
 const popupContent = ref('')
+const popupVersionInfo = ref('')
+const popupNewVersion = ref('')
 const popupButtons = ref([])
 let pendingRegistration = null
 let shouldReload = false
@@ -38,19 +40,15 @@ function saveCurrentVersion() {
 }
 
 /** 从 SW 获取弹窗内容 */
-function fetchPopupData(reg) {
+function fetchPopupData(reg, currentVersion) {
   return new Promise((resolve) => {
     const mc = new MessageChannel()
-    mc.port1.onmessage = (e) => {
-      resolve(e.data.popupData || null)
-    }
-    // 超时兜底
     const timer = setTimeout(() => resolve(null), 3000)
     mc.port1.onmessage = (e) => {
       clearTimeout(timer)
       resolve(e.data.popupData || null)
     }
-    reg.waiting.postMessage({ type: 'GET_POPUP_DATA' }, [mc.port2])
+    reg.waiting.postMessage({ type: 'GET_POPUP_DATA', currentVersion }, [mc.port2])
   })
 }
 
@@ -68,13 +66,11 @@ async function handleUpdate(reg) {
       reg.waiting.postMessage('SKIP_WAITING')
     } else if (type === 'popup') {
       // 从 SW 获取弹窗内容
-      const data = await fetchPopupData(reg)
+      const data = await fetchPopupData(reg, curVer)
       popupTitle.value = data?.title || '发现新版本'
-      if (data?.content) {
-        popupContent.value = data.content + `<p style="font-size:13px;color:var(--n-text-color-3);margin-top:10px;">当前版本: v${curVer} → 最新版本: v${newVer}</p>`
-      } else {
-        popupContent.value = ''
-      }
+      popupContent.value = data?.content || ''
+      popupNewVersion.value = `v${newVer}`
+      popupVersionInfo.value = `v${curVer} → v${newVer}`
       popupButtons.value = Array.isArray(data?.buttons) ? data.buttons : []
       pendingRegistration = reg
       showUpdateModal.value = true
@@ -145,5 +141,5 @@ export function useSWUpdate() {
     pendingRegistration = null
   }
 
-  return { showUpdateModal, popupTitle, popupContent, popupButtons, initSW, applyUpdate, deferUpdate }
+  return { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, initSW, applyUpdate, deferUpdate }
 }
