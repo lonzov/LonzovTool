@@ -118,16 +118,16 @@ onUnmounted(() => {
     </div>
     <div v-if="state !== 'diagnosing'" class="diagnostic-actions">
       <template v-if="state === 'server-ok'">
-        <button class="diagnostic-btn diagnostic-btn--ok" @click="goHome">返回首页</button>
-        <button class="diagnostic-btn" @click="retryNow">
+        <button class="offline-btn btn-fill" @click="goHome">返回首页</button>
+        <button class="offline-btn btn-outline" @click="retryNow">
           重新检测{{ retryCountdown > 0 ? ` (${retryCountdown}s)` : '' }}
         </button>
       </template>
       <template v-else>
-        <button class="diagnostic-btn diagnostic-btn--primary" @click="retryNow">
+        <button class="offline-btn btn-fill" @click="retryNow">
           重新检测{{ retryCountdown > 0 ? ` (${retryCountdown}s)` : '' }}
         </button>
-        <button class="diagnostic-btn" @click="goHome">返回首页</button>
+        <button class="offline-btn btn-outline" @click="goHome">返回首页</button>
       </template>
     </div>
   </div>
@@ -190,50 +190,59 @@ onUnmounted(() => {
 
 .diagnostic-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   margin-top: 0.4em;
 }
 
-.diagnostic-btn {
-  padding: 8px 20px;
-  border-radius: 6px;
-  border: 1px solid var(--border-color, #e0e0e0);
-  background: var(--bg-color, #fff);
-  color: var(--text-primary, #333);
+.offline-btn {
+  height: 34px;
+  padding: 0 20px;
+  border-radius: 17px;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  border: none;
 }
 
-[data-theme='dark'] .diagnostic-btn {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.82);
+/* fill - 实心主按钮 */
+[data-theme="light"] .btn-fill {
+  background: #1A1A1A;
+  color: #fff;
 }
 
-.diagnostic-btn:hover {
+[data-theme="dark"] .btn-fill {
+  background: #fff;
+  color: #1A1A1A;
+}
+
+.btn-fill:hover {
   opacity: 0.85;
 }
 
-.diagnostic-btn--primary {
-  background: #E46962;
-  color: #fff;
-  border-color: #E46962;
+/* outline - 描边按钮 */
+.btn-outline {
+  border: 1.5px solid currentColor;
 }
 
-.diagnostic-btn--primary:hover {
-  background: #d55851;
-  border-color: #d55851;
+[data-theme="light"] .btn-outline {
+  background: #fff;
+  color: #1A1A1A;
 }
 
-.diagnostic-btn--ok {
-  background: #63E469;
-  color: #fff;
-  border-color: #63E469;
+[data-theme="light"] .btn-outline:hover {
+  background: #E8E8E8;
 }
 
-.diagnostic-btn--ok:hover {
-  background: #4fd455;
-  border-color: #4fd455;
+[data-theme="dark"] .btn-outline {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+[data-theme="dark"] .btn-outline:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 </style>
