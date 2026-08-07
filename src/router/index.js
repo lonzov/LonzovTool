@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { createDiscreteApi } from 'naive-ui'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 
@@ -26,15 +27,59 @@ if (typeof window !== 'undefined') {
 }
 
 // ===== 路由导航超时机制 =====
-// 防止 chunk 加载挂起导致 NProgress 永久卡住（如离线/网络极差场景）
-const NAV_TIMEOUT_MS = 8000
-let navTimer = null
+const PING_DELAY = 8000
+const REFRESH_AT = 15000
+const FALLBACK_TIMEOUT = 30000
+const SESSION_KEY = 'nav_refreshed'
 
-/** 清除导航超时计时器 */
-function clearNavTimer() {
-  if (navTimer) {
-    clearTimeout(navTimer)
-    navTimer = null
+let fallbackTimer = null
+let pingTimer = null
+let refreshTimer = null
+let reloadTimer = null
+let abortController = null
+
+/** 懒加载 Naive UI message 实例（createDiscreteApi 无需 NMessageProvider 上下文） */
+let _messageApi = null
+function getMessage() {
+  if (!_messageApi && typeof window !== 'undefined') {
+    try {
+      _messageApi = createDiscreteApi(['message']).message
+    } catch { /* noop */ }
+  }
+  return _messageApi
+}
+
+/** 清除所有定时器 + 中止在途 ping */
+function clearAllTimers() {
+  if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null }
+  if (pingTimer) { clearTimeout(pingTimer); pingTimer = null }
+  if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null }
+  if (reloadTimer) { clearTimeout(reloadTimer); reloadTimer = null }
+  if (abortController) { abortController.abort(); abortController = null }
+}
+
+/** 强制跳转离线诊断页 */
+function goOffline(reason) {
+  console.error(`[Router] ${reason}，跳转离线页`)
+  clearAllTimers()
+  NProgress.done()
+  window.location.href = '/offline'
+}
+
+/**
+ * ping 本站服务器，成功返回 true
+ * @param {AbortSignal} signal
+ */
+async function pingServer(signal) {
+  try {
+    const ctrl = new AbortController()
+    const tid = setTimeout(() => ctrl.abort(), 10000)
+    if (signal) signal.addEventListener('abort', () => ctrl.abort())
+    await fetch('https://tool.lonzov.top/', { mode: 'no-cors', signal: ctrl.signal, cache: 'no-store' })
+    clearTimeout(tid)
+    return !ctrl.signal.aborted
+  } catch {
+    return false
   }
 }
 
@@ -270,40 +315,96 @@ export default routes
  * ViteSSG 回调中调用此函数，客户端/SSR 共用
  */
 export function setupRouterGuards(router) {
-  // 路由前置守卫：开始进度条 + 启动超时计时器（仅客户端）
+  // 路由前置守卫：进度条 + 超时 / ping / 刷新 / 兜底（仅客户端）
   router.beforeEach((to, from, next) => {
     if (typeof window === 'undefined') { next(); return }
 
     if (to.path !== from.path && to.name !== 'offline') {
-      clearNavTimer()
-      navTimer = setTimeout(() => {
-        NProgress.done()
-        window.location.href = '/offline'
-      }, NAV_TIMEOUT_MS)
+      clearAllTimers()
 
+      const navStart = Date.now()
+      let alreadyRefreshed = false
+      try {
+        alreadyRefreshed = sessionStorage.getItem(SESSION_KEY) === '1'
+      } catch { /* noop */ }
+
+      console.log(
+        `[Router] 开始导航: ${from.path} → ${to.path}`,
+        `(已刷新:${alreadyRefreshed ? '是' : '否'})`,
+      )
+
+      // ---- 定时器 1：8s ping 本站 ----
+      // 成功 → 动态安排刷新（对齐 15s 时间线）
+      // 失败 → 立即跳 /offline
+      abortController = new AbortController()
+      pingTimer = setTimeout(async () => {
+        const elapsed = Date.now() - navStart
+        console.log(`[Router] ${elapsed}ms 未完成，开始 ping 服务器...`)
+        const ok = await pingServer(abortController.signal)
+        if (abortController.signal.aborted) return
+
+        if (!ok) {
+          goOffline('服务器 ping 失败')
+        } else {
+          console.log('[Router] 服务器连通正常，安排刷新')
+          const remaining = Math.max(0, REFRESH_AT - (Date.now() - navStart))
+          refreshTimer = setTimeout(() => {
+            if (alreadyRefreshed) {
+              console.log('[Router] 已刷新过一次，本轮不再刷新，等待 30s 兜底')
+              return
+            }
+            console.warn(`[Router] 加载超过 15s 且服务器连通，跳转目标页: ${to.path}`)
+            try { sessionStorage.setItem(SESSION_KEY, '1') } catch { /* noop */ }
+            if (getMessage()) {
+              getMessage().warning('加载过久，正在刷新重试…')
+            }
+            reloadTimer = setTimeout(() => { window.location.href = to.path }, 600)
+          }, remaining)
+        }
+      }, PING_DELAY)
+
+      // ---- 定时器 2：30s 最终兜底 ----
+      fallbackTimer = setTimeout(() => {
+        goOffline('30s 兜底超时')
+      }, FALLBACK_TIMEOUT)
+
+      // ---- NProgress ----
       NProgress.start()
       setTimeout(() => {
         const bar = document.querySelector('#nprogress .bar')
-        if (bar) {
-          bar.style.zIndex = '9999999'
-        }
+        if (bar) bar.style.zIndex = '9999999'
         NProgress.set(0.2)
       }, 30)
     }
     next()
   })
 
-  // 路由后置守卫：完成进度条（head 更新已由 App.vue useHead watcher 统一处理）
-  router.afterEach(() => {
-    clearNavTimer()
+  // 路由错误处理：chunk 加载失败时清定时器 + 立即 ping 判断是否离线
+  router.onError((error) => {
+    if (
+      error?.message?.includes('Failed to fetch dynamically imported module') ||
+      error?.message?.includes('Importing a module script failed') ||
+      error?.message?.includes('error loading dynamically imported module')
+    ) {
+      clearAllTimers()
+      NProgress.done()
+        ; (async () => {
+          const ok = await pingServer()
+          if (!ok) window.location.href = '/offline'
+        })()
+    }
+  })
 
-    // NProgress done 仅在客户端执行
+  // 路由后置守卫：导航成功 → 清除所有定时器 + 清除刷新标记
+  router.afterEach((to) => {
+    clearAllTimers()
+    try { sessionStorage.removeItem(SESSION_KEY) } catch { /* noop */ }
+    console.log(`[Router] 导航完成: ${to.path}`)
+
     if (typeof window !== 'undefined') {
       setTimeout(() => {
         const bar = document.querySelector('#nprogress .bar')
-        if (bar) {
-          bar.style.zIndex = '9999999'
-        }
+        if (bar) bar.style.zIndex = '9999999'
         NProgress.done()
       }, 100)
     }

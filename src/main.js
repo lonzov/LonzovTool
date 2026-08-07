@@ -14,7 +14,7 @@ import {
   NMenu,
   NScrollbar,
 } from 'naive-ui'
-import NProgress from 'nprogress'
+
 import App from './App.vue'
 import { routes, setupRouterGuards } from './router'
 
@@ -66,31 +66,6 @@ export const createApp = ViteSSG(
       if (window.__SW_OFFLINE) {
         window.history.replaceState(null, '', '/offline')
       }
-
-      // SPA 内部页面切换时，懒加载 chunk 加载失败（如离线）的处理
-      router.onError((error) => {
-        if (
-          error.message.includes('Failed to fetch dynamically imported module') ||
-          error.message.includes('Importing a module script failed') ||
-          error.message.includes('error loading dynamically imported module')
-        ) {
-          NProgress.done()
-          ;(async () => {
-            try {
-              const controller = new AbortController()
-              const timeoutId = setTimeout(() => controller.abort(), 10000)
-              await fetch('https://tool.lonzov.top/', {
-                mode: 'no-cors',
-                signal: controller.signal,
-                cache: 'no-store',
-              })
-              clearTimeout(timeoutId)
-            } catch {
-              window.location.href = '/offline'
-            }
-          })()
-        }
-      })
 
       // 移除全屏加载动画
       router.isReady().then(() => {
