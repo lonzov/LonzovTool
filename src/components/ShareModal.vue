@@ -17,6 +17,7 @@ const showLocal = computed({
 // ---- 状态 ----
 const posterRef = ref(null)
 const posterImage = ref(null)
+let cachedKey = '' // 内容缓存键：命中则复用已生成海报，避免二次渲染
 const generating = ref(false)
 const copied = ref(false)
 let copyTimer = null
@@ -61,32 +62,27 @@ function buildShareUrl() {
   return u.toString()
 }
 
-function ensureFonts() {
-  const id = 'share-poster-fonts'
-  if (document.getElementById(id)) return document.fonts.ready
-  const link = document.createElement('link')
-  link.id = id
-  link.rel = 'stylesheet'
-  link.href = 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700;900&display=swap'
-  document.head.appendChild(link)
-  return Promise.race([
-    document.fonts.ready,
-    new Promise(r => setTimeout(r, 3000)),
-  ])
-}
 
 // ---- 生成海报 ----
 async function generatePoster() {
-  generating.value = true
-  posterImage.value = null
-
   // 1. 收集数据
   const url = buildShareUrl()
   const rawTitle = getMeta('', 'og:title') || document.title || '小舟工具箱'
-  shareTitle.value = rawTitle.split(' - ')[0].trim()
-  shareDesc.value = getMeta('description') || getMeta('', 'og:description') || ''
+  const title = rawTitle.split(' - ')[0].trim()
+  const desc = getMeta('description') || getMeta('', 'og:description') || ''
+  const key = `${title}|${desc}|${url}`
 
-  // 2. QR 码
+  // 2. 命中缓存：直接展示，跳过整个渲染流程
+  if (cachedKey === key && posterImage.value) {
+    return
+  }
+
+  generating.value = true
+  posterImage.value = null
+  shareTitle.value = title
+  shareDesc.value = desc
+
+  // 3. QR 码
   try {
     const QRCode = (await import('qrcode')).default
     qrDataUrl.value = await QRCode.toDataURL(url, {
@@ -96,13 +92,12 @@ async function generatePoster() {
     })
   } catch { /* 静默降级 */ }
 
-  // 3. 等字体 + 图片加载
-  await ensureFonts()
+  // 4. 等图片加载
   await nextTick()
   // 等 qr img 和 logo 加载完成
   await new Promise(r => setTimeout(r, 500))
 
-  // 4. html2canvas 截图
+  // 5. html2canvas 截图
   if (posterRef.value) {
     try {
       const canvas = await html2canvas(posterRef.value, {
@@ -112,7 +107,10 @@ async function generatePoster() {
         backgroundColor: '#ffffff',
       })
       posterImage.value = canvas.toDataURL('image/png')
-    } catch { /* 静默降级 */ }
+      cachedKey = key
+    } catch {
+      cachedKey = '' // 生成失败清空缓存，避免下次误命中
+    }
   }
 
   generating.value = false
@@ -225,7 +223,7 @@ const modalStyle = computed(() => ({
 
       <!-- 主体 -->
       <div class="body">
-        <h1 class="title">{{ shareTitle }}</h1>
+        <div class="title">{{ shareTitle }}</div>
         <div class="desc">
           <i></i>
           <p>{{ shareDesc }}</p>
