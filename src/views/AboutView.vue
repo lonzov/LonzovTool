@@ -204,15 +204,16 @@ function rushToTarget(el, target) {
 }
 
 /* 预先测量：用目标值替换 → 测量 → 设缩放 → 还原，整个过程在同一帧同步完成无闪烁 */
+/* 注意：parentWidth 必须在替换内容之后测量，因为部分父元素（如视频 flex 项）宽度随内容变化 */
 function preScale(el, target) {
   if (!el || !el.parentElement) return
   el.style.transform = ''
-  const parentWidth = el.parentElement.getBoundingClientRect().width
-  if (parentWidth <= 0) return
   const prev = el.innerHTML
   el.innerHTML = el._formatter(target)
+  const parentWidth = el.parentElement.getBoundingClientRect().width
   const elWidth = el.getBoundingClientRect().width
   el.innerHTML = prev
+  if (parentWidth <= 0) return
   if (elWidth > parentWidth) {
     el.style.transform = `scale(${parentWidth / elWidth})`
   }
