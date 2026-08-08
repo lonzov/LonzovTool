@@ -48,6 +48,7 @@ const marqueeRows = computed(() => {
 onMounted(() => {
   fetchStats()
   requestAnimationFrame(setupCountUp)
+  window.addEventListener('resize', onResizeFit)
 })
 
 onMounted(async () => {
@@ -138,6 +139,9 @@ function setCountRef(el, getter, formatter) {
     el._current = 0
     el._state = 'idle' /* idle | crawling | rushing | done */
     el._countInited = true
+    el.style.whiteSpace = 'nowrap'
+    el.style.display = 'inline-block'
+    el.style.transformOrigin = 'left bottom'
     countEls.add(el)
   }
 }
@@ -155,6 +159,7 @@ function startCrawl(el) {
     lastT = t
     el._current += speed * dt
     el.innerHTML = el._formatter(Math.floor(el._current))
+    fitNumber(el)
     requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)
@@ -166,6 +171,7 @@ function rushToTarget(el, target) {
     el._current = target
     el.innerHTML = el._formatter(target)
     el._state = 'done'
+    fitNumber(el)
     return
   }
   el._state = 'rushing'
@@ -175,6 +181,7 @@ function rushToTarget(el, target) {
     el._current = target
     el.innerHTML = el._formatter(target)
     el._state = 'done'
+    fitNumber(el)
     return
   }
   const dur = 1200, t0 = performance.now()
@@ -184,14 +191,40 @@ function rushToTarget(el, target) {
     const e = 1 - Math.pow(1 - p, 3)
     el._current = start + diff * e
     el.innerHTML = el._formatter(Math.round(el._current))
+    fitNumber(el)
     if (p < 1) requestAnimationFrame(tick)
     else {
       el._current = target
       el.innerHTML = el._formatter(target)
       el._state = 'done'
+      fitNumber(el)
     }
   }
   requestAnimationFrame(tick)
+}
+
+/* 动态缩放：数字溢出容器时等比缩小到刚好不溢出 */
+function fitNumber(el) {
+  if (!el || !el.parentElement) return
+  /* 先重置缩放，获取原始尺寸 */
+  el.style.transform = ''
+  const parentWidth = el.parentElement.getBoundingClientRect().width
+  if (parentWidth <= 0) return
+  const elWidth = el.getBoundingClientRect().width
+  if (elWidth > parentWidth) {
+    const scale = parentWidth / elWidth
+    el.style.transform = `scale(${scale})`
+  }
+}
+
+let resizeTicking = false
+function onResizeFit() {
+  if (resizeTicking) return
+  resizeTicking = true
+  requestAnimationFrame(() => {
+    countEls.forEach(fitNumber)
+    resizeTicking = false
+  })
 }
 
 /* 进入视口：有数据就 rush，没数据就 crawl */
@@ -262,6 +295,7 @@ watch(() => stats.value.yearPV, (v) => {
 
 onBeforeUnmount(() => {
   if (countIO) countIO.disconnect()
+  window.removeEventListener('resize', onResizeFit)
   countEls.forEach((el) => { el._state = 'done' })
   countEls.clear()
 })
