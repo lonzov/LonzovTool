@@ -50,26 +50,27 @@ function switchRailStyle({ focused, checked }) {
 /* ========== 标签页拖拽触发时长 ========== */
 const DRAG_DELAY_KEY = 'tab_drag_delay'
 const DRAG_DELAY_DEFAULT = 700
-const dragDelay = ref(
-  (() => {
-    try {
-      const v = localStorage.getItem(DRAG_DELAY_KEY)
-      const num = parseInt(v, 10)
-      return (num >= 100 && num <= 2000) ? num : DRAG_DELAY_DEFAULT
-    } catch { return DRAG_DELAY_DEFAULT }
-  })(),
-)
 
-function onDragDelayChange(val) {
-  if (val === null || val === undefined || val === '') {
-    dragDelay.value = DRAG_DELAY_DEFAULT
-    localStorage.setItem(DRAG_DELAY_KEY, String(DRAG_DELAY_DEFAULT))
-    return
-  }
-  const num = parseInt(val, 10)
-  if (isNaN(num)) return
-  const clamped = Math.max(100, Math.min(2000, Math.round(num)))
+function loadDragDelay() {
+  try {
+    const v = localStorage.getItem(DRAG_DELAY_KEY)
+    const num = parseInt(v, 10)
+    return (num >= 100 && num <= 2000) ? num : DRAG_DELAY_DEFAULT
+  } catch { return DRAG_DELAY_DEFAULT }
+}
+
+const dragDelay = ref(loadDragDelay())
+const dragDelayInput = ref(String(dragDelay.value))
+
+function onDragDelayInput(val) {
+  dragDelayInput.value = val
+}
+
+function onDragDelayBlur() {
+  const num = parseInt(dragDelayInput.value, 10)
+  const clamped = isNaN(num) ? DRAG_DELAY_DEFAULT : Math.max(100, Math.min(2000, Math.round(num)))
   dragDelay.value = clamped
+  dragDelayInput.value = String(clamped)
   localStorage.setItem(DRAG_DELAY_KEY, String(clamped))
 }
 
@@ -522,9 +523,10 @@ const darkOverrides = {
                       type="text"
                       inputmode="numeric"
                       class="drag-delay-input"
-                      :value="dragDelay"
+                      :value="dragDelayInput"
                       placeholder="700"
-                      @input="onDragDelayChange($event.target.value)"
+                      @input="onDragDelayInput($event.target.value)"
+                      @blur="onDragDelayBlur"
                     />
                     <span class="drag-delay-unit">ms</span>
                   </span>
