@@ -113,7 +113,7 @@ onUnmounted(() => {
     <div class="diagnostic-text">
       <template v-if="state === 'diagnosing'">连接失败，正在诊断……</template>
       <template v-else-if="state === 'server-ok'">测试通过，建议返回首页重试</template>
-      <template v-else-if="state === 'server-error'">无法连接至服务器，请稍后再试</template>
+      <template v-else-if="state === 'server-error'">无法连接至服务器，请稍后再试<br><a class="offline-link" href="https://stats.uptimerobot.com/E0cvH6yiGq" target="_blank" rel="noopener noreferrer">点击前往状态监控</a></template>
       <template v-else>请检查网络后重试</template>
     </div>
     <div v-if="state !== 'diagnosing'" class="diagnostic-actions">
@@ -186,6 +186,60 @@ onUnmounted(() => {
   font-weight: 500;
   letter-spacing: 0.08em;
   text-align: center;
+}
+
+/* 超链接样式（搬自 Markdown 组件） */
+.diagnostic-text .offline-link {
+  color: var(--text-primary);
+  text-decoration: none;
+  position: relative;
+  padding-bottom: 2px;
+  cursor: pointer;
+  display: inline-block;
+  vertical-align: baseline;
+  background: none;
+}
+
+.diagnostic-text .offline-link::before {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5px;
+  height: 1px;
+  background-image: repeating-linear-gradient(to right,
+      color-mix(in srgb, var(--text-primary), transparent 30%) 0 4px,
+      transparent 4px 8px);
+  background-repeat: repeat-x;
+  background-size: 8px 1px;
+  opacity: 1;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.diagnostic-text .offline-link::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5px;
+  height: 1px;
+  background-color: var(--text-primary);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.diagnostic-text .offline-link:hover::before {
+  opacity: 0;
+}
+
+.diagnostic-text .offline-link:hover::after {
+  opacity: 1;
 }
 
 .diagnostic-actions {
