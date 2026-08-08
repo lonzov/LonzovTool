@@ -159,7 +159,6 @@ function startCrawl(el) {
     lastT = t
     el._current += speed * dt
     el.innerHTML = el._formatter(Math.floor(el._current))
-    fitNumber(el)
     requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)
@@ -175,13 +174,16 @@ function rushToTarget(el, target) {
     return
   }
   el._state = 'rushing'
+
+  /* 预先用目标值（最大宽度）测量并设置缩放，避免动画中每帧强制重排 */
+  preScale(el, target)
+
   const start = el._current
   const diff = target - start
   if (diff <= 0) {
     el._current = target
     el.innerHTML = el._formatter(target)
     el._state = 'done'
-    fitNumber(el)
     return
   }
   const dur = 1200, t0 = performance.now()
@@ -191,19 +193,32 @@ function rushToTarget(el, target) {
     const e = 1 - Math.pow(1 - p, 3)
     el._current = start + diff * e
     el.innerHTML = el._formatter(Math.round(el._current))
-    fitNumber(el)
     if (p < 1) requestAnimationFrame(tick)
     else {
       el._current = target
       el.innerHTML = el._formatter(target)
       el._state = 'done'
-      fitNumber(el)
     }
   }
   requestAnimationFrame(tick)
 }
 
-/* 动态缩放：数字溢出容器时等比缩小到刚好不溢出 */
+/* 预先测量：用目标值替换 → 测量 → 设缩放 → 还原，整个过程在同一帧同步完成无闪烁 */
+function preScale(el, target) {
+  if (!el || !el.parentElement) return
+  el.style.transform = ''
+  const parentWidth = el.parentElement.getBoundingClientRect().width
+  if (parentWidth <= 0) return
+  const prev = el.innerHTML
+  el.innerHTML = el._formatter(target)
+  const elWidth = el.getBoundingClientRect().width
+  el.innerHTML = prev
+  if (elWidth > parentWidth) {
+    el.style.transform = `scale(${parentWidth / elWidth})`
+  }
+}
+
+/* 动态缩放：数字溢出容器时等比缩小到刚好不溢出（用于无目标值时当前渲染状态的测量） */
 function fitNumber(el) {
   if (!el || !el.parentElement) return
   /* 先重置缩放，获取原始尺寸 */
