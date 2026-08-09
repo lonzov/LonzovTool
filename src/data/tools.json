@@ -169,8 +169,8 @@
         {
           "id": "aiex-fmbe",
           "title": "AIEX FMBE模拟器",
-          "description": "可视化预览+生成命令",
-          "logo": "/logos/AIEX-FMBE.webp",
+          "description": "在EX FMBE模拟器基础上增加了AI功能",
+          "logo": "/logos/1AIEX-FMBE.webp",
           "link": "/down/AIEX-FMBE/"
         },
         {
