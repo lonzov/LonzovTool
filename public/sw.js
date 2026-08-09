@@ -19,6 +19,9 @@ const MINOR_VERSION = CACHE_VERSION.split('.').slice(0, 2).join('.')
 const MINOR_CACHE_NAME = `lt-v3-minor-${MINOR_VERSION}`
 const MINOR_CACHE_PATHS = ['/app-icon/', '/assets/']
 
+// ===== 离线页预缓存 URL（构建时由 minify-sw.js 注入实际文件列表） =====
+const OFFLINE_PRECACHE_URLS = ['__OFFLINE_PRECACHE_URLS__']
+
 // ===== 激活时保留的缓存白名单 =====
 const PROTECTED_CACHES = [CACHE_NAME, STATIC_CACHE_NAME, MINOR_CACHE_NAME, FORCE_UPDATE_CACHE]
 
@@ -60,6 +63,18 @@ self.addEventListener('install', (event) => {
       }
     })()
   )
+
+  // 异步预缓存离线页依赖：fire-and-forget，不阻塞 SW 激活
+  // URL 列表由构建脚本从 dist/offline/index.html 提取并注入
+  if (OFFLINE_PRECACHE_URLS[0] !== '__OFFLINE_PRECACHE_URLS__') {
+    caches.open(CACHE_NAME).then((cache) => {
+      OFFLINE_PRECACHE_URLS.forEach((url) => {
+        fetch(new Request(url))
+          .then((res) => { if (res.ok) cache.put(url, res) })
+          .catch(() => {})
+      })
+    })
+  }
 })
 
 // ===== Activate: 清理旧缓存 + 接管客户端 =====
