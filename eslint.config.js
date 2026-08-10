@@ -38,4 +38,15 @@ export default defineConfig([
       sourceType: 'module',
     },
   },
+
+  {
+    name: 'app/node-cjs-scripts',
+    files: ['scripts/**/*.cjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      sourceType: 'commonjs',
+    },
+  },
 ])

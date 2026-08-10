@@ -4,6 +4,7 @@ import { NIcon, useMessage, NSwitch } from 'naive-ui'
 import { CurrencyDollarEuro20Regular } from '@vicons/fluent'
 import { useMouseGlow, applyGlow } from '../../composables/useMouseGlow.js'
 import { useToolStorage } from '../../composables/useToolStorage.js'
+import glyphMap from '../../data/glyph-map.json'
 
 defineProps({
   tabPath: {
@@ -16,71 +17,29 @@ const message = useMessage()
 const { subscribe: subGlow, unsubscribe: unsubGlow } = useMouseGlow()
 
 // ===== 雪碧图配置 =====
-const SPRITE_CONFIG = {
-  spritePath: '/sprites/mc-unicode.png',
-  iconWidth: 48,
-  iconHeight: 48,
-  iconsPerRow: 5,
-}
+const SPRITE_PATH = '/sprites/glyph-pack.webp'
+const DISPLAY_SIZE = 48    // 卡片中显示尺寸
 
-// ===== 图标数据 (来自 v2/c/fuhao/iconList.js) =====
-const rawIcons = [
-  { codePointHex: 'E000' }, { codePointHex: 'E001' }, { codePointHex: 'E002' }, { codePointHex: 'E003' }, { codePointHex: 'E004' },
-  { codePointHex: 'E005' }, { codePointHex: 'E006' }, { codePointHex: 'E007' }, { codePointHex: 'E008' }, { codePointHex: 'E009' },
-  { codePointHex: 'E00A' }, { codePointHex: 'E00B' }, { codePointHex: 'E00C' }, { codePointHex: 'E00D' }, { codePointHex: 'E00E' },
-  { codePointHex: 'E00F' }, { codePointHex: 'E010' }, { codePointHex: 'E011' }, { codePointHex: 'E012' }, { codePointHex: 'E013' },
-  { codePointHex: 'E014' }, { codePointHex: 'E015' }, { codePointHex: 'E016' }, { codePointHex: 'E017' }, { codePointHex: 'E018' },
-  { codePointHex: 'E019' }, { codePointHex: 'E01A' }, { codePointHex: 'E01B' }, { codePointHex: 'E01C' }, { codePointHex: 'E01D' },
-  { codePointHex: 'E020' }, { codePointHex: 'E021' }, { codePointHex: 'E022' }, { codePointHex: 'E023' }, { codePointHex: 'E024' },
-  { codePointHex: 'E025' }, { codePointHex: 'E026' }, { codePointHex: 'E027' }, { codePointHex: 'E028' }, { codePointHex: 'E029' },
-  { codePointHex: 'E02A' }, { codePointHex: 'E02B' }, { codePointHex: 'E02C' }, { codePointHex: 'E02D' }, { codePointHex: 'E02E' },
-  { codePointHex: 'E02F' }, { codePointHex: 'E040' }, { codePointHex: 'E041' }, { codePointHex: 'E042' }, { codePointHex: 'E043' },
-  { codePointHex: 'E044' }, { codePointHex: 'E045' }, { codePointHex: 'E046' }, { codePointHex: 'E047' }, { codePointHex: 'E048' },
-  { codePointHex: 'E049' }, { codePointHex: 'E04A' }, { codePointHex: 'E04B' }, { codePointHex: 'E04C' }, { codePointHex: 'E04D' },
-  { codePointHex: 'E04E' }, { codePointHex: 'E04F' }, { codePointHex: 'E060' }, { codePointHex: 'E061' }, { codePointHex: 'E062' },
-  { codePointHex: 'E063' }, { codePointHex: 'E065' }, { codePointHex: 'E066' }, { codePointHex: 'E067' }, { codePointHex: 'E068' },
-  { codePointHex: 'E069' }, { codePointHex: 'E06A' }, { codePointHex: 'E06B' }, { codePointHex: 'E06C' }, { codePointHex: 'E06D' },
-  { codePointHex: 'E06E' }, { codePointHex: 'E06F' }, { codePointHex: 'E070' }, { codePointHex: 'E071' }, { codePointHex: 'E072' },
-  { codePointHex: 'E073' }, { codePointHex: 'E075' }, { codePointHex: 'E076' }, { codePointHex: 'E080' }, { codePointHex: 'E081' },
-  { codePointHex: 'E082' }, { codePointHex: 'E083' }, { codePointHex: 'E084' }, { codePointHex: 'E085' }, { codePointHex: 'E086' },
-  { codePointHex: 'E087' }, { codePointHex: 'E088' }, { codePointHex: 'E0A0' }, { codePointHex: 'E0A1' }, { codePointHex: 'E0C0' },
-  { codePointHex: 'E0C1' }, { codePointHex: 'E0C2' }, { codePointHex: 'E0C3' }, { codePointHex: 'E0C4' }, { codePointHex: 'E0C5' },
-  { codePointHex: 'E0C6' }, { codePointHex: 'E0C7' }, { codePointHex: 'E0C8' }, { codePointHex: 'E0C9' }, { codePointHex: 'E0CA' },
-  { codePointHex: 'E0CB' }, { codePointHex: 'E0CC' }, { codePointHex: 'E0CD' }, { codePointHex: 'E0E0' }, { codePointHex: 'E0E1' },
-  { codePointHex: 'E0E2' }, { codePointHex: 'E0E3' }, { codePointHex: 'E0E4' }, { codePointHex: 'E0E5' }, { codePointHex: 'E0E6' },
-  { codePointHex: 'E0E7' }, { codePointHex: 'E0E8' }, { codePointHex: 'E0E9' }, { codePointHex: 'E0EA' }, { codePointHex: 'E100' },
-  { codePointHex: 'E101' }, { codePointHex: 'E102' }, { codePointHex: 'E103' }, { codePointHex: 'E104' }, { codePointHex: 'E105' },
-  { codePointHex: 'E106' }, { codePointHex: 'E107' }, { codePointHex: 'E108' }, { codePointHex: 'E109' }, { codePointHex: 'E10A' },
-  { codePointHex: 'E10B' }, { codePointHex: 'E10C' }, { codePointHex: 'E10D' }, { codePointHex: 'a0a' },
-]
-
-// 处理图标数据：计算背景位置和字符
+// ===== 图标数据（从构建时生成的映射数组构建） =====
 const NULL_CHAR = String.fromCharCode(0)
-const iconsData = rawIcons.map((icon, index) => {
-  const row = Math.floor(index / SPRITE_CONFIG.iconsPerRow)
-  const col = index % SPRITE_CONFIG.iconsPerRow
 
-  if (icon.codePointHex === 'a0a') {
+const iconsData = glyphMap.map((hex, index) => {
+  if (hex === 'a0a') {
     return {
       index,
       codePointHex: 'a0a',
       character: 'a' + NULL_CHAR + 'a',
-      bgPositionX: -col * SPRITE_CONFIG.iconWidth,
-      bgPositionY: -row * SPRITE_CONFIG.iconHeight,
+      bgPositionX: -index * DISPLAY_SIZE,
     }
   }
-  const cp = parseInt(icon.codePointHex, 16)
+  const cp = parseInt(hex, 16)
   return {
     index,
-    codePointHex: icon.codePointHex,
+    codePointHex: hex,
     character: String.fromCodePoint(cp),
-    bgPositionX: -col * SPRITE_CONFIG.iconWidth,
-    bgPositionY: -row * SPRITE_CONFIG.iconHeight,
+    bgPositionX: -index * DISPLAY_SIZE,
   }
 })
-
-const spriteWidth = SPRITE_CONFIG.iconsPerRow * SPRITE_CONFIG.iconWidth
-const spriteHeight = Math.ceil(iconsData.length / SPRITE_CONFIG.iconsPerRow) * SPRITE_CONFIG.iconHeight
 
 // ===== 字符到图标映射（仅单字符条目，排除 a0a） =====
 const charToIconMap = new Map()
@@ -90,10 +49,14 @@ iconsData.forEach((icon) => {
   }
 })
 
-const PREVIEW_SPRITE_SIZE = 24
-const PREVIEW_SPRITE_SCALE = 2.5
-const PREVIEW_ICON_SIZE = PREVIEW_SPRITE_SIZE * PREVIEW_SPRITE_SCALE
-const previewIconScale = PREVIEW_ICON_SIZE / SPRITE_CONFIG.iconWidth
+function getIconStyle(icon) {
+  return {
+    backgroundImage: `url(${SPRITE_PATH})`,
+    backgroundPositionX: `${icon.bgPositionX}px`,
+    backgroundSize: `auto ${DISPLAY_SIZE}px`,
+    imageRendering: 'pixelated',
+  }
+}
 
 // ===== 验证输入 =====
 const verifyInput = ref('')
@@ -120,11 +83,12 @@ const previewSegments = computed(() => {
 
 function getPreviewSpriteStyle(icon) {
   return {
-    backgroundImage: `url(${SPRITE_CONFIG.spritePath})`,
-    backgroundPosition: `${icon.bgPositionX * previewIconScale}px ${icon.bgPositionY * previewIconScale}px`,
-    backgroundSize: `${spriteWidth * previewIconScale}px ${spriteHeight * previewIconScale}px`,
-    width: `${PREVIEW_ICON_SIZE}px`,
-    height: `${PREVIEW_ICON_SIZE}px`,
+    backgroundImage: `url(${SPRITE_PATH})`,
+    backgroundPositionX: `${icon.bgPositionX}px`,
+    backgroundSize: `auto ${DISPLAY_SIZE}px`,
+    imageRendering: 'pixelated',
+    width: `${DISPLAY_SIZE}px`,
+    height: `${DISPLAY_SIZE}px`,
   }
 }
 
@@ -227,7 +191,7 @@ onBeforeUnmount(() => {
         <NIcon :component="CurrencyDollarEuro20Regular" class="page-title-icon" />
         <h1 class="page-title">特殊符号</h1>
       </div>
-      <p class="page-desc">Minecraft 基岩版特殊符号合集，点击即可复制</p>
+      <p class="page-desc">Minecraft 基岩版特殊符号合集，点击即可复制（来自最新国际基岩版，在低版本可能部分不可用）</p>
     </div>
 
     <!-- 验证输入卡片 -->
@@ -290,11 +254,7 @@ onBeforeUnmount(() => {
       >
         <div
           class="icon-sprite"
-          :style="{
-            backgroundImage: `url(${SPRITE_CONFIG.spritePath})`,
-            backgroundPosition: `${icon.bgPositionX}px ${icon.bgPositionY}px`,
-            backgroundSize: `${spriteWidth}px ${spriteHeight}px`,
-          }"
+          :style="getIconStyle(icon)"
         ></div>
       </div>
     </div>
@@ -473,7 +433,7 @@ onBeforeUnmount(() => {
 }
 
 .preview-sprite-wrap {
-  width: 60px;
+  width: 48px;
   height: 16px;
   flex-shrink: 0;
   position: relative;

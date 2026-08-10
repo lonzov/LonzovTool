@@ -85,6 +85,7 @@ src:
     parentMenus.json: 父级菜单配置
     searchEngines.json: 搜索引擎配置
     tools.json: 工具数据（分类与工具项）
+    glyph-map.json: 特殊符号字形码点→雪碧图列索引映射（由 build-glyph-sprites.cjs 构建时生成）
   docs:
     dev.md: 开发文档
     donate.md: 打赏支持页面
@@ -113,7 +114,7 @@ public:
   app-icon/: PWA 应用图标
   logos/: 首页工具卡片 Logo 图片
   img/: 图片资源
-  sprites/: Minecraft Unicode 精灵图
+  sprites/: Minecraft Unicode 精灵图（glyph_E0.png / glyph_E1.png 源图 + glyph-pack.png 构建产物）
   fonts/: 自定义字体文件（unifontdianzhenhei.woff2）
   .well-known/assetlinks.json: Android 数字资产链接验证文件
 docs:
@@ -127,3 +128,4 @@ scripts:
   fetch-contributor-avatars.js: 预构建脚本，为配置了 qq 字段的贡献者拉取 QQ 头像，哈希命名存入 public/logos/avatars/，更新 contributors.json 的 avatar 字段
   subset-hollow-font.js: 预构建脚本，从系统 HarmonyOS_Sans_SC_Bold.ttf 提取描边文字字形，子集化为 woff2 到 public/fonts/
   deploy.js: 部署脚本，SSH 上传构建产物到服务器并原子替换站点目录（pnpm deploy）
+  build-glyph-sprites.cjs: 预构建脚本，从 Minecraft 风格字形 PNG 自动检测非空字符并打包为紧凑雪碧图+码点映射 JSON
