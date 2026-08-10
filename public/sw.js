@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.3.12'
+const CACHE_VERSION = '3.3.13'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
@@ -71,7 +71,7 @@ self.addEventListener('install', (event) => {
       OFFLINE_PRECACHE_URLS.forEach((url) => {
         fetch(new Request(url))
           .then((res) => { if (res.ok) cache.put(url, res) })
-          .catch(() => {})
+          .catch(() => { })
       })
     })
   }
