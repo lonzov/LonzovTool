@@ -4,7 +4,9 @@ import { NIcon, useMessage, NSwitch } from 'naive-ui'
 import { CurrencyDollarEuro20Regular } from '@vicons/fluent'
 import { useMouseGlow, applyGlow } from '../../composables/useMouseGlow.js'
 import { useToolStorage } from '../../composables/useToolStorage.js'
-import glyphMap from '../../data/glyph-map.json'
+import data from '../../data/glyph-map.json'
+
+const { sprite, glyphs } = data
 
 defineProps({
   tabPath: {
@@ -17,13 +19,13 @@ const message = useMessage()
 const { subscribe: subGlow, unsubscribe: unsubGlow } = useMouseGlow()
 
 // ===== 雪碧图配置 =====
-const SPRITE_PATH = '/sprites/glyph-pack.webp'
+const SPRITE_PATH = `/sprites/${sprite}`
 const DISPLAY_SIZE = 48    // 卡片中显示尺寸
 
 // ===== 图标数据（从构建时生成的映射数组构建） =====
 const NULL_CHAR = String.fromCharCode(0)
 
-const iconsData = glyphMap.map((hex, index) => {
+const iconsData = glyphs.map((hex, index) => {
   if (hex === 'a0a') {
     return {
       index,

@@ -4,9 +4,8 @@
  * 输入：public/sprites/glyph_E0.png (512×512, 32px/格, 16×16 逻辑网格)
  *       public/sprites/glyph_E1.png (256×256, 16px/格, 16×16 逻辑网格)
  *       public/sprites/null.png    (16×16 空字符)
- * 输出：public/sprites/glyph-pack.png   (紧凑单行雪碧图, 32px/格)
- *       public/sprites/glyph-pack.webp  (WebP 压缩版, quality=90)
- *       src/data/glyph-map.json        (码点→列索引映射数组)
+ * 输出：public/sprites/glyph-pack-{hash}.png  (紧凑单行雪碧图, 32px/格, 文件名含内容哈希)
+ *       src/data/glyph-map.json             ({ sprite: "glyph-pack-{hash}.png", glyphs: [...] })
  *
  * 缓存：node_modules/.cache/glyph-hash.json 记录源文件哈希，无变化时跳过构建
  *
@@ -17,14 +16,13 @@ const { PNG } = require('pngjs')
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
-const sharp = require('sharp')
 
 // ===== 配置 =====
 const ROOT = path.join(__dirname, '..')
 const PUBLIC_SPRITES = path.join(ROOT, 'public', 'sprites')
 const DATA_DIR = path.join(ROOT, 'src', 'data')
 const CACHE_FILE = path.join(ROOT, 'node_modules', '.cache', 'glyph-hash.json')
-const WEBP_QUALITY = 90
+const HASH_LEN = 7
 
 const GRID_COLS = 16
 const GRID_ROWS = 16
@@ -130,10 +128,10 @@ async function main() {
 
   const glyphEntries = []
 
-  // 1. 处理 glyph_E0 和 glyph_E1
+  // 2. 处理 glyph_E0 和 glyph_E1
   for (const src of GLYPH_SOURCES) {
     const filepath = path.join(PUBLIC_SPRITES, src.file)
-    console.log(`[1/6] 读取 ${src.file} (cellSize=${src.cellSize}px)...`)
+    console.log(`[1/4] 读取 ${src.file} (cellSize=${src.cellSize}px)...`)
     const png = readPNG(filepath)
 
     let emptyCount = 0
@@ -161,42 +159,38 @@ async function main() {
     console.log(`  非空: ${total - emptyCount}, 空: ${emptyCount}, 总计: ${total}`)
   }
 
-  // 2. 读取并校验空字符专用图 null.png
-  console.log('[2/6] 读取并校验 null.png...')
+  // 3. 读取并校验空字符专用图 null.png
+  console.log('[2/4] 读取并校验 null.png...')
   const nullPNG = readPNG(path.join(PUBLIC_SPRITES, 'null.png'))
   if (nullPNG.width !== 16 || nullPNG.height !== 16) {
     console.error(`错误：null.png 应为 16×16，实际为 ${nullPNG.width}×${nullPNG.height}`)
     process.exit(1)
   }
-  console.log('  通过 (16×16)')
 
-  // 3. 组装输出雪碧图（单行，每格 TARGET_CELL px）
+  // 4. 组装输出雪碧图（单行，每格 TARGET_CELL px）
   const nullSlot = { hex: 'a0a', codepoint: -1 }
-  const allGlyphs = [...glyphEntries, nullSlot] // 空字符放最后
+  const allGlyphs = [...glyphEntries, nullSlot]
   const outputWidth = allGlyphs.length * TARGET_CELL
   const outputHeight = TARGET_CELL
 
-  console.log(`[3/6] 生成雪碧图 (${outputWidth}×${outputHeight}px, ${allGlyphs.length} 个字形)...`)
+  console.log(`[3/4] 生成雪碧图 (${outputWidth}×${outputHeight}px, ${allGlyphs.length} 个字形)...`)
 
   const outPNG = new PNG({ width: outputWidth, height: outputHeight })
 
   for (let i = 0; i < allGlyphs.length; i++) {
     const g = allGlyphs[i]
     if (g.hex === 'a0a') {
-      // 空字符：null.png (16→32 最近邻放大)
       scaleCellNearest(
         nullPNG.data, nullPNG.width, 0, 0, nullPNG.width,
         outPNG.data, outPNG.width, i, 0, TARGET_CELL,
       )
     } else if (g.srcCellSize === TARGET_CELL) {
-      // E0: 直接复制
       copyCell(
         g.srcPNG.data, g.srcPNG.width,
         g.srcCellX, g.srcCellY, TARGET_CELL,
         outPNG.data, outPNG.width, i, 0,
       )
     } else {
-      // E1: 16→32 最近邻放大
       scaleCellNearest(
         g.srcPNG.data, g.srcPNG.width,
         g.srcCellX, g.srcCellY, g.srcCellSize,
@@ -205,37 +199,37 @@ async function main() {
     }
   }
 
-  // 4. 写入 PNG
-  console.log('[4/6] 写入 PNG...')
-  const spritePng = path.join(PUBLIC_SPRITES, 'glyph-pack.png')
-  await writePNG(spritePng, outPNG)
+  // 5. 写入 PNG 并计算内容哈希
+  console.log('[4/4] 写入雪碧图与码点映射...')
+  const tmpPng = path.join(PUBLIC_SPRITES, '.glyph-tmp.png')
+  await writePNG(tmpPng, outPNG)
+
+  // 对 PNG 文件内容取哈希前 N 位
+  const pngBuf = fs.readFileSync(tmpPng)
+  const contentHash = crypto.createHash('sha256').update(pngBuf).digest('hex').slice(0, HASH_LEN)
+  const spriteName = `glyph-pack-${contentHash}.png`
+  const spritePng = path.join(PUBLIC_SPRITES, spriteName)
+
+  // 清理旧的 glyph-pack-*.png 和 glyph-pack*.webp（保留新文件名）
+  for (const f of fs.readdirSync(PUBLIC_SPRITES)) {
+    if (f !== spriteName && ((f.startsWith('glyph-pack') && (f.endsWith('.png') || f.endsWith('.webp'))))) {
+      fs.unlinkSync(path.join(PUBLIC_SPRITES, f))
+      console.log(`  清理旧文件: ${f}`)
+    }
+  }
+
+  fs.renameSync(tmpPng, spritePng)
   console.log(`  → ${spritePng}`)
 
-  // 5. 写入码点映射 JSON
-  console.log('[5/6] 写入码点映射...')
+  // 码点映射 JSON（含雪碧图文件名）
   const glyphMap = allGlyphs.map((g) => g.hex)
   const jsonOut = path.join(DATA_DIR, 'glyph-map.json')
-  fs.writeFileSync(jsonOut, JSON.stringify(glyphMap) + '\n')
+  fs.writeFileSync(jsonOut, JSON.stringify({ sprite: spriteName, glyphs: glyphMap }) + '\n')
   console.log(`  → ${jsonOut}`)
 
-  // 6. 转换为 WebP（失败不影响 PNG 和 JSON，但不写缓存以便下次重试）
-  console.log('[6/6] 转换 WebP...')
-  const spriteWebp = path.join(PUBLIC_SPRITES, 'glyph-pack.webp')
-  try {
-    await sharp(spritePng)
-      .webp({ quality: WEBP_QUALITY, lossless: false })
-      .toFile(spriteWebp)
-    const webpStat = fs.statSync(spriteWebp)
-    const pngStat = fs.statSync(spritePng)
-    console.log(`  → ${spriteWebp} (${(webpStat.size / 1024).toFixed(1)} KB vs PNG ${(pngStat.size / 1024).toFixed(1)} KB)`)
-
-    // 全部成功后才写缓存
-    fs.mkdirSync(path.dirname(CACHE_FILE), { recursive: true })
-    fs.writeFileSync(CACHE_FILE, JSON.stringify({ hash: currentHash }) + '\n')
-  } catch (err) {
-    console.error(`  ⚠ WebP 转换失败: ${err.message}`)
-    console.error('  PNG 和 JSON 已正常输出，下次构建将重试 WebP')
-  }
+  // 写入缓存
+  fs.mkdirSync(path.dirname(CACHE_FILE), { recursive: true })
+  fs.writeFileSync(CACHE_FILE, JSON.stringify({ hash: currentHash }) + '\n')
 
   console.log(`\n完成！共 ${glyphMap.length} 个字形（${glyphEntries.length} 个标准 + 1 个 a0a）`)
 }
