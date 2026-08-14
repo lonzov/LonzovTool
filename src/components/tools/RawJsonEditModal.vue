@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { NModal, NConfigProvider, NIcon, NSelect } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { Delete24Regular, ArrowUp24Regular, ArrowDown24Regular, Add24Regular, Edit24Filled } from '@vicons/fluent'
@@ -62,6 +62,101 @@ function nestedElLabel(el) {
 function nestedElPreview(el) {
   return getElPreviewText(el)
 }
+
+function onModalClose() {
+  if (nestedIdx.value !== null) {
+    cancelNestedEdit()
+    return false
+  }
+}
+
+// ========== 编辑器内容变化高度动画（类型/模式切换、增删元素等） ==========
+const formWrapRef = ref(null)
+let heightAnimEnd = null
+
+watch(
+  [
+    nestedIdx, editType, nestedType, withMode,
+    () => tempWith.value.length,
+    () => withRawtext.value.length,
+    () => nestedWith.value.length,
+  ],
+  () => {
+  const el = formWrapRef.value
+  if (!el || !showEditModal.value) return
+
+  // 中止上一轮残留的动画
+  if (heightAnimEnd) {
+    el.removeEventListener('transitionend', heightAnimEnd)
+    heightAnimEnd = null
+  }
+  el.style.transition = ''
+  el.style.height = ''
+  el.style.overflow = ''
+
+  // 1) 锁定旧高度（watch 在 pre 阶段运行，DOM 仍是旧分支）
+  const cap = getAvailableHeight(el)
+  const fromHeight = Math.min(el.scrollHeight, cap)
+  el.style.height = fromHeight + 'px'
+  el.style.overflow = 'hidden'
+
+  // 2) 等新分支渲染后再测量并过渡
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      el.style.transition = 'none'
+      el.style.height = ''
+      const newCap = getAvailableHeight(el)
+      const toHeight = Math.min(el.scrollHeight, newCap)
+
+      if (Math.abs(fromHeight - toHeight) < 2) {
+        resetWrapStyle(el)
+        return
+      }
+
+      el.style.height = fromHeight + 'px'
+      void el.offsetHeight
+      el.style.transition = 'height 0.3s cubic-bezier(0.2, 0, 0, 1)'
+      el.style.height = toHeight + 'px'
+
+      const onEnd = (e) => {
+        if (e.propertyName !== 'height') return
+        resetWrapStyle(el)
+        el.removeEventListener('transitionend', onEnd)
+        heightAnimEnd = null
+      }
+      heightAnimEnd = onEnd
+      el.addEventListener('transitionend', onEnd)
+    })
+  })
+})
+
+function resetWrapStyle(el) {
+  el.style.height = ''
+  el.style.overflow = ''
+  el.style.transition = ''
+}
+
+/** 计算卡片可用内容区高度 = 卡片总高 − 标题栏 − 按钮栏 − 内容 padding */
+function getAvailableHeight(el) {
+  const card = el.closest('.n-card')
+  if (!card) return Infinity
+
+  const header = card.querySelector(':scope > .n-card-header')
+  const footer = card.querySelector(':scope > .n-card-footer')
+  const headerH = header ? header.getBoundingClientRect().height : 68
+  const footerH = footer ? footer.getBoundingClientRect().height : 83
+
+  const scrollContent = el.closest('.n-scrollbar-content')
+  let padTop = 20
+  let padBottom = 20
+  if (scrollContent) {
+    const cs = getComputedStyle(scrollContent)
+    padTop = parseFloat(cs.paddingTop) || 20
+    padBottom = parseFloat(cs.paddingBottom) || 20
+  }
+
+  return card.clientHeight - headerH - footerH - padTop - padBottom
+}
 </script>
 
 <template>
@@ -75,7 +170,10 @@ function nestedElPreview(el) {
       content-scrollable
       @esc="nestedIdx !== null ? cancelNestedEdit() : closeEditModal()"
       @mask-click="nestedIdx !== null ? cancelNestedEdit() : closeEditModal()"
+      @close="onModalClose"
     >
+      <!-- 高度过渡动画载体：nestedIdx 切换时只替换其内部内容，本层始终存在 -->
+      <div ref="formWrapRef" class="edit-form-wrap">
       <!-- ========== 嵌套编辑器：编辑 with.rawtext 内元素 ========== -->
       <template v-if="nestedIdx !== null">
         <div class="edit-form">
@@ -193,12 +291,15 @@ function nestedElPreview(el) {
                     class="edit-input with-input"
                     :placeholder="`参数 ${wi + 1}`"
                   />
-                  <button class="btn-minor" :class="{ 'btn-delete-confirmed': withParamConfirmIdx === wi }" :title="withParamConfirmIdx === wi ? '再次点击确认删除' : '删除'" @click="removeWithParam(wi)">
+                  <button class="btn-delete" :class="{ 'btn-delete-confirmed': withParamConfirmIdx === wi }" :title="withParamConfirmIdx === wi ? '再次点击确认删除' : '删除'" @click="removeWithParam(wi)">
                     <NIcon :component="Delete24Regular" :size="14" />
                   </button>
                 </div>
               </div>
-              <button class="btn-minor" @click="addWithParam">添加参数</button>
+              <button class="btn-minor btn-add" @click="addWithParam">
+                <NIcon :component="Add24Regular" :size="14" />
+                <span>添加参数</span>
+              </button>
             </div>
 
             <!-- With {...} 对象模式 -->
@@ -225,14 +326,15 @@ function nestedElPreview(el) {
                   </div>
                 </div>
               </div>
-              <button class="btn-minor" @click="startNestedEdit(null)">
+              <button class="btn-minor btn-add" @click="startNestedEdit(null)">
                 <NIcon :component="Add24Regular" :size="14" />
-                添加元素
+                <span>添加元素</span>
               </button>
             </div>
           </template>
         </div>
       </template>
+      </div>
 
       <!-- 统一 footer -->
       <template #footer>
@@ -250,6 +352,7 @@ function nestedElPreview(el) {
 </template>
 
 <style scoped>
+.edit-form-wrap { transition: height 0.3s cubic-bezier(0.2, 0, 0, 1); }
 .edit-form { display: flex; flex-direction: column; gap: 14px; }
 .edit-field { display: flex; flex-direction: column; gap: 4px; }
 .edit-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -374,7 +477,7 @@ function nestedElPreview(el) {
 /* minor - 表单内小按钮 */
 .btn-minor {
   display: inline-flex; align-items: center; justify-content: center;
-  padding: 4px 10px;
+  padding: 9px 10px;
   border: none; background: transparent;
   color: var(--text-secondary);
   font-size: 12px; font-weight: 500;
@@ -399,6 +502,41 @@ function nestedElPreview(el) {
 .btn-minor:active { transform: scale(0.97); }
 .btn-minor:disabled { opacity: 0.3; cursor: default; }
 .btn-minor:disabled:hover { background: transparent; }
+
+/* add - 带加号的新增按钮（内部布局照抄 add-btn：图标+span，gap 5px；仅降低高度） */
+.btn-minor.btn-add {
+  gap: 5px;
+  padding: 6px 10px;
+}
+
+/* delete - 列表模式元素条尾部删除按钮（独立于 btn-minor，撑满元素条高度） */
+.btn-delete {
+  display: inline-flex; align-items: center; justify-content: center;
+  align-self: stretch;
+  flex-shrink: 0;
+  width: 34px;
+  padding: 0;
+  border: none; background: transparent;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+[data-theme="light"] .btn-delete:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .btn-delete {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+[data-theme="dark"] .btn-delete:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-delete:active { transform: scale(0.97); }
 
 .btn-delete-confirmed,
 .btn-delete-confirmed:hover {
