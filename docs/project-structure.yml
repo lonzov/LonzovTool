@@ -63,6 +63,7 @@ src:
           CoordinateCalcModal.vue: 坐标自动计算弹窗，输入起终点坐标自动生成 x,y,z,dx,dy,dz 参数
   composables:
     useMouseGlow.js: 卡片边框高光平滑跟随鼠标效果（lerp 插值）
+    useOfficialDomainCheck.js: 非官方站点检测，URL 域名非 tool.lonzov.top（排除本地开发环境）时返回 true，用于注入红色警告横幅
     usePrivacyModal.js: 隐私弹窗状态共享组合式函数
     usePWAInstall.js: PWA 安装状态管理与安装触发，处理不同系统/浏览器的安装逻辑
     useRawJsonEditor.js: T显编辑器核心状态与逻辑（模块级单例）

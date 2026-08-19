@@ -4,7 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
 import { getGlobalHead } from './main.js'
 import { NMessageProvider, NIcon, NTooltip } from 'naive-ui'
-import { Settings24Regular, ShareAndroid20Regular } from '@vicons/fluent'
+import { Settings24Regular, ShareAndroid20Regular, Open16Filled } from '@vicons/fluent'
 import AppMenu from './components/AppMenu.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import PrivacyBanner from './components/PrivacyBanner.vue'
@@ -13,6 +13,7 @@ import ShareModal from './components/ShareModal.vue'
 import { useTheme } from './composables/useTheme'
 import { useWorkspace } from './composables/useWorkspace.js'
 import { useSWUpdate } from './composables/useSWUpdate'
+import { useOfficialDomainCheck } from './composables/useOfficialDomainCheck'
 import { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES } from './router'
 
 export default {
@@ -22,6 +23,7 @@ export default {
     const route = useRoute()
     const { themeMode, cycleTheme, isDark } = useTheme()
     const { initSW } = useSWUpdate()
+    const { isUnofficial } = useOfficialDomainCheck()
 
     // SSR 期间在组件上下文中设置 SEO head（router.afterEach 中的 useHead 在 SSR 时
     // 不在 Vue 组件上下文中导致 inject 失败，必须在组件 setup 内调用）
@@ -410,11 +412,13 @@ export default {
       isHome,
       isWorkspaceRoute,
       skipPageTransition,
+      isUnofficial,
       handleResize,
       handleMenuNavigate,
       goSettings,
       SettingsIcon: Settings24Regular,
       ShareIcon: ShareAndroid20Regular,
+      OfficialOpenIcon: Open16Filled,
       initSW,
     }
   },
@@ -566,6 +570,13 @@ export default {
           <NScrollbar ref="desktopScrollbar" :style="{ height: '100%' }">
             <div style="padding: 12px 24px 24px; scrollMarginTop: 56px">
               <div style="max-width: 1200px; margin: 0 auto">
+                <!-- 非官方站点红色横幅：置于主内容区域顶部，不可关闭（no-close） -->
+                <div v-if="isUnofficial" class="unofficial-domain-banner">你正在访问的是非<a
+      class="official-link"
+      href="https://tool.lonzov.top"
+      target="_blank"
+      rel="noopener noreferrer"
+    >官方站点<NIcon :component="OfficialOpenIcon" :size="14" /></a>，请留意信息安全</div>
                 <RouterView v-slot="{ Component, route }">
                   <Transition :name="skipPageTransition ? '' : 'page'" mode="out-in">
                     <KeepAlive :include="['HomeView']">
@@ -652,6 +663,13 @@ export default {
       </button>
 
       <div style="padding: 12px 24px 24px">
+        <!-- 非官方站点红色横幅：置于主内容区域顶部，不可关闭（no-close） -->
+        <div v-if="isUnofficial" class="unofficial-domain-banner">你正在访问的是非<a
+      class="official-link"
+      href="https://tool.lonzov.top"
+      target="_blank"
+      rel="noopener noreferrer"
+    >官方站点<NIcon :component="OfficialOpenIcon" :size="14" /></a>，请留意信息安全</div>
         <RouterView v-slot="{ Component, route }">
           <Transition :name="skipPageTransition ? '' : 'page'" mode="out-in">
             <KeepAlive :include="['HomeView']">
@@ -811,6 +829,34 @@ export default {
 </template>
 
 <style>
+/* ===== 非官方站点横幅（样式参考 index.html 中的 .loading-timeout-banner）===== */
+.unofficial-domain-banner {
+  background: #CC3333;
+  color: #ffffff;
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.unofficial-domain-banner .official-link {
+  color: #ffffff;
+  text-decoration: underline;
+  -webkit-text-decoration-color: rgba(255, 255, 255, 0.75);
+  text-decoration-color: rgba(255, 255, 255, 0.75);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+.unofficial-domain-banner .official-link:hover {
+  color: #ffe0e0;
+  text-decoration-color: #ffe0e0;
+}
 .mobile-menu-button {
   position: fixed !important;
   top: 12px !important;
