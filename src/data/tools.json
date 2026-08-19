@@ -23,21 +23,21 @@
           "id": "qjzh",
           "title": "艺术字转换",
           "description": "将字母数字转换为游戏内的艺术字",
-          "logo": "/logos/1tool_lonzov_top.webp",
+          "logo": "TextCaseTitle24Filled",
           "link": "/c/qjzh/"
         },
         {
           "id": "tr",
           "title": "T显动画生成",
           "description": "生成打字机动画效果的rawJSON",
-          "logo": "/logos/1tool_lonzov_top.webp",
+          "logo": "TextGrammarWand24Filled",
           "link": "/c/tr/"
         },
         {
           "id": "raw-json",
           "title": "T显可视化编辑器",
           "description": "通过可视化界面编辑rawJSON",
-          "logo": "/logos/1tool_lonzov_top.webp",
+          "logo": "Braces24Filled",
           "link": "/c/raw-json/"
         },
         {
@@ -51,7 +51,7 @@
           "id": "selector",
           "title": "选择器参数编辑器",
           "description": "可视化编辑目标选择器参数",
-          "logo": "/logos/1tool_lonzov_top.webp",
+          "logo": "Mention20Filled",
           "link": "/c/selector/"
         },
         {
@@ -65,7 +65,7 @@
           "id": "execute",
           "title": "语法转换",
           "description": "execute指令语法升级",
-          "logo": "/logos/1tool_lonzov_top.webp",
+          "logo": "ArrowTrending20Filled",
           "link": "/c/execute/"
         }
       ]
@@ -79,7 +79,7 @@
           "id": "fuhao",
           "title": "MC特殊符号",
           "description": "mc特殊符号,如鸡腿M币等",
-          "logo": "/logos/1tool_lonzov_top.webp",
+          "logo": "CurrencyDollarEuro20Filled",
           "link": "/c/fuhao/"
         },
         {

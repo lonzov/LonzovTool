@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, onBeforeUnmount } from 'vue'
 import { NIcon, NConfigProvider, darkTheme } from 'naive-ui'
-import { TextGrammarWand24Regular } from '@vicons/fluent'
+import { Braces24Filled } from '@vicons/fluent'
 import { useTheme } from '../../composables/useTheme'
 import {
   useRawJsonEditor,
@@ -82,7 +82,7 @@ const darkSelectOverrides = {
       <!-- 页面标题 -->
       <div class="page-header">
         <div class="page-title-row">
-          <NIcon :component="TextGrammarWand24Regular" class="page-title-icon" />
+          <NIcon :component="Braces24Filled" class="page-title-icon" />
           <h1 class="page-title">T显可视化编辑器</h1>
         </div>
         <p class="page-desc">可视化构建 rawtext JSON，原项目@矩阵方块，详见关于页</p>

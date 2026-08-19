@@ -74,7 +74,7 @@ src:
     useWorkspace.js: 工作站状态管理组合式函数，包括标签页处理
     useDownloadIntro.js: 下载页 Markdown 功能介绍加载组合式函数（按需加载原始 md 字符串）
   config:
-    categoryIcons.js: 分类图标配置
+    categoryIcons.js: 分类图标配置 + 工具卡片 logo 图标映射（getCategoryIcon / getToolIcon，tools.json 中非路径 logo 按图标名映射）
   data:
     downloads:
       index.js: 模块映射与动态导入配置

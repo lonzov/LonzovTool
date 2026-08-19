@@ -3,6 +3,7 @@ import { h, ref, onMounted, onUnmounted, Transition } from 'vue'
 import { useRouter } from 'vue-router'
 import { NHighlight, NIcon, useMessage } from 'naive-ui'
 import { Star24Filled } from '@vicons/fluent'
+import { getToolIcon } from '../config/categoryIcons'
 import { useWorkspace } from '../composables/useWorkspace.js'
 import { useMouseGlow, applyGlow } from '../composables/useMouseGlow.js'
 
@@ -276,6 +277,9 @@ export default {
         this.longPressTimer = null
       }
     },
+    getIconComponent(name) {
+      return getToolIcon(name)
+    },
   },
   watch: {
     toolId() {
@@ -296,11 +300,14 @@ export default {
     },
   },
   render() {
+    // logo 以 / 或 http 开头视为图片路径，否则视为图标名（图标统一白底黑 logo）
+    const isIconLogo = !!this.logo && !this.logo.startsWith('/') && !/^https?:/i.test(this.logo)
+    const iconComp = isIconLogo ? this.getIconComponent(this.logo) : null
     const hasLogo = !!this.logo
-    const shouldLoad = hasLogo && this.isInViewport && !this.imageError
-    const showImage = hasLogo && this.imageLoaded && !this.imageError
-    const showError = hasLogo && this.imageError
-    const showSkeleton = hasLogo && !this.imageLoaded && !this.imageError
+    const shouldLoad = hasLogo && !isIconLogo && this.isInViewport && !this.imageError
+    const showImage = hasLogo && !isIconLogo && this.imageLoaded && !this.imageError
+    const showError = hasLogo && !isIconLogo && this.imageError
+    const showSkeleton = hasLogo && !isIconLogo && !this.imageLoaded && !this.imageError
 
     // 渐变骨架屏
     const skeletonGradient = this.isDark
@@ -383,7 +390,7 @@ export default {
               height: '40px',
               borderRadius: '10px',
               cornerShape: 'squircle',
-              background: 'var(--bg-card)',
+              background: isIconLogo ? '#ffffff' : 'var(--bg-card)',
               marginRight: '12px',
               flexShrink: 0,
               overflow: 'hidden',
@@ -392,6 +399,22 @@ export default {
             },
           },
           [
+            // 图标 logo（白底黑图标，图片 logo 走下方图片逻辑）
+            isIconLogo
+              ? h(
+                  'div',
+                  {
+                    style: {
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    },
+                  },
+                  [h(NIcon, { component: iconComp, size: 24, color: '#000000' })],
+                )
+              : null,
             // Logo 图片容器
             h(
               'div',
