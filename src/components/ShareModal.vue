@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { NModal, NConfigProvider } from 'naive-ui'
+import { NModal, NConfigProvider, useMessage } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { useTheme } from '../composables/useTheme'
 import html2canvas from 'html2canvas'
@@ -8,6 +8,7 @@ import html2canvas from 'html2canvas'
 const props = defineProps({ show: Boolean })
 const emit = defineEmits(['update:show'])
 const { isDark } = useTheme()
+const message = useMessage()
 
 const showLocal = computed({
   get: () => props.show,
@@ -19,8 +20,6 @@ const posterRef = ref(null)
 const posterImage = ref(null)
 let cachedKey = '' // 内容缓存键：命中则复用已生成海报，避免二次渲染
 const generating = ref(false)
-const copied = ref(false)
-let copyTimer = null
 
 // 移动端自适应高度（参考 UpdateDialog）
 const isCompact = ref(false)
@@ -32,7 +31,6 @@ onMounted(() => {
   mq.addEventListener('change', onMqChange)
 })
 onUnmounted(() => {
-  clearTimeout(copyTimer)
   if (mq) mq.removeEventListener('change', onMqChange)
 })
 
@@ -120,22 +118,24 @@ async function generatePoster() {
 async function copyLink() {
   const url = window.location.href
   try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(url)
-    } else {
-      const ta = document.createElement('textarea')
-      ta.value = url
-      ta.style.position = 'fixed'
-      ta.style.left = '-9999px'
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
+    await navigator.clipboard.writeText(url)
+    message.success('已复制', { duration: 1000 })
+  } catch {
+    try {
+      const textarea = document.createElement('textarea')
+      textarea.value = url
+      textarea.setAttribute('readonly', '')
+      textarea.style.position = 'absolute'
+      textarea.style.left = '-9999px'
+      document.body.appendChild(textarea)
+      textarea.select()
+      if (!document.execCommand('copy')) throw new Error()
+      document.body.removeChild(textarea)
+      message.success('已复制', { duration: 1000 })
+    } catch {
+      message.error('复制失败，请重试', { duration: 1000 })
     }
-    copied.value = true
-    clearTimeout(copyTimer)
-    copyTimer = setTimeout(() => { copied.value = false }, 2000)
-  } catch { /* 静默降级 */ }
+  }
 }
 
 // ---- 保存图片 ----
@@ -150,7 +150,6 @@ function downloadPoster() {
 // ---- 监听 ----
 watch(() => props.show, (val) => {
   if (val) {
-    copied.value = false
     nextTick(() => generatePoster())
   }
 })
@@ -270,9 +269,7 @@ const modalStyle = computed(() => ({
 
       <template #footer>
         <div class="modal-foot">
-          <button class="foot-btn foot-btn-outline" @click="copyLink">
-            {{ copied ? '已复制' : '复制链接' }}
-          </button>
+          <button class="foot-btn foot-btn-outline" @click="copyLink">复制链接</button>
           <button
             class="foot-btn foot-btn-fill"
             :disabled="!posterImage"
