@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { NSelect, NSwitch, NConfigProvider, darkTheme, NModal, NIcon, useMessage } from 'naive-ui'
 import { ArrowDownload16Regular, ArrowExportUp24Filled, Settings24Regular, ChevronUp16Regular, ArrowCounterclockwise24Filled } from '@vicons/fluent'
 import { useTheme } from '../composables/useTheme'
@@ -42,9 +42,9 @@ const { embedEnabled, setEmbedEnabled, iframeMaskMode, setIframeMaskMode } = use
 
 // 深色模式 iframe 遮罩选项
 const IFRAME_MASK_OPTIONS = [
-  { value: 'off', label: '关闭' },
-  { value: 'black', label: '黑色遮罩' },
-  { value: 'invert', label: '反色滤镜' },
+  { value: 'off', label: '不处理' },
+  { value: 'black', label: '降低亮度' },
+  { value: 'invert', label: '颜色反转' },
 ]
 
 const maskValue = computed({
@@ -53,12 +53,78 @@ const maskValue = computed({
 })
 
 function onEmbedToggle(val) {
-  setEmbedEnabled(val)
-  // 关闭开关时：清理工作站中已有的站外嵌入标签页（含本地记录与缓存，并重新归并编号）
-  if (!val) {
-    const { removeExternalTabs } = useWorkspace()
-    removeExternalTabs()
+  if (val) {
+    // 开启：弹第三方内容声明确认
+    openEmbedEnableModal()
+  } else {
+    // 关闭：弹选择模态框（是否清理已打开的站外嵌入标签页）
+    embedCloseModal.value.show = true
   }
+}
+
+/* ========== 开启站外嵌入：声明确认（5s 倒计时）========== */
+const embedEnableModal = ref({ show: false, countdown: 0 })
+let embedEnableTimer = null
+
+function openEmbedEnableModal() {
+  if (embedEnableTimer) clearInterval(embedEnableTimer)
+  embedEnableModal.value = { show: true, countdown: 9 }
+  embedEnableTimer = setInterval(() => {
+    if (embedEnableModal.value.countdown > 0) {
+      embedEnableModal.value.countdown--
+      if (embedEnableModal.value.countdown === 0 && embedEnableTimer) {
+        clearInterval(embedEnableTimer)
+        embedEnableTimer = null
+      }
+    }
+  }, 1000)
+}
+
+const embedEnableReady = computed(() => embedEnableModal.value.countdown <= 0)
+const embedConfirmLabel = computed(() =>
+  embedEnableModal.value.countdown > 0
+    ? `我已知晓 ${embedEnableModal.value.countdown}`
+    : '我已知晓',
+)
+
+function confirmEmbedEnable() {
+  if (!embedEnableReady.value) return
+  setEmbedEnabled(true)
+  closeEmbedEnableModal()
+}
+
+function closeEmbedEnableModal() {
+  if (embedEnableTimer) {
+    clearInterval(embedEnableTimer)
+    embedEnableTimer = null
+  }
+  embedEnableModal.value.show = false
+}
+
+onBeforeUnmount(() => {
+  if (embedEnableTimer) clearInterval(embedEnableTimer)
+})
+
+/* ========== 关闭站外嵌入：选择是否清理标签页 ========== */
+const embedCloseModal = ref({ show: false })
+
+function directEmbedClose() {
+  // 直接关闭，保留已打开的站外嵌入标签页
+  setEmbedEnabled(false)
+  embedCloseModal.value.show = false
+}
+
+function cleanupEmbedClose() {
+  // 关闭并清理已打开的站外嵌入标签页（含本地记录与缓存，重新归并编号）
+  setEmbedEnabled(false)
+  const { removeExternalTabs } = useWorkspace()
+  removeExternalTabs()
+  embedCloseModal.value.show = false
+}
+
+function cancelEmbedClose() {
+  // 取消：保持开启状态
+  embedCloseModal.value.show = false
 }
 
 /* ========== 开关轨道颜色（参考特殊符号页） ========== */
@@ -540,26 +606,6 @@ const darkOverrides = {
                   />
                 </div>
               </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <span class="setting-title">标签页拖拽触发时长</span>
-                  <p class="setting-desc">长按标签页进入拖拽模式的时长，默认700ms</p>
-                </div>
-                <div class="setting-control setting-control--drag-delay">
-                  <span class="drag-delay-input-wrap">
-                    <input
-                      type="text"
-                      inputmode="numeric"
-                      class="drag-delay-input"
-                      :value="dragDelayInput"
-                      placeholder="700"
-                      @input="onDragDelayInput($event.target.value)"
-                      @blur="onDragDelayBlur"
-                    />
-                    <span class="drag-delay-unit">ms</span>
-                  </span>
-                </div>
-              </div>
             </div>
           </Transition>
         </div>
@@ -583,8 +629,28 @@ const darkOverrides = {
             <div v-show="!collapsedSections.workspace" class="card-body">
               <div class="setting-row">
                 <div class="setting-info">
-                  <span class="setting-title">站外站点嵌入工作站</span>
-                  <p class="setting-desc">开启后，点击站外卡片将在工作站中以 iframe 方式打开；关闭则保持默认，在浏览器新标签页中打开</p>
+                  <span class="setting-title">标签页长按拖拽时长</span>
+                  <p class="setting-desc">长按标签页多久后可以拖动，默认 700 ms</p>
+                </div>
+                <div class="setting-control setting-control--drag-delay">
+                  <span class="drag-delay-input-wrap">
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      class="drag-delay-input"
+                      :value="dragDelayInput"
+                      placeholder="700"
+                      @input="onDragDelayInput($event.target.value)"
+                      @blur="onDragDelayBlur"
+                    />
+                    <span class="drag-delay-unit">ms</span>
+                  </span>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <span class="setting-title">在工作站内打开外部网页</span>
+                  <p class="setting-desc">开启后，点击站外卡片直接在工作站里查看网页；关闭则照旧在浏览器新标签页打开</p>
                 </div>
                 <div class="setting-control">
                   <NSwitch
@@ -597,8 +663,8 @@ const darkOverrides = {
               </div>
               <div class="setting-row">
                 <div class="setting-info">
-                  <span class="setting-title">深色模式 iframe 遮罩</span>
-                  <p class="setting-desc">深色模式下为站外嵌入页叠加深色适配效果，仅在深色模式下生效</p>
+                  <span class="setting-title">深色模式下压暗外部网页</span>
+                  <p class="setting-desc">将工作站内的外部网页统一调暗（部分浏览器可能不支持颜色反转）</p>
                 </div>
                 <div class="setting-control">
                   <NSelect
@@ -775,6 +841,75 @@ const darkOverrides = {
           <div class="import-modal-actions">
             <button class="import-btn import-btn--outline" @click="cancelClearResourceCache">取消</button>
             <button class="import-btn import-btn--fill" @click="confirmClearResourceCache">确认清理</button>
+          </div>
+        </template>
+      </NModal>
+    </NConfigProvider>
+
+    <!-- 开启站外嵌入：第三方内容声明 + 5s 倒计时确认 -->
+    <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
+      <NModal
+        v-model:show="embedEnableModal.show"
+        preset="card"
+        :style="{
+          maxWidth: '420px',
+          width: 'calc(100% - 32px)',
+          borderRadius: '16px',
+          cornerShape: 'squircle',
+        }"
+        title="在工作站内打开外部网页"
+        :bordered="false"
+        :closable="true"
+        @close="closeEmbedEnableModal"
+        :mask-closable="false"
+        :auto-focus="false"
+      >
+        <div class="embed-enable-modal-body">
+          <p>开启后，点击站外卡片将直接在工作站内打开网页，方便你同时使用多个工具。<strong>请注意：</strong></p>
+          <p>1. 打开的网页均为 <strong>第三方网站</strong>，与本站无关，本站无法保证其稳定性与绝对的安全性，登录账号或填写个人信息时请谨慎。</p>
+          <p>2. 部分网站因安全策略 <strong>不支持在工作站内打开</strong>，若遇到无法打开的情况，请点击顶部导航栏中的按钮，改用新标签页打开。</p>
+        </div>
+        <template #footer>
+          <div class="import-modal-actions">
+            <button
+              class="import-btn import-btn--fill embed-confirm-btn"
+              :class="{ 'embed-confirm-btn--disabled': !embedEnableReady }"
+              :disabled="!embedEnableReady"
+              @click="confirmEmbedEnable"
+            >
+              {{ embedConfirmLabel }}
+            </button>
+          </div>
+        </template>
+      </NModal>
+    </NConfigProvider>
+
+    <!-- 关闭站外嵌入：是否清理已打开的嵌入标签页 -->
+    <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
+      <NModal
+        v-model:show="embedCloseModal.show"
+        preset="card"
+        :style="{
+          maxWidth: '420px',
+          width: 'calc(100% - 32px)',
+          borderRadius: '16px',
+          cornerShape: 'squircle',
+        }"
+        title="关闭站外嵌入"
+        :bordered="false"
+        :closable="true"
+        @close="cancelEmbedClose"
+        :mask-closable="true"
+        :auto-focus="false"
+      >
+        <div class="embed-close-modal-body">
+          <p>是否需要清理已打开的站外嵌入标签页？</p>
+          <p class="embed-close-hint">关闭后，站外卡片将恢复为在浏览器新标签页中打开。</p>
+        </div>
+        <template #footer>
+          <div class="import-modal-actions">
+            <button class="import-btn import-btn--outline" @click="cleanupEmbedClose">清理</button>
+            <button class="import-btn import-btn--fill" @click="directEmbedClose">直接关闭</button>
           </div>
         </template>
       </NModal>
@@ -1133,6 +1268,41 @@ const darkOverrides = {
   line-height: 1.75;
   color: var(--n-text-color-2);
   padding: 4px 2px;
+}
+
+/* ========== 站外嵌入模态框 ========== */
+.embed-enable-modal-body,
+.embed-close-modal-body {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--n-text-color-2);
+  padding: 4px 2px;
+}
+
+.embed-enable-modal-body p,
+.embed-close-modal-body p {
+  margin: 0 0 10px;
+}
+
+.embed-enable-modal-body p:last-child,
+.embed-close-modal-body p:last-child {
+  margin-bottom: 0;
+}
+
+.embed-enable-modal-body strong {
+  font-weight: 600;
+  color: var(--n-text-color);
+}
+
+.embed-close-hint {
+  font-size: 13px;
+  color: var(--n-text-color-3);
+  opacity: 0.8;
+}
+
+/* 倒计时未结束：确认按钮填充与文字降至 60% 透明度 */
+.embed-confirm-btn--disabled {
+  opacity: 0.6;
 }
 
 .import-modal-actions {
