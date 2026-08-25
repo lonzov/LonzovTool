@@ -7,6 +7,8 @@ src:
     AppMenu.vue: 侧边栏导航菜单，支持分类折叠与 PWA 安装入口
     DonateCard.vue: 打赏收款码卡片，含三平台切换 + 爱发电按钮
     DonateRecords.vue: 打赏记录表格，异步加载 JSON 动态渲染
+    DarkFilterIcon.vue: 深色滤镜状态图标（月亮 + 可生长/回缩的描边斜杠），用 stroke-dashoffset 动画实现斜杠生长
+    ExternalSiteView.vue: 站外站点 iframe 嵌入视图（工作站标签页内显示站外卡片内容）
     Footer.vue: 页脚组件，包含版权信息、运行时间、隐私政策入口
     HomeView.vue: 首页视图容器，集成搜索栏、工具网格、页脚
     IframeForm.vue: iframe 表单封装组件
@@ -22,7 +24,7 @@ src:
     ToolLoading.vue: 异步组件加载动画（旋转圆圈 + 加载文字），复用文档页加载样式
     UpdateDialog.vue: SW 更新确认弹窗，照搬 Cookie 弹窗样式
     ShareModal.vue: 分享海报模态框，Canvas 渲染海报含标题/简介/Logo/二维码，支持复制链接与保存图片
-    WorkspaceView.vue: 工作站视图容器，管理多标签页
+    WorkspaceView.vue: 工作站视图容器，管理多标签页，含站外 iframe 标签（/embed/ 目录，域名白名单校验）
     StatsInfoBar.vue: 访问统计信息栏，显示统计起始日、更新时间与数据来源
     tools:
       ArtTextTool.vue: 艺术字转换工具页
@@ -71,7 +73,8 @@ src:
     useStats.js: 访问统计状态管理组合式函数（模块级单例，含内存/localsStorage双层缓存）
     useTheme.js: 主题状态管理组合式函数
     useToolStorage.js: 工具页 localStorage 持久化组合式函数
-    useWorkspace.js: 工作站状态管理组合式函数，包括标签页处理
+    useWorkspace.js: 工作站状态管理组合式函数，包括标签页处理，及站外 iframe 标签的 path 编解码与域名白名单
+    useWorkspaceSettings.js: 工作站相关偏好设置（站外卡片 iframe 嵌入开关默认关闭、深色模式 iframe 遮罩 off/black/invert 默认黑色、按站点的深色滤镜开关持久化为同一密钥内 id:0/1）
     useDownloadIntro.js: 下载页 Markdown 功能介绍加载组合式函数（按需加载原始 md 字符串）
   config:
     categoryIcons.js: 分类图标配置 + 工具卡片 logo 图标映射（getCategoryIcon / getToolIcon，tools.json 中非路径 logo 按图标名映射）

@@ -4,8 +4,15 @@ import { useRouter } from 'vue-router'
 import { NHighlight, NIcon, useMessage } from 'naive-ui'
 import { Star24Filled } from '@vicons/fluent'
 import { getToolIcon } from '../config/categoryIcons'
-import { useWorkspace } from '../composables/useWorkspace.js'
+import { useWorkspace, externalTabPath } from '../composables/useWorkspace.js'
+import { useWorkspaceSettings } from '../composables/useWorkspaceSettings.js'
 import { useMouseGlow, applyGlow } from '../composables/useMouseGlow.js'
+
+// 站外嵌入开关（模块级共享 ref，render 的 onClick 闭包可直接读取）
+const { embedEnabled } = useWorkspaceSettings()
+
+// 始终在新标签页打开的卡片 ID 白名单
+const ALWAYS_NEW_TAB_IDS = ['rainyun', 'mcnav', 'honghe']
 
 export default {
   components: {
@@ -315,6 +322,8 @@ export default {
       : 'linear-gradient(120deg, #f0f2f5 0%, #e0e0e0 100%)'
 
     const isInternal = this.link.startsWith('/') && this.link !== '/'
+    // 白名单卡片：始终在浏览器新标签页打开
+    const alwaysNewTab = ALWAYS_NEW_TAB_IDS.includes(this.toolId)
 
     const cardStyle = {
       display: 'flex',
@@ -348,9 +357,9 @@ export default {
         onTouchmove: () => this.handleTouchMove(),
         ...(this.link ? {
           href: this.link,
-          target: isInternal ? '' : '_blank',
-          rel: isInternal ? '' : 'noopener',
-          referrerpolicy: isInternal ? '' : 'origin',
+          target: alwaysNewTab || !isInternal ? '_blank' : '',
+          rel: alwaysNewTab || !isInternal ? 'noopener' : '',
+          referrerpolicy: alwaysNewTab || !isInternal ? 'origin' : '',
           onClick: (e) => {
             // 长按收藏后阻止导航
             if (this.longPressed) {
@@ -362,6 +371,8 @@ export default {
             if (this.toolId && window.umami) {
               window.umami.track(this.toolId)
             }
+            // 白名单：始终新标签页打开，不拦截
+            if (alwaysNewTab) return
             // 站内链接：拦截默认行为，走 SPA 路由（预渲染时 JS 未执行则正常跳转 <a>）
             if (isInternal) {
               e.preventDefault()
@@ -374,7 +385,18 @@ export default {
                 this.router.push(toolPath)
               }
             }
-            // 外部链接：不拦截，<a> 自带 target="_blank" 正常新窗口打开
+            // 外部链接：仅处理站外卡片；开启"站外嵌入工作站"时改在工作站标签页 iframe 打开，
+            // 否则不拦截，<a> 自带 target="_blank" 正常新窗口打开
+            else if (embedEnabled.value) {
+              // 修饰键 / 中键点击视为用户主动要求新标签页，不拦截
+              const forceNewTab = e.metaKey || e.ctrlKey || e.button === 1
+              if (!forceNewTab) {
+                e.preventDefault()
+                const tabPath = externalTabPath(this.link)
+                this.openTab(tabPath, this.title)
+                this.router.push(tabPath)
+              }
+            }
           },
         } : {}),
       },

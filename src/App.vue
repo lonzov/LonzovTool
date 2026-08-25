@@ -11,7 +11,7 @@ import PrivacyBanner from './components/PrivacyBanner.vue'
 import UpdateDialog from './components/UpdateDialog.vue'
 import ShareModal from './components/ShareModal.vue'
 import { useTheme } from './composables/useTheme'
-import { useWorkspace } from './composables/useWorkspace.js'
+import { useWorkspace, isExternalPath } from './composables/useWorkspace.js'
 import { useSWUpdate } from './composables/useSWUpdate'
 import { useOfficialDomainCheck } from './composables/useOfficialDomainCheck'
 import { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES } from './router'
@@ -290,9 +290,11 @@ export default {
           alert('请至少先打开一个工具页面（从首页点击工具卡片）')
           return
         }
-        // 以本地存储的活跃标签为准，前往对应路径
+        // 以本地存储的活跃标签为准，前往对应路径（站外标签路径本身即完整路由）
         const targetPath = activeTab.value || '/c/qjzh'
-        const fullPath = '/c/' + (targetPath === '/c/' ? '' : targetPath.replace(/^\/c\//, ''))
+        const fullPath = isExternalPath(targetPath)
+          ? targetPath
+          : '/c/' + (targetPath === '/c/' ? '' : targetPath.replace(/^\/c\//, ''))
         router.push(fullPath)
         activeKey.value = 'workspace'
         return
@@ -380,7 +382,7 @@ export default {
         activeKey.value = 'donate'
       } else if (path.startsWith('/submit')) {
         activeKey.value = 'submit'
-      } else if (path.startsWith('/c/')) {
+      } else if (path.startsWith('/c/') || path.startsWith('/embed/')) {
         activeKey.value = 'workspace'
       }
     }
@@ -388,11 +390,12 @@ export default {
     router.afterEach(handleRouteChange)
 
     const isHome = computed(() => router.currentRoute.value.path === '/')
-    const isWorkspaceRoute = computed(() => router.currentRoute.value.path.startsWith('/c/'))
+    const isWorkspaceRoute = computed(() =>
+      router.currentRoute.value.path.startsWith('/c/') || router.currentRoute.value.path.startsWith('/embed/'))
     // 追踪上一条路由是否为工作站，用于判断是否跳过页面切换动画
     let _prevIsWorkspace = false
     router.afterEach((to) => {
-      _prevIsWorkspace = to.path.startsWith('/c/')
+      _prevIsWorkspace = to.path.startsWith('/c/') || to.path.startsWith('/embed/')
     })
     // 仅工作站→工作站内部切换时跳过动画，其他情况（首页→工作站、文档→工作站等）保留动画
     const skipPageTransition = computed(() => _prevIsWorkspace && isWorkspaceRoute.value)

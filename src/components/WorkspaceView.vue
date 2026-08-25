@@ -1,9 +1,10 @@
 <script setup>
 import { computed, watch, onMounted, onBeforeUnmount, ref, defineAsyncComponent } from 'vue'
-import { NProgress, NDropdown, useMessage } from 'naive-ui'
+import { NProgress, NDropdown, NIcon, useMessage } from 'naive-ui'
 import { useRouter, useRoute } from 'vue-router'
 import { ChevronDown16Filled } from '@vicons/fluent'
-import { useWorkspace } from '../composables/useWorkspace.js'
+import { useWorkspace, isExternalPath, getExternalUrl, isExternalUrlAllowed, getExternalLogo } from '../composables/useWorkspace.js'
+import { getToolIcon } from '../config/categoryIcons'
 import { useTheme } from '../composables/useTheme.js'
 import ToolLoading from './ToolLoading.vue'
 import NotFoundView from '../views/NotFoundView.vue'
@@ -15,6 +16,11 @@ const asyncOptions = {
   delay: 200,
   timeout: 10000,
 }
+
+const ExternalSiteView = defineAsyncComponent({
+  loader: () => import('./ExternalSiteView.vue'),
+  ...asyncOptions,
+})
 
 const ArtTextTool = defineAsyncComponent({
   loader: () => import('./tools/ArtTextTool.vue'),
@@ -62,6 +68,46 @@ function getComponent(path) {
   return componentMap[normalized] || null
 }
 
+// 是否为工作站路由：本地工具页 /c/ 或站外嵌入页 /embed/
+function isWorkspaceRoutePath(p) {
+  return p.startsWith('/c/') || p.startsWith('/embed/')
+}
+
+// 当前活跃标签对应的站外 URL（否则为 null），用于渲染 iframe 嵌入
+const activeExternalUrl = computed(() => {
+  if (!activeTab.value) return null
+  const url = isExternalPath(activeTab.value) ? getExternalUrl(activeTab.value) : null
+  // 域名白名单校验：不在 tools.json 站外链接中的直接交 404 处理
+  return url && isExternalUrlAllowed(url) ? url : null
+})
+
+// 站外标签的 logo（放到标签栏标题前面）；本地工具标签无 logo
+const tabLogos = computed(() => {
+  const map = {}
+  for (const tab of tabs.value) {
+    if (isExternalPath(tab.path)) {
+      const url = getExternalUrl(tab.path)
+      map[tab.path] = url ? getExternalLogo(url) : ''
+    }
+  }
+  return map
+})
+
+function isIconTabLogo(logo) {
+  return !!logo && !logo.startsWith('/') && !/^https?:/i.test(logo)
+}
+
+// 已知工具页或通过白名单的站外标签 → 需持久化为正式标签；其余视为无效页面
+function ensureTabForRoutePath(routePath) {
+  const externalUrl = isExternalPath(routePath) ? getExternalUrl(routePath) : null
+  if (getComponent(routePath) || (externalUrl && isExternalUrlAllowed(externalUrl))) {
+    ensureTabForPath(routePath)
+  } else {
+    // 无效工具页 / 不在白名单的站外链接：UI 显示"暂无内容"，但不写入 localStorage
+    setActiveTabWithoutPersist(routePath)
+  }
+}
+
 function handleClose(path) {
   const result = closeTab(path)
   if (result === 'last') {
@@ -90,7 +136,7 @@ function handleTabSelect(key) {
 
 // 监听标签变化，全部关闭时回首页
 watch(tabs, (val) => {
-  if (val.length === 0 && router.currentRoute.value.path.startsWith('/c/')) {
+  if (val.length === 0 && isWorkspaceRoutePath(router.currentRoute.value.path)) {
     router.push('/')
   }
 }, { deep: true })
@@ -105,7 +151,10 @@ let syncingFromRoute = false
 
 watch(activeTab, (newPath) => {
   if (syncingFromRoute || !newPath) return
-  const fullPath = '/c/' + (newPath === '/c/' ? '' : newPath.replace(/^\/c\//, ''))
+  // 站外标签路径本身即为完整路由；本地工具标签统一补上 /c/ 前缀
+  const fullPath = isExternalPath(newPath)
+    ? newPath
+    : ('/c/' + (newPath === '/c/' ? '' : newPath.replace(/^\/c\//, '')))
   if (route.fullPath !== fullPath) {
     router.replace(fullPath)
   }
@@ -114,53 +163,41 @@ watch(activeTab, (newPath) => {
 // ===== 从路由同步到活跃标签（处理路径不在 tabs 中的情况） =====
 function syncFromRoute() {
   const routePath = route.path
-  if (!routePath.startsWith('/c/')) return
+  if (!isWorkspaceRoutePath(routePath)) return
 
   syncingFromRoute = true
-  if (getComponent(routePath)) {
-    ensureTabForPath(routePath)
-  } else {
-    // 无效工具页：UI 显示"暂无内容"，但不写入 localStorage
-    setActiveTabWithoutPersist(routePath)
-  }
+  ensureTabForRoutePath(routePath)
   setTimeout(() => { syncingFromRoute = false }, 0)
 }
 
 // SSR 期间 onMounted 不执行，直接在 setup 中根据路由初始化 activeTab，
 // 确保预渲染时工具页渲染正确的工具组件而非 NotFoundView
-if (route.path.startsWith('/c/')) {
+if (isWorkspaceRoutePath(route.path)) {
   const normalizedRoute = route.path.replace(/\/+$/, '')
-  if (normalizedRoute !== '/c') {
-    if (getComponent(route.path)) {
-      ensureTabForPath(route.path)
-    } else {
-      setActiveTabWithoutPersist(route.path)
-    }
+  if (normalizedRoute !== '/c' && normalizedRoute !== '/embed') {
+    ensureTabForRoutePath(route.path)
   }
 }
 
 onMounted(() => {
-  if (typeof window === 'undefined' || !route.path.startsWith('/c/')) return
+  if (typeof window === 'undefined' || !isWorkspaceRoutePath(route.path)) return
 
   // restoreTabs 是幂等的：tabs 已有数据时直接跳过
   restoreTabs()
 
   const normalizedRoute = route.path.replace(/\/+$/, '')
 
-  if (normalizedRoute !== '/c') {
-    // URL 明确指向某个工具页 — 以 URL 为准（直接输入地址或卡片点击）
+  if (normalizedRoute !== '/c' && normalizedRoute !== '/embed') {
+    // URL 明确指向某个工具页或站外链接 — 以 URL 为准（直接输入地址或卡片点击）
     syncingFromRoute = true
-    if (getComponent(route.path)) {
-      ensureTabForPath(route.path)
-    } else {
-      // 无效工具页：UI 显示"暂无内容"，但不写入 localStorage
-      setActiveTabWithoutPersist(route.path)
-    }
+    ensureTabForRoutePath(route.path)
     setTimeout(() => { syncingFromRoute = false }, 0)
   } else if (activeTab.value) {
-    // URL 仅为 /c，无具体工具，用本地存储的活跃标签
+    // URL 仅为 /c 或 /embed，无具体工具，用本地存储的活跃标签
     syncingFromRoute = true
-    const targetPath = '/c/' + (activeTab.value === '/c/' ? '' : activeTab.value.replace(/^\/c\//, ''))
+    const targetPath = isExternalPath(activeTab.value)
+      ? activeTab.value
+      : '/c/' + (activeTab.value === '/c/' ? '' : activeTab.value.replace(/^\/c\//, ''))
     if (route.fullPath !== targetPath) {
       router.replace(targetPath)
     }
@@ -593,7 +630,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="workspace-container">
+  <div
+    class="workspace-container"
+    :class="{ 'workspace--external': !!activeExternalUrl }"
+  >
     <!-- 自定义标签栏（可横向滚动 + 渐变遮罩） -->
     <div ref="tabsBarEl" class="workspace-tabs-bar">
       <!-- 标签下拉菜单 -->
@@ -649,6 +689,14 @@ onMounted(() => {
           @pointercancel="onTabPointerCancel"
           @dragstart.prevent
         >
+          <span v-if="tabLogos[tab.path]" class="tab-logo">
+            <NIcon
+              v-if="isIconTabLogo(tabLogos[tab.path])"
+              :component="getToolIcon(tabLogos[tab.path])"
+              :size="13"
+            />
+            <img v-else :src="tabLogos[tab.path]" alt="" class="tab-logo-img" />
+          </span>
           <span class="tab-label">{{ tab.title }}</span>
           <span
             v-if="tabs.length > 1"
@@ -684,6 +732,11 @@ onMounted(() => {
           :is="activeComponent"
           :key="activeTab"
           :tab-path="activeTab"
+        />
+        <ExternalSiteView
+          v-else-if="activeExternalUrl"
+          :url="activeExternalUrl"
+          :key="activeTab"
         />
         <NotFoundView v-else />
       </div>
@@ -735,6 +788,11 @@ onMounted(() => {
   margin-bottom: 24px;
   transition: background-color 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1)),
     border-color 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1));
+}
+
+/* 站外嵌入时：标签栏紧贴下方导航栏 */
+.workspace--external .workspace-tabs-bar {
+  margin-bottom: 10px;
 }
 
 /* 标签下拉菜单触发按钮（最左侧，与标签等高） */
@@ -908,6 +966,25 @@ onMounted(() => {
   max-width: 4em;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 站外标签标题前的 logo（16px 圆角小图 / 小图标） */
+.tab-logo {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 /* 活跃标签的文字不截断 */

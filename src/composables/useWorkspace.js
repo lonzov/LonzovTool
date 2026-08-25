@@ -23,8 +23,93 @@ function saveToStorage(key, value) {
   }
 }
 
+// ===== 站外链接标签（iframe 嵌入工作站）=====
+// 站外链接统一挂载到独立的 /embed/ 目录（不使用 /c/，并在 robots.txt 中屏蔽不参与收录）
+const EXTERNAL_PATH_PREFIX = '/embed/'
+
+// 域名白名单：tools.json 中所有站外链接的域名，不在白名单内的站外链接直接转交 404
+const EXTERNAL_HOSTS = new Set()
+for (const category of toolsData.categories) {
+  for (const tool of category.tools) {
+    if (/^https?:/i.test(tool.link)) {
+      try {
+        EXTERNAL_HOSTS.add(new URL(tool.link).hostname)
+      } catch {
+        // ignore invalid urls
+      }
+    }
+  }
+}
+
+// 站外链接作为标签 path 时用 encodeURIComponent 整体编码，
+// 避免 URL 中的保留字符（? # : / 等）破坏路由解析
+function externalTabPath(url) {
+  if (!url) return ''
+  return EXTERNAL_PATH_PREFIX + encodeURIComponent(url)
+}
+
+// 是否为站外（iframe 嵌入）标签
+function isExternalPath(path) {
+  return typeof path === 'string' && path.startsWith(EXTERNAL_PATH_PREFIX)
+}
+
+// 从标签 path 还原原始站外 URL
+function getExternalUrl(path) {
+  if (!isExternalPath(path)) return null
+  try {
+    return decodeURIComponent(path.slice(EXTERNAL_PATH_PREFIX.length))
+  } catch {
+    return null
+  }
+}
+
+// 域名白名单校验：返回 true 才允许嵌入渲染，否则转交 404
+function isExternalUrlAllowed(url) {
+  if (!url) return false
+  try {
+    return EXTERNAL_HOSTS.has(new URL(url).hostname)
+  } catch {
+    return false
+  }
+}
+
+// 根据站外 URL 从 tools.json 匹配卡片 logo（与标题同源，供嵌入条复用卡片图标）
+function getExternalLogo(url) {
+  if (!url) return ''
+  const normalized = url.replace(/\/+$/, '')
+  for (const category of toolsData.categories) {
+    for (const tool of category.tools) {
+      if (/^https?:/i.test(tool.link) && tool.link.replace(/\/+$/, '') === normalized) {
+        return tool.logo || ''
+      }
+    }
+  }
+  return ''
+}
+
+// 根据站外 URL 从 tools.json 匹配工具标题，兜底使用域名
+function getTitleFromExternalUrl(url) {
+  if (!url) return ''
+  const normalized = url.replace(/\/+$/, '')
+  for (const category of toolsData.categories) {
+    for (const tool of category.tools) {
+      if (/^https?:/i.test(tool.link) && tool.link.replace(/\/+$/, '') === normalized) {
+        return tool.title
+      }
+    }
+  }
+  try {
+    return new URL(url).hostname
+  } catch {
+    return url
+  }
+}
+
 // 从 tools.json 获取标题
 function getTitleFromPath(path) {
+  if (isExternalPath(path)) {
+    return getTitleFromExternalUrl(getExternalUrl(path))
+  }
   for (const category of toolsData.categories) {
     for (const tool of category.tools) {
       const linkPath = tool.link.replace(/^https?:\/\/[^/]+/, '').replace(/\/+$/, '')
@@ -133,6 +218,31 @@ export function useWorkspace() {
     saveToStorage(ACTIVE_KEY, null)
   }
 
+  // 关闭"站外嵌入工作站"开关时调用：删除所有站外 iframe 标签的记录
+  // （数组过滤后编号天然连续，如 1,2,5,6 → 1,2,3,4），并处理活跃标签回到剩余标签
+  function removeExternalTabs() {
+    let removedCount = 0
+    tabs.value = tabs.value.filter((t) => {
+      if (isExternalPath(t.path)) {
+        removedCount++
+        clearTabData(t.path)
+        return false
+      }
+      return true
+    })
+
+    // 活跃标签是被删除的站外标签时，回到剩余的第一个标签
+    if (activeTab.value && isExternalPath(activeTab.value)) {
+      activeTab.value = tabs.value[0]?.path || null
+    }
+    // 全部被删除时清空活跃标签存储
+    if (tabs.value.length === 0) {
+      saveToStorage(TABS_KEY, [])
+      saveToStorage(ACTIVE_KEY, null)
+    }
+    return removedCount
+  }
+
   function hasTabs() {
     return tabs.value.length > 0
   }
@@ -184,9 +294,12 @@ export function useWorkspace() {
     getTabData,
     saveTabData,
     clearAllTabs,
+    removeExternalTabs,
     hasTabs,
     restoreTabs,
     ensureTabForPath,
     setActiveTabWithoutPersist,
   }
 }
+
+export { externalTabPath, isExternalPath, getExternalUrl, isExternalUrlAllowed, getExternalLogo }

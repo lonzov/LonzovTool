@@ -282,6 +282,13 @@ export const routes = [
     component: WorkspaceView,
     props: true,
   },
+  // 站外站点 iframe 嵌入路由：复用工作站视图，独立目录 /embed/（robots.txt 已屏蔽）
+  {
+    path: '/embed/:path(.*)',
+    name: 'external',
+    component: WorkspaceView,
+    props: true,
+  },
   {
     path: '/settings',
     name: 'settings',

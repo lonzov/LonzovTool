@@ -3,6 +3,8 @@ import { ref, computed, watch, nextTick } from 'vue'
 import { NSelect, NSwitch, NConfigProvider, darkTheme, NModal, NIcon, useMessage } from 'naive-ui'
 import { ArrowDownload16Regular, ArrowExportUp24Filled, Settings24Regular, ChevronUp16Regular, ArrowCounterclockwise24Filled } from '@vicons/fluent'
 import { useTheme } from '../composables/useTheme'
+import { useWorkspaceSettings } from '../composables/useWorkspaceSettings'
+import { useWorkspace } from '../composables/useWorkspace'
 
 const { themeMode, setThemeMode, isDark } = useTheme()
 const message = useMessage()
@@ -33,6 +35,30 @@ function onGlowToggle(val) {
   glowEnabled.value = val
   localStorage.setItem(GLOW_KEY, String(val))
   message.info('刷新页面后生效', { duration: 1800 })
+}
+
+/* ========== 站外嵌入工作站（模块级共享状态）========== */
+const { embedEnabled, setEmbedEnabled, iframeMaskMode, setIframeMaskMode } = useWorkspaceSettings()
+
+// 深色模式 iframe 遮罩选项
+const IFRAME_MASK_OPTIONS = [
+  { value: 'off', label: '关闭' },
+  { value: 'black', label: '黑色遮罩' },
+  { value: 'invert', label: '反色滤镜' },
+]
+
+const maskValue = computed({
+  get: () => iframeMaskMode.value,
+  set: (val) => setIframeMaskMode(val),
+})
+
+function onEmbedToggle(val) {
+  setEmbedEnabled(val)
+  // 关闭开关时：清理工作站中已有的站外嵌入标签页（含本地记录与缓存，并重新归并编号）
+  if (!val) {
+    const { removeExternalTabs } = useWorkspace()
+    removeExternalTabs()
+  }
 }
 
 /* ========== 开关轨道颜色（参考特殊符号页） ========== */
@@ -85,6 +111,7 @@ const savedCollapsed = (() => {
 
 const collapsedSections = ref({
   personalization: savedCollapsed?.personalization ?? false,
+  workspace: savedCollapsed?.workspace ?? false,
   config: savedCollapsed?.config ?? false,
   cache: savedCollapsed?.cache ?? false,
 })
@@ -114,6 +141,7 @@ const CONFIG_SCOPES = {
   workspace: {
     label: '工作站配置',
     desc: '例如已打开的标签页、编辑记录等',
+    keys: ['workspace_embed_external', 'workspace_iframe_mask', 'workspace_iframe_site_dark'],
     keysExact: ['workspace-save', 'lonzovtool-rawjson-jzfk', 'lonzovtool-rawjson-jzfk-meta'],
     keysPrefix: ['workspace-tab-data-'],
   },
@@ -530,6 +558,56 @@ const darkOverrides = {
                     />
                     <span class="drag-delay-unit">ms</span>
                   </span>
+                </div>
+              </div>
+            </div>
+          </Transition>
+        </div>
+
+        <!-- 工作站 -->
+        <div class="settings-card">
+          <div
+            class="card-header"
+            :class="{ 'card-header--collapsed': collapsedSections.workspace }"
+            @click="toggleSection('workspace')"
+          >
+            <span>工作站</span>
+            <NIcon
+              :component="ChevronUp16Regular"
+              size="16"
+              class="chevron-icon"
+              :class="{ 'chevron-icon--rotated': collapsedSections.workspace }"
+            />
+          </div>
+          <Transition name="collapse">
+            <div v-show="!collapsedSections.workspace" class="card-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <span class="setting-title">站外站点嵌入工作站</span>
+                  <p class="setting-desc">开启后，点击站外卡片将在工作站中以 iframe 方式打开；关闭则保持默认，在浏览器新标签页中打开</p>
+                </div>
+                <div class="setting-control">
+                  <NSwitch
+                    :value="embedEnabled"
+                    @update:value="onEmbedToggle"
+                    :rail-style="switchRailStyle"
+                    class="settings-switch"
+                  />
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <span class="setting-title">深色模式 iframe 遮罩</span>
+                  <p class="setting-desc">深色模式下为站外嵌入页叠加深色适配效果，仅在深色模式下生效</p>
+                </div>
+                <div class="setting-control">
+                  <NSelect
+                    v-model:value="maskValue"
+                    :options="IFRAME_MASK_OPTIONS"
+                    placement="bottom-end"
+                    size="medium"
+                    class="settings-select"
+                  />
                 </div>
               </div>
             </div>
