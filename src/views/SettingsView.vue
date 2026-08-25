@@ -580,7 +580,6 @@ const darkOverrides = {
               <div class="setting-row">
                 <div class="setting-info">
                   <span class="setting-title">主题模式</span>
-                  <p class="setting-desc">设置全站的深浅色模式</p>
                 </div>
                 <div class="setting-control">
                   <NSelect
@@ -742,7 +741,6 @@ const darkOverrides = {
               <div class="setting-row">
                 <div class="setting-info">
                   <span class="setting-title">检查更新</span>
-                  <p class="setting-desc">强制触发更新检查</p>
                 </div>
                 <div class="setting-control">
                   <button class="cache-btn" @click="handleCheckUpdate">检查</button>
@@ -1078,6 +1076,11 @@ const darkOverrides = {
 .setting-info {
   flex: 1;
   min-width: 0;
+  /* 无描述时按"标题+描述"的高度等齐，并让标题在预留高度内垂直居中 */
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .setting-title {
