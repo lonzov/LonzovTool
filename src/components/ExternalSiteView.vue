@@ -33,6 +33,7 @@ const siteDarkOn = ref(storedSiteDark !== null ? storedSiteDark : iframeMaskMode
 // 图标显示状态独立于实际开关：图标切换延迟到缩小到最小时，滤镜本身立即生效
 const darkIconOn = ref(siteDarkOn.value)
 const darkPressed = ref(false)
+const refreshPressed = ref(false)
 
 function toggleSiteDark() {
   // 滤镜开关立即生效并持久化
@@ -70,6 +71,10 @@ function onFrameLoad() {
 }
 
 function reloadFrame() {
+  // 点击缩小 → 恢复（与深色开关按钮一致的反馈）
+  refreshPressed.value = true
+  setTimeout(() => { refreshPressed.value = false }, 150)
+
   // 重新加载 iframe：触发 key 变化重建节点 + 重新启用加载动画
   iframeLoading.value = true
   frameKey.value++
@@ -92,7 +97,13 @@ onBeforeUnmount(() => {
     <!-- 浏览器式导航栏：左侧按钮栏 + 右侧网址胶囊 -->
     <div class="ext-nav">
       <div class="ext-nav-buttons">
-        <button type="button" class="ext-nav-btn" title="重新加载" @click="reloadFrame">
+        <button
+        type="button"
+        class="ext-nav-btn"
+        :class="{ 'ext-nav-btn--pressed': refreshPressed }"
+        title="重新加载"
+        @click="reloadFrame"
+      >
           <NIcon :component="ArrowClockwise28Filled" :size="18" />
         </button>
         <button
