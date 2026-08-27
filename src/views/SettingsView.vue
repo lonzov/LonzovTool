@@ -20,6 +20,18 @@ const themeValue = computed({
   set: (val) => setThemeMode(val),
 })
 
+/* ========== 主题写入 URL 参数 ========== */
+const URL_THEME_OPTIONS = [
+  { value: 'off', label: '关闭' },
+  { value: 'always', label: '开启' },
+  { value: 'explicit', label: '开启 (跟随系统模式除外)' },
+]
+
+const urlThemeValue = computed({
+  get: () => urlThemeMode.value,
+  set: (val) => setUrlThemeMode(val),
+})
+
 /* ========== 卡片高光效果开关 ========== */
 const GLOW_KEY = 'mouse_glow_enabled'
 const glowEnabled = ref(
@@ -38,7 +50,7 @@ function onGlowToggle(val) {
 }
 
 /* ========== 站外嵌入工作站（模块级共享状态）========== */
-const { embedEnabled, setEmbedEnabled, iframeMaskMode, setIframeMaskMode } = useWorkspaceSettings()
+const { embedEnabled, setEmbedEnabled, iframeMaskMode, setIframeMaskMode, urlThemeMode, setUrlThemeMode } = useWorkspaceSettings()
 
 // 深色模式 iframe 遮罩选项
 const IFRAME_MASK_OPTIONS = [
@@ -214,7 +226,7 @@ const CONFIG_SCOPES = {
   personalization: {
     label: '个性化设置',
     desc: '例如深浅主题、搜索偏好',
-    keys: ['theme_mode', 'search_engine_selected', 'tab_drag_delay'],
+    keys: ['theme_mode', 'search_engine_selected', 'tab_drag_delay', 'url_theme_param'],
   },
   all: {
     label: '所有配置',
@@ -588,6 +600,23 @@ const darkOverrides = {
                     placement="bottom-end"
                     size="medium"
                     class="settings-select"
+                  />
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <span class="setting-title">同步主题模式到外部网站</span>
+                  <p class="setting-desc">需要目标网站支持相关 URL 参数，否则不生效</p>
+                </div>
+                <div class="setting-control">
+                  <NSelect
+                    v-model:value="urlThemeValue"
+                    :options="URL_THEME_OPTIONS"
+                    placement="bottom-end"
+                    size="medium"
+                    class="settings-select"
+                    :consistent-menu-width="false"
+                    :menu-props="{ class: 'settings-select-menu-wide' }"
                   />
                 </div>
               </div>
@@ -1439,6 +1468,12 @@ const darkOverrides = {
 .n-select-menu {
   --n-option-color-hover: var(--bg-sub) !important;
   border: 1px solid var(--border-color) !important;
+}
+
+/* 仅加宽"主题写入 URL 参数"下拉的面板（触发器宽度不变） */
+.settings-select-menu-wide {
+  min-width: 0 !important;
+  --n-option-padding: 0 0px;
 }
 
 [data-theme='dark'] .n-select-menu {

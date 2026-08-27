@@ -72,6 +72,7 @@ src:
     useSWUpdate.js: Service Worker 更新检测与版本比较组合式函数
     useStats.js: 访问统计状态管理组合式函数（模块级单例，含内存/localsStorage双层缓存）
     useTheme.js: 主题状态管理组合式函数
+    useUrlTheme.js: 按设置将明暗主题以 theme / colorScheme 参数附加到打开的站外网址（off/always/explicit 三档，默认关闭）
     useToolStorage.js: 工具页 localStorage 持久化组合式函数
     useWorkspace.js: 工作站状态管理组合式函数，包括标签页处理，及站外 iframe 标签（/embed/工具id 反查 URL）与域名白名单
     useWorkspaceSettings.js: 工作站相关偏好设置（站外卡片 iframe 嵌入开关默认关闭、深色模式 iframe 遮罩 off/black/invert 默认黑色、按站点的深色滤镜开关持久化为同一密钥内 id:0/1）

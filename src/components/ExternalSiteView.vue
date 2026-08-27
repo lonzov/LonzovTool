@@ -6,6 +6,7 @@ import ToolLoading from './ToolLoading.vue'
 import DarkFilterIcon from './DarkFilterIcon.vue'
 import { useTheme } from '../composables/useTheme.js'
 import { useWorkspaceSettings, getStoredSiteDark, saveSiteDark } from '../composables/useWorkspaceSettings.js'
+import { attachThemeParams } from '../composables/useUrlTheme.js'
 
 const { isDark } = useTheme()
 const { iframeMaskMode } = useWorkspaceSettings()
@@ -16,6 +17,9 @@ const props = defineProps({
     required: true,
   },
 })
+
+// 打开时的站外地址：按设置附加 theme / colorScheme 参数
+const iframeSrc = computed(() => attachThemeParams(props.url))
 
 // 站点开关的 id（域名）
 const host = computed(() => {
@@ -119,7 +123,7 @@ onBeforeUnmount(() => {
       <div class="ext-urlbar">
         <a
           class="ext-open"
-          :href="url"
+          :href="iframeSrc"
           target="_blank"
           rel="noopener"
           title="在新标签页打开"
@@ -144,7 +148,7 @@ onBeforeUnmount(() => {
           'ext-frame--loading': iframeLoading,
           'ext-frame--invert': activeMask === 'invert',
         }"
-        :src="url"
+        :src="iframeSrc"
         title="站外内容"
         sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"
         @load="onFrameLoad"

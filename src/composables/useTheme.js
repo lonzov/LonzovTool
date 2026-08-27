@@ -94,3 +94,6 @@ export function useTheme() {
     cycleTheme
   }
 }
+
+// 具名导出供无需组件上下文的消费方（如 useUrlTheme）读取实时值
+export { themeMode, actualTheme, isDark }

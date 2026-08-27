@@ -6,6 +6,7 @@ import { Star24Filled } from '@vicons/fluent'
 import { getToolIcon } from '../config/categoryIcons'
 import { useWorkspace, externalTabPath } from '../composables/useWorkspace.js'
 import { useWorkspaceSettings } from '../composables/useWorkspaceSettings.js'
+import { attachThemeParams } from '../composables/useUrlTheme.js'
 import { useMouseGlow, applyGlow } from '../composables/useMouseGlow.js'
 
 // 站外嵌入开关（模块级共享 ref，render 的 onClick 闭包可直接读取）
@@ -356,7 +357,7 @@ export default {
         onTouchend: () => this.handleTouchEnd(),
         onTouchmove: () => this.handleTouchMove(),
         ...(this.link ? {
-          href: this.link,
+          href: isInternal ? this.link : attachThemeParams(this.link),
           target: alwaysNewTab || !isInternal ? '_blank' : '',
           rel: alwaysNewTab || !isInternal ? 'noopener' : '',
           referrerpolicy: alwaysNewTab || !isInternal ? 'origin' : '',

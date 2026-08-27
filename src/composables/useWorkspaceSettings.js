@@ -37,6 +37,10 @@ export function saveSiteDark(host, enabled) {
   }
 }
 
+// 是否将用户主题写入 URL 参数（theme / colorScheme）：off / always / explicit（默认关闭）
+export const URL_THEME_KEY = 'url_theme_param'
+export const URL_THEME_MODES = ['off', 'always', 'explicit']
+
 function loadEmbedEnabled() {
   try {
     if (typeof localStorage === 'undefined') return false
@@ -56,9 +60,20 @@ function loadIframeMask() {
   }
 }
 
+function loadUrlThemeMode() {
+  try {
+    if (typeof localStorage === 'undefined') return 'off'
+    const v = localStorage.getItem(URL_THEME_KEY)
+    return URL_THEME_MODES.includes(v) ? v : 'off'
+  } catch {
+    return 'off'
+  }
+}
+
 // 模块级共享状态：设置页与工具卡片/嵌入页读写同一份值
 const embedEnabled = ref(loadEmbedEnabled())
 const iframeMaskMode = ref(loadIframeMask())
+const urlThemeMode = ref(loadUrlThemeMode())
 
 export function useWorkspaceSettings() {
   function setEmbedEnabled(val) {
@@ -80,5 +95,18 @@ export function useWorkspaceSettings() {
     }
   }
 
-  return { embedEnabled, setEmbedEnabled, iframeMaskMode, setIframeMaskMode }
+  function setUrlThemeMode(val) {
+    if (!URL_THEME_MODES.includes(val)) val = 'off'
+    urlThemeMode.value = val
+    try {
+      localStorage.setItem(URL_THEME_KEY, val)
+    } catch {
+      // storage unavailable
+    }
+  }
+
+  return { embedEnabled, setEmbedEnabled, iframeMaskMode, setIframeMaskMode, urlThemeMode, setUrlThemeMode }
 }
+
+// 具名导出供无需组件上下文的消费方（如 useUrlTheme）读取实时值
+export { urlThemeMode }
