@@ -464,9 +464,6 @@ function _onLongPressConfirmed(x, y) {
 function _enterDragMode() {
   if (!_pressInfo) return
 
-  // 长按倒计时结束，震动反馈（30ms；此处处于按住的用户手势中，瞬态激活有效，不会静默失败）
-  if (navigator.vibrate) navigator.vibrate(30)
-
   longPressState.value.showRing = false
   longPressState.value.ringPercent = 0
 
@@ -853,6 +850,7 @@ onMounted(() => {
           @touchend="onTabPointerUp($event)"
           @pointercancel="onTabPointerCancel"
           @dragstart.prevent
+          @contextmenu.prevent
         >
           <span v-if="tabLogos[tab.path]" class="tab-logo">
             <NIcon
@@ -1069,6 +1067,8 @@ onMounted(() => {
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none; /* 阻止 iOS 长按弹出 callout/菜单 */
   overflow: hidden;
   flex-shrink: 0;
   min-height: 39px;
@@ -1131,6 +1131,9 @@ onMounted(() => {
   max-width: 4em;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* 标签文字不允许被选中 */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* 站外标签标题前的 logo（16px 圆角小图 / 小图标） */
