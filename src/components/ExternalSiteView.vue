@@ -56,6 +56,10 @@ const darkTitle = computed(() =>
   siteDarkOn.value ? '深色滤镜已开启，点击关闭' : '深色滤镜已关闭，点击开启',
 )
 
+// 站点级深色滤镜开关仅在有意义时展示：深色主题（含跟随系统的深色）且设置页为非"不处理"；
+// 浅色主题 / 跟随系统浅色 / 设置不处理时隐藏（此时开了也不生效）
+const showSiteDarkToggle = computed(() => isDark.value && iframeMaskMode.value !== 'off')
+
 // 深色模式下 iframe 深色适配遮罩（off/black/invert）：浅色模式一律不生效，
 // 设置页模式为关闭或当前站点开关关闭时也不叠加
 const activeMask = computed(() => {
@@ -111,6 +115,7 @@ onBeforeUnmount(() => {
           <NIcon :component="ArrowClockwise28Filled" :size="18" />
         </button>
         <button
+          v-if="showSiteDarkToggle"
           type="button"
           class="ext-nav-btn"
           :class="{ 'ext-nav-btn--pressed': darkPressed }"
