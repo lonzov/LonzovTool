@@ -13,7 +13,7 @@ import { useMouseGlow, applyGlow } from '../composables/useMouseGlow.js'
 const { embedEnabled } = useWorkspaceSettings()
 
 // 始终在新标签页打开的卡片 ID 白名单
-const ALWAYS_NEW_TAB_IDS = ['rainyun', 'mcnav', 'honghe']
+const ALWAYS_NEW_TAB_IDS = ['rainyun', 'mcnav', 'honghe', 'mc-wiki-zh', 'ms-creator-docs', 'minebbs']
 
 export default {
   components: {
