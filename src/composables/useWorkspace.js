@@ -67,7 +67,9 @@ function isExternalPath(path) {
 // 由标签 path 反查原始站外 URL（id 未收录或非外链则返回 null，转交 404）
 function getExternalUrl(path) {
   if (!isExternalPath(path)) return null
-  const tool = findToolById(path.slice(EXTERNAL_PATH_PREFIX.length))
+  // 剥掉可能存在的尾斜杠（如直接访问/复制的 /embed/<id>/），避免反查为未知 id
+  const id = path.slice(EXTERNAL_PATH_PREFIX.length).replace(/\/+$/, '')
+  const tool = findToolById(id)
   return tool && /^https?:/i.test(tool.link) ? tool.link : null
 }
 
