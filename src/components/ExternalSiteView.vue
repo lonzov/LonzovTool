@@ -18,8 +18,9 @@ const props = defineProps({
   },
 })
 
-// 打开时的站外地址：按设置附加 theme / colorScheme 参数
-const iframeSrc = computed(() => attachThemeParams(props.url))
+// 打开时的站外地址：按设置附加 theme / colorScheme 参数。
+// 仅在此页打开时快照一次（不跟随本站后续主题切换，避免重载第三方页面丢失状态）
+const iframeSrc = attachThemeParams(props.url)
 
 // 站点开关的 id（域名）
 const host = computed(() => {
