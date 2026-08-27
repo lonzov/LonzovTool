@@ -27,18 +27,18 @@
           "link": "/c/qjzh/"
         },
         {
-          "id": "tr",
-          "title": "T显动画生成",
-          "description": "生成打字机动画效果的rawJSON",
-          "logo": "TextGrammarWand24Filled",
-          "link": "/c/tr/"
-        },
-        {
           "id": "raw-json",
           "title": "T显可视化编辑器",
           "description": "通过可视化界面编辑rawJSON",
           "logo": "Braces24Filled",
           "link": "/c/raw-json/"
+        },
+        {
+          "id": "selector",
+          "title": "选择器参数编辑器",
+          "description": "可视化编辑目标选择器参数",
+          "logo": "Mention20Filled",
+          "link": "/c/selector/"
         },
         {
           "id": "rawjson-editor",
@@ -48,11 +48,11 @@
           "link": "https://dislink.github.io/"
         },
         {
-          "id": "selector",
-          "title": "选择器参数编辑器",
-          "description": "可视化编辑目标选择器参数",
-          "logo": "Mention20Filled",
-          "link": "/c/selector/"
+          "id": "tr",
+          "title": "T显动画生成",
+          "description": "生成打字机动画效果的rawJSON",
+          "logo": "TextGrammarWand24Filled",
+          "link": "/c/tr/"
         },
         {
           "id": "dxdydz",
@@ -88,13 +88,6 @@
           "description": "特殊符号大全",
           "logo": "/logos/teshuzifu_cn.webp",
           "link": "https://teshuzifu.cn/"
-        },
-        {
-          "id": "n-sensitive-words",
-          "title": "网易敏感词检测",
-          "description": "检测输入内容是否命中网易敏感词规则",
-          "logo": "/logos/n-sensitive-words.webp",
-          "link": "https://neteasemcapi.theconsole.top/SensitiveWords"
         },
         {
           "id": "mc-hm0-top",
@@ -137,6 +130,13 @@
           "description": "在线制作像素画、地图画、雕塑和红石音乐",
           "logo": "/logos/mcpixelart_com.webp",
           "link": "https://mcpixelart.com/"
+        },
+        {
+          "id": "mcblock",
+          "title": "MCBlock 方块工坊",
+          "description": "海量建筑投影，支持逐层查看学习",
+          "logo": "/logos/mcblock.webp",
+          "link": "https://mcblock.top/"
         }
       ]
     },
@@ -416,6 +416,13 @@
           "description": "MC资源集合, 包括皮肤头像、贴图等",
           "logo": "/logos/ccvaults_com.webp",
           "link": "https://ccvaults.com/"
+        },
+        {
+          "id": "mccag",
+          "title": "可爱头像生成器",
+          "description": "轻松生成个性化Minecraft头像",
+          "logo": "/logos/mccag.webp",
+          "link": "https://mccag.cn/"
         },
         {
           "id": "mc-note",
