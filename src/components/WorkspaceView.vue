@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch, onMounted, onBeforeUnmount, ref, defineAsyncComponent } from 'vue'
+import { computed, watch, onMounted, onBeforeUnmount, ref, nextTick, defineAsyncComponent } from 'vue'
 import { NProgress, NDropdown, NIcon, useMessage } from 'naive-ui'
 import { useRouter, useRoute } from 'vue-router'
 import { ChevronDown16Filled } from '@vicons/fluent'
@@ -116,6 +116,13 @@ function handleClose(path) {
   }
 }
 
+// 中键点击标签页：关闭该标签页（auxclick 也含右键 button=2，需仅响应中键）
+function onTabAuxClick(e, tab) {
+  if (e.button !== 1) return
+  e.preventDefault()
+  handleClose(tab.path)
+}
+
 // 切换活跃标签
 function switchTab(path) {
   if (activeTab.value !== path) {
@@ -222,6 +229,25 @@ function updateScrollFades() {
   showRightFade.value = el.scrollWidth - el.clientWidth - el.scrollLeft > 1
 }
 
+// 把焦点标签滚动到标签栏可见区域内：
+// 优先让焦点标签位于标签栏区域最左；若其右侧内容不足以填满视口（无法满足居左），则完全居右
+function scrollActiveTabIntoView() {
+  const list = tabsListEl.value
+  const active = activeTab.value
+  if (!list || !active) return
+  const el = list.querySelector(`.tab-item[data-path="${CSS.escape(active)}"]`)
+  if (!el) return
+
+  const listRect = list.getBoundingClientRect()
+  const elRect = el.getBoundingClientRect()
+  // 焦点标签相对标签栏内容起始位置的左偏移（= 滚动到其位于最左所需 scrollLeft）
+  const preferred = elRect.left - listRect.left + list.scrollLeft
+  const max = Math.max(0, list.scrollWidth - list.clientWidth)
+
+  list.scrollTo({ left: Math.max(0, preferred <= max ? preferred : max), behavior: 'smooth' })
+  updateScrollFades()
+}
+
 // ===== 长按拖拽排序系统 =====
 // 流程：按下 → 500ms内松开=普通点击 / 500ms后显示进度环 → 可配置倒计时 → 进入拖拽模式 → 松手完成排序
 const LONG_PRESS_DELAY = 500     // 长按判定时间 ms
@@ -263,6 +289,8 @@ let _longPressTimer = null       // setTimeout ID
 let _progressRafId = null        // setInterval ID（进度环定时器）
 let _dragOffsetX = 0             // 按下时鼠标相对标签左边缘的偏移（保持拖拽时相对位置不变）
 let _barCachedLeft = 0          // 拖拽开始时标签栏左边缘视口坐标（用于坐标转换）
+let _dragScrollStart = 0        // 拖拽开始时的标签栏 scrollLeft（自动滚动时补偿缓存标签位置）
+let _dragLastClientX = 0        // 拖拽期间最近一次指针 x（自动滚动时更新排序索引）
 
 // 计算被动移动 tab 的偏移量（被拖拽标签本身隐藏，仅做排序占位）
 const dragOffsets = computed(() => {
@@ -356,15 +384,9 @@ function onTabPointerMove(e) {
     return
   }
 
-  // 拖拽模式下更新位置
-  if (isDraggingTab.value && cachedTabRects.value.length > 0) {
-    updateDragOverIndex(pos.x)
-    // 视觉标签跟随鼠标横向移动（保持相对偏移不变）
-    // pos.x 是视口坐标，需减去 barLeft 转为相对于标签栏容器的坐标
-    if (visualTag.value.show) {
-      visualTag.value.left = (pos.x - _barCachedLeft) - _dragOffsetX
-    }
-  }
+  // 拖拽位置/边缘自动滚动交由 document 级 _onDocPointerMove 处理，
+  // 覆盖标签、空白区、边缘等任意指针位置
+  return
 }
 
 function onTabPointerUp() {
@@ -451,6 +473,9 @@ function _enterDragMode() {
     return { left: r.left, right: r.right, width: r.width }
   })
 
+  // 记录拖拽开始时的滚动位置（自动滚动时用于补偿缓存标签位置）
+  _dragScrollStart = listEl?.scrollLeft || 0
+
   // 创建视觉标签（绝对定位在标签栏内，坐标需转为相对于 bar 的值）
   const barRect = tabsBarEl.value?.getBoundingClientRect() || { left: 0, top: 0 }
   _barCachedLeft = barRect.left
@@ -462,8 +487,10 @@ function _enterDragMode() {
     showClose: tabs.value.length > 1,
   }
 
-  // 绑定 document 级指针释放事件（解决拖拽时移出 tab 元素收不到 up 的问题）
+  // 绑定 document 级指针移动/释放事件（覆盖空白区、边缘等任意指针位置）
+  document.addEventListener('mousemove', _onDocPointerMove, { passive: true })
   document.addEventListener('mouseup', _onDocPointerUp, { passive: true })
+  document.addEventListener('touchmove', _onDocPointerMove, { passive: true })
   document.addEventListener('touchend', _onDocPointerUp, { passive: true })
   document.addEventListener('touchcancel', _onDocPointerCancel, { passive: true })
 }
@@ -476,6 +503,27 @@ function _onDocPointerUp() {
   }
 }
 
+// document 级指针移动处理：更新排序索引/视觉标签 + 边缘自动滚动
+function _onDocPointerMove(e) {
+  if (!isDraggingTab.value) return
+  const pos = getEventPos(e)
+  _dragLastClientX = pos.x
+  updateDragVisual(pos.x)
+  updateReorderEdge(pos.x)
+}
+
+// 按当前指针位置刷新排序索引与视觉标签位置
+function updateDragVisual(clientX) {
+  if (cachedTabRects.value.length === 0) return
+  // 自动滚动会让缓存标签位置失效，用滚动增量补偿
+  const scrollDelta = (tabsListEl.value?.scrollLeft || 0) - _dragScrollStart
+  updateDragOverIndex(clientX, scrollDelta)
+  // 视觉标签跟随鼠标横向移动（保持相对偏移不变，坐标转为相对于标签栏容器）
+  if (visualTag.value.show) {
+    visualTag.value.left = (clientX - _barCachedLeft) - _dragOffsetX
+  }
+}
+
 // document 级取消处理
 function _onDocPointerCancel() {
   cancelLongPress()
@@ -483,11 +531,12 @@ function _onDocPointerCancel() {
   _pressInfo = null
 }
 
-function updateDragOverIndex(mouseX) {
+function updateDragOverIndex(mouseX, scrollDelta = 0) {
   let targetIdx = 0
   for (let i = 0; i < cachedTabRects.value.length; i++) {
     const rect = cachedTabRects.value[i]
-    const midX = (rect.left + rect.right) / 2
+    // 标签栏滚动会让缓存的初始位置失效，需按滚动增量补偿
+    const midX = (rect.left + rect.right) / 2 - scrollDelta
     if (mouseX > midX) {
       targetIdx = i + 1
     } else {
@@ -519,9 +568,12 @@ function finalizeDrag() {
 
 function endDrag() {
   // 移除 document 级监听
+  document.removeEventListener('mousemove', _onDocPointerMove)
   document.removeEventListener('mouseup', _onDocPointerUp)
+  document.removeEventListener('touchmove', _onDocPointerMove)
   document.removeEventListener('touchend', _onDocPointerUp)
   document.removeEventListener('touchcancel', _onDocPointerCancel)
+  stopEdgeScroll()
 
   // 隐藏视觉标签
   visualTag.value.show = false
@@ -534,6 +586,8 @@ function endDrag() {
   isDraggingTab.value = false
   _dragOffsetX = 0
   _barCachedLeft = 0
+  _dragScrollStart = 0
+  _dragLastClientX = 0
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => { dragSnapping.value = false })
@@ -552,14 +606,20 @@ function cancelLongPress() {
 // 组件卸载时清理
 onBeforeUnmount(() => {
   cancelLongPress()
+  stopEdgeScroll()
+  if (isDraggingTab.value) endDrag()
 })
 
 function onTabsWheel(e) {
-  if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
-    e.preventDefault()
+  // 触控板/鼠标横滚（deltaX 主导）直接按 deltaX 横向滚动；
+  // 普通纵向滚轮（deltaY 主导）转换为横向滚动（阻止页面滚动）
+  const dx = Math.abs(e.deltaX)
+  const dy = Math.abs(e.deltaY)
+  const delta = dx >= dy ? e.deltaX : e.deltaY
+  if (tabsListEl.value) {
+    tabsListEl.value.scrollLeft += delta
+    updateScrollFades()
   }
-  tabsListEl.value.scrollLeft += e.deltaY
-  updateScrollFades()
 }
 
 // 触摸拖拽（横向滚动）
@@ -601,6 +661,8 @@ let dragStartX = 0
 let dragStartScroll = 0
 
 function onMouseDown(e) {
+  // 仅左键触发拖拽滚动，中键/右键交给各自的逻辑（中键关闭标签页）
+  if (e.button !== 0) return
   if (isDraggingTab.value || _pressInfo) return
   isDragging = true
   dragStartX = e.pageX
@@ -623,9 +685,90 @@ function onMouseUp() {
   if (tabsListEl.value) tabsListEl.value.style.cursor = ''
 }
 
+// ===== 长按排序拖拽到边缘时，标签栏自动滑动（动态速度，越靠边越快）=====
+const EDGE_THRESHOLD = 60 // 距标签栏左右边缘多少 px 触发自动滚动
+const EDGE_MAX_SPEED = 5 // 贴边时的最快速度（每帧滚动的像素上限）
+const EDGE_SPEED_POWER = 2 // 速度曲线指数：>1 时慢速占比更多，快速只集中于贴边附近
+
+let edgeDir = 0 // -1 左 / 1 右 / 0 停
+let edgeRafId = null
+let edgeAccum = 0 // 子像素位移累积（保证慢速区间也能平滑前进）
+
+// 排序拖拽：指针靠近标签栏左右边缘时决定自动滚动方向
+function updateReorderEdge(clientX) {
+  const el = tabsListEl.value
+  if (!el || !isDraggingTab.value) {
+    setEdgeDir(0)
+    return
+  }
+  const rect = el.getBoundingClientRect()
+  let dir = 0
+  if (clientX - rect.left < EDGE_THRESHOLD) {
+    dir = -1
+  } else if (rect.right - clientX < EDGE_THRESHOLD) {
+    dir = 1
+  }
+  setEdgeDir(dir)
+}
+
+function setEdgeDir(dir) {
+  if (edgeDir === dir) return
+  edgeDir = dir
+  if (dir !== 0) {
+    if (!edgeRafId) edgeRafId = requestAnimationFrame(edgeScrollTick)
+  } else {
+    stopEdgeScroll()
+  }
+}
+
+// 由指针到边缘的距离动态算每帧速度：贴边最大，向阈值边界渐减，呈"慢占多数、快贴边"的曲线
+function getEdgeSpeed() {
+  const el = tabsListEl.value
+  if (!el) return 0
+  const rect = el.getBoundingClientRect()
+  const x = _dragLastClientX
+  const dist = edgeDir === -1 ? x - rect.left : rect.right - x
+  const ratio = Math.max(0, Math.min(dist, EDGE_THRESHOLD)) / EDGE_THRESHOLD
+  return EDGE_MAX_SPEED * Math.pow(1 - ratio, EDGE_SPEED_POWER)
+}
+
+function edgeScrollTick() {
+  if (edgeDir === 0) {
+    stopEdgeScroll()
+    return
+  }
+  const el = tabsListEl.value
+  if (el) {
+    // 累积子像素位移，达到 1px 才滚动，慢速区间也能持续前进
+    edgeAccum += getEdgeSpeed() * edgeDir
+    const step = Math.floor(Math.abs(edgeAccum))
+    if (step > 0) {
+      el.scrollLeft += step * Math.sign(edgeAccum)
+      edgeAccum -= step * Math.sign(edgeAccum)
+      updateScrollFades()
+      // 触底/触顶后不再滚动
+      el.scrollLeft = Math.max(0, Math.min(el.scrollLeft, el.scrollWidth - el.clientWidth))
+      // 自动滚动时同步刷新排序索引/视觉标签，让 drop 目标跟随滚动
+      if (isDraggingTab.value) updateDragVisual(_dragLastClientX)
+    }
+  }
+  edgeRafId = requestAnimationFrame(edgeScrollTick)
+}
+
+function stopEdgeScroll() {
+  if (edgeRafId) {
+    cancelAnimationFrame(edgeRafId)
+    edgeRafId = null
+  }
+  edgeDir = 0
+  edgeAccum = 0
+}
+
 onMounted(() => {
   updateScrollFades()
   window.addEventListener('resize', updateScrollFades)
+  // 首次进入工作站页：把焦点标签滚入可见区域（工作站内切换标签不触发）
+  nextTick(() => scrollActiveTabIntoView())
 })
 </script>
 
@@ -673,6 +816,7 @@ onMounted(() => {
           v-for="(tab, index) in tabs"
           :key="tab.path"
           class="tab-item"
+          :data-path="tab.path"
           :class="{
             'tab-item--active': activeTab === tab.path,
             'tab-item--dragging': draggingPath === tab.path,
@@ -680,6 +824,7 @@ onMounted(() => {
           }"
           :style="{ transform: `translateX(${getDragOffset(index)}px)` }"
           @click="switchTab(tab.path)"
+          @auxclick="onTabAuxClick($event, tab)"
           @mousedown="onTabPointerDown($event, tab)"
           @touchstart.passive="onTabPointerDown($event, tab)"
           @mousemove="onTabPointerMove($event)"
