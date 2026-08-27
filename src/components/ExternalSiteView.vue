@@ -156,7 +156,7 @@ onBeforeUnmount(() => {
         }"
         :src="iframeSrc"
         title="站外内容"
-        sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"
+        sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin allow-downloads"
         @load="onFrameLoad"
       />
       <div v-if="activeMask === 'black'" class="ext-mask"></div>

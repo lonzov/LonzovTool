@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, nextTick, onBeforeUnmount, onMounted, onUnmounted } from 'vue'
 import { NSelect, NSwitch, NConfigProvider, darkTheme, NModal, NIcon, useMessage } from 'naive-ui'
 import { ArrowDownload16Regular, ArrowExportUp24Filled, Settings24Regular, ChevronUp16Regular, ArrowCounterclockwise24Filled } from '@vicons/fluent'
 import { useTheme } from '../composables/useTheme'
@@ -116,6 +116,27 @@ function closeEmbedEnableModal() {
 onBeforeUnmount(() => {
   if (embedEnableTimer) clearInterval(embedEnableTimer)
 })
+
+/* ========== 开启站外嵌入弹窗样式 ========== */
+const isCompact = ref(false)
+let _compactMq = null
+function _onCompactChange(e) { isCompact.value = e.matches }
+onMounted(() => {
+  _compactMq = window.matchMedia('(max-width: 640px)')
+  isCompact.value = _compactMq.matches
+  _compactMq.addEventListener('change', _onCompactChange)
+})
+onUnmounted(() => {
+  if (_compactMq) _compactMq.removeEventListener('change', _onCompactChange)
+})
+
+const embedEnableModalStyle = computed(() => ({
+  maxWidth: '540px',
+  width: 'calc(100% - 32px)',
+  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
+  borderRadius: '16px',
+  cornerShape: 'squircle',
+}))
 
 /* ========== 关闭站外嵌入：选择是否清理标签页 ========== */
 const embedCloseModal = ref({ show: false })
@@ -873,17 +894,14 @@ const darkOverrides = {
       </NModal>
     </NConfigProvider>
 
-    <!-- 开启站外嵌入：第三方内容声明 + 5s 倒计时确认 -->
+    <!-- 开启站外嵌入：第三方内容声明 + 9s 倒计时确认 -->
     <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
       <NModal
         v-model:show="embedEnableModal.show"
         preset="card"
-        :style="{
-          maxWidth: '420px',
-          width: 'calc(100% - 32px)',
-          borderRadius: '16px',
-          cornerShape: 'squircle',
-        }"
+        :style="embedEnableModalStyle"
+        :segmented="{ content: true, footer: 'soft' }"
+        content-scrollable
         title="在工作站内打开外部网页"
         :bordered="false"
         :closable="true"
@@ -893,8 +911,9 @@ const darkOverrides = {
       >
         <div class="embed-enable-modal-body">
           <p>开启后，点击站外卡片将直接在工作站内打开网页，方便你同时使用多个工具。<strong>请注意：</strong></p>
-          <p>1. 打开的网页均为 <strong>第三方网站</strong>，与本站无关，本站无法保证其稳定性与绝对的安全性，登录账号或填写个人信息时请谨慎。</p>
+          <p>1. 打开的网页均为 <strong>第三方网站</strong>，与本站无关，本站无法保证其稳定性与绝对的安全性，登录账号或填写个人信息时请谨慎。<strong>如遇 BUG 请联系对应网站反馈，本站无法处理第三方网站的问题😥</strong></p>
           <p>2. 部分网站因安全策略 <strong>不支持在工作站内打开</strong>，若遇到无法打开的情况，请点击顶部导航栏中的按钮，改用新标签页打开。</p>
+          <p>3. 因浏览器安全策略，打开的网页可能会无法读取 cookie，这会导致无法登录、人机验证卡住、记录消失等问题，此时同样请改用新标签页打开。</p>
         </div>
         <template #footer>
           <div class="import-modal-actions">
