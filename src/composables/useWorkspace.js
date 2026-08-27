@@ -135,7 +135,11 @@ function getTitleFromExternalUrl(url) {
 // 从 tools.json 获取标题
 function getTitleFromPath(path) {
   if (isExternalPath(path)) {
-    return getTitleFromExternalUrl(getExternalUrl(path))
+    // tools.json 中 id 已被移除时反查不到标题，兜底用 id 本身，避免标签栏空白
+    return (
+      getTitleFromExternalUrl(getExternalUrl(path)) ||
+      path.slice(EXTERNAL_PATH_PREFIX.length).replace(/\/+$/, '')
+    )
   }
   for (const category of toolsData.categories) {
     for (const tool of category.tools) {
