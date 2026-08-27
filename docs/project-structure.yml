@@ -74,7 +74,7 @@ src:
     useTheme.js: 主题状态管理组合式函数
     useUrlTheme.js: 按设置将明暗主题以 theme / colorScheme 参数附加到打开的站外网址（off/always/explicit 三档，默认关闭）
     useToolStorage.js: 工具页 localStorage 持久化组合式函数
-    useWorkspace.js: 工作站状态管理组合式函数，包括标签页处理，及站外 iframe 标签（/embed/工具id 反查 URL）与域名白名单
+    useWorkspace.js: 工作站状态管理组合式函数，包括标签页处理，站外 iframe 标签（/embed/工具id 反查 URL）与域名白名单，及按 path 解析卡片 logo
     useWorkspaceSettings.js: 工作站相关偏好设置（站外卡片 iframe 嵌入开关默认关闭、深色模式 iframe 遮罩 off/black/invert 默认黑色、按站点的深色滤镜开关持久化为同一密钥内 id:0/1）
     useDownloadIntro.js: 下载页 Markdown 功能介绍加载组合式函数（按需加载原始 md 字符串）
   config:

@@ -153,6 +153,24 @@ function getTitleFromPath(path) {
   return ''
 }
 
+// 按标签 path 解析 logo（标签栏/下拉菜单复用卡片图标）：
+// 站外 = tools.json 匹配的图片路径或图标名；站内 = 按其 /c/ link 匹配的图标名或图片
+function getLogoFromPath(path) {
+  if (isExternalPath(path)) {
+    return getExternalLogo(getExternalUrl(path))
+  }
+  for (const category of toolsData.categories) {
+    for (const tool of category.tools) {
+      const linkPath = tool.link.replace(/^https?:\/\/[^/]+/, '').replace(/\/+$/, '')
+      const normalizedPath = path.replace(/\/+$/, '')
+      if (linkPath === normalizedPath) {
+        return tool.logo || ''
+      }
+    }
+  }
+  return ''
+}
+
 let tabsRef = null
 let activeTabRef = null
 let initialized = false
@@ -333,4 +351,4 @@ export function useWorkspace() {
   }
 }
 
-export { externalTabPath, isExternalPath, getExternalUrl, isExternalUrlAllowed, getExternalLogo, getExternalToolMeta }
+export { externalTabPath, isExternalPath, getExternalUrl, isExternalUrlAllowed, getExternalLogo, getExternalToolMeta, getLogoFromPath }

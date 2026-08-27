@@ -1,9 +1,9 @@
 <script setup>
-import { computed, watch, onMounted, onBeforeUnmount, ref, nextTick, defineAsyncComponent } from 'vue'
+import { computed, watch, onMounted, onBeforeUnmount, ref, nextTick, h, defineAsyncComponent } from 'vue'
 import { NProgress, NDropdown, NIcon, useMessage } from 'naive-ui'
 import { useRouter, useRoute } from 'vue-router'
 import { ChevronDown16Filled } from '@vicons/fluent'
-import { useWorkspace, isExternalPath, getExternalUrl, isExternalUrlAllowed, getExternalLogo } from '../composables/useWorkspace.js'
+import { useWorkspace, isExternalPath, getExternalUrl, isExternalUrlAllowed, getLogoFromPath } from '../composables/useWorkspace.js'
 import { getToolIcon } from '../config/categoryIcons'
 import { useTheme } from '../composables/useTheme.js'
 import ToolLoading from './ToolLoading.vue'
@@ -81,20 +81,35 @@ const activeExternalUrl = computed(() => {
   return url && isExternalUrlAllowed(url) ? url : null
 })
 
-// 站外标签的 logo（放到标签栏标题前面）；本地工具标签无 logo
+// 各标签的 logo（放到标签栏标题前 / 下拉菜单）；站外为图片路径或图标名，站内为图标名
 const tabLogos = computed(() => {
   const map = {}
   for (const tab of tabs.value) {
-    if (isExternalPath(tab.path)) {
-      const url = getExternalUrl(tab.path)
-      map[tab.path] = url ? getExternalLogo(url) : ''
-    }
+    map[tab.path] = getLogoFromPath(tab.path)
   }
   return map
 })
 
 function isIconTabLogo(logo) {
   return !!logo && !logo.startsWith('/') && !/^https?:/i.test(logo)
+}
+
+// 生成下拉菜单选项的 logo 渲染（naive dropdown option.icon，图片/图标两种）
+function makeTabLogoIcon(tab) {
+  const logo = getLogoFromPath(tab.path)
+  if (!logo) return undefined
+  if (isIconTabLogo(logo)) {
+    const comp = getToolIcon(logo)
+    // 用站点主题色变量，随深浅色自动适配
+    return comp ? () => h(NIcon, { component: comp, size: 18, color: 'var(--text-secondary)' }) : undefined
+  }
+  // 图片 logo：圆角遮罩裁切
+  return () =>
+    h(
+      'span',
+      { style: 'width:18px;height:18px;border-radius:4px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center' },
+      [h('img', { src: logo, alt: '', style: 'width:100%;height:100%;object-fit:contain;display:block' })],
+    )
 }
 
 // 已知工具页或通过白名单的站外标签 → 需持久化为正式标签；其余视为无效页面
@@ -132,7 +147,12 @@ function switchTab(path) {
 
 // ===== 标签下拉菜单（最左侧图标） =====
 const tabDropdownOptions = computed(() =>
-  tabs.value.map((tab) => ({ label: tab.title, key: tab.path }))
+  tabs.value.map((tab) => {
+    const opt = { label: tab.title, key: tab.path }
+    const icon = makeTabLogoIcon(tab)
+    if (icon) opt.icon = icon
+    return opt
+  })
 )
 
 function handleTabSelect(key) {
@@ -444,8 +464,8 @@ function _onLongPressConfirmed(x, y) {
 function _enterDragMode() {
   if (!_pressInfo) return
 
-  // 长按倒计时结束，震动反馈
-  if (navigator.vibrate) navigator.vibrate(200)
+  // 长按倒计时结束，震动反馈（30ms；此处处于按住的用户手势中，瞬态激活有效，不会静默失败）
+  if (navigator.vibrate) navigator.vibrate(30)
 
   longPressState.value.showRing = false
   longPressState.value.ringPercent = 0
