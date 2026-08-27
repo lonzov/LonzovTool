@@ -25,7 +25,19 @@ function saveToStorage(key, value) {
 
 // ===== 站外链接标签（iframe 嵌入工作站）=====
 // 站外链接统一挂载到独立的 /embed/ 目录（不使用 /c/，并在 robots.txt 中屏蔽不参与收录）
+// 路径段使用 tools.json 中的工具 id（如 /embed/mcbe-id-table），URL 通过 id 反查
 const EXTERNAL_PATH_PREFIX = '/embed/'
+
+// 按 id 查 tools.json 工具
+function findToolById(id) {
+  if (!id) return null
+  for (const category of toolsData.categories) {
+    for (const tool of category.tools) {
+      if (tool.id === id) return tool
+    }
+  }
+  return null
+}
 
 // 域名白名单：tools.json 中所有站外链接的域名，不在白名单内的站外链接直接转交 404
 const EXTERNAL_HOSTS = new Set()
@@ -41,11 +53,10 @@ for (const category of toolsData.categories) {
   }
 }
 
-// 站外链接作为标签 path 时用 encodeURIComponent 整体编码，
-// 避免 URL 中的保留字符（? # : / 等）破坏路由解析
-function externalTabPath(url) {
-  if (!url) return ''
-  return EXTERNAL_PATH_PREFIX + encodeURIComponent(url)
+// 站外标签 path：/embed/ + tools.json 工具 id
+function externalTabPath(toolId) {
+  if (!toolId) return ''
+  return EXTERNAL_PATH_PREFIX + toolId
 }
 
 // 是否为站外（iframe 嵌入）标签
@@ -53,14 +64,11 @@ function isExternalPath(path) {
   return typeof path === 'string' && path.startsWith(EXTERNAL_PATH_PREFIX)
 }
 
-// 从标签 path 还原原始站外 URL
+// 由标签 path 反查原始站外 URL（id 未收录或非外链则返回 null，转交 404）
 function getExternalUrl(path) {
   if (!isExternalPath(path)) return null
-  try {
-    return decodeURIComponent(path.slice(EXTERNAL_PATH_PREFIX.length))
-  } catch {
-    return null
-  }
+  const tool = findToolById(path.slice(EXTERNAL_PATH_PREFIX.length))
+  return tool && /^https?:/i.test(tool.link) ? tool.link : null
 }
 
 // 域名白名单校验：返回 true 才允许嵌入渲染，否则转交 404
@@ -85,6 +93,23 @@ function getExternalLogo(url) {
     }
   }
   return ''
+}
+
+// 根据站外 URL 从 tools.json 获取嵌入页的 SEO meta（标题/简介），供 meta 与分享模态框使用
+function getExternalToolMeta(url) {
+  if (!url) return null
+  const normalized = url.replace(/\/+$/, '')
+  for (const category of toolsData.categories) {
+    for (const tool of category.tools) {
+      if (/^https?:/i.test(tool.link) && tool.link.replace(/\/+$/, '') === normalized) {
+        return {
+          title: tool.title,
+          description: tool.description || '',
+        }
+      }
+    }
+  }
+  return null
 }
 
 // 根据站外 URL 从 tools.json 匹配工具标题，兜底使用域名
@@ -302,4 +327,4 @@ export function useWorkspace() {
   }
 }
 
-export { externalTabPath, isExternalPath, getExternalUrl, isExternalUrlAllowed, getExternalLogo }
+export { externalTabPath, isExternalPath, getExternalUrl, isExternalUrlAllowed, getExternalLogo, getExternalToolMeta }

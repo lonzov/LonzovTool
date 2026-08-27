@@ -392,7 +392,7 @@ export default {
               const forceNewTab = e.metaKey || e.ctrlKey || e.button === 1
               if (!forceNewTab) {
                 e.preventDefault()
-                const tabPath = externalTabPath(this.link)
+                const tabPath = externalTabPath(this.toolId)
                 this.openTab(tabPath, this.title)
                 this.router.push(tabPath)
               }

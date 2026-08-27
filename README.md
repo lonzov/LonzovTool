@@ -97,7 +97,7 @@
 - **功能**：多工具页签管理，支持拖拽排序、关闭、持久化存储。
 - **组件**：`WorkspaceView.vue` 根据当前路由参数动态加载对应工具组件（`ArtTextTool.vue`、`TrAnimationTool.vue`、`ExecuteTool.vue`、`FuhaoTool.vue`、`RawJsonTool.vue`）。
 - **路径归一化**：`getComponent()` 方法对路径进行归一化处理（移除末尾斜杠），确保路由匹配准确。
-- **站外 iframe 嵌入**：设置页开启"站外站点嵌入工作站"后，站外卡片改为在独立 `/embed/` 目录（`ExternalSiteView.vue`）中以 iframe 打开，站外 URL 以 `encodeURIComponent` 编码进路由，通过 `isExternalUrlAllowed()` 校验域名是否在 `tools.json` 站外链接白名单内，不在白名单的直接转交 404 页处理；`/embed/` 目录已在 robots.txt 中屏蔽（`scripts/generate-seo.js` 的 `DISALLOW_PATHS`）。
+- **站外 iframe 嵌入**：设置页开启"站外站点嵌入工作站"后，站外卡片改为在独立 `/embed/` 目录（`ExternalSiteView.vue`）中以 iframe 打开，路径段使用 `tools.json` 中的工具 id（如 `/embed/mcbe-id-table`），URL 由 id 反查并通过 `isExternalUrlAllowed()` 校验域名白名单，不在白名单的直接转交 404 页处理；`/embed/` 目录已在 robots.txt 中屏蔽（`scripts/generate-seo.js` 的 `DISALLOW_PATHS`）。
 
 ### 隐私与 Cookie 管理
 

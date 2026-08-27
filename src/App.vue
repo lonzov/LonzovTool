@@ -11,7 +11,7 @@ import PrivacyBanner from './components/PrivacyBanner.vue'
 import UpdateDialog from './components/UpdateDialog.vue'
 import ShareModal from './components/ShareModal.vue'
 import { useTheme } from './composables/useTheme'
-import { useWorkspace, isExternalPath } from './composables/useWorkspace.js'
+import { useWorkspace, isExternalPath, getExternalUrl, getExternalToolMeta } from './composables/useWorkspace.js'
 import { useSWUpdate } from './composables/useSWUpdate'
 import { useOfficialDomainCheck } from './composables/useOfficialDomainCheck'
 import { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES } from './router'
@@ -52,6 +52,15 @@ export default {
           title = `${name} - 文件下载 - 小舟工具箱`
           description = `小舟工具箱提供的${name}下载页面，支持快捷直链解析和手动网盘下载。`
           keywords = `Minecraft,资源下载,${name},MC工具下载,小舟工具箱`
+        }
+
+        // 动态解析站外嵌入页 meta（标题/简介取自 tools.json 对应的站外卡片）
+        if (!title && !description && !keywords && route.path.startsWith('/embed/')) {
+          const extMeta = getExternalToolMeta(getExternalUrl(route.path))
+          if (extMeta) {
+            title = `${extMeta.title} - 外部网页 - 小舟工具箱`
+            description = `外部网页：${extMeta.description}`
+          }
         }
 
         // 动态解析文档页 meta
