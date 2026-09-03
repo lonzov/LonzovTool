@@ -15,8 +15,8 @@ import { useOfficialDomainCheck } from './composables/useOfficialDomainCheck'
 import { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES } from './router'
 
 /* 懒加载：UpdateDialog → markdown-it、ShareModal → html2canvas 体积大且极少打开，
-   不静态 import，避免拖入入口 JS（每页启动都要下载+解析）。挂载时才开始加载 chunk，
-   浏览器空闲即并行拉取，首页首次内容渲染不再被这两个库拖累。 */
+   不静态 import，避免拖入入口 JS。ShareModal 需常驻挂载以响应 show 变化触发海报生成，
+   故不能 v-if；其内部 html2canvas 已改为生成时才动态 import。 */
 const UpdateDialog = defineAsyncComponent(() => import('./components/UpdateDialog.vue'))
 const ShareModal = defineAsyncComponent(() => import('./components/ShareModal.vue'))
 
