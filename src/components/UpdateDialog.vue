@@ -1,10 +1,12 @@
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 import { NModal, NConfigProvider, NTooltip, useMessage } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { useTheme } from '../composables/useTheme'
 import { useSWUpdate } from '../composables/useSWUpdate'
-import MarkdownRenderer from './MarkdownRenderer.vue'
+/* MarkdownRenderer 携带 markdown-it（~47K gz），只在弹窗真正展示更新内容时加载 */
+const loadMarkdown = () => import('./MarkdownRenderer.vue')
+const MarkdownRenderer = defineAsyncComponent(loadMarkdown)
 
 const { isDark } = useTheme()
 const { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, applyUpdate, deferUpdate } = useSWUpdate()
@@ -61,8 +63,11 @@ const modalStyle = computed(() => ({
   cornerShape: 'squircle',
 }))
 
-// 模糊遮罩（与 cookie 弹窗一致）
+// 弹窗打开即预热 Markdown 渲染 chunk，使更新内容加载与弹窗动画重叠
 watch(showUpdateModal, (val) => {
+  if (val) loadMarkdown()
+
+  // 模糊遮罩（与 cookie 弹窗一致）
   if (val) {
     nextTick(() => {
       if (document.getElementById('update-blur-overlay')) return

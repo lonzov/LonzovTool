@@ -3,7 +3,6 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { NModal, NConfigProvider, useMessage } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { useTheme } from '../composables/useTheme'
-import html2canvas from 'html2canvas'
 
 const props = defineProps({ show: Boolean })
 const emit = defineEmits(['update:show'])
@@ -95,9 +94,10 @@ async function generatePoster() {
   // 等 qr img 和 logo 加载完成
   await new Promise(r => setTimeout(r, 500))
 
-  // 5. html2canvas 截图
+  // 5. html2canvas 截图（按需加载，避免其 ~200K 体积在启动时被解析占用主线程）
   if (posterRef.value) {
     try {
+      const html2canvas = (await import('html2canvas')).default
       const canvas = await html2canvas(posterRef.value, {
         scale: 2,
         useCORS: true,
