@@ -1,5 +1,5 @@
 <script>
-import { computed, ref, provide, watch } from 'vue'
+import { computed, ref, provide, watch, defineAsyncComponent } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
 import { getGlobalHead } from './main.js'
@@ -8,13 +8,17 @@ import { Settings24Regular, ShareAndroid20Regular, Open16Filled } from '@vicons/
 import AppMenu from './components/AppMenu.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import PrivacyBanner from './components/PrivacyBanner.vue'
-import UpdateDialog from './components/UpdateDialog.vue'
-import ShareModal from './components/ShareModal.vue'
 import { useTheme } from './composables/useTheme'
 import { useWorkspace, isExternalPath, getExternalUrl, getExternalToolMeta } from './composables/useWorkspace.js'
 import { useSWUpdate } from './composables/useSWUpdate'
 import { useOfficialDomainCheck } from './composables/useOfficialDomainCheck'
 import { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES } from './router'
+
+/* 懒加载：UpdateDialog → markdown-it、ShareModal → html2canvas 体积大且极少打开，
+   不静态 import，避免拖入入口 JS（每页启动都要下载+解析）。挂载时才开始加载 chunk，
+   浏览器空闲即并行拉取，首页首次内容渲染不再被这两个库拖累。 */
+const UpdateDialog = defineAsyncComponent(() => import('./components/UpdateDialog.vue'))
+const ShareModal = defineAsyncComponent(() => import('./components/ShareModal.vue'))
 
 export default {
   components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog, ShareModal, NIcon, NTooltip },
