@@ -61,16 +61,27 @@ export function useToolStorage(key, refs, options = {}) {
     watch(ref, debouncedSave, { deep: true })
   }
 
-  // 页面关闭前立即保存一次（防止防抖未落地的数据丢失）
+  // 页面隐藏/离开前立即保存一次（防止防抖未落地的数据丢失）
+  // 用 pagehide + visibilitychange(hidden) 而非 beforeunload/unload：
+  // 注册 beforeunload/unload 会把页面排除出往返缓存(bfcache)；pagehide/visibilitychange
+  // 不阻断 bfcache，且能覆盖移动端切后台时 pagehide 不触发、最后时刻数据易丢的情况
+  let onPageHide = null
+  let onVisibilityChange = null
   if (typeof window !== 'undefined') {
-    window.addEventListener('beforeunload', save)
+    onPageHide = () => save()
+    onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') save()
+    }
+    window.addEventListener('pagehide', onPageHide)
+    document.addEventListener('visibilitychange', onVisibilityChange)
   }
 
   // 返回清理函数（组件一般不需要调用，因为 composable 生命周期与页面一致）
   return function cleanup() {
     clearTimeout(timer)
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('beforeunload', save)
+    if (typeof window !== 'undefined' && onPageHide) {
+      window.removeEventListener('pagehide', onPageHide)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
     }
   }
 }
