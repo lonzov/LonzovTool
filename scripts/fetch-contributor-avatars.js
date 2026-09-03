@@ -126,12 +126,14 @@ async function main() {
     }
   }
 
-  // GC：删除目录中未被任何贡献者引用的头像文件
+  // GC：删除目录中未被任何贡献者引用的头像文件（跳过子目录，如 static 手工维护区）
   const referenced = new Set(list.filter((c) => c && c.avatar).map((c) => c.avatar))
   let removed = 0
-  for (const f of readdirSync(AVATAR_DIR)) {
-    if (!referenced.has(`/logos/avatars/${f}`)) {
-      rmSync(resolve(AVATAR_DIR, f), { force: true })
+  for (const f of readdirSync(AVATAR_DIR, { withFileTypes: true })) {
+    if (f.isDirectory()) continue
+    const name = f.name
+    if (!referenced.has(`/logos/avatars/${name}`)) {
+      rmSync(resolve(AVATAR_DIR, name), { force: true })
       removed++
     }
   }
