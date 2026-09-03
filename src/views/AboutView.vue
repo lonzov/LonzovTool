@@ -546,6 +546,7 @@ const statCluster = computed(() => ([
                           v-if="c.avatar && !avatarFailed(c.avatar)"
                           :src="c.avatar"
                           :alt="c.name"
+                          loading="lazy"
                           @error="onAvatarError(c.avatar)"
                         />
                         <span v-else class="av-text">{{ c.name ? c.name.charAt(0) : '?' }}</span>
