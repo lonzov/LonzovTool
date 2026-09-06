@@ -678,7 +678,12 @@ let dragStartX = 0
 let dragStartScroll = 0
 
 function onMouseDown(e) {
-  // 仅左键触发拖拽滚动，中键/右键交给各自的逻辑（中键关闭标签页）
+  // 中键：阻止浏览器在可滚动标签栏上的原生"自动滚动球"，让 auxclick 能正常关闭标签页
+  if (e.button === 1) {
+    e.preventDefault()
+    return
+  }
+  // 仅左键触发拖拽滚动，右键等其余按键不做处理
   if (e.button !== 0) return
   if (isDraggingTab.value || _pressInfo) return
   isDragging = true
