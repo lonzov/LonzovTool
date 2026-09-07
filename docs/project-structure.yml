@@ -14,7 +14,7 @@ src:
     IframeForm.vue: iframe 表单封装组件
     MarkdownRenderer.vue: 共享 Markdown 渲染组件，封装 markdown-it、链接拦截、统一内容样式
     OfflineDiagnostic.vue: 离线诊断页，ping 检测区分服务端异常/网络断开
-    NoticeBar.vue: 公告通知栏，支持多公告自动轮播与高度自适应
+    NoticeBar.vue: 公告通知栏，多公告自动轮播（悬停/离屏/展开时暂停）与高度自适应，右端「n/N ⌄」触发器展开查看全部列表（行点链接新开/无链接切换，未读红点按已读记录隐藏）
     PrivacyBanner.vue: 隐私横幅与 Cookie 设置弹窗，管理用户同意选项
     SearchBar.vue: 搜索栏，支持多搜索引擎切换
     SearchGrid.vue: 搜索网格布局组件
