@@ -22,11 +22,9 @@ export default {
       notices: [...noticesData].sort((a, b) => a.priority - b.priority),
       currentIndex: 0,
       timer: null,
-      resumeTimer: null,
       isAnimating: false,
       headHeight: 44, // 顶栏高度（含纵向 padding），动画驱动
       expanded: false,
-      hovering: false,
       isVisible: true,
       isMeasuring: false,
       reduceMotion: false,
@@ -119,24 +117,16 @@ export default {
     // ---------- 轮播调度 ----------
     clearSchedulers() {
       if (this.timer) clearInterval(this.timer)
-      if (this.resumeTimer) clearTimeout(this.resumeTimer)
       this.timer = null
-      this.resumeTimer = null
     },
     reschedule() {
-      // 展开中 / 鼠标悬停 / 离开视口 / 减少动效时暂停；解除暂停延迟 1s 再续播，避免立刻跳变
+      // 展开/悬停不再暂停轮播，仅离开视口或减少动效时停止
       this.clearSchedulers()
-      const paused = this.expanded || this.hovering || !this.isVisible || this.reduceMotion
-      if (paused || !this.hasMore) return
-      this.resumeTimer = setTimeout(() => {
-        this.resumeTimer = null
-        if (!this.timer) {
-          this.timer = setInterval(() => this.advance(), 4000)
-        }
-      }, 1000)
+      if (!this.hasMore || !this.isVisible || this.reduceMotion) return
+      this.timer = setInterval(() => this.advance(), 4000)
     },
     advance() {
-      if (this.isAnimating || this.expanded || this.notices.length < 2) return
+      if (this.isAnimating || this.notices.length < 2) return
       this.isAnimating = true
       const next = (this.currentIndex + 1) % this.notices.length
       this.switchTo(next, () => {
@@ -159,11 +149,9 @@ export default {
     expand() {
       this.expanded = true
       this.markRead()
-      this.reschedule()
     },
     collapse() {
       this.expanded = false
-      this.reschedule()
     },
     toggle() {
       if (this.expanded) this.collapse()
@@ -241,17 +229,10 @@ export default {
     handleRowClick(index) {
       const n = this.notices[index]
       if (!n) return
-      if (n.link) {
-        // 带链接：新窗口打开（不再改变当前条）
-        window.open(n.link, '_blank')
-        this.markRead()
-      } else {
-        // 无链接：切换为当前公告，保持展开
-        if (!this.isAnimating) {
-          this.isAnimating = true
-          this.switchTo(index, () => setTimeout(() => (this.isAnimating = false), 320))
-        }
-      }
+      if (!n.link) return // 无链接行：不改写顶栏，当前高亮仅随轮播同步
+      // 带链接：新窗口打开（不改变当前条）
+      window.open(n.link, '_blank')
+      this.markRead()
     },
 
     // ---------- 已读 ----------
@@ -357,8 +338,6 @@ export default {
       id="notice-bar"
       class="notice-bar"
       :class="{ open: expanded }"
-      @pointerenter="hovering = true; reschedule()"
-      @pointerleave="hovering = false; reschedule()"
     >
       <!-- 公告内容区 -->
       <div
