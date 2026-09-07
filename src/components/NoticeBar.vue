@@ -8,6 +8,7 @@ import noticesData from '../data/notices.json'
 const READ_KEY = 'notice_last_read_id'
 
 const PAD_Y = 16 // 顶栏纵向 padding 合计，用于按内容反推容器高度
+const PANEL_DURATION = 300 // 展开/收起高度动画时长(ms)
 
 export default {
   name: 'NoticeBar',
@@ -30,6 +31,7 @@ export default {
       isMeasuring: false,
       reduceMotion: false,
       readMaxId: 0, // localStorage 已读记录
+      triggerWidth: 38, // 触发器宽度 = 公告栏单行高度，mounted 后测量校准
     }
   },
   computed: {
@@ -45,9 +47,6 @@ export default {
     // 存在比已读记录更新的公告时才显示未读圆点
     showDot() {
       return this.hasMore && this.maxNoticeId > this.readMaxId
-    },
-    counterLabel() {
-      return `${this.currentIndex + 1}/${this.notices.length}`
     },
     dateStr() {
       const n = this.currentNotice
@@ -79,7 +78,11 @@ export default {
     }
 
     // 测量初始高度并启动
-    nextTick(() => this.measureHead())
+    nextTick(() => {
+      this.measureHead()
+      // 触发器宽度 = 公告栏单行高度（含上下边框）
+      this.triggerWidth = this.controlHeight() + PAD_Y + 2
+    })
     if (this.hasMore) this.reschedule()
 
     window.addEventListener('resize', this.onResize)
@@ -157,7 +160,6 @@ export default {
       this.expanded = true
       this.markRead()
       this.reschedule()
-      this.$nextTick(() => this.updateListFade())
     },
     collapse() {
       this.expanded = false
@@ -166,6 +168,66 @@ export default {
     toggle() {
       if (this.expanded) this.collapse()
       else this.expand()
+    },
+
+    // ---------- 展开面板过渡：高度 + 边框同步动画，收起结束后销毁 DOM ----------
+    panelTransition() {
+      const ease = 'cubic-bezier(0.4, 0, 0.2, 1)'
+      return `height ${PANEL_DURATION}ms ${ease}, border-width ${PANEL_DURATION}ms ${ease}`
+    },
+    resetPanel(el) {
+      el.style.height = ''
+      el.style.borderTopWidth = ''
+      el.style.borderBottomWidth = ''
+      el.style.overflow = ''
+      el.style.transition = ''
+    },
+    // 展开：height 0 → 内容高度，上下边框 0 → 1px
+    onPanelEnter(el, done) {
+      const target = el.offsetHeight
+      el.style.height = '0px'
+      el.style.borderTopWidth = '0px'
+      el.style.borderBottomWidth = '0px'
+      el.style.overflow = 'hidden'
+      void el.offsetHeight
+      if (this.reduceMotion) {
+        this.resetPanel(el)
+        done()
+        return
+      }
+      el.style.transition = this.panelTransition()
+      el.style.height = target + 'px'
+      el.style.borderTopWidth = '1px'
+      el.style.borderBottomWidth = '1px'
+      el.addEventListener('transitionend', function handler(e) {
+        if (e.target !== el || e.propertyName !== 'height') return
+        el.removeEventListener('transitionend', handler)
+        done()
+      })
+    },
+    // 展开动画结束：恢复 auto 高度（响应式跟随），再测列表渐隐
+    onPanelAfterEnter(el) {
+      this.resetPanel(el)
+      this.updateListFade()
+    },
+    // 收起：当前高度 → 0，上下边框 → 0，结束后 Vue 自动销毁 DOM
+    onPanelLeave(el, done) {
+      el.style.height = el.offsetHeight + 'px'
+      el.style.overflow = 'hidden'
+      void el.offsetHeight
+      if (this.reduceMotion) {
+        done()
+        return
+      }
+      el.style.transition = this.panelTransition()
+      el.style.height = '0px'
+      el.style.borderTopWidth = '0px'
+      el.style.borderBottomWidth = '0px'
+      el.addEventListener('transitionend', function handler(e) {
+        if (e.target !== el || e.propertyName !== 'height') return
+        el.removeEventListener('transitionend', handler)
+        done()
+      })
     },
 
     // ---------- 点击行为 ----------
@@ -209,10 +271,10 @@ export default {
       this.measureHead()
       this.updateListFade()
     },
-    // 控制件基准高度：触发器 pill 存在时按其真实高度，否则按图标高度，避免顶栏裁掉 pill
+    // 单行内容基准高度：取图标高度（与单行文本、日期同高），避免顶栏裁掉内容
     controlHeight() {
-      const trigger = this.hasMore ? this.$refs.trigger : null
-      if (trigger && trigger.offsetHeight) return trigger.offsetHeight
+      const icon = this.$refs.icon
+      if (icon && icon.offsetHeight) return icon.offsetHeight
       return 20
     },
     // 当前内容高度：读取真实渲染的文本元素（其换行宽度与布局一致）
@@ -290,64 +352,66 @@ export default {
 </script>
 
 <template>
-  <div
-    id="notice-bar"
-    class="notice-bar"
-    :class="{ open: expanded }"
-    @pointerenter="hovering = true; reschedule()"
-    @pointerleave="hovering = false; reschedule()"
-  >
-    <!-- 顶栏 -->
+  <div class="notice-wrap">
     <div
-      class="notice-head"
-      :style="{ height: headHeight + 'px' }"
+      id="notice-bar"
+      class="notice-bar"
+      :class="{ open: expanded }"
+      @pointerenter="hovering = true; reschedule()"
+      @pointerleave="hovering = false; reschedule()"
     >
-      <div class="notice-icon" aria-hidden="true">
-        <NIcon :component="MegaphoneLoud24Filled" :size="16" color="var(--text-secondary)" />
+      <!-- 公告内容区 -->
+      <div
+        class="notice-head"
+        :style="{ height: headHeight + 'px' }"
+      >
+        <div ref="icon" class="notice-icon" aria-hidden="true">
+          <NIcon :component="MegaphoneLoud24Filled" :size="16" color="var(--text-secondary)" />
+        </div>
+
+        <!-- 当前公告内容：可点击打开链接（整块文本作为按钮，键盘可聚焦） -->
+        <button
+          type="button"
+          class="notice-main"
+          :disabled="!currentNotice || !currentNotice.link"
+          :aria-label="currentNotice && currentNotice.link ? '打开公告链接' : '公告'"
+          @click="openCurrent"
+        >
+          <div class="notice-swap-holder" id="notice-text-wrap">
+            <TransitionGroup name="notice-slide" tag="div" class="notice-swap">
+              <div v-if="currentNotice" :key="currentIndex" class="notice-item">
+                <span id="notice-content-text">{{ currentNotice.content }}</span>
+                <NIcon
+                  v-if="currentNotice.link"
+                  :component="Open20Filled"
+                  :size="13"
+                  color="var(--text-secondary)"
+                  class="notice-open-icon"
+                />
+              </div>
+            </TransitionGroup>
+          </div>
+        </button>
+
+        <span class="notice-date" :title="formatFullDate(currentNotice && currentNotice.date)">
+          {{ dateStr }}
+        </span>
       </div>
 
-      <!-- 当前公告内容：可点击打开链接（整块文本作为按钮，键盘可聚焦） -->
-      <button
-        type="button"
-        class="notice-main"
-        :disabled="!currentNotice || !currentNotice.link"
-        :aria-label="currentNotice && currentNotice.link ? '打开公告链接' : '公告'"
-        @click="openCurrent"
-      >
-        <div class="notice-swap-holder" id="notice-text-wrap">
-          <TransitionGroup name="notice-slide" tag="div" class="notice-swap">
-            <div v-if="currentNotice" :key="currentIndex" class="notice-item">
-              <span id="notice-content-text">{{ currentNotice.content }}</span>
-              <NIcon
-                v-if="currentNotice.link"
-                :component="Open20Filled"
-                :size="13"
-                color="var(--text-secondary)"
-                class="notice-open-icon"
-              />
-            </div>
-          </TransitionGroup>
-        </div>
-      </button>
-
-      <span class="notice-date" :title="formatFullDate(currentNotice && currentNotice.date)">
-        {{ dateStr }}
-      </span>
-
-      <!-- 查看全部触发器（仅多于一条时显示） -->
+      <!-- 展开触发器：与内容区同级的右侧竖条按钮（仅多于一条时显示） -->
       <NTooltip v-if="hasMore" placement="bottom" :disabled="expanded">
         <template #trigger>
           <button
             ref="trigger"
             type="button"
             class="notice-trigger"
+            :style="{ width: triggerWidth + 'px' }"
             :aria-expanded="expanded"
             :aria-controls="'notice-list'"
             :aria-label="triggerLabel"
             :title="triggerTip"
             @click.stop="toggle"
           >
-            <span class="trigger-counter">{{ counterLabel }}</span>
             <span class="chevron" aria-hidden="true">
               <NIcon :component="ChevronDown20Filled" :size="14" />
             </span>
@@ -358,9 +422,9 @@ export default {
       </NTooltip>
     </div>
 
-    <!-- 展开面板：grid-rows 0fr→1fr 高度动画 -->
-    <div class="notice-panel">
-      <div class="panel-inner">
+    <!-- 展开卡片：独立元素，折叠动画结束后销毁 DOM -->
+    <Transition @enter="onPanelEnter" @after-enter="onPanelAfterEnter" @leave="onPanelLeave">
+      <div v-if="expanded" ref="panel" class="notice-panel">
         <ul ref="list" id="notice-list" class="notice-list">
           <li v-for="(n, index) in notices" :key="n.id" class="notice-li">
             <button
@@ -384,22 +448,29 @@ export default {
           </li>
         </ul>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 
 <style scoped>
+.notice-wrap {
+  margin: 0 0 24px;
+}
+
 .notice-bar {
+  display: flex;
+  align-items: stretch;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
-  margin: 0 0 24px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
-/* ===== 顶栏 ===== */
+/* ===== 公告内容区 ===== */
 .notice-head {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -505,24 +576,19 @@ export default {
   margin-top: 1px;
 }
 
-/* 触发器：计数器 + chevron 的 pill 按钮 */
+/* 触发器：右侧竖条按钮，宽度=单行高度（JS 设置），高度随公告栏拉伸，图标垂直居中 */
 .notice-trigger {
   position: relative;
   flex: none;
-  align-self: flex-start;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 7px;
+  justify-content: center;
   border: none;
-  border-radius: 6px;
+  border-left: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 16px;
-  font-variant-numeric: tabular-nums;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.4s ease;
 }
 
 .notice-trigger:hover,
@@ -545,11 +611,11 @@ export default {
   transform: rotate(180deg);
 }
 
-/* 未读红点 */
+/* 未读红点：压在公告栏右上角圆角处 */
 .trigger-dot {
   position: absolute;
-  top: -2px;
-  right: -2px;
+  top: 4px;
+  right: 4px;
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -558,33 +624,18 @@ export default {
   pointer-events: none;
 }
 
-/* ===== 展开面板 ===== */
+/* ===== 展开卡片：独立元素，高度由 JS 过渡驱动，折叠结束销毁 ===== */
 .notice-panel {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.notice-bar.open .notice-panel {
-  grid-template-rows: 1fr;
-}
-
-.panel-inner {
-  min-height: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   overflow: hidden;
-  visibility: hidden;
-  /* 收起时延后 0.3s 再隐藏，保证折叠动画全程内容可见；展开时立即显示（见 .open 覆盖） */
-  transition: visibility 0s linear 0.3s;
-}
-
-.notice-bar.open .panel-inner {
-  visibility: visible;
-  transition-delay: 0s;
+  margin-top: 8px;
+  transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
 .notice-list {
   list-style: none;
-  border-top: 1px solid var(--border-color);
   margin: 0;
   padding: 5px 7px 7px;
   display: flex;
@@ -592,7 +643,6 @@ export default {
   gap: 1px;
   max-height: 300px;
   overflow-y: auto;
-  transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
 /* 可滚动时：底部渐隐提示还有更多 */
@@ -660,8 +710,6 @@ export default {
 /* 减少动效 */
 @media (prefers-reduced-motion: reduce) {
   .notice-head,
-  .notice-panel,
-  .panel-inner,
   .chevron,
   .notice-icon {
     transition: none !important;
