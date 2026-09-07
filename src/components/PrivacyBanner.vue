@@ -129,7 +129,7 @@ export default {
               'left: 0',
               'right: 0',
               'bottom: 0',
-              'z-index: 1000', // NModal 默认 z-index 是 2000，我们在下层
+              'z-index: 1990', // 盖住移动端汉堡(1950)/菜单抽屉(1900)，仍低于 NModal 遮罩(≥2000)
               '-webkit-backdrop-filter: blur(8px)',
               'backdrop-filter: blur(8px)',
               'background: rgba(0, 0, 0, 0.1)', // 半透明黑色滤镜，叠加 NModal 遮罩后整体更深

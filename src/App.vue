@@ -702,6 +702,7 @@ export default {
         v-model:show="mobileMenuOpen"
         placement="left"
         :width="220"
+        :z-index="1900"
         :mask-closable="true"
         :style="{ background: 'var(--bg-color)', boxShadow: '0 8px 40px rgba(0, 0, 0, 0.5)' }"
       >
@@ -877,7 +878,9 @@ export default {
   position: fixed !important;
   top: 12px !important;
   left: 17px !important;
-  z-index: 99999 !important;
+  /* 层级：高于移动端菜单抽屉(1900)，低于 Naive 弹层(2000 起自动递增)，
+     保证模态框遮罩能盖住汉堡，而打开菜单时 X 仍悬浮可见 */
+  z-index: 1950 !important;
   width: 32px;
   height: 32px;
   border: none;

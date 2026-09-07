@@ -75,7 +75,7 @@ watch(showUpdateModal, (val) => {
       overlay.id = 'update-blur-overlay'
       overlay.style.cssText = [
         'position: fixed', 'top: 0', 'left: 0', 'right: 0', 'bottom: 0',
-        'z-index: 1000',
+        'z-index: 1990', // 盖住移动端汉堡(1950)/菜单抽屉(1900)，仍低于 NModal(≥2000)
         '-webkit-backdrop-filter: blur(8px)', 'backdrop-filter: blur(8px)',
         'background: rgba(0, 0, 0, 0.1)',
         'pointer-events: none',
