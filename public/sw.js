@@ -1,4 +1,4 @@
-const CACHE_VERSION = '3.4.0.1'
+const CACHE_VERSION = '3.4.1'
 const CACHE_NAME = `lt-v3-${CACHE_VERSION}`
 // 用于在 Cache 中标记 SPA shell (index.html) 的固定 key
 const INDEX_KEY = new Request('/?__sw_index=1')
@@ -12,7 +12,7 @@ let _forceUpdateChecked = false
 
 // ===== 静态资源长期缓存：不随版本更新删除 =====
 const STATIC_CACHE_NAME = 'lt-static'
-const STATIC_CACHE_PATHS = ['/logos/', '/fonts/', '/img/', '/sprites/']
+const STATIC_CACHE_PATHS = ['/logos/', '/fonts/', '/img/', '/sprites/', 'imamu.js']
 
 // ===== 二级版本缓存：仅在 minor 版本变更时清除（如 3.3.x → 3.4.x） =====
 const MINOR_VERSION = CACHE_VERSION.split('.').slice(0, 2).join('.')
