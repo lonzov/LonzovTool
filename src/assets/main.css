@@ -16,6 +16,16 @@ body {
     'Helvetica Neue', Arial, 'Noto Sans', 'Microsoft YaHei', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* 自动盘古之白：中英文/数字之间自动插入间距（Chromium 120+ / Safari 18.4+，Firefox 静默忽略） */
+  text-autospace: normal;
+}
+
+/* 表单控件不继承 body 的文本排版属性，单独声明一份 */
+input,
+textarea,
+select,
+button {
+  text-autospace: normal;
 }
 
 /* ===== 主题变量 - 亮色模式 (默认) ===== */
