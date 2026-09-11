@@ -134,6 +134,11 @@ const DOCS_META_MAP = {
     description: '小舟工具箱常见问题解答，包含使用技巧、常见疑问与解决方案。',
     keywords: '小舟工具箱,常见问题,FAQ,使用帮助,Minecraft工具,故障排查',
   },
+  promotion: {
+    title: '推广合作 - 小舟工具箱',
+    description: '小舟工具箱首页推广位合作说明：收录范围、展示尺寸、价格与周期、免费推广资格、素材要求与联系方式。',
+    keywords: '小舟工具箱,推广合作,首页推广位,广告合作,Minecraft推广,广告位投放',
+  },
 }
 
 /**
@@ -168,6 +173,7 @@ const KNOWN_DOCS = [
   { slug: 'privacy', meta: DOCS_META_MAP.privacy },
   { slug: 'faq', meta: DOCS_META_MAP.faq },
   { slug: 'dev', meta: DOCS_META_MAP.dev },
+  { slug: 'promotion', meta: DOCS_META_MAP.promotion },
 ]
 
 // 已知的下载页面路径（具体静态路由，用于 SSG 预渲染）

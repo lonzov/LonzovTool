@@ -33,6 +33,7 @@ const docMap = {
   '/': '../docs/index.md',
   introduction: '../docs/introduction.md',
   'url-tj': '../docs/url-tj.md',
+  promotion: '../docs/promotion.md',
   privacy: '../docs/privacy.md',
   donate: '../docs/donate.md',
   faq: '../docs/faq.md',

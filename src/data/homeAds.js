@@ -13,7 +13,7 @@ export default {
   // 公告位
   notice: {
     id: 1,
-    image: 'https://bu.dusays.com/2026/09/08/6a9fb1904e2a0.webp',
+    image: 'https://bu.dusays.com/2026/09/11/6aa3c7ccae09a.webp',
     link: '/docs/promotion',
   },
 }
