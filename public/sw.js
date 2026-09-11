@@ -14,6 +14,11 @@ let _forceUpdateChecked = false
 const STATIC_CACHE_NAME = 'lt-static'
 const STATIC_CACHE_PATHS = ['/logos/', '/fonts/', '/img/', '/sprites/', 'imamu.js']
 
+// ===== 广告素材目录：始终走网络，不缓存 =====
+// 广告图需随素材更换即时生效，而 /img/ 落在 STATIC_CACHE_PATHS（lt-static 永不清理），
+// 同名换图会永远命中旧缓存，故广告素材单独放 /ads/ 并在此拦截
+const ADS_PATH = '/ads/'
+
 // ===== 二级版本缓存：仅在 minor 版本变更时清除（如 3.3.x → 3.4.x） =====
 const MINOR_VERSION = CACHE_VERSION.split('.').slice(0, 2).join('.')
 const MINOR_CACHE_NAME = `lt-v3-minor-${MINOR_VERSION}`
@@ -253,6 +258,12 @@ self.addEventListener('fetch', (event) => {
   // 带 hash 的 JS/CSS: CacheFirst (内容不变，长期缓存)
   if (url.pathname.startsWith('/assets/') && /\.(js|css)$/.test(url.pathname)) {
     event.respondWith(cacheFirst(request))
+    return
+  }
+
+  // 广告素材: 始终走网络，不缓存。必须排在下面 image 分支之前，否则会被 CacheFirst 缓存
+  if (url.pathname.startsWith(ADS_PATH)) {
+    event.respondWith(fetch(request))
     return
   }
 

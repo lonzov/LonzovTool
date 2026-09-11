@@ -2,6 +2,7 @@
 import { inject, onMounted, ref, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import NoticeBar from './NoticeBar.vue'
+import AdCarousel from './AdCarousel.vue'
 import SearchBar from './SearchBar.vue'
 import ToolGrid from './ToolGrid.vue'
 import SearchGrid from './SearchGrid.vue'
@@ -10,7 +11,7 @@ import searchEngines from '../data/searchEngines.json'
 
 export default {
   name: 'HomeView',
-  components: { NoticeBar, SearchBar, ToolGrid, SearchGrid, AppFooter },
+  components: { NoticeBar, AdCarousel, SearchBar, ToolGrid, SearchGrid, AppFooter },
   setup() {
     const registerHomeView = inject('registerHomeView')
     const route = useRoute()
@@ -100,8 +101,14 @@ export default {
 <template>
   <div class="home-view">
     <h1 class="sr-only">小舟工具箱</h1>
-    <NoticeBar />
-    <SearchBar ref="searchBar" v-model="searchQuery" @internalSearch="handleInternalSearch" @toggleFavorites="handleToggleFavorites" />
+    <!-- 顶部区域：公告/搜索/广告逐行叠放；639–770 与 ≥889px 双栏(左列+右侧广告侧贴)，771–888 中间退回逐行 -->
+    <div class="home-hero">
+      <div class="home-hero__main">
+        <NoticeBar />
+        <SearchBar ref="searchBar" v-model="searchQuery" @internalSearch="handleInternalSearch" @toggleFavorites="handleToggleFavorites" />
+      </div>
+      <AdCarousel class="home-hero__ad" />
+    </div>
     <SearchGrid :searchQuery="searchQuery" />
     <ToolGrid ref="toolGrid" :searchQuery="searchQuery" :showFavorites="showFavorites" />
     <AppFooter />
@@ -111,5 +118,31 @@ export default {
 <style scoped>
 .home-view {
   min-height: 60vh;
+}
+
+/* 顶部两区：默认窄屏逐行（公告、搜索、广告各自外距形成 24px 节奏） */
+.home-hero__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.home-hero__ad {
+  margin-bottom: 24px;
+}
+
+/* 双栏区间：639–770（移动布局但已够宽）与 ≥889（桌面）；771–888 保持逐行，
+   广告整行通栏。右列固定 324（3:1，高108），左列 minmax(0,1fr) 自适应 */
+@media (min-width: 639px) and (max-width: 770px), (min-width: 889px) {
+  .home-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 16px;
+    align-items: start;
+  }
+
+  .home-hero__ad {
+    margin-bottom: 0;
+  }
 }
 </style>
