@@ -1,11 +1,9 @@
 <script>
 import { NCarousel, NCarouselItem } from 'naive-ui'
 
-// 图片索引独立在 src/data/homeAds.js（只含 JSON 结构的模块，动态导入、构建后为独立 chunk），
-// 便于单独维护；分 first 首屏位 / paid 付费位 / free 免费位 / notice 公告位 四档，没配的档位或条目直接忽略、
-// 后面的顺位顶上，四档都没配时仍显示 1 个灰底占位框。
-// 加载前与图片加载失败的滑片用灰底图标占位顶位。单项结构 { id, image, title?, link? }
-// 占位只放一条：避免首屏闪现多条才有的指示点与切换按钮
+// 滑片数据来自 src/data/homeAds.js（独立模块，构建后为独立 chunk，动态导入），
+// 按首屏位 / 付费位 / 免费位 / 公告位四档拼成轮播顺序，见下方 resolveSlides
+// 配置加载完成前用占位滑片顶位；只放一条，避免首屏闪现多条才有的指示点与切换按钮
 const PLACEHOLDER_SLIDES = [{ id: 1, image: '' }]
 
 // 付费位先后顺序的跨访问记录（'1' 表示本次反转）
@@ -50,10 +48,9 @@ function isConfigured(item) {
 
 /**
  * 分档配置 → 本次轮播顺序：首屏位 → 付费位 → 免费位 → 公告位（固定压尾）
- * 没配的档位/条目直接忽略，后面的顺位顶上（例：只配了 1 和 4 就是 1,4）；
- * 付费位价位相同，配满 2 个时来回换先后（本次 2,3 则下次 3,2），换完把记录翻转给下次；
- * 只配了 1 个或没配时不交替，也不翻转记录
- * @param {object} config homeAds.js 的三档配置
+ * 没配的档位/条目忽略，后面的顺位顶上；付费位价格相同，配满 2 个时来回换先后
+ * （本次 2,3 则下次 3,2），换完把记录翻转给下次；只配 1 个时不交替、也不翻转记录
+ * @param {object} config homeAds.js 的四档配置
  * @returns {Array|null} 轮播滑片数组，配置非法时返回 null
  */
 function resolveSlides(config) {
@@ -90,7 +87,7 @@ export default {
       reduceMotion: false,
       // 异步加载的分档配置拼成的滑片数组，加载完成前为空
       loadedSlides: [],
-      // 加载失败的滑片（键为 slide.id || 索引），失败后回退灰底图标占位
+      // 加载失败的滑片，键为滑片位置（不用配置里的 id：id 手写，重复会误伤其他滑片）
       failedSlides: {},
     }
   },
@@ -115,8 +112,14 @@ export default {
       if (this.$router) this.$router.push(link)
     },
     // 图片加载失败（断网/防盗链/404）→ 标记该滑片，改渲染灰底图标占位
-    handleImageError(slide, i) {
-      this.failedSlides[slide.id || i] = true
+    handleImageError(i) {
+      this.failedSlides[i] = true
+    },
+    // 非当前滑片带 aria-hidden，其内链接仍可 Tab 聚焦会被 Lighthouse 判为 aria-hidden-focus；
+    // 只加 tabindex="-1" 移出 Tab 顺序（不影响鼠标点击），别用 inert，它会连点击一起挡掉
+    inactiveSlideLinkAttrs(slide, isActive) {
+      if (!slide.link || isActive) return {}
+      return { tabindex: '-1' }
     },
   },
   mounted() {
@@ -124,6 +127,12 @@ export default {
       typeof window !== 'undefined' &&
       !!window.matchMedia &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    // NCarousel 的滑片容器只有 role="listbox" 没有可访问名称（未开放该属性），直接补在容器上
+    this.$nextTick(() => {
+      const slidesEl = this.$el && this.$el.querySelector('.n-carousel__slides')
+      if (slidesEl) slidesEl.setAttribute('aria-label', '广告推广位轮播')
+    })
 
     // 异步导入分档配置并拼成本次轮播顺序
     loadHomeAdsConfig().then((config) => {
@@ -135,26 +144,31 @@ export default {
 </script>
 
 <template>
-  <div class="ad-carousel" aria-label="广告推广位轮播">
+  <div class="ad-carousel">
+    <!-- 只有 1 张时关掉 loop：naive 的首尾克隆仅在 ≥2 张时才补，但 realIndex 恒按已补克隆算
+         （displayIndex + 1），单张时下标对不上，会把正在显示的那张误判成“非当前” -->
     <n-carousel
       v-if="items.length"
       class="ad-carousel__inner"
       direction="horizontal"
       dot-placement="bottom"
       dot-type="dot"
+      :loop="items.length > 1"
       :autoplay="canAutoplay"
       :interval="interval"
       :show-dots="items.length > 1"
       :show-arrow="items.length > 1"
       :keyboard="items.length > 1"
     >
-      <n-carousel-item v-for="(slide, i) in items" :key="slide.id || i">
-        <!-- 图片滑片：配了 link 才包 <a>（未配则纯 div，不留空链接）；
-             站内(/开头)点击走 SPA 切换，站外新标签页打开 -->
+      <!-- isActive 由 NCarouselItem 提供，即该滑片是否被标为 aria-hidden；
+           key 同样用位置：配置里的 id 手写，重复会让 Vue 复用错元素 -->
+      <n-carousel-item v-for="(slide, i) in items" :key="i" v-slot="{ isActive }">
+        <!-- 配了 link 才包 <a>（未配则纯 div，不留空链接）：站内 / 开头走 SPA 切换、站外新标签页打开；
+             图片加载失败只换里面的内容，外层链接照旧可点 -->
         <component
           :is="slide.link ? 'a' : 'div'"
-          v-if="slide.image && !failedSlides[slide.id || i]"
           class="ad-carousel__media"
+          v-bind="inactiveSlideLinkAttrs(slide, isActive)"
           :href="slide.link ? slide.link : undefined"
           :target="slide.link && !isInternalLink(slide.link) ? '_blank' : undefined"
           :rel="slide.link && !isInternalLink(slide.link) ? 'noopener noreferrer' : undefined"
@@ -162,22 +176,23 @@ export default {
           @click="handleSlideClick($event, slide)"
         >
           <img
+            v-if="slide.image && !failedSlides[i]"
             class="ad-carousel__img"
             :src="slide.image"
             :alt="slide.title || '广告'"
             loading="lazy"
             draggable="false"
-            @error="handleImageError(slide, i)"
+            @error="handleImageError(i)"
           />
+          <!-- 无图 / 加载失败占位：灰底 + 居中图标（与工具卡片 logo 错误占位同款图标） -->
+          <div v-else class="ad-carousel__ph">
+            <svg class="ad-carousel__ph-icon" viewBox="0 0 20 20" aria-hidden="true">
+              <path
+                d="M2.854 2.146a.5.5 0 1 0-.708.708l3.67 3.668a5.326 5.326 0 0 0-.463 1.724h-.07C3.468 8.246 2 9.758 2 11.623C2 13.488 3.47 15 5.282 15h9.01l2.854 2.854a.5.5 0 0 0 .708-.708l-15-15zM18 11.623a3.4 3.4 0 0 1-1.452 2.804l-9.49-9.49C7.808 4.353 8.792 4 10 4c2.817 0 4.415 1.923 4.647 4.246h.07c1.814 0 3.283 1.512 3.283 3.377z"
+              />
+            </svg>
+          </div>
         </component>
-        <!-- 无图 / 加载失败占位：灰底 + 居中图标（与工具卡片 logo 错误占位同款图标） -->
-        <div v-else class="ad-carousel__ph">
-          <svg class="ad-carousel__ph-icon" viewBox="0 0 20 20" aria-hidden="true">
-            <path
-              d="M2.854 2.146a.5.5 0 1 0-.708.708l3.67 3.668a5.326 5.326 0 0 0-.463 1.724h-.07C3.468 8.246 2 9.758 2 11.623C2 13.488 3.47 15 5.282 15h9.01l2.854 2.854a.5.5 0 0 0 .708-.708l-15-15zM18 11.623a3.4 3.4 0 0 1-1.452 2.804l-9.49-9.49C7.808 4.353 8.792 4 10 4c2.817 0 4.415 1.923 4.647 4.246h.07c1.814 0 3.283 1.512 3.283 3.377z"
-            />
-          </svg>
-        </div>
       </n-carousel-item>
     </n-carousel>
   </div>
@@ -212,8 +227,7 @@ export default {
   --n-bezier: cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* 指示点与切换按钮均保持 NCarousel 默认排布：show-arrow 下指示点位于底边左下、
-   切换按钮位于右下角互不重叠，故此处不再重排位置 */
+/* 指示点与切换按钮保持 NCarousel 默认排布（底边左下 + 右下角，互不重叠），无需重排位置 */
 
 /* 滑片：图片撑满（非 3:1 素材拉伸变形，不裁切不留边）；
    有 link 时该层为 <a>，否则为 <div> */
