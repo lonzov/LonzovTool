@@ -8,6 +8,29 @@ import { usePWAInstall } from '../composables/usePWAInstall'
 import toolsData from '../data/tools.json'
 import parentMenusData from '../data/parentMenus.json'
 
+// 父级菜单展开状态持久化（桌面端侧边栏与移动端抽屉共用同一份）
+const EXPANDED_KEYS_KEY = 'sidebar_expanded_keys'
+
+function loadExpandedKeys() {
+  try {
+    if (typeof localStorage === 'undefined') return null
+    const raw = localStorage.getItem(EXPANDED_KEYS_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed.map(String) : null
+  } catch {
+    return null
+  }
+}
+
+function saveExpandedKeys(keys) {
+  try {
+    localStorage.setItem(EXPANDED_KEYS_KEY, JSON.stringify(keys))
+  } catch {
+    // storage unavailable
+  }
+}
+
 export default {
   props: {
     value: {
@@ -83,7 +106,8 @@ export default {
   },
   mounted() {
     this.initMenuOptions()
-    this.expandedKeys = [...this.defaultExpandedKeys]
+    // 优先恢复上次的展开状态，无记录时取 parentMenus.json 的默认展开配置
+    this.expandedKeys = loadExpandedKeys() || [...this.defaultExpandedKeys]
     this.observeTheme()
   },
   beforeUnmount() {
@@ -237,6 +261,7 @@ export default {
     },
     handleUpdateExpandedKeys(keys) {
       this.expandedKeys = keys
+      saveExpandedKeys(keys)
     },
   },
   render() {
