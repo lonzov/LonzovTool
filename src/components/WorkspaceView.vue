@@ -94,6 +94,11 @@ function isIconTabLogo(logo) {
   return !!logo && !logo.startsWith('/') && !/^https?:/i.test(logo)
 }
 
+// 外链 logo 不携带 Referer，避免图床/防盗链服务因来源校验拒绝加载
+function tabLogoPolicy(logo) {
+  return /^https?:/i.test(logo || '') ? 'no-referrer' : undefined
+}
+
 // 生成下拉菜单选项的 logo 渲染（naive dropdown option.icon，图片/图标两种）
 function makeTabLogoIcon(tab) {
   const logo = getLogoFromPath(tab.path)
@@ -108,7 +113,7 @@ function makeTabLogoIcon(tab) {
     h(
       'span',
       { style: 'width:18px;height:18px;border-radius:4px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center' },
-      [h('img', { src: logo, alt: '', style: 'width:100%;height:100%;object-fit:contain;display:block' })],
+      [h('img', { src: logo, alt: '', referrerpolicy: tabLogoPolicy(logo), style: 'width:100%;height:100%;object-fit:contain;display:block' })],
     )
 }
 
@@ -863,7 +868,13 @@ onMounted(() => {
               :component="getToolIcon(tabLogos[tab.path])"
               :size="13"
             />
-            <img v-else :src="tabLogos[tab.path]" alt="" class="tab-logo-img" />
+            <img
+              v-else
+              :src="tabLogos[tab.path]"
+              alt=""
+              :referrerpolicy="tabLogoPolicy(tabLogos[tab.path])"
+              class="tab-logo-img"
+            />
           </span>
           <span class="tab-label">{{ tab.title }}</span>
           <span

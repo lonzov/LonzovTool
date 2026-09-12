@@ -310,6 +310,8 @@ export default {
   render() {
     // logo 以 / 或 http 开头视为图片路径，否则视为图标名（图标统一白底黑 logo）
     const isIconLogo = !!this.logo && !this.logo.startsWith('/') && !/^https?:/i.test(this.logo)
+    // 外链 logo：不携带 Referer，且不带 crossorigin（避免触发 CORS 校验导致加载失败）
+    const isExternalLogo = /^https?:/i.test(this.logo)
     const iconComp = isIconLogo ? this.getIconComponent(this.logo) : null
     const hasLogo = !!this.logo
     const shouldLoad = hasLogo && !isIconLogo && this.isInViewport && !this.imageError
@@ -473,7 +475,8 @@ export default {
                       key: `logo-${this.imgKey}`,
                       src: this.logo,
                       alt: this.title,
-                      crossorigin: 'anonymous',
+                      crossorigin: isExternalLogo ? undefined : 'anonymous',
+                      referrerpolicy: isExternalLogo ? 'no-referrer' : undefined,
                       style: {
                         width: '100%',
                         height: '100%',
