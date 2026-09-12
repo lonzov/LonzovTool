@@ -482,6 +482,11 @@ export default {
             background: 'var(--bg-color)',
             borderRight: '1px solid var(--sider-border)',
           }"
+          :content-style="{
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }"
         >
           <div
             :style="{
@@ -513,13 +518,9 @@ export default {
           />
           <div
             :style="{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
+              flexShrink: 0,
               padding: '0 14px 16px 14px',
               background: 'var(--bg-color)',
-              zIndex: 1,
             }"
           >
             <div
