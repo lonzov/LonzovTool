@@ -511,11 +511,12 @@ export default {
               margin: '0 auto 0px auto',
             }"
           ></div>
-          <AppMenu
-            v-model:value="activeKey"
-            @navigate="handleMenuNavigate"
-            style="flex: 1; overflow-y: auto"
-          />
+          <NScrollbar :style="{ flex: 1, minHeight: 0 }">
+            <AppMenu
+              v-model:value="activeKey"
+              @navigate="handleMenuNavigate"
+            />
+          </NScrollbar>
           <div
             :style="{
               flexShrink: 0,

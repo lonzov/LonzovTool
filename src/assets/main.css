@@ -210,10 +210,8 @@ button {
 
 /* ===== Naive UI Scrollbar 深色模式适配 ===== */
 [data-theme="dark"] .n-scrollbar {
-  --n-rail-color: #1F1F1F !important;
-  --n-rail-color-hover: #1F1F1F !important;
-  --n-thumb-color: #404040 !important;
-  --n-thumb-color-hover: #505050 !important;
+  --n-scrollbar-color: #404040 !important;
+  --n-scrollbar-color-hover: #505050 !important;
 }
 
 /* ===== Naive UI Input 输入框 - 全局深浅色适配（遵循项目变量） ===== */
