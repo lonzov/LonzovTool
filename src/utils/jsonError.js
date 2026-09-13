@@ -200,7 +200,52 @@ export function describeJsonError(text, problem) {
 }
 
 /**
- * JSON.parse，但失败时抛出带上下文的友好提示
+ * 把字符串字面量内部的原始换行改写成 \n 转义序列。
+ *
+ * 从游戏里复制出来的文本常常在字符串里夹着真实换行，JSON.parse 会直接报错。
+ * 这里在解析前主动修好，省得用户自己去补转义。
+ *
+ * 三个要点：
+ *   - 只动字符串内部；字符串之间的换行是合法空白，保持原样
+ *   - 已经是 \n 转义的保持原样，不会被二次转义成 \\n
+ *   - 反斜杠后的字符整体跳过，所以 \" 不会误判成字符串结束
+ * @param {string} text
+ * @returns {string} 改写后的文本（无需改动时原样返回）
+ */
+export function escapeRawNewlines(text) {
+  const src = String(text ?? '')
+  if (!src.includes('\n') && !src.includes('\r')) return src
+
+  let out = ''
+  let inString = false
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i]
+    if (!inString) {
+      if (c === '"') inString = true
+      out += c
+      continue
+    }
+    if (c === '\\') {
+      // 已有转义序列整体带走，避免把 \n 变成 \\n
+      out += c + (src[i + 1] ?? '')
+      i++
+      continue
+    }
+    if (c === '"') { inString = false; out += c; continue }
+    if (c === '\r') {
+      if (src[i + 1] === '\n') i++ // CRLF 只算一个换行
+      out += '\\n'
+      continue
+    }
+    if (c === '\n') { out += '\\n'; continue }
+    out += c
+  }
+  return out
+}
+
+/**
+ * JSON.parse，但失败时抛出带上下文的友好提示。
+ * 解析前会先把字符串内部的原始换行修成 \n。
  * @param {string} text
  * @returns {any}
  */
@@ -208,8 +253,15 @@ export function parseJsonWithHint(text) {
   const src = String(text ?? '')
   try {
     return JSON.parse(src)
-  } catch {
-    const problem = locateJsonError(src)
-    throw new Error(problem ? describeJsonError(src, problem) : 'JSON结构不规范，无法解析')
+  } catch { /* 下面先尝试修复换行再解析 */ }
+
+  const fixed = escapeRawNewlines(src)
+  if (fixed !== src) {
+    try {
+      return JSON.parse(fixed)
+    } catch { /* 修完还是不行，走诊断 */ }
   }
+
+  const problem = locateJsonError(fixed)
+  throw new Error(problem ? describeJsonError(fixed, problem) : 'JSON结构不规范，无法解析')
 }
