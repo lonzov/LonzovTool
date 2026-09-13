@@ -34,7 +34,11 @@ export const langStorageFallback = ref(false)
 export const showLangModal = ref(false)
 export const langImportOpen = ref(false)
 export const langImportName = ref('')
+/** 粘贴进来的文本 */
 export const langImportText = ref('')
+/** 选中的文件：文本单独存，不塞进 textarea（一份 .lang 有 13k 行，塞进去渲染会卡） */
+export const langImportFileName = ref('')
+export const langImportFileText = ref('')
 export const langImportError = ref('')
 export const langImporting = ref(false)
 export const langDeleteConfirmId = ref(null)
@@ -258,7 +262,24 @@ export function openLangModal() {
   langImportError.value = ''
   langImportName.value = ''
   langImportText.value = ''
+  langImportFileName.value = ''
+  langImportFileText.value = ''
+  // 一份语言包都没有时默认展开导入区，否则收起
+  langImportOpen.value = langPackList.value.length === 0
   showLangModal.value = true
+}
+
+/** 置入选中的文件（文本单独存，不进 textarea） */
+export function setImportFile(name, text) {
+  langImportFileName.value = name
+  langImportFileText.value = text
+  langImportError.value = ''
+  if (!langImportName.value.trim()) langImportName.value = name.replace(/\.[^.]+$/, '')
+}
+
+export function clearImportFile() {
+  langImportFileName.value = ''
+  langImportFileText.value = ''
 }
 export function closeLangModal() {
   showLangModal.value = false

@@ -42,6 +42,8 @@ src:
       RawJsonEditModal.vue: T显编辑器：编辑/添加元素弹窗
       RawJsonImportModal.vue: T显编辑器：导入指令弹窗
       RawJsonColorModal.vue: T显编辑器：颜色参考表弹窗
+      RawJsonLangModal.vue: T显编辑器：语言包管理弹窗（导入/切换/重命名/删除）
+      RawJsonSimulatorModal.vue: T显编辑器：预览模拟器弹窗（玩家名/缺失分值/标签/记分板）
       selector:
         index.vue: 选择器参数编辑器入口，NConfigProvider 深色覆盖 + 组件组装
         constants.js: 参数种类定义(PARAM_KINDS)、游戏模式选项、权限选项等配置

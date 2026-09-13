@@ -15,6 +15,12 @@ import RawJsonRightPanel from './RawJsonRightPanel.vue'
 import RawJsonEditModal from './RawJsonEditModal.vue'
 import RawJsonImportModal from './RawJsonImportModal.vue'
 import RawJsonColorModal from './RawJsonColorModal.vue'
+import RawJsonLangModal from './RawJsonLangModal.vue'
+import RawJsonSimulatorModal from './RawJsonSimulatorModal.vue'
+import { initLangStore, showLangModal, closeLangModal } from '../../composables/useRawJsonLang.js'
+import {
+  showSimModal, closeSimModal, loadSimFromStorage, disposeSimulator,
+} from '../../composables/useRawJsonSimulator.js'
 
 defineProps({
   tabPath: { type: String, default: '' },
@@ -24,12 +30,16 @@ const { isDark } = useTheme()
 
 // 初始化编辑器（捕获 message 实例 + localStorage 加载 + 生命周期）
 useRawJsonEditor()
+// 模拟器同步读取 localStorage（数据 <1KB，需首帧可用）；语言包走 IndexedDB，异步加载
+loadSimFromStorage()
 
 // 键盘快捷键
 function handleKeydown(e) {
   if (e.key === 'Escape') {
     if (showEditModal.value) closeEditModal()
     else if (showColorModal.value) closeColorTable()
+    else if (showLangModal.value) closeLangModal()
+    else if (showSimModal.value) closeSimModal()
     else if (showImportModal.value) closeImport()
   }
   if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
@@ -40,8 +50,14 @@ function handleKeydown(e) {
   }
 }
 
-onMounted(() => { document.addEventListener('keydown', handleKeydown) })
-onBeforeUnmount(() => { document.removeEventListener('keydown', handleKeydown) })
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown)
+  initLangStore()
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', handleKeydown)
+  disposeSimulator()
+})
 
 /** NSelect 深色模式 peer 覆盖（按 customize-theme.md 文档方式） */
 const darkSelectOverrides = {
@@ -107,6 +123,8 @@ const darkSelectOverrides = {
       <RawJsonEditModal />
       <RawJsonImportModal />
       <RawJsonColorModal />
+      <RawJsonLangModal />
+      <RawJsonSimulatorModal />
     </div>
   </NConfigProvider>
 </template>

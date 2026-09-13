@@ -3,6 +3,7 @@ import { NButton, NIcon, NSelect } from 'naive-ui'
 import {
   ArrowImport24Regular, ArrowUndo24Regular, ArrowRedo24Regular,
   BookOpen48Regular, Color24Regular, Delete24Regular, Add16Filled,
+  LocalLanguage24Regular,
 } from '@vicons/fluent'
 import {
   cmdType, titlePos, targetSel, targetCustom,
@@ -13,6 +14,7 @@ import {
   openImport, loadExample, openColorTable,
   addElement, clearAll,
 } from '../../composables/useRawJsonEditor.js'
+import { openLangModal, activePackName } from '../../composables/useRawJsonLang.js'
 </script>
 
 <template>
@@ -92,6 +94,11 @@ import {
       <NButton quaternary size="small" @click="openColorTable">
         <template #icon><NIcon :component="Color24Regular" /></template>
         颜色表
+      </NButton>
+      <NButton quaternary size="small" @click="openLangModal">
+        <template #icon><NIcon :component="LocalLanguage24Regular" /></template>
+        语言包
+        <span v-if="activePackName" class="toolbar-dot" :title="`当前语言包：${activePackName}`" />
       </NButton>
       <NButton quaternary size="small" :disabled="undoStack.length === 0" @click="undo">
         <template #icon><NIcon :component="ArrowUndo24Regular" /></template>
@@ -190,6 +197,15 @@ import {
   align-items: center;
   gap: 2px;
   flex-wrap: wrap;
+}
+/* 「语言包」已加载指示点 */
+.toolbar-dot {
+  display: inline-block;
+  width: 5px; height: 5px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: #18A058;
+  vertical-align: middle;
 }
 .toolbar-count {
   font-size: 11px;

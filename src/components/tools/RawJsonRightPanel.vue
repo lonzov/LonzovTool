@@ -1,11 +1,13 @@
 <script setup>
 import { onMounted, onBeforeUnmount } from 'vue'
 import { NButton, NIcon } from 'naive-ui'
-import { Copy24Regular, Code20Filled, ArrowMinimize16Filled } from '@vicons/fluent'
+import { Copy24Regular, Code20Filled, ArrowMinimize16Filled, Person24Regular } from '@vicons/fluent'
 import {
   jsonFormatted, modeLabel, previewHtml, jsonOutput, commandOutput, cmdLength,
   formatJson, minifyJson, copyCommand,
 } from '../../composables/useRawJsonEditor.js'
+import { openSimModal } from '../../composables/useRawJsonSimulator.js'
+import { activePackName } from '../../composables/useRawJsonLang.js'
 import { startObfuscateTimer, stopObfuscateTimer } from '../../vendor/mcfc/mcfc.js'
 import '../../vendor/mcfc/mcfc.css'
 
@@ -18,13 +20,23 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
   <div class="output-card">
     <div class="output-card-header">
       <span class="output-card-title">预览</span>
-      <span class="output-card-badge">{{ modeLabel }}</span>
+      <div class="preview-header-actions">
+        <span class="output-card-badge">{{ modeLabel }}</span>
+        <button class="preview-icon-btn" title="预览模拟器（玩家名 / 记分板）" @click="openSimModal">
+          <NIcon :component="Person24Regular" :size="14" />
+        </button>
+      </div>
     </div>
     <div class="preview-box">
       <div class="preview-content mcfc" v-html="previewHtml" />
     </div>
     <div class="preview-footer">
-      <span>支持 § 颜色代码 + \n 换行</span>
+      <span class="preview-footer-left">
+        <span>支持 § 颜色代码 + \n 换行</span>
+        <span class="preview-lang" :class="{ 'preview-lang--off': !activePackName }">
+          {{ activePackName ? `语言包：${activePackName}` : '语言包：未加载' }}
+        </span>
+      </span>
       <span>{{ cmdLength }} 字符</span>
     </div>
   </div>
@@ -100,6 +112,15 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
   transition: color 0.4s ease, background-color 0.4s ease;
 }
 .output-card-actions { display: flex; gap: 2px; }
+.preview-header-actions { display: flex; align-items: center; gap: 6px; }
+.preview-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; padding: 0;
+  border: none; border-radius: 6px; background: transparent;
+  color: var(--text-tertiary); cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+.preview-icon-btn:hover { background: var(--bg-sub); color: var(--text-primary); }
 
 .preview-box {
   background: #1a1a1a; border-radius: 8px; border: 1px solid #333;
@@ -123,6 +144,13 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   transition: color 0.4s ease;
 }
+.preview-footer-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.preview-lang {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  transition: color 0.4s ease;
+}
+.preview-lang::before { content: '· '; }
+.preview-lang--off { color: var(--text-tertiary); opacity: 0.75; }
 .json-textarea {
   width: 100%; height: 100px;
   padding: 10px 12px;

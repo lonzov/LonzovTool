@@ -1,0 +1,457 @@
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { NModal, NConfigProvider, NIcon, useMessage } from 'naive-ui'
+import { darkTheme } from 'naive-ui'
+import { Delete24Regular, Edit24Filled } from '@vicons/fluent'
+import { useTheme } from '../../composables/useTheme'
+import {
+  showLangModal, langPackList, activePackId, langLoading, langStorageFallback,
+  langImportOpen, langImportName, langImportText, langImportFileName, langImportFileText,
+  langImportError, langImporting, langDeleteConfirmId, langRenamingId, langRenamingName,
+  closeLangModal, activatePack, importLangPack, deletePack, toggleDeleteConfirm,
+  startRename, cancelRename, confirmRename, setImportFile, clearImportFile, formatBytes,
+} from '../../composables/useRawJsonLang.js'
+
+const { isDark } = useTheme()
+const message = useMessage()
+
+const darkOverrides = {
+  common: { neutralModal: '#191919' },
+  Card: { colorModal: '#191919' },
+}
+
+const isCompact = ref(false)
+let _mq
+function _onMqChange(e) { isCompact.value = e.matches }
+onMounted(() => {
+  _mq = window.matchMedia('(max-width: 640px)')
+  isCompact.value = _mq.matches
+  _mq.addEventListener('change', _onMqChange)
+})
+onUnmounted(() => {
+  if (_mq) _mq.removeEventListener('change', _onMqChange)
+})
+
+const modalStyle = computed(() => ({
+  maxWidth: '640px',
+  width: 'calc(100% - 32px)',
+  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 110px)',
+  borderRadius: '16px',
+  cornerShape: 'squircle',
+}))
+
+const activePack = computed(() => langPackList.value.find(p => p.id === activePackId.value) || null)
+const sourceLabel = { lang: '.lang', json: 'JSON', paste: '粘贴' }
+
+function formatDate(ts) {
+  const d = new Date(ts)
+  const p = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+}
+
+function pickFile() {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = '.lang,.txt,.json,text/plain,application/json'
+  input.onchange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      setImportFile(file.name, await file.text())
+    } catch (err) {
+      langImportError.value = `读取文件失败：${err?.message || err}`
+    }
+  }
+  input.click()
+}
+
+async function doImport() {
+  const text = langImportFileText.value || langImportText.value
+  if (!text.trim()) {
+    langImportError.value = '请先选择 .lang 文件，或粘贴语言包内容'
+    return
+  }
+  langImporting.value = true
+  langImportError.value = ''
+  try {
+    const meta = await importLangPack({
+      text,
+      name: langImportName.value,
+      source: langImportFileText.value ? 'lang' : 'paste',
+    })
+    message.success(`已导入「${meta.name}」，共 ${meta.keyCount.toLocaleString('zh-CN')} 个键`)
+    langImportName.value = ''
+    langImportText.value = ''
+    clearImportFile()
+    langImportOpen.value = false
+  } catch (e) {
+    langImportError.value = e?.message || '导入失败'
+  } finally {
+    langImporting.value = false
+  }
+}
+
+async function doActivate(id) {
+  const ok = await activatePack(id)
+  if (!ok) message.error('语言包数据读取失败')
+}
+
+function doDelete(id) {
+  if (toggleDeleteConfirm(id)) deletePack(id)
+}
+</script>
+
+<template>
+  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
+    <NModal
+      v-model:show="showLangModal"
+      preset="card"
+      title="语言包"
+      :style="modalStyle"
+      :segmented="{ content: true, footer: 'soft' }"
+      content-scrollable
+    >
+      <!-- 当前生效 -->
+      <div class="lang-section">
+        <div class="lang-section-header">
+          <span class="lang-section-title">当前生效</span>
+          <span v-if="langLoading" class="lang-section-hint">载入中…</span>
+        </div>
+        <div v-if="activePack" class="lang-current">
+          <div class="lang-current-main">
+            <span class="lang-current-name">{{ activePack.name }}</span>
+            <span class="lang-current-meta">
+              {{ activePack.keyCount.toLocaleString('zh-CN') }} 个键 · {{ formatBytes(activePack.bytes) }}
+            </span>
+          </div>
+          <span class="lang-badge">生效中</span>
+        </div>
+        <p v-else class="lang-empty">
+          尚未加载语言包。预览里的 <code>translate</code> 元素会原样显示键名（与游戏查不到键时的行为一致）。
+        </p>
+      </div>
+
+      <!-- 已导入列表 -->
+      <div class="lang-section">
+        <div class="lang-section-header">
+          <span class="lang-section-title">已导入（{{ langPackList.length }}）</span>
+          <button class="lang-link" @click="langImportOpen = !langImportOpen">
+            {{ langImportOpen ? '收起导入' : '导入语言包' }}
+          </button>
+        </div>
+
+        <p v-if="langPackList.length === 0" class="lang-empty">
+          还没有语言包。点右上角「导入语言包」，选择游戏资源包里的 <code>texts/zh_CN.lang</code> 即可。
+        </p>
+
+        <div v-else class="lang-list">
+          <div
+            v-for="p in langPackList" :key="p.id"
+            class="lang-item" :class="{ 'lang-item--active': p.id === activePackId }"
+          >
+            <template v-if="langRenamingId === p.id">
+              <input
+                v-model="langRenamingName"
+                type="text" class="lang-input"
+                @keydown.enter="confirmRename"
+                @keydown.esc="cancelRename"
+              />
+              <div class="lang-actions">
+                <button class="lang-link" @click="cancelRename">取消</button>
+                <button class="lang-link lang-link--strong" @click="confirmRename">保存</button>
+              </div>
+            </template>
+
+            <template v-else>
+              <div class="lang-item-main">
+                <span class="lang-item-name">{{ p.name }}</span>
+                <span class="lang-item-meta">
+                  {{ p.keyCount.toLocaleString('zh-CN') }} 个键 · {{ formatBytes(p.bytes) }}
+                  · {{ sourceLabel[p.source] || p.source }} · {{ formatDate(p.importedAt) }}
+                </span>
+              </div>
+              <div class="lang-actions">
+                <span v-if="p.id === activePackId" class="lang-badge">生效中</span>
+                <button
+                  v-else class="lang-link lang-link--strong"
+                  :disabled="langLoading" @click="doActivate(p.id)"
+                >设为当前</button>
+                <button class="lang-icon-btn" title="重命名" @click="startRename(p.id)">
+                  <NIcon :component="Edit24Filled" :size="14" />
+                </button>
+                <button
+                  class="lang-icon-btn"
+                  :class="{ 'lang-icon-btn--danger': langDeleteConfirmId === p.id }"
+                  :title="langDeleteConfirmId === p.id ? '再次点击确认删除' : '删除'"
+                  @click="doDelete(p.id)"
+                >
+                  <NIcon :component="Delete24Regular" :size="14" />
+                </button>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <p v-if="langStorageFallback" class="lang-note">
+          当前浏览器不支持 IndexedDB，语言包已降级存到 localStorage，容量有限。
+        </p>
+      </div>
+
+      <!-- 导入区 -->
+      <div v-if="langImportOpen" class="lang-section">
+        <div class="lang-section-header">
+          <span class="lang-section-title">导入</span>
+        </div>
+
+        <div class="lang-field">
+          <label class="lang-label">名称</label>
+          <input v-model="langImportName" type="text" class="lang-input" placeholder="不填则自动命名" />
+        </div>
+
+        <div class="lang-field">
+          <label class="lang-label">来源</label>
+          <div class="lang-source-row">
+            <button class="btn btn-outline btn-sm" @click="pickFile">选择 .lang / .json 文件</button>
+            <span v-if="langImportFileName" class="lang-file-chip">
+              {{ langImportFileName }}
+              <button class="lang-file-remove" title="移除" @click="clearImportFile">×</button>
+            </span>
+          </div>
+        </div>
+
+        <div class="lang-field">
+          <label class="lang-label">或直接粘贴</label>
+          <textarea
+            v-model="langImportText"
+            class="lang-textarea"
+            spellcheck="false"
+            :disabled="!!langImportFileName"
+            placeholder="key=value 形式的 .lang 内容，或 {&quot;键&quot;:&quot;值&quot;} 的 JSON"
+          />
+        </div>
+
+        <p v-if="langImportError" class="lang-error">{{ langImportError }}</p>
+
+        <div class="lang-import-actions">
+          <button class="btn btn-fill" :disabled="langImporting" @click="doImport">
+            {{ langImporting ? '导入中…' : '导入并启用' }}
+          </button>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="modal-actions">
+          <span class="lang-footer-hint">语言数据全部保存在本地浏览器，不会上传</span>
+          <button class="btn btn-fill" @click="closeLangModal">关闭</button>
+        </div>
+      </template>
+    </NModal>
+  </NConfigProvider>
+</template>
+
+<style scoped>
+.lang-section { margin-bottom: 18px; }
+.lang-section:last-child { margin-bottom: 0; }
+.lang-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.lang-section-title {
+  font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  transition: color 0.4s ease;
+}
+.lang-section-hint { font-size: 10px; color: var(--text-tertiary); transition: color 0.4s ease; }
+.lang-empty {
+  margin: 0; padding: 10px 12px;
+  font-size: 12px; line-height: 1.6; color: var(--text-secondary);
+  background: var(--bg-sub); border-radius: 8px;
+  transition: color 0.4s ease, background-color 0.4s ease;
+}
+.lang-empty code {
+  font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
+  font-size: 11px; padding: 1px 4px; border-radius: 4px;
+  background: var(--bg-card); color: var(--text-primary);
+}
+.lang-note { margin: 8px 0 0; font-size: 11px; color: var(--text-tertiary); transition: color 0.4s ease; }
+
+.lang-current {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-sub); border: 1px solid var(--border-color); border-radius: 8px;
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+.lang-current-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lang-current-name {
+  font-size: 13px; font-weight: 600; color: var(--text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  transition: color 0.4s ease;
+}
+.lang-current-meta { font-size: 10px; color: var(--text-tertiary); transition: color 0.4s ease; }
+
+.lang-list { display: flex; flex-direction: column; gap: 6px; }
+.lang-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 10px;
+  background: var(--bg-sub); border: 1px solid var(--border-color); border-radius: 8px;
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+.lang-item--active { border-color: var(--text-secondary); }
+.lang-item-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.lang-item-name {
+  font-size: 13px; color: var(--text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  transition: color 0.4s ease;
+}
+.lang-item-meta { font-size: 10px; color: var(--text-tertiary); transition: color 0.4s ease; }
+.lang-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+.lang-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+  color: var(--text-secondary); background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
+}
+
+.lang-link {
+  border: none; background: transparent; cursor: pointer;
+  font-size: 11px; font-family: inherit; padding: 2px 4px; border-radius: 4px;
+  color: var(--text-secondary);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+.lang-link:hover { background: var(--bg-card); color: var(--text-primary); }
+.lang-link:disabled { opacity: 0.5; cursor: default; }
+.lang-link--strong { color: var(--text-primary); font-weight: 600; }
+
+.lang-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; padding: 0;
+  border: none; border-radius: 6px; background: transparent;
+  color: var(--text-secondary); cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+.lang-icon-btn:hover { background: var(--bg-card); color: var(--text-primary); }
+.lang-icon-btn--danger { color: #E5484D; }
+
+.lang-field { margin-bottom: 10px; }
+.lang-label {
+  display: block; margin-bottom: 4px;
+  font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  transition: color 0.4s ease;
+}
+.lang-input {
+  width: 100%; height: 34px; padding: 0 12px;
+  border: 1px solid var(--border-color); border-radius: 8px;
+  background: var(--bg-sub); color: var(--text-primary);
+  font-size: 13px; font-family: inherit; outline: none; box-sizing: border-box;
+  transition: border-color 0.3s ease, background-color 0.4s ease, color 0.4s ease;
+}
+.lang-input:focus { border-color: var(--text-secondary); }
+.lang-item .lang-input { flex: 1; }
+
+.lang-source-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lang-file-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 8px; border-radius: 6px;
+  font-size: 11px; color: var(--text-secondary);
+  background: var(--bg-sub); border: 1px solid var(--border-color);
+  transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
+}
+.lang-file-remove {
+  border: none; background: transparent; cursor: pointer;
+  font-size: 14px; line-height: 1; padding: 0;
+  color: var(--text-tertiary);
+  transition: color 0.15s ease;
+}
+.lang-file-remove:hover { color: var(--text-primary); }
+
+.lang-textarea {
+  width: 100%; min-height: 120px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color); border-radius: 8px;
+  background: var(--bg-sub); color: var(--text-primary);
+  font-size: 12px; resize: vertical;
+  font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
+  outline: none; box-sizing: border-box;
+  transition: border-color 0.3s ease, background-color 0.4s ease, color 0.4s ease;
+}
+.lang-textarea:focus { border-color: var(--text-secondary); }
+.lang-textarea:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.lang-error {
+  margin: 0 0 10px; padding: 8px 12px;
+  background: #f2f2f2; border: 1px solid #ddd;
+  border-radius: 6px; font-size: 12px; color: #555;
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+[data-theme="dark"] .lang-error {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.lang-import-actions { display: flex; justify-content: flex-end; }
+.lang-footer-hint { font-size: 11px; color: var(--text-tertiary); transition: color 0.4s ease; }
+
+/* 页脚操作按钮 (与 UpdateDialog 一致) */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding-top: 8px;
+}
+.modal-actions > :first-child:not(span) { margin-right: auto; }
+
+.btn {
+  height: 34px;
+  padding: 0 20px;
+  border-radius: 17px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  border: none;
+}
+.btn-sm { height: 30px; padding: 0 14px; font-size: 12px; border-radius: 15px; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+
+[data-theme="light"] .btn-fill {
+  background: #1A1A1A;
+  color: #fff;
+}
+
+[data-theme="dark"] .btn-fill {
+  background: #fff;
+  color: #1A1A1A;
+}
+
+.btn-fill:hover:not(:disabled) { opacity: 0.85; }
+
+.btn-outline {
+  border: 1.5px solid currentColor;
+}
+
+[data-theme="light"] .btn-outline {
+  background: #fff;
+  color: #1A1A1A;
+}
+
+[data-theme="light"] .btn-outline:hover {
+  background: #E8E8E8;
+}
+
+[data-theme="dark"] .btn-outline {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+[data-theme="dark"] .btn-outline:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+</style>
