@@ -20,6 +20,7 @@
     "@unhead/vue": "^2.1.2",
     "@vicons/ionicons5": "^0.13.0",
     "html2canvas": "^1.4.1",
+    "localforage": "^1.10.0",
     "markdown-it": "^14.1.1",
     "naive-ui": "^2.44.1",
     "nprogress": "^0.2.0",

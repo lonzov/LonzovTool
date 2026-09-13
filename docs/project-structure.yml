@@ -70,6 +70,8 @@ src:
     usePrivacyModal.js: 隐私弹窗状态共享组合式函数
     usePWAInstall.js: PWA 安装状态管理与安装触发，处理不同系统/浏览器的安装逻辑
     useRawJsonEditor.js: T显编辑器核心状态与逻辑（模块级单例）
+    useRawJsonLang.js: T显编辑器语言包状态与 localforage(IndexedDB) 持久化（模块级单例）
+    useRawJsonSimulator.js: T显编辑器预览模拟器状态与 localStorage 持久化（模块级单例）
     useSWUpdate.js: Service Worker 更新检测与版本比较组合式函数
     useStats.js: 访问统计状态管理组合式函数（模块级单例，含内存/localsStorage双层缓存）
     useTheme.js: 主题状态管理组合式函数
