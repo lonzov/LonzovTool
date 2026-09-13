@@ -12,6 +12,12 @@
  *   2. $s / $d 会被无条件删除，所以 %1$s 等价于 %1。
  *   3. %N 的索引带偏移：取 args[该串中 %s/%d 的总数 + N - 1]，不是 Java 的纯 1-based。
  *   4. 参数以 % 开头时会被当成子翻译键再查一次表。
+ *   5. **条件/变量模式**：with.rawtext 里求不出值的元素（未命中的 selector、
+ *      未命中的 score）不占参数槽，会被整个移出参数表，后面的参数整体前移。
+ *      于是 {"translate":"%%2","with":{"rawtext":[
+ *        {"selector":"@p[scores={a=1}]"},{"text":"1"},{"text":"other"}]}}
+ *      在条件成立时 %%2 取到 "1"，不成立时取到 "other"。
+ *      注意 text:"" 空串仍占槽，只有 selector / score 会消失。
  */
 
 /** 翻译嵌套深度上限（参考实现无上限，这里加护栏防止极端数据卡死预览） */
@@ -176,12 +182,15 @@ function substituteArgs(template, params, lookup) {
  * 渲染一个 translate 元素为纯文本（可能含 § 格式化代码）。
  * @param {string} key           el.translate 的原始值
  * @param {(key: string) => string|null} lookup
- * @param {string[]} params      已渲染成字符串的参数列表
+ * @param {string[]|undefined} params 已渲染成字符串的参数列表。
+ *        传 undefined 表示「元素没有 with 字段」→ 不做参数替换；
+ *        传数组（哪怕是空数组）表示「有 with 字段」→ 一定执行替换，
+ *        这样所有参数都被条件移除时，占位符会被替换成空而不是原样保留。
  */
-export function translateKey(key, lookup, params = []) {
+export function translateKey(key, lookup, params) {
   let s = fillTranslations(String(key ?? ''), lookup)
   s = s.replace(new RegExp(RE_DOLLAR, 'g'), '')
-  if (params.length) s = substituteArgs(s, params, lookup)
+  if (Array.isArray(params)) s = substituteArgs(s, params, lookup)
   // 折叠转义后的字面量百分号：语言值里 %s%% 应显示为 "50%"（游戏实际行为）
   return s.replace(/%%/g, '%')
 }
@@ -196,29 +205,77 @@ export function parseTags(value) {
     .filter(Boolean))]
 }
 
+/** 按分隔符切分，但忽略 {} / [] 内部的同级分隔符（scores={a=1,b=2} 里的逗号不能被切开） */
+function splitTopLevel(str, sep) {
+  const out = []
+  let depth = 0
+  let cur = ''
+  for (const ch of str) {
+    if (ch === '{' || ch === '[') depth++
+    else if (ch === '}' || ch === ']') depth--
+    if (ch === sep && depth === 0) { out.push(cur); cur = '' } else cur += ch
+  }
+  out.push(cur)
+  return out
+}
+
+/**
+ * 判断一条 scores 过滤条件是否成立。
+ * 支持 `a=1`、`a=1..5`、`a=..5`、`a=5..`；模拟器里没有该计分项一律不成立。
+ * @param {string} cond 形如 "a=1"
+ * @param {{player: string, scores: Array}} sim
+ */
+function scoreFilterMatches(cond, sim) {
+  const eq = cond.indexOf('=')
+  if (eq < 0) return true
+  const objective = cond.slice(0, eq).trim()
+  const range = cond.slice(eq + 1).trim()
+  const row = (sim?.scores || []).find(s => s.player === sim.player && s.objective === objective)
+  if (!row) return false
+  const val = Number(row.score)
+  if (Number.isNaN(val)) return false
+  if (range.includes('..')) {
+    const [lo, hi] = range.split('..')
+    const loN = lo.trim() === '' ? -Infinity : Number(lo)
+    const hiN = hi.trim() === '' ? Infinity : Number(hi)
+    return val >= loN && val <= hiN
+  }
+  return val === Number(range)
+}
+
 /**
  * 求目标选择器的显示文本。
- * 模拟器只建模一个实体（玩家名 + 标签），因此 @a/@e 在模型下必然只匹配到它一个，
+ * 模拟器只建模一个实体（玩家名 + 标签 + 计分板），因此 @a/@e 在模型下必然只匹配到它一个，
  * 展开结果就是玩家名本身（游戏里多实体是逗号分隔）。
+ *
+ * scores={...} 过滤是「条件/变量模式」的核心：条件不成立时返回 null，
+ * 该参数会被移出参数表，后面的参数整体前移。
  * @param {string} selector
- * @param {{player: string, tags: string[]}} sim
- * @returns {string} 无匹配时返回空串，由调用方退化为灰色占位
+ * @param {{player: string, tags: string[], scores: Array}} sim
+ * @returns {string|null} null 表示「是选择器但没匹配到」——调用方需据此把它从参数表里移除；
+ *          不是选择器（如手写的 "Steve"）或语法不认识时，原样返回该字符串，当作普通文本
  */
 export function resolveSelector(selector, sim) {
-  const m = /^@([aeprsn])(?:\[(.*)\])?$/.exec(String(selector ?? '').trim())
-  if (!m) return ''
+  const src = String(selector ?? '').trim()
+  if (!src.startsWith('@')) return src
+  const m = /^@([aeprsn])(?:\[(.*)\])?$/.exec(src)
+  if (!m) return src
   const name = sim?.player || ''
-  if (!name) return ''
+  if (!name) return null
   const tags = sim?.tags || []
-  const filters = (m[2] || '').split(',').map(s => s.trim()).filter(Boolean)
+  const filters = splitTopLevel(m[2] || '', ',').map(s => s.trim()).filter(Boolean)
   for (const f of filters) {
     const eq = f.indexOf('=')
     if (eq < 0) continue
     const k = f.slice(0, eq).trim().toLowerCase()
     const v = f.slice(eq + 1).trim().replace(/^"|"$/g, '')
-    // 只解释模拟器能求值的过滤器，type= / r= / c= 等一律忽略（不参与过滤）
-    if (k === 'tag' && !tags.includes(v)) return ''
-    if (k === 'name' && name !== v) return ''
+    // 只解释模拟器能求值的过滤器，type= / r= / c= / x= 等一律忽略（不参与过滤）
+    if (k === 'tag' && !tags.includes(v)) return null
+    if (k === 'name' && name !== v) return null
+    if (k === 'scores') {
+      const conds = splitTopLevel(v.replace(/^\{|\}$/g, ''), ',').map(s => s.trim()).filter(Boolean)
+      if (!conds.every(c => scoreFilterMatches(c, sim))) return null
+    }
   }
   return name
 }
@@ -244,28 +301,33 @@ export function resolveScore(scoreEl, sim) {
     : { value: missingValue, missing: true }
 }
 
-// ========== 元素 → 纯文本（供 with.rawtext 内元素与顶层预览复用） ==========
+// ========== 元素 → 参数值 ==========
 
 /**
- * 把一个 rawtext 元素渲染成纯文本字符串（保留 § 代码）。
+ * 把一个 rawtext 元素渲染成「参数值」（保留 § 代码）。
  * 与游戏一致：参数在替换发生前就被压平成字符串，随后是纯拼接，样式线性流动。
  * @param {object} el
  * @param {{ lookup: Function, selector: Function, score: Function }} ctx
  * @param {number} depth
+ * @returns {string|null} null 表示该元素求不出值，不占参数槽（条件/变量模式的关键）
  */
-export function renderElement(el, ctx, depth = 0) {
-  if (!el || typeof el !== 'object' || depth > MAX_TRANSLATE_DEPTH) return ''
+export function renderElementArg(el, ctx, depth = 0) {
+  if (!el || typeof el !== 'object' || depth > MAX_TRANSLATE_DEPTH) return null
   if (el.text !== undefined) return String(el.text)
   if (el.translate !== undefined) return renderTranslate(el, ctx, depth)
   if (el.selector !== undefined) return ctx.selector(String(el.selector))
-  if (el.score !== undefined) return ctx.score(el).value
-  return ''
+  if (el.score !== undefined) {
+    const r = ctx.score(el)
+    return r && !r.missing ? r.value : null
+  }
+  return null
 }
 
 /**
  * 把 el.with 渲染成参数列表。
- *   数组模式：每个字符串是一个参数
- *   对象模式：rawtext 里每个元素各自渲染成一个字符串、各自成为一个参数
+ *   数组模式：每个字符串是一个参数（空串也占槽）
+ *   对象模式：rawtext 里每个元素各自成为一个参数；求不出值的元素（未命中的
+ *            selector / score）被移除，后面的参数整体前移 —— 这就是条件写法
  * @param {any} withVal
  * @param {{ lookup: Function, selector: Function, score: Function }} ctx
  * @param {number} depth
@@ -274,7 +336,12 @@ export function renderElement(el, ctx, depth = 0) {
 export function buildParams(withVal, ctx, depth = 0) {
   if (Array.isArray(withVal)) return withVal.map(v => String(v ?? ''))
   if (withVal && Array.isArray(withVal.rawtext)) {
-    return withVal.rawtext.map(sub => renderElement(sub, ctx, depth + 1))
+    const out = []
+    for (const sub of withVal.rawtext) {
+      const v = renderElementArg(sub, ctx, depth + 1)
+      if (v !== null) out.push(v)
+    }
+    return out
   }
   return []
 }
@@ -287,7 +354,8 @@ export function buildParams(withVal, ctx, depth = 0) {
  */
 export function renderTranslate(el, ctx, depth = 0) {
   if (depth > MAX_TRANSLATE_DEPTH) return ''
-  const params = buildParams(el.with, ctx, depth)
+  const hasWith = el.with !== undefined && el.with !== null
+  const params = hasWith ? buildParams(el.with, ctx, depth) : undefined
   return translateKey(el.translate, ctx.lookup, params)
 }
 

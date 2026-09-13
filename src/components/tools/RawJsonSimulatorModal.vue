@@ -93,6 +93,10 @@ const modalStyle = computed(() => ({
           <NIcon :component="Add16Filled" :size="14" />
           <span>添加记分板项</span>
         </button>
+        <span class="sim-field-hint">
+          既用于 <code>score</code> 元素求值，也用于 <code>@p[scores={{ a=1 }}]</code> 这类条件选择器。
+          没有列出的计分项一律视为「条件不成立」，该参数会被移出参数表。
+        </span>
       </div>
 
       <template #footer>
@@ -128,8 +132,14 @@ const modalStyle = computed(() => ({
 }
 .sim-field-hint {
   display: block; margin-top: 4px;
-  font-size: 10px; color: var(--text-tertiary);
+  font-size: 10px; line-height: 1.6; color: var(--text-tertiary);
   transition: color 0.4s ease;
+}
+.sim-field-hint code {
+  font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
+  font-size: 10px; padding: 1px 3px; border-radius: 3px;
+  background: var(--bg-sub); color: var(--text-secondary);
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 .sim-input {
   width: 100%; height: 34px; padding: 0 12px;
