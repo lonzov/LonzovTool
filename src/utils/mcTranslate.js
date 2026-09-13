@@ -31,14 +31,16 @@ export const DEFAULT_TEXT_COLOR = '#FFFFFF'
 /** 未命中/无匹配时的灰色占位色 */
 export const PLACEHOLDER_GRAY = '#999'
 
+// 正则提到模块级：这几个在预览热路径上每次求值都要用，逐次 new RegExp 是白白的开销。
+// 统一走 matchAll / match：它们内部克隆正则、不改 lastIndex，没有共享状态的隐患。
 // fillTranslations：%% 或 %单词（后跟非键名字符或串尾）
-const RE_TRANSLATION_KEY = '%%|%(?:([\\w.-]+)([^\\w.-]|$))?'
+const RE_TRANSLATION_KEY = /%%|%(?:([\w.-]+)([^\w.-]|$))?/g
 // $s / $d 一律删除
-const RE_DOLLAR = '\\$[ds]'
+const RE_DOLLAR = /\$[ds]/g
 // 顺序参数计数用：只数 %s / %d
-const RE_S_ARGS = '%[ds]'
+const RE_S_ARGS = /%[ds]/g
 // 参数替换用：%s / %d / %数字
-const RE_ARGS = '%([ds\\d])'
+const RE_ARGS = /%([ds\d])/g
 
 /** 与 useRawJsonEditor.escHtml 保持一致；此处本地定义以免 utils 反向依赖 composables 形成循环引用 */
 function escapeHtml(str) {
@@ -128,11 +130,11 @@ export function buildLookup(entries) {
  * @param {(key: string) => string|null} lookup
  */
 function fillTranslations(s, lookup) {
-  const re = new RegExp(RE_TRANSLATION_KEY, 'g')
   let out = ''
   let start = 0
-  let m
-  while ((m = re.exec(s)) !== null) {
+  let matched = false
+  for (const m of s.matchAll(RE_TRANSLATION_KEY)) {
+    matched = true
     if (m.index > start) out += s.slice(start, m.index)
     start = m.index + m[0].length
     if (m[0] === '%%') {
@@ -142,7 +144,8 @@ function fillTranslations(s, lookup) {
       if (m[2] != null) out += m[2]
     }
   }
-  if (start === 0) out += lookup(s) ?? s
+  // 整串一个 % 都没匹配到 → 整串当成键去查表
+  if (!matched) out += lookup(s) ?? s
   else if (start < s.length) out += s.slice(start)
   return out
 }
@@ -158,13 +161,11 @@ function getArg(params, lookup, index) {
 
 /** 第二/三遍：删 $s/$d → 参数替换 → 折叠 %% */
 function substituteArgs(template, params, lookup) {
-  const offset = (template.match(new RegExp(RE_S_ARGS, 'g')) || []).length
-  const re = new RegExp(RE_ARGS, 'g')
+  const offset = (template.match(RE_S_ARGS) || []).length
   let out = ''
   let start = 0
   let seq = 0
-  let m
-  while ((m = re.exec(template)) !== null) {
+  for (const m of template.matchAll(RE_ARGS)) {
     if (m.index > start) out += template.slice(start, m.index)
     start = m.index + m[0].length
     const conv = m[1]
@@ -187,7 +188,7 @@ function substituteArgs(template, params, lookup) {
  */
 export function translateKey(key, lookup, params) {
   let s = fillTranslations(String(key ?? ''), lookup)
-  s = s.replace(new RegExp(RE_DOLLAR, 'g'), '')
+  s = s.replace(RE_DOLLAR, '')
   if (Array.isArray(params)) s = substituteArgs(s, params, lookup)
   // 折叠转义后的字面量百分号：语言值里 %s%% 应显示为 "50%"（游戏实际行为）
   return s.replace(/%%/g, '%')
@@ -351,7 +352,8 @@ export function buildParams(withVal, ctx, depth = 0) {
  * @param {number} depth
  */
 export function renderTranslate(el, ctx, depth = 0) {
-  if (depth > MAX_TRANSLATE_DEPTH) return ''
+  // el 可能来自任意导入数据，先挡掉非对象，避免读 el.with 直接抛异常
+  if (!el || typeof el !== 'object' || depth > MAX_TRANSLATE_DEPTH) return ''
   const hasWith = el.with !== undefined && el.with !== null
   const params = hasWith ? buildParams(el.with, ctx, depth) : undefined
   return translateKey(el.translate, ctx.lookup, params)

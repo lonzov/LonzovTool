@@ -119,6 +119,16 @@ const STORAGE_KEY = 'lonzovtool-rawjson-jzfk'
 const STORAGE_KEY_META = 'lonzovtool-rawjson-jzfk-meta'
 let saveTimer = null
 
+/**
+ * 只保留对象型元素。null / 数字 / 字符串 / 数组出现在 rawtext 里时，
+ * 任何属性访问都会直接抛异常（`Cannot read properties of null`），
+ * 而 data 的来源除了编辑器本身还有导入与 localStorage，必须在入口处滤掉。
+ */
+function sanitizeElements(list) {
+  if (!Array.isArray(list)) return []
+  return list.filter(el => el && typeof el === 'object' && !Array.isArray(el))
+}
+
 function loadFromStorage() {
   try {
     // 1) 兼容 v2 旧格式：key=rawTextArray，值为纯 rawtext 数组的 JSON
@@ -126,11 +136,12 @@ function loadFromStorage() {
     if (v2Raw) {
       const arr = JSON.parse(v2Raw)
       if (Array.isArray(arr)) {
+        const clean = sanitizeElements(arr)
         // 归一化 v2 旧数据：将字面量 \n 转为真实换行符
-        for (const el of arr) {
+        for (const el of clean) {
           if (el.text !== undefined) el.text = processEscapes(el.text)
         }
-        data.value = arr
+        data.value = clean
         // 迁移到新格式，同时清理旧 key
         persistNow()
         localStorage.removeItem('rawTextArray')
@@ -148,7 +159,7 @@ function loadFromStorage() {
     if (jsonStr) {
       const parsed = JSON.parse(jsonStr)
       if (parsed.rawtext && Array.isArray(parsed.rawtext)) {
-        data.value = parsed.rawtext
+        data.value = sanitizeElements(parsed.rawtext)
       }
       if (metaStr) {
         const meta = JSON.parse(metaStr)
@@ -246,6 +257,11 @@ export function validate() {
 
   data.value.forEach((el, idx) => {
     const num = idx + 1
+
+    if (!el || typeof el !== 'object' || Array.isArray(el)) {
+      errors.push({ idx, msg: `#${num} 元素必须是对象` })
+      return
+    }
 
     // 与游戏一致的元素优先级：translate > text > score > selector
     if (el.translate !== undefined) {
@@ -373,7 +389,9 @@ export const previewHtml = computed(() => {
   }
 
   data.value.forEach(el => {
-    if (el.text !== undefined) {
+    if (!el || typeof el !== 'object') {
+      html += '<span style="color:#666">[错误]</span>'
+    } else if (el.text !== undefined) {
       pushText(el.text)
     } else if (el.translate !== undefined) {
       pushText(renderTranslate(el, ctx))
@@ -799,7 +817,7 @@ export function parseImport() {
     // 不用裸 JSON.parse：它的报错文案各浏览器不一致，用户看不懂
     const json = parseJsonWithHint(jsonStr)
     if (!json.rawtext || !Array.isArray(json.rawtext)) throw new Error('缺少 rawtext 数组')
-    const valid = json.rawtext.filter(e =>
+    const valid = sanitizeElements(json.rawtext).filter(e =>
       e.text !== undefined || e.selector !== undefined || e.score !== undefined || e.translate !== undefined
     )
     if (valid.length === 0) throw new Error('未找到有效元素')

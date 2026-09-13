@@ -50,6 +50,7 @@ let deleteConfirmTimer = null
 /** 当前生效词表。刻意用裸 Map：13k 键不需要 Vue 深度代理（放大内存 + 首次代理开销），只读不响应 */
 let _activeEntries = null
 let _store = null
+let _storePromise = null
 let _lf = null
 
 export const activePackName = computed(() =>
@@ -89,23 +90,33 @@ function describeStorageError(e) {
 
 // ========== localforage ==========
 
-async function getStore() {
+/**
+ * 取得 localforage 实例。缓存的是 Promise 而不是实例本身：
+ * 初始化期间有 await（动态 import），只缓存实例的话并发调用会各建一个实例。
+ */
+function getStore() {
   // vite-ssg 预渲染跑在 jsdom 里，window/document 都存在，typeof window 判断不可靠
-  if (import.meta.env.SSR) return null
-  if (_store) return _store
-  if (!_lf) {
-    const mod = await import('localforage')
-    _lf = mod.default ?? mod
-  }
-  _store = _lf.createInstance({
-    name: DB_NAME,
-    storeName: STORE_NAME,
-    driver: [_lf.INDEXEDDB, _lf.LOCALSTORAGE],
-  })
-  try {
-    langStorageFallback.value = (await _store.ready()).driver() !== _lf.INDEXEDDB
-  } catch { /* 探测失败不影响使用 */ }
-  return _store
+  if (import.meta.env.SSR) return Promise.resolve(null)
+  if (_storePromise) return _storePromise
+  _storePromise = (async () => {
+    if (!_lf) {
+      const mod = await import('localforage')
+      _lf = mod.default ?? mod
+    }
+    const store = _lf.createInstance({
+      name: DB_NAME,
+      storeName: STORE_NAME,
+      driver: [_lf.INDEXEDDB, _lf.LOCALSTORAGE],
+    })
+    try {
+      langStorageFallback.value = (await store.ready()).driver() !== _lf.INDEXEDDB
+    } catch { /* 探测失败不影响使用 */ }
+    _store = store
+    return store
+  })()
+  // 失败时清掉缓存，允许下次重试
+  _storePromise.catch(() => { _storePromise = null })
+  return _storePromise
 }
 
 /** 只读 meta:* 前缀，不碰 data:* */
@@ -231,17 +242,6 @@ export async function deletePack(id) {
       } catch { /* ignore */ }
     }
   }
-}
-
-export async function clearActivePack() {
-  if (!activePackId.value) return
-  _activeEntries = null
-  activePackId.value = null
-  langRevision.value++
-  try {
-    const store = await getStore()
-    if (store) await store.setItem(KEY_STATE, { version: 1, activePackId: null })
-  } catch { /* ignore */ }
 }
 
 /** 清空所有语言包。供设置页「重置」调用（localStorage.clear() 清不掉 IndexedDB） */

@@ -140,6 +140,8 @@ const modalStyle = computed(() => ({
 }
 
 .sim-field { margin-bottom: 14px; }
+/* 高度过渡容器形成了 BFC，末尾 margin 不再塌陷出去，会白白多出一截高度 */
+.sim-field:last-child { margin-bottom: 0; }
 .sim-label {
   display: block; margin-bottom: 4px;
   font-size: 11px; font-weight: 600; color: var(--text-tertiary);
