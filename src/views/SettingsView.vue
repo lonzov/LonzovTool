@@ -222,9 +222,14 @@ function toggleSection(key) {
 }
 
 /* ========== 重置所有设置 ========== */
-function handleReset() {
+async function handleReset() {
   if (!confirm('确定要重置所有设置吗？此操作不可恢复。')) return
   localStorage.clear()
+  // T显编辑器的语言包存在 IndexedDB 里，localStorage.clear() 清不掉，需单独清
+  try {
+    const { clearAllLangPacks } = await import('../composables/useRawJsonLang.js')
+    await clearAllLangPacks()
+  } catch { /* 未使用过语言包时无需清理 */ }
   message.success('已重置所有设置，页面即将刷新')
   setTimeout(() => window.location.reload(), 800)
 }
@@ -241,7 +246,12 @@ const CONFIG_SCOPES = {
     label: '工作站配置',
     desc: '例如已打开的标签页、编辑记录等',
     keys: ['workspace_embed_external', 'workspace_iframe_mask', 'workspace_iframe_site_dark'],
-    keysExact: ['workspace-save', 'lonzovtool-rawjson-jzfk', 'lonzovtool-rawjson-jzfk-meta'],
+    keysExact: [
+      'workspace-save',
+      'lonzovtool-rawjson-jzfk',
+      'lonzovtool-rawjson-jzfk-meta',
+      'lonzovtool-rawjson-jzfk-sim',
+    ],
     keysPrefix: ['workspace-tab-data-'],
   },
   personalization: {

@@ -259,6 +259,9 @@ export async function clearAllLangPacks() {
 // ========== 弹窗 ==========
 
 export function openLangModal() {
+  // 上一次可能通过遮罩直接关闭，这里复位所有临时状态
+  clearDeleteConfirm()
+  cancelRename()
   langImportError.value = ''
   langImportName.value = ''
   langImportText.value = ''
