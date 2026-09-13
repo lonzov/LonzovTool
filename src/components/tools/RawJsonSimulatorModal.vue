@@ -180,7 +180,17 @@ const modalStyle = computed(() => ({
   transition: color 0.15s ease, background-color 0.15s ease;
 }
 .sim-icon-btn:hover { background: var(--bg-sub); color: var(--text-primary); }
-.sim-icon-btn--danger { color: #E5484D; }
+/* 二次点击确认删除（与 .btn-delete-confirmed / .act-delete-confirmed 一致） */
+.sim-icon-btn--danger,
+.sim-icon-btn--danger:hover {
+  background: #dc2626 !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .sim-icon-btn--danger,
+[data-theme="dark"] .sim-icon-btn--danger:hover {
+  background: #dc2626 !important;
+  color: #fff !important;
+}
 
 .sim-add-btn {
   display: inline-flex; align-items: center; gap: 4px;

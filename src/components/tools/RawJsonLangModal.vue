@@ -350,7 +350,17 @@ function doDelete(id) {
   transition: color 0.15s ease, background-color 0.15s ease;
 }
 .lang-icon-btn:hover { background: var(--bg-card); color: var(--text-primary); }
-.lang-icon-btn--danger { color: #E5484D; }
+/* 二次点击确认删除（与 .btn-delete-confirmed / .act-delete-confirmed 一致） */
+.lang-icon-btn--danger,
+.lang-icon-btn--danger:hover {
+  background: #dc2626 !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .lang-icon-btn--danger,
+[data-theme="dark"] .lang-icon-btn--danger:hover {
+  background: #dc2626 !important;
+  color: #fff !important;
+}
 
 .lang-field { margin-bottom: 10px; }
 .lang-label {
