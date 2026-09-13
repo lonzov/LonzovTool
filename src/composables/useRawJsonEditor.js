@@ -1,6 +1,9 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useMessage } from 'naive-ui'
 import { parseMinecraftTextToHtmlWithState } from '../vendor/mcfc/mcfc.js'
+import { renderTranslate, resolveSelector, resolveScore, PLACEHOLDER_GRAY } from '../utils/mcTranslate.js'
+import { lookupTranslate, langRevision } from './useRawJsonLang.js'
+import { simulator } from './useRawJsonSimulator.js'
 
 // ========== 模块级状态（单例，所有组件共享） ==========
 
@@ -341,27 +344,52 @@ export function col(text) {
 
 // ========== 预览输出 ==========
 export const previewHtml = computed(() => {
+  // 读一次 langRevision 建立响应式依赖：切换/导入/删除语言包时预览自动重算
+  void langRevision.value
+  const sim = simulator.value
+  const ctx = {
+    lookup: lookupTranslate,
+    selector: sel => resolveSelector(sel, sim),
+    score: el => resolveScore(el, sim),
+  }
+
   // 统一预处理：把所有元素拉到一起，用共享状态串联渲染，实现跨元素样式继承
   let state = null
   let html = ''
 
+  // 文本与 translate 都产出纯字符串，走完全相同的渲染路径：
+  // 基岩版在替换发生前就把 with 参数压平成字符串，之后是纯拼接，§ 状态线性流动（样式会外溢，同游戏）
+  const pushText = (text) => {
+    const result = parseMinecraftTextToHtmlWithState(text, '#FFFFFF', state)
+    html += result.html
+    state = result.finalState
+  }
+  const pushPlaceholder = (content, title) => {
+    // 非文本元素：继承当前的非颜色样式（§l/§M/§N/§o），使用自身固定颜色，且不推进样式状态
+    const inheritStyles = state ? state.currentStyles : ''
+    html += `<span style="${inheritStyles}color:${PLACEHOLDER_GRAY}" title="${escHtml(title)}">${content}</span>`
+  }
+
   data.value.forEach(el => {
     if (el.text !== undefined) {
-      const result = parseMinecraftTextToHtmlWithState(el.text, '#FFFFFF', state)
-      html += result.html
-      state = result.finalState
-    } else {
-      // 非文本元素：继承当前的非颜色样式（§l/§M/§N/§o），使用自身固定颜色
-      const inheritStyles = state ? state.currentStyles : ''
-      if (el.selector !== undefined) {
-        html += `<span style="${inheritStyles}color:#999">[${escHtml(el.selector)}]</span>`
-      } else if (el.score !== undefined) {
-        html += `<span style="${inheritStyles}color:#999">0</span>`
-      } else if (el.translate !== undefined) {
-        html += `<span style="${inheritStyles}color:#999">{${escHtml(el.translate)}}</span>`
+      pushText(el.text)
+    } else if (el.translate !== undefined) {
+      pushText(renderTranslate(el, ctx))
+    } else if (el.selector !== undefined) {
+      const resolved = ctx.selector(String(el.selector))
+      if (resolved) pushText(resolved)
+      else pushPlaceholder(`[${escHtml(el.selector)}]`, '模拟器中没有匹配的实体')
+    } else if (el.score !== undefined) {
+      const { value, missing } = ctx.score(el)
+      if (missing) {
+        const obj = el.score?.objective || ''
+        const name = el.score?.name || ''
+        pushPlaceholder(escHtml(value), `模拟器中未找到记分板项：${obj} / ${name}`)
       } else {
-        html += '<span style="color:#666">[错误]</span>'
+        pushText(value)
       }
+    } else {
+      html += '<span style="color:#666">[错误]</span>'
     }
   })
 
@@ -554,7 +582,9 @@ export function saveElement() {
     case 'translate': {
       el = { translate: formTranslateKey.value }
       if (withMode.value === 'array') {
-        const arr = tempWith.value.map(s => s.trim()).filter(Boolean)
+        // 保序且保留空串：空参数仍占一个槽位，%1/%2/%3 的对应关系才与游戏一致；
+        // 首尾空格在 MC 文本里是有意义的排版，同样不做 trim
+        const arr = tempWith.value.map(s => String(s ?? ''))
         if (arr.length) el.with = arr
       } else {
         if (withRawtext.value.length) el.with = { rawtext: withRawtext.value.map(e => ({ ...e })) }
@@ -595,7 +625,8 @@ function buildNestedElement() {
     case 'score': return { score: { name: nestedScoreName.value || '@s', objective: nestedScoreObj.value } }
     case 'translate': {
       const el = { translate: nestedTranslateKey.value }
-      const arr = nestedWith.value.map(s => s.trim()).filter(Boolean)
+      // 同 saveElement：保序、保留空串与首尾空格
+      const arr = nestedWith.value.map(s => String(s ?? ''))
       if (arr.length) el.with = arr
       return el
     }

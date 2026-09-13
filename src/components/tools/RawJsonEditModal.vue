@@ -216,6 +216,7 @@ function getAvailableHeight(el) {
                 <div v-if="nestedWith.length === 0" class="with-empty">无参数</div>
                 <div v-for="(_w, wi) in nestedWith" :key="wi" class="with-row">
                   <input v-model="nestedWith[wi]" type="text" class="edit-input with-input" :placeholder="`参数 ${wi + 1}`" />
+                  <span v-if="nestedWith[wi] === ''" class="with-empty-tag" title="这一行是空参数，仍会占用一个槽位">空</span>
                   <button class="btn-minor" :class="{ 'btn-delete-confirmed': nestedWithParamConfirmIdx === wi }" :title="nestedWithParamConfirmIdx === wi ? '再次点击确认删除' : '删除'" @click="removeNestedWithParam(wi)">
                     <NIcon :component="Delete24Regular" :size="14" />
                   </button>
@@ -291,6 +292,7 @@ function getAvailableHeight(el) {
                     class="edit-input with-input"
                     :placeholder="`参数 ${wi + 1}`"
                   />
+                  <span v-if="tempWith[wi] === ''" class="with-empty-tag" title="这一行是空参数，仍会占用一个槽位">空</span>
                   <button class="btn-delete" :class="{ 'btn-delete-confirmed': withParamConfirmIdx === wi }" :title="withParamConfirmIdx === wi ? '再次点击确认删除' : '删除'" @click="removeWithParam(wi)">
                     <NIcon :component="Delete24Regular" :size="14" />
                   </button>
@@ -390,6 +392,16 @@ function getAvailableHeight(el) {
 .with-empty { font-size: 12px; color: var(--text-tertiary); font-style: italic; transition: color 0.4s ease; }
 .with-row { display: flex; gap: 6px; align-items: center; }
 .with-input { flex: 1; }
+.with-empty-tag {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px; font-weight: 700; line-height: 1.4;
+  color: var(--text-tertiary);
+  background: var(--bg-sub);
+  border: 1px solid var(--border-color);
+  transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
+}
 
 .with-el-row {
   display: flex; align-items: center; gap: 8px;
