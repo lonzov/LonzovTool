@@ -2,6 +2,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useMessage } from 'naive-ui'
 import { parseMinecraftTextToHtmlWithState } from '../vendor/mcfc/mcfc.js'
 import { renderTranslate, resolveSelector, resolveScore, PLACEHOLDER_GRAY } from '../utils/mcTranslate.js'
+import { parseJsonWithHint } from '../utils/jsonError.js'
 import { lookupTranslate, langRevision } from './useRawJsonLang.js'
 import { simulator } from './useRawJsonSimulator.js'
 
@@ -795,7 +796,8 @@ export function parseImport() {
       else if (text.startsWith('{')) { jsonStr = text }
       else throw new Error('格式错误：需要 tellraw 或 titleraw 开头，或直接粘贴 JSON 对象')
     }
-    const json = JSON.parse(jsonStr)
+    // 不用裸 JSON.parse：它的报错文案各浏览器不一致，用户看不懂
+    const json = parseJsonWithHint(jsonStr)
     if (!json.rawtext || !Array.isArray(json.rawtext)) throw new Error('缺少 rawtext 数组')
     const valid = json.rawtext.filter(e =>
       e.text !== undefined || e.selector !== undefined || e.score !== undefined || e.translate !== undefined

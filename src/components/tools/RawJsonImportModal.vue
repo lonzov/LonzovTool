@@ -85,6 +85,8 @@ const modalStyle = computed(() => ({
   margin-top: 10px; padding: 8px 12px;
   background: #f2f2f2; border: 1px solid #ddd;
   border-radius: 6px; font-size: 12px; color: #555;
+  /* JSON 报错是「诊断 + 位置」两行，靠换行断句 */
+  white-space: pre-line; word-break: break-all;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 [data-theme="dark"] .import-error {

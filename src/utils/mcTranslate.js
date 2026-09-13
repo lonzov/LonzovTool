@@ -20,6 +20,8 @@
  *      注意 text:"" 空串仍占槽，只有 selector / score 会消失。
  */
 
+import { parseJsonWithHint } from './jsonError.js'
+
 /** 翻译嵌套深度上限（参考实现无上限，这里加护栏防止极端数据卡死预览） */
 export const MAX_TRANSLATE_DEPTH = 8
 
@@ -78,7 +80,7 @@ export function parseLangText(text) {
  */
 export function parseLangJson(text) {
   const raw = String(text).replace(/^﻿/, '').trim()
-  const data = JSON.parse(raw)
+  const data = parseJsonWithHint(raw)
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     throw new Error('JSON 语言包必须是一个对象')
   }
@@ -103,12 +105,8 @@ export function parseLangAuto(text) {
   const raw = String(text ?? '').replace(/^﻿/, '')
   const head = raw.trim()
   if (!head) throw new Error('请输入或选择语言包内容')
-  if (head.startsWith('{')) {
-    try {
-      const r = parseLangJson(head)
-      if (r.count > 0) return r
-    } catch { /* 落到 .lang 解析 */ }
-  }
+  // 以 { 开头即认定为 JSON（.lang 的键不会以 { 开头），语法错直接报出来，不再悄悄回退
+  if (head.startsWith('{')) return parseLangJson(head)
   const r = parseLangText(raw)
   if (r.count === 0) throw new Error('未解析到任何键值对，请确认为 .lang 或 {"键":"值"} 格式')
   return r
