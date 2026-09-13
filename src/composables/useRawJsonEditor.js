@@ -246,20 +246,8 @@ export function validate() {
   data.value.forEach((el, idx) => {
     const num = idx + 1
 
-    if (el.text !== undefined) {
-      if (typeof el.text !== 'string') errors.push({ idx, msg: `#${num} text 必须是字符串` })
-      else if (el.text === '') errors.push({ idx, msg: `#${num} text 为空` })
-    } else if (el.selector !== undefined) {
-      if (typeof el.selector !== 'string') errors.push({ idx, msg: `#${num} selector 必须是字符串` })
-      else if (!el.selector.match(/^@[sarpaer](\[.*\])?$/)) errors.push({ idx, msg: `#${num} selector 格式错误 (${el.selector})` })
-    } else if (el.score !== undefined) {
-      if (!el.score || typeof el.score !== 'object') {
-        errors.push({ idx, msg: `#${num} score 必须是对象` })
-      } else {
-        if (!el.score.name) errors.push({ idx, msg: `#${num} score 缺少 name 字段` })
-        if (!el.score.objective) errors.push({ idx, msg: `#${num} score 缺少 objective 字段` })
-      }
-    } else if (el.translate !== undefined) {
+    // 与游戏一致的元素优先级：translate > text > score > selector
+    if (el.translate !== undefined) {
       if (typeof el.translate !== 'string') errors.push({ idx, msg: `#${num} translate 必须是字符串` })
       else if (el.translate === '') errors.push({ idx, msg: `#${num} translate 为空` })
       if (el.with !== undefined) {
@@ -272,6 +260,19 @@ export function validate() {
         } else if (!el.with.rawtext || !Array.isArray(el.with.rawtext)) {
           errors.push({ idx, msg: `#${num} with.rawtext 必须是数组` })
         }
+      }
+    } else if (el.text !== undefined) {
+      if (typeof el.text !== 'string') errors.push({ idx, msg: `#${num} text 必须是字符串` })
+      else if (el.text === '') errors.push({ idx, msg: `#${num} text 为空` })
+    } else if (el.selector !== undefined) {
+      if (typeof el.selector !== 'string') errors.push({ idx, msg: `#${num} selector 必须是字符串` })
+      else if (!el.selector.match(/^@[sarpaer](\[.*\])?$/)) errors.push({ idx, msg: `#${num} selector 格式错误 (${el.selector})` })
+    } else if (el.score !== undefined) {
+      if (!el.score || typeof el.score !== 'object') {
+        errors.push({ idx, msg: `#${num} score 必须是对象` })
+      } else {
+        if (!el.score.name) errors.push({ idx, msg: `#${num} score 缺少 name 字段` })
+        if (!el.score.objective) errors.push({ idx, msg: `#${num} score 缺少 objective 字段` })
       }
     } else {
       errors.push({ idx, msg: `#${num} 未知的元素类型` })
@@ -414,10 +415,11 @@ export const cmdLength = computed(() => commandOutput.value.length)
 
 // ========== 元素类型辅助 ==========
 export function getElType(el) {
-  if (el.text !== undefined) return 'text'
-  if (el.selector !== undefined) return 'selector'
-  if (el.score !== undefined) return 'score'
+  // 与 validate / 预览渲染保持同一优先级：translate > text > score > selector
   if (el.translate !== undefined) return 'translate'
+  if (el.text !== undefined) return 'text'
+  if (el.score !== undefined) return 'score'
+  if (el.selector !== undefined) return 'selector'
   return 'unknown'
 }
 
