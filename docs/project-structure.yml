@@ -76,6 +76,7 @@ src:
     useRawJsonSimulator.js: T显编辑器预览模拟器状态与 localStorage 持久化（模块级单例）
     useSWUpdate.js: Service Worker 更新检测与版本比较组合式函数
     useStats.js: 访问统计状态管理组合式函数（模块级单例，含内存/localsStorage双层缓存）
+    useHeightTransition.js: 内容高度变化时的容器高度过渡（ResizeObserver 驱动，弹窗用）
     useTheme.js: 主题状态管理组合式函数
     useUrlTheme.js: 按设置将明暗主题以 theme / colorScheme 参数附加到打开的站外网址（off/always/explicit 三档，默认关闭）
     useToolStorage.js: 工具页 localStorage 持久化组合式函数

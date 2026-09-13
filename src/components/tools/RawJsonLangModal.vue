@@ -4,6 +4,7 @@ import { NModal, NConfigProvider, NIcon, useMessage } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { Delete24Regular, Edit24Filled } from '@vicons/fluent'
 import { useTheme } from '../../composables/useTheme'
+import { useHeightTransition } from '../../composables/useHeightTransition.js'
 import {
   showLangModal, langPackList, activePackId, langLoading, langStorageFallback,
   langImportOpen, langImportName, langImportText, langImportFileName, langImportFileText,
@@ -14,6 +15,11 @@ import {
 
 const { isDark } = useTheme()
 const message = useMessage()
+
+// 内容高度变化时给卡片做过渡：折叠导入区、增删语言包、报错出现等都会被覆盖
+const animWrap = ref(null)
+const animInner = ref(null)
+useHeightTransition({ show: showLangModal, inner: animInner, wrap: animWrap })
 
 const darkOverrides = {
   common: { neutralModal: '#191919' },
@@ -111,131 +117,134 @@ function doDelete(id) {
       :segmented="{ content: true, footer: 'soft' }"
       content-scrollable
     >
-      <!-- 当前生效 -->
-      <div class="lang-section">
-        <div class="lang-section-header">
-          <span class="lang-section-title">当前生效</span>
-          <span v-if="langLoading" class="lang-section-hint">载入中…</span>
-        </div>
-        <div v-if="activePack" class="lang-current">
-          <div class="lang-current-main">
-            <span class="lang-current-name">{{ activePack.name }}</span>
-            <span class="lang-current-meta">
-              {{ activePack.keyCount.toLocaleString('zh-CN') }} 个键 · {{ formatBytes(activePack.bytes) }}
-            </span>
-          </div>
-          <span class="lang-badge">生效中</span>
-        </div>
-        <p v-else class="lang-empty">
-          尚未加载语言包。预览里的 <code>translate</code> 元素会原样显示键名（与游戏查不到键时的行为一致）。
-        </p>
-      </div>
-
-      <!-- 已导入列表 -->
-      <div class="lang-section">
-        <div class="lang-section-header">
-          <span class="lang-section-title">已导入（{{ langPackList.length }}）</span>
-          <button class="lang-link" @click="langImportOpen = !langImportOpen">
-            {{ langImportOpen ? '收起导入' : '导入语言包' }}
-          </button>
-        </div>
-
-        <p v-if="langPackList.length === 0" class="lang-empty">
-          还没有语言包。点右上角「导入语言包」，选择游戏资源包里的 <code>texts/zh_CN.lang</code> 即可。
-        </p>
-
-        <div v-else class="lang-list">
-          <div
-            v-for="p in langPackList" :key="p.id"
-            class="lang-item" :class="{ 'lang-item--active': p.id === activePackId }"
-          >
-            <template v-if="langRenamingId === p.id">
-              <input
-                v-model="langRenamingName"
-                type="text" class="lang-input"
-                @keydown.enter="confirmRename"
-                @keydown.esc="cancelRename"
-              />
-              <div class="lang-actions">
-                <button class="lang-link" @click="cancelRename">取消</button>
-                <button class="lang-link lang-link--strong" @click="confirmRename">保存</button>
-              </div>
-            </template>
-
-            <template v-else>
-              <div class="lang-item-main">
-                <span class="lang-item-name">{{ p.name }}</span>
-                <span class="lang-item-meta">
-                  {{ p.keyCount.toLocaleString('zh-CN') }} 个键 · {{ formatBytes(p.bytes) }}
-                  · {{ sourceLabel[p.source] || p.source }} · {{ formatDate(p.importedAt) }}
+      <div ref="animWrap" class="modal-anim">
+        <div ref="animInner">
+          <!-- 当前生效 -->
+          <div class="lang-section">
+            <div class="lang-section-header">
+              <span class="lang-section-title">当前生效</span>
+              <span v-if="langLoading" class="lang-section-hint">载入中…</span>
+            </div>
+            <div v-if="activePack" class="lang-current">
+              <div class="lang-current-main">
+                <span class="lang-current-name">{{ activePack.name }}</span>
+                <span class="lang-current-meta">
+                  {{ activePack.keyCount.toLocaleString('zh-CN') }} 个键 · {{ formatBytes(activePack.bytes) }}
                 </span>
               </div>
-              <div class="lang-actions">
-                <span v-if="p.id === activePackId" class="lang-badge">生效中</span>
-                <button
-                  v-else class="lang-link lang-link--strong"
-                  :disabled="langLoading" @click="doActivate(p.id)"
-                >设为当前</button>
-                <button class="lang-icon-btn" title="重命名" @click="startRename(p.id)">
-                  <NIcon :component="Edit24Filled" :size="14" />
-                </button>
-                <button
-                  class="lang-icon-btn"
-                  :class="{ 'lang-icon-btn--danger': langDeleteConfirmId === p.id }"
-                  :title="langDeleteConfirmId === p.id ? '再次点击确认删除' : '删除'"
-                  @click="doDelete(p.id)"
-                >
-                  <NIcon :component="Delete24Regular" :size="14" />
-                </button>
+              <span class="lang-badge">生效中</span>
+            </div>
+            <p v-else class="lang-empty">
+              尚未加载语言包。预览里的 <code>translate</code> 元素会原样显示键名（与游戏查不到键时的行为一致）。
+            </p>
+          </div>
+
+          <!-- 已导入列表 -->
+          <div class="lang-section">
+            <div class="lang-section-header">
+              <span class="lang-section-title">已导入（{{ langPackList.length }}）</span>
+              <button class="lang-link" @click="langImportOpen = !langImportOpen">
+                {{ langImportOpen ? '收起导入' : '导入语言包' }}
+              </button>
+            </div>
+
+            <p v-if="langPackList.length === 0" class="lang-empty">
+              还没有语言包。点右上角「导入语言包」，选择游戏资源包里的 <code>texts/zh_CN.lang</code> 即可。
+            </p>
+
+            <div v-else class="lang-list">
+              <div
+                v-for="p in langPackList" :key="p.id"
+                class="lang-item" :class="{ 'lang-item--active': p.id === activePackId }"
+              >
+                <template v-if="langRenamingId === p.id">
+                  <input
+                    v-model="langRenamingName"
+                    type="text" class="lang-input"
+                    @keydown.enter="confirmRename"
+                    @keydown.esc="cancelRename"
+                  />
+                  <div class="lang-actions">
+                    <button class="lang-link" @click="cancelRename">取消</button>
+                    <button class="lang-link lang-link--strong" @click="confirmRename">保存</button>
+                  </div>
+                </template>
+
+                <template v-else>
+                  <div class="lang-item-main">
+                    <span class="lang-item-name">{{ p.name }}</span>
+                    <span class="lang-item-meta">
+                      {{ p.keyCount.toLocaleString('zh-CN') }} 个键 · {{ formatBytes(p.bytes) }}
+                      · {{ sourceLabel[p.source] || p.source }} · {{ formatDate(p.importedAt) }}
+                    </span>
+                  </div>
+                  <div class="lang-actions">
+                    <span v-if="p.id === activePackId" class="lang-badge">生效中</span>
+                    <button
+                      v-else class="lang-link lang-link--strong"
+                      :disabled="langLoading" @click="doActivate(p.id)"
+                    >设为当前</button>
+                    <button class="lang-icon-btn" title="重命名" @click="startRename(p.id)">
+                      <NIcon :component="Edit24Filled" :size="14" />
+                    </button>
+                    <button
+                      class="lang-icon-btn"
+                      :class="{ 'lang-icon-btn--danger': langDeleteConfirmId === p.id }"
+                      :title="langDeleteConfirmId === p.id ? '再次点击确认删除' : '删除'"
+                      @click="doDelete(p.id)"
+                    >
+                      <NIcon :component="Delete24Regular" :size="14" />
+                    </button>
+                  </div>
+                </template>
               </div>
-            </template>
+            </div>
+
+            <p v-if="langStorageFallback" class="lang-note">
+              当前浏览器不支持 IndexedDB，语言包已降级存到 localStorage，容量有限。
+            </p>
           </div>
-        </div>
 
-        <p v-if="langStorageFallback" class="lang-note">
-          当前浏览器不支持 IndexedDB，语言包已降级存到 localStorage，容量有限。
-        </p>
-      </div>
+          <!-- 导入区 -->
+          <div v-if="langImportOpen" class="lang-section">
+            <div class="lang-section-header">
+              <span class="lang-section-title lang-section-title--strong">导入</span>
+            </div>
 
-      <!-- 导入区 -->
-      <div v-if="langImportOpen" class="lang-section">
-        <div class="lang-section-header">
-          <span class="lang-section-title">导入</span>
-        </div>
+            <div class="lang-field">
+              <label class="lang-label">名称</label>
+              <input v-model="langImportName" type="text" class="lang-input" placeholder="不填则自动命名" />
+            </div>
 
-        <div class="lang-field">
-          <label class="lang-label">名称</label>
-          <input v-model="langImportName" type="text" class="lang-input" placeholder="不填则自动命名" />
-        </div>
+            <div class="lang-field">
+              <label class="lang-label">来源</label>
+              <div class="lang-source-row">
+                <button class="btn btn-fill btn-sm" :disabled="langImporting" @click="doImport">
+                  {{ langImporting ? '导入中…' : '导入并启用' }}
+                </button>
+                <button class="btn btn-outline btn-sm" @click="pickFile">选择文件</button>
+              </div>
+              <div v-if="langImportFileName" class="lang-file-line">
+                <span class="lang-file-chip">
+                  {{ langImportFileName }}
+                  <button class="lang-file-remove" title="移除" @click="clearImportFile">×</button>
+                </span>
+              </div>
+            </div>
 
-        <div class="lang-field">
-          <label class="lang-label">来源</label>
-          <div class="lang-source-row">
-            <button class="btn btn-outline btn-sm" @click="pickFile">选择 .lang / .json 文件</button>
-            <span v-if="langImportFileName" class="lang-file-chip">
-              {{ langImportFileName }}
-              <button class="lang-file-remove" title="移除" @click="clearImportFile">×</button>
-            </span>
+            <div class="lang-field">
+              <label class="lang-label">或直接粘贴</label>
+              <textarea
+                v-model="langImportText"
+                class="lang-textarea"
+                spellcheck="false"
+                :disabled="!!langImportFileName"
+                placeholder="key=value 形式的 .lang 内容，或 {&quot;键&quot;:&quot;值&quot;} 的 JSON"
+              />
+            </div>
+
+            <p v-if="langImportError" class="lang-error">{{ langImportError }}</p>
           </div>
-        </div>
-
-        <div class="lang-field">
-          <label class="lang-label">或直接粘贴</label>
-          <textarea
-            v-model="langImportText"
-            class="lang-textarea"
-            spellcheck="false"
-            :disabled="!!langImportFileName"
-            placeholder="key=value 形式的 .lang 内容，或 {&quot;键&quot;:&quot;值&quot;} 的 JSON"
-          />
-        </div>
-
-        <p v-if="langImportError" class="lang-error">{{ langImportError }}</p>
-
-        <div class="lang-import-actions">
-          <button class="btn btn-fill" :disabled="langImporting" @click="doImport">
-            {{ langImporting ? '导入中…' : '导入并启用' }}
-          </button>
         </div>
       </div>
 
@@ -250,6 +259,12 @@ function doDelete(id) {
 </template>
 
 <style scoped>
+/* 高度过渡容器：外层高度由 useHeightTransition 接管，内层高度自适应 */
+.modal-anim {
+  overflow: hidden;
+  transition: height 260ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .lang-section { margin-bottom: 18px; }
 .lang-section:last-child { margin-bottom: 0; }
 .lang-section-header {
@@ -260,6 +275,10 @@ function doDelete(id) {
   font-size: 11px; font-weight: 600; color: var(--text-tertiary);
   text-transform: uppercase; letter-spacing: 0.5px;
   transition: color 0.4s ease;
+}
+.lang-section-title--strong {
+  font-size: 13px;
+  color: var(--text-primary);
 }
 .lang-section-hint { font-size: 10px; color: var(--text-tertiary); transition: color 0.4s ease; }
 .lang-empty {
@@ -351,6 +370,7 @@ function doDelete(id) {
 .lang-item .lang-input { flex: 1; }
 
 .lang-source-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lang-file-line { margin-top: 8px; }
 .lang-file-chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 4px 8px; border-radius: 6px;
@@ -393,7 +413,6 @@ function doDelete(id) {
   color: rgba(255, 255, 255, 0.75);
 }
 
-.lang-import-actions { display: flex; justify-content: flex-end; }
 .lang-footer-hint { font-size: 11px; color: var(--text-tertiary); transition: color 0.4s ease; }
 
 /* 页脚操作按钮 (与 UpdateDialog 一致) */
