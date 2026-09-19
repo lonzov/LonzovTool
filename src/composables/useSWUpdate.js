@@ -6,8 +6,11 @@ const popupContent = ref('')
 const popupVersionInfo = ref('')
 const popupNewVersion = ref('')
 const popupButtons = ref([])
+/** 静默更新（小版本）已接管页面，但页面未重载 → UI 提示用户刷新 */
+const silentUpdated = ref(false)
 let pendingRegistration = null
 let shouldReload = false
+let pendingSilentUpdate = false
 
 /**
  * 版本号比较（沿用 V2 逻辑）
@@ -63,6 +66,7 @@ async function handleUpdate(reg) {
     console.log(`[SW] Version: ${curVer} → v${newVer} (${type})`)
     if (type === 'auto') {
       console.log('[SW] Auto-updating (minor), skipWaiting without reload')
+      pendingSilentUpdate = true
       reg.waiting.postMessage('SKIP_WAITING')
     } else if (type === 'popup') {
       // 从 SW 获取弹窗内容
@@ -115,6 +119,11 @@ export function useSWUpdate() {
         if (shouldReload) {
           console.log('[SW] Controller changed, reloading...')
           window.location.reload()
+        } else if (pendingSilentUpdate) {
+          // 静默更新：新 SW 已接管，但页面仍是旧资源，交给 UI 提示用户刷新
+          console.log('[SW] Silent update activated, page reload required')
+          pendingSilentUpdate = false
+          silentUpdated.value = true
         }
       })
     } catch (e) {
@@ -141,5 +150,5 @@ export function useSWUpdate() {
     pendingRegistration = null
   }
 
-  return { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, initSW, applyUpdate, deferUpdate }
+  return { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, silentUpdated, initSW, applyUpdate, deferUpdate }
 }

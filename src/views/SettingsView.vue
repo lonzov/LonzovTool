@@ -433,6 +433,24 @@ const cacheClearModal = ref({
   sizeMB: '0.0',
 })
 
+/** 向当前接管页面的 SW 查询版本号，失败返回 null */
+function fetchCurrentSWVersion() {
+  return new Promise((resolve) => {
+    const controller = navigator.serviceWorker.controller
+    if (!controller) {
+      resolve(null)
+      return
+    }
+    const mc = new MessageChannel()
+    const timer = setTimeout(() => resolve(null), 1000)
+    mc.port1.onmessage = (e) => {
+      clearTimeout(timer)
+      resolve(e.data?.version || null)
+    }
+    controller.postMessage({ type: 'GET_VERSION' }, [mc.port2])
+  })
+}
+
 async function handleCheckUpdate() {
   if (!('serviceWorker' in navigator)) {
     message.warning('当前浏览器不支持此功能', { duration: 2000 })
@@ -441,31 +459,45 @@ async function handleCheckUpdate() {
 
   const loadingMsg = message.loading('正在检查更新...', { duration: 0 })
 
+  // 统一收口销毁，避免重复销毁与"新版本提示盖在加载提示上"
+  let loadingDismissed = false
+  const dismissLoading = () => {
+    if (loadingDismissed) return
+    loadingDismissed = true
+    loadingMsg.destroy()
+  }
+
   try {
     const registration = await navigator.serviceWorker.getRegistration()
     if (!registration) {
-      loadingMsg.destroy()
+      dismissLoading()
       message.warning('未检测到 Service Worker', { duration: 2000 })
       return
     }
 
     let updateFound = false
-    const onUpdateFound = () => { updateFound = true }
+    const onUpdateFound = () => {
+      updateFound = true
+      // 发现更新：立刻撤掉加载提示，后续弹窗/刷新提示不再与它叠在一起
+      dismissLoading()
+    }
     registration.addEventListener('updatefound', onUpdateFound, { once: true })
 
     await registration.update()
 
     // 延迟判断：若 1.5s 内没触发 updatefound 则无更新
-    setTimeout(() => {
-      loadingMsg.destroy()
+    setTimeout(async () => {
+      dismissLoading()
       registration.removeEventListener('updatefound', onUpdateFound)
       if (!updateFound) {
-        message.success('当前已是最新版本', { duration: 2000 })
+        const version = await fetchCurrentSWVersion()
+        const versionLabel = version ? ` v${version.replace(/^v/, '')}` : ''
+        message.success(`当前已是最新版本${versionLabel}`, { duration: 2000 })
       }
       // 有更新时 useSWUpdate 会自动弹出更新弹窗，此处不做额外处理
     }, 1500)
   } catch (error) {
-    loadingMsg.destroy()
+    dismissLoading()
     console.error('更新检查失败:', error)
     message.error('检查更新失败，请检查网络连接', { duration: 2500 })
   }

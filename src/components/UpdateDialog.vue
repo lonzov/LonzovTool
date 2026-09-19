@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted, defineAsyncComponent, h } from 'vue'
 import { NModal, NConfigProvider, NTooltip, useMessage } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
 import { useTheme } from '../composables/useTheme'
@@ -9,8 +9,32 @@ const loadMarkdown = () => import('./MarkdownRenderer.vue')
 const MarkdownRenderer = defineAsyncComponent(loadMarkdown)
 
 const { isDark } = useTheme()
-const { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, applyUpdate, deferUpdate } = useSWUpdate()
+const { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, silentUpdated, applyUpdate, deferUpdate } = useSWUpdate()
 const message = useMessage()
+
+/**
+ * 静默更新（如 v3.4.4 → v3.4.4.1）不弹更新弹窗、页面也不重载，
+ * 此时页面仍在跑旧资源，弹提示引导用户刷新
+ */
+watch(silentUpdated, (val) => {
+  if (!val) return
+  silentUpdated.value = false
+  message.success(
+    () =>
+      h('div', { class: 'sw-reload-tip' }, [
+        h('span', '更新完毕，刷新应用'),
+        h(
+          'button',
+          {
+            class: 'sw-reload-tip-btn',
+            onClick: () => window.location.reload(),
+          },
+          '刷新',
+        ),
+      ]),
+    { duration: 8000 },
+  )
+}, { immediate: true })
 
 /** 版本号只保留前三位，如 3.3.10.1 → 3.3.10 */
 const displayVersion = computed(() => {
@@ -320,6 +344,36 @@ watch(showUpdateModal, (val) => {
 </style>
 
 <style>
+/* 静默更新提示条（message 渲染到 body，须全局样式） */
+.sw-reload-tip {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sw-reload-tip-btn {
+  padding: 2px 12px;
+  border: none;
+  border-radius: 100px;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.6;
+  white-space: nowrap;
+  cursor: pointer;
+  background: #1A1A1A;
+  color: #fff;
+  transition: background-color 0.4s ease, color 0.4s ease, opacity 0.2s ease;
+}
+
+.sw-reload-tip-btn:hover {
+  opacity: 0.85;
+}
+
+[data-theme="dark"] .sw-reload-tip-btn {
+  background: #fff;
+  color: #1A1A1A;
+}
+
 /* 更新弹窗 Tooltip 深浅色覆盖（popover 渲染到 body，须全局样式） */
 .n-popover {
   --n-color: #fff !important;
