@@ -15,10 +15,63 @@ const showLocal = computed({
 })
 
 // ---- 状态 ----
-const posterRef = ref(null)
+const posterRef = ref(null)    // 离屏海报 DOM，html2canvas 的截图目标
+const posterImgEl = ref(null)  // 模态框里的真图，揭幕前先等它解码完
 const posterImage = ref(null)
 let cachedKey = '' // 内容缓存键：命中则复用已生成海报，避免二次渲染
 const generating = ref(false)
+
+// 揭幕动效阶段：loading（骨架 + 毛玻璃 + 进度条）→ revealing（毛玻璃渐隐）→ idle（只剩真图）
+const phase = ref('idle')
+const progress = ref(0)
+const posterShown = ref(false) // 真图渐显开关：骨架换成真图时用透明度过渡，避免硬切
+const REVEAL_MS = 520   // 与 .poster-veil 的 opacity 过渡时长保持一致
+const IMG_FADE_MS = 620 // 与 .poster-img 的 opacity 过渡时长保持一致，需小于 REVEAL_MS
+
+// ---- 进度条补间 ----
+// html2canvas 不提供真实百分比，只能按生成阶段跳档；阶段内用 ease-out 补间，越接近目标越慢
+let rafId = 0
+let rafResolve = null
+
+function cancelTween() {
+  cancelAnimationFrame(rafId)
+  rafId = 0
+  const done = rafResolve
+  rafResolve = null
+  done?.()
+}
+
+/** 平滑补间到目标值；Promise 在到达或被下一次调用打断时 resolve */
+function tweenProgress(target, duration = 520) {
+  cancelTween()
+  return new Promise((resolve) => {
+    const from = progress.value
+    const delta = target - from
+    if (Math.abs(delta) < 0.5) {
+      progress.value = target
+      resolve()
+      return
+    }
+    const t0 = performance.now()
+    rafResolve = resolve
+    const step = (now) => {
+      const t = Math.min(1, (now - t0) / duration)
+      progress.value = from + delta * (1 - Math.pow(1 - t, 3)) // cubic ease-out
+      if (t < 1) {
+        rafId = requestAnimationFrame(step)
+        return
+      }
+      progress.value = target
+      rafId = 0
+      const done = rafResolve
+      rafResolve = null
+      done?.()
+    }
+    rafId = requestAnimationFrame(step)
+  })
+}
+
+let revealTimer = 0
 
 // 移动端自适应高度（参考 UpdateDialog）
 const isCompact = ref(false)
@@ -31,6 +84,8 @@ onMounted(() => {
 })
 onUnmounted(() => {
   if (mq) mq.removeEventListener('change', onMqChange)
+  cancelTween()
+  clearTimeout(revealTimer)
 })
 
 // 动态数据
@@ -69,8 +124,12 @@ async function generatePoster() {
   const desc = getMeta('description') || getMeta('', 'og:description') || ''
   const key = `${title}|${desc}|${url}`
 
-  // 2. 命中缓存：直接展示，跳过整个渲染流程
+  // 2. 命中缓存：直接出图，不播揭幕动效
   if (cachedKey === key && posterImage.value) {
+    return
+  }
+  // 已有一轮生成在跑（生成中关掉再打开），让它继续跑完，避免两次渲染互相打断
+  if (generating.value) {
     return
   }
 
@@ -78,8 +137,13 @@ async function generatePoster() {
   posterImage.value = null
   shareTitle.value = title
   shareDesc.value = desc
+  progress.value = 0
+  posterShown.value = false
+  clearTimeout(revealTimer)
+  phase.value = 'loading'
 
   // 3. QR 码
+  tweenProgress(35)
   try {
     const QRCode = (await import('qrcode')).default
     qrDataUrl.value = await QRCode.toDataURL(url, {
@@ -90,28 +154,47 @@ async function generatePoster() {
   } catch { /* 静默降级 */ }
 
   // 4. 等图片加载
+  tweenProgress(60)
   await nextTick()
   // 等 qr img 和 logo 加载完成
   await new Promise(r => setTimeout(r, 500))
 
   // 5. html2canvas 截图（按需加载，避免其 ~200K 体积在启动时被解析占用主线程）
-  if (posterRef.value) {
-    try {
-      const html2canvas = (await import('html2canvas')).default
-      const canvas = await html2canvas(posterRef.value, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-      })
-      posterImage.value = canvas.toDataURL('image/png')
-      cachedKey = key
-    } catch {
-      cachedKey = '' // 生成失败清空缓存，避免下次误命中
-    }
+  tweenProgress(90)
+  try {
+    if (!posterRef.value) throw new Error('poster not mounted')
+    const html2canvas = (await import('html2canvas')).default
+    const canvas = await html2canvas(posterRef.value, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+    })
+    posterImage.value = canvas.toDataURL('image/png')
+    cachedKey = key
+  } catch {
+    // 生成失败：撤掉毛玻璃与骨架，保留占位高度，避免卡在加载态
+    cachedKey = ''
+    cancelTween()
+    phase.value = 'idle'
+    generating.value = false
+    return
   }
 
-  generating.value = false
+  // 6. 等真图解码完再渐显，否则毛玻璃散开的一瞬下面还是空白
+  await nextTick()
+  try { await posterImgEl.value?.decode() } catch { /* 解码失败也照常揭幕 */ }
+  // 先让它以 opacity:0 画过一帧，透明度渐变才有起点
+  await new Promise(r => requestAnimationFrame(r))
+  posterShown.value = true
+
+  // 7. 进度冲满 → 毛玻璃与进度条一起渐隐（真图此时已在下面渐显完）
+  await tweenProgress(100, 340)
+  phase.value = 'revealing'
+  revealTimer = setTimeout(() => {
+    phase.value = 'idle'
+    generating.value = false
+  }, REVEAL_MS)
 }
 
 // ---- 复制链接 ----
@@ -255,16 +338,52 @@ const modalStyle = computed(() => ({
       :segmented="{ content: true, footer: true }"
     >
       <div class="poster-wrap">
-        <div v-if="generating" class="poster-loading">
-          <div class="spinner"></div>
-          <span>正在生成海报…</span>
+        <!-- 海报框：始终按海报 2:3 占位，高度从打开到出图都不变 -->
+        <div class="poster-frame">
+          <!-- 占位骨架：按海报真实版式排，压在毛玻璃下只看大意 -->
+          <div v-if="phase !== 'idle'" class="poster-skeleton" aria-hidden="true">
+            <div class="sk-title">
+              <span class="sk-bar sk-bar-title1"></span>
+              <span class="sk-bar sk-bar-title2"></span>
+            </div>
+            <div class="sk-desc">
+              <span class="sk-rail"></span>
+              <div class="sk-desc-lines">
+                <span class="sk-bar"></span>
+                <span class="sk-bar"></span>
+                <span class="sk-bar sk-bar-desc3"></span>
+              </div>
+            </div>
+            <div class="sk-foot">
+              <span class="sk-logo"></span>
+              <div class="sk-brand">
+                <span class="sk-bar sk-bar-name"></span>
+                <span class="sk-bar sk-bar-sub"></span>
+              </div>
+              <span class="sk-qr"></span>
+            </div>
+          </div>
+
+          <img
+            v-if="posterImage"
+            ref="posterImgEl"
+            :src="posterImage"
+            alt="分享海报"
+            class="poster-img"
+            :class="{ 'is-in': posterShown }"
+          >
+
+          <!-- 毛玻璃 + 进度条：真图就位后整体渐隐揭幕 -->
+          <div
+            v-if="phase !== 'idle'"
+            class="poster-veil"
+            :class="{ 'is-out': phase === 'revealing' }"
+          >
+            <div class="poster-progress">
+              <span class="poster-progress-fill" :style="{ width: progress + '%' }"></span>
+            </div>
+          </div>
         </div>
-        <img
-          v-else-if="posterImage"
-          :src="posterImage"
-          alt="分享海报"
-          class="poster-img"
-        >
       </div>
 
       <template #footer>
@@ -448,39 +567,157 @@ const modalStyle = computed(() => ({
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
   padding: 8px 0 0 0;
 }
 
-.poster-img {
+/* 海报框：2:3 与海报本体一致，高度自始至终不变 */
+.poster-frame {
+  position: relative;
+  flex: none;
   width: 100%;
   max-width: 360px;
-  height: auto;
-  display: block;
+  aspect-ratio: 360 / 540;
   border-radius: 8px;
+  overflow: hidden;
+  /* 海报本体永远是白底，骨架与真图都铺在这上面，不随主题变 */
+  background: #FFFFFF;
 }
 
-.poster-loading {
+/* ===== 占位骨架（尺寸对应海报 360×540 的版式，宽度用 % 跟随缩放） ===== */
+.poster-skeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  color: var(--n-text-color-2);
-  font-size: 14px;
-  padding: 40px 0;
+  box-sizing: border-box;
+  padding: 13.889% 8.333% 0; /* 对应海报内边距 50px 30px */
 }
 
-.spinner {
-  width: 28px;
+.sk-bar {
+  display: block;
+  flex: none;
   height: 28px;
-  border-radius: 50%;
-  border: 3px solid;
-  animation: spin 0.9s linear infinite;
+  border-radius: 7px;
+  background: #C2C2C2;
 }
-[data-theme='dark'] .spinner { border-color: #fff #fff0; }
-[data-theme='light'] .spinner { border-color: #000 #0000; }
 
-@keyframes spin { to { transform: rotate(1turn); } }
+.sk-title {
+  display: flex;
+  flex-direction: column;
+  gap: 7px; /* 对应标题行距 1.12 × 32px */
+}
+.sk-bar-title1 { width: 100%; }
+.sk-bar-title2 { width: 55%; }
+
+.sk-desc {
+  display: flex;
+  align-items: stretch;
+  gap: 4.333%;       /* 对应简介内间距 13px */
+  margin-top: 6.667%; /* 对应简介上外边距 20px */
+}
+.sk-rail {
+  flex: none;
+  width: 2.333%; /* 对应简介左侧方块 7px */
+  border-radius: 2px;
+  background: #C2C2C2;
+}
+.sk-desc-lines {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px; /* 14px 条 + 14px 间距 ≈ 简介行高 1.9 × 15px */
+  padding-top: 4px;
+}
+.sk-desc-lines .sk-bar {
+  height: 14px;
+  border-radius: 4px;
+}
+.sk-bar-desc3 { width: 60%; }
+
+.sk-foot {
+  display: flex;
+  align-items: center;
+  gap: 4.333%;           /* 对应底栏间距 13px */
+  margin-top: auto;      /* 顶到底部，与海报底栏对齐 */
+  padding-bottom: 8.667%; /* 对应底栏下内边距 26px */
+}
+.sk-logo {
+  flex: none;
+  width: 16.667%; /* 对应 logo 50px */
+  aspect-ratio: 1;
+  border-radius: 8px;
+  background: #C2C2C2;
+}
+.sk-brand {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sk-bar-name {
+  width: 62%;
+  height: 14px;
+  border-radius: 4px;
+}
+.sk-bar-sub {
+  width: 48%;
+  height: 6px;
+  border-radius: 3px;
+}
+.sk-qr {
+  flex: none;
+  width: 32%; /* 对应二维码 96px */
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: #C2C2C2;
+}
+
+.poster-img {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* 从骨架渐显到真图，避免毛玻璃下露出硬切 */
+  opacity: 0;
+  transition: opacity 0.62s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.poster-img.is-in { opacity: 1; }
+
+/* ===== 毛玻璃层 + 进度条：真图就位后整体渐隐揭幕 ===== */
+.poster-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.16);
+  -webkit-backdrop-filter: blur(15px) saturate(1.5);
+  backdrop-filter: blur(15px) saturate(1.5);
+  transition: opacity 0.52s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.poster-veil.is-out { opacity: 0; }
+
+.poster-progress {
+  width: 46%;
+  max-width: 168px;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(20, 20, 20, 0.12);
+}
+.poster-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #141414;
+}
 
 .modal-foot {
   display: flex;
