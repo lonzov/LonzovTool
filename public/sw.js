@@ -12,7 +12,7 @@ let _forceUpdateChecked = false
 
 // ===== 静态资源长期缓存：不随版本更新删除 =====
 const STATIC_CACHE_NAME = 'lt-static'
-const STATIC_CACHE_PATHS = ['/logos/', '/fonts/', '/img/', '/sprites/', 'imamu.js']
+const STATIC_CACHE_PATHS = ['/logos/', '/fonts/', '/img/', '/sprites/']
 
 // ===== 广告素材目录：始终走网络，不缓存 =====
 // 广告图需随素材更换即时生效，而 /img/ 落在 STATIC_CACHE_PATHS（lt-static 永不清理），
@@ -20,6 +20,7 @@ const STATIC_CACHE_PATHS = ['/logos/', '/fonts/', '/img/', '/sprites/', 'imamu.j
 const ADS_PATH = '/ads/'
 
 // ===== 二级版本缓存：仅在 minor 版本变更时清除（如 3.3.x → 3.4.x） =====
+// 含带 hash 的 JS/CSS（/assets/）：hash 不变即内容不变，跨补丁版本复用可省掉重复下载
 const MINOR_VERSION = CACHE_VERSION.split('.').slice(0, 2).join('.')
 const MINOR_CACHE_NAME = `lt-v3-minor-${MINOR_VERSION}`
 const MINOR_CACHE_PATHS = ['/app-icon/', '/assets/']
@@ -252,12 +253,6 @@ self.addEventListener('fetch', (event) => {
   // 二级版本缓存路径: CacheFirst（仅在 minor 版本升级时清除）
   if (MINOR_CACHE_PATHS.some((p) => url.pathname.startsWith(p))) {
     event.respondWith(minorCacheFirst(request))
-    return
-  }
-
-  // 带 hash 的 JS/CSS: CacheFirst (内容不变，长期缓存)
-  if (url.pathname.startsWith('/assets/') && /\.(js|css)$/.test(url.pathname)) {
-    event.respondWith(cacheFirst(request))
     return
   }
 
