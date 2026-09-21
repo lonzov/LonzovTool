@@ -23,7 +23,7 @@
 - 🌙 **主题切换**： 支持明暗模式自由切换，自动记忆用户偏好
 - 📑 **标签页布局**： 快速切换不同工具页，大幅提升效率
 - 📱 **响应式布局**： 完美适配桌面端与移动端，提供一致的优质体验
-- 🍪 **隐私保护**： Cookie 同意管理、隐私政策透明披露、可选的流量分析
+- 🍪 **隐私保护**： 隐私偏好可按需开关、隐私政策透明披露、可选的匿名统计
 - ⚡ **PWA 支持**： 可安装到桌面，支持离线访问
 
 ## 技术栈
@@ -41,7 +41,7 @@
 
 ## 特别鸣谢
 
-- **[命令模拟器](https://github.com/missing244/Command_Simulator/)**：execute 语法转换逻辑参考了此项目，特殊符号的符号图片也是由该项目整理。
+- **[命令模拟器](https://github.com/missing244/Command_Simulator/)**：execute 语法转换逻辑参考了此项目。
 - **[Webstack网址导航](https://github.com/WebStackPage/WebStackPage.github.io)**： 首页布局参考了此项目。
 - **[Mizuki](https://github.com/LyraVoid/Mizuki)**： 部分 UI/UX 效果参考了此项目。
 - **[矩阵方块 - T显编译器](https://jzfk.indevs.in/)**： T显编辑器参考了此项目。
@@ -99,11 +99,11 @@
 - **路径归一化**：`getComponent()` 方法对路径进行归一化处理（移除末尾斜杠），确保路由匹配准确。
 - **站外 iframe 嵌入**：设置页开启"站外站点嵌入工作站"后，站外卡片改为在独立 `/embed/` 目录（`ExternalSiteView.vue`）中以 iframe 打开，路径段使用 `tools.json` 中的工具 id（如 `/embed/mcbe-id-table`），URL 由 id 反查并通过 `isExternalUrlAllowed()` 校验域名白名单，不在白名单的直接转交 404 页处理；`/embed/` 目录已在 robots.txt 中屏蔽（`scripts/generate-seo.js` 的 `DISALLOW_PATHS`）。
 
-### 隐私与 Cookie 管理
+### 隐私与偏好管理
 
-- **PrivacyBanner.vue**：隐私横幅与 Cookie 设置弹窗，管理用户同意选项（必要 Cookie、分析 Cookie）。
-- **Footer.vue**：页脚组件，显示版权信息、运行时间、站点监控、隐私政策链接和"更新 Cookie 选项"入口。
-- **两者关系**：独立组件，功能互补。Footer 提供隐私政策入口和 Cookie 设置触发；PrivacyBanner 处理首次访问的同意横幅和详细设置弹窗。
+- **PrivacyBanner.vue**：隐私横幅与隐私偏好弹窗，管理用户同意选项（必要服务、数据统计、回放统计），并按同意结果注入 51.la 统计与 Umami 回放录制脚本。
+- **Footer.vue**：页脚组件，显示版权信息、运行时间、站点监控、隐私政策链接和"隐私偏好"入口。
+- **两者关系**：独立组件，功能互补。Footer 提供隐私政策入口和偏好设置触发；PrivacyBanner 处理首次访问的同意横幅和详细设置弹窗。
 
 ### PWA 与 Service Worker 缓存
 
