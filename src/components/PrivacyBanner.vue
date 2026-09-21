@@ -16,12 +16,15 @@ export default {
     const { isDark } = useTheme()
     const { showCookieModal } = usePrivacyModal()
 
-    // Cookie 设置：[必要(固定1), 分析]
+    // 隐私偏好：[必要(固定1), 分析, 回放]
     function parseConsent(raw) {
       if (!raw) return null
-      if (raw === 'agreed') return [1, 1]
+      if (raw === 'agreed') return [1, 1, 0]
       try {
-        return raw.split(',').map(Number)
+        const bits = raw.split(',').map(Number)
+        // 旧记录只有必要/分析两位，回放位补 0（新用途需重新授权）
+        while (bits.length < 3) bits.push(0)
+        return bits
       } catch {
         return null
       }
@@ -29,22 +32,28 @@ export default {
 
     const stored = typeof localStorage !== 'undefined' ? parseConsent(localStorage.getItem(STORAGE_KEY)) : null
 
-    // 兜底修复：必要 Cookie 位不应为 0，自动修正为 1
+    // 兜底修复：必要位不应为 0，自动修正为 1
     if (stored && stored[0] !== 1) {
       stored[0] = 1
-      try { localStorage.setItem(STORAGE_KEY, `${stored[0]},${stored[1]}`) } catch { /* SSR safe */ }
+      try { localStorage.setItem(STORAGE_KEY, stored.join(',')) } catch { /* SSR safe */ }
     }
 
     const hasConsent = !!stored
     const showBanner = ref(!hasConsent)
 
     const analyticsChecked = ref(stored ? stored[1] === 1 : false)
+    const replayChecked = ref(stored ? stored[2] === 1 : false)
 
     if (hasConsent) {
-      const [necessary, analytics] = stored
+      const [necessary, analytics, replay] = stored
+      console.log(`[隐私控制] 已有同意记录(必要:${necessary},分析:${analytics},回放:${replay})`)
       if (analytics === 1) {
-        console.log(`[隐私控制] 已有同意记录(必要:${necessary},分析:${analytics})，注入51la`)
+        console.log('[隐私控制] 注入51la')
         injectAnalytics()
+      }
+      if (replay === 1) {
+        console.log('[隐私控制] 注入Umami回放')
+        injectReplay()
       }
     } else {
       console.log('[隐私控制] 尚未同意暂不注入')
@@ -79,23 +88,43 @@ export default {
       }
     }
 
+    // 注入 Umami 回放录制脚本（依赖主脚本 script.js 先建立会话）
+    function injectReplay() {
+      if (document.getElementById('umami-replay')) return
+
+      const n = document.createElement('script')
+      n.defer = true
+      n.src = 'https://imamu.lonzov.top/recorder.js'
+      n.setAttribute('data-website-id', '32b32d08-4710-482c-974d-390290f93229')
+      n.setAttribute('data-sample-rate', '0.25')
+      n.setAttribute('data-mask-level', 'strict')
+      n.setAttribute('data-max-duration', '300000')
+      n.id = 'umami-replay'
+      document.head.appendChild(n)
+    }
+
     // 保存设置并关闭横幅
-    function applyConsent(analyticsEnabled) {
-      localStorage.setItem(STORAGE_KEY, `1,${analyticsEnabled ? 1 : 0}`)
+    function applyConsent(analyticsEnabled, replayEnabled) {
+      localStorage.setItem(STORAGE_KEY, `1,${analyticsEnabled ? 1 : 0},${replayEnabled ? 1 : 0}`)
       showBanner.value = false
       showCookieModal.value = false
 
       if (analyticsEnabled) {
-        console.log(`[隐私控制] 用户同意分析Cookie(必要:1,分析:1)，注入51la`)
+        console.log(`[隐私控制] 用户同意分析Cookie(必要:1,分析:1,回放:${replayEnabled ? 1 : 0})，注入51la`)
         injectAnalytics()
       } else {
-        console.log(`[隐私控制] 用户仅接受必要Cookie(必要:1,分析:0)`)
+        console.log(`[隐私控制] 用户仅接受必要Cookie(必要:1,分析:0,回放:${replayEnabled ? 1 : 0})`)
+      }
+      if (replayEnabled) {
+        console.log('[隐私控制] 注入Umami回放')
+        injectReplay()
       }
     }
 
     function handleAgree() {
       analyticsChecked.value = true
-      applyConsent(true)
+      replayChecked.value = true
+      applyConsent(true, true)
     }
 
     function handleManageCookie() {
@@ -103,12 +132,13 @@ export default {
     }
 
     function handleSaveSettings() {
-      applyConsent(analyticsChecked.value)
+      applyConsent(analyticsChecked.value, replayChecked.value)
     }
 
     function handleAcceptAllInModal() {
       analyticsChecked.value = true
-      applyConsent(true)
+      replayChecked.value = true
+      applyConsent(true, true)
     }
 
     function handleCloseModal() {
@@ -184,6 +214,7 @@ export default {
       showCookieModal,
       necessaryChecked: ref(true),
       analyticsChecked,
+      replayChecked,
       isDark,
       darkTheme,
       modalStyle,
@@ -266,16 +297,30 @@ export default {
         </div>
       </div>
 
-      <!-- 分析服务 -->
+      <!-- 数据统计 -->
       <div class="cookie-section">
         <div class="cookie-header">
           <NCheckbox v-model:checked="analyticsChecked" />
-          <span class="cookie-title">分析服务</span>
+          <span class="cookie-title">数据统计</span>
         </div>
         <div class="cookie-detail">
-          这些服务帮助我们了解访问者如何使用网站，以便改进用户体验。
+          更详细的统计访问数据（如访客留存、SEO分析），辅助运营决策。
           <ul class="cookie-list">
             <li>51.la - 访问分析</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 回放统计 -->
+      <div class="cookie-section">
+        <div class="cookie-header">
+          <NCheckbox v-model:checked="replayChecked" />
+          <span class="cookie-title">回放统计</span>
+        </div>
+        <div class="cookie-detail">
+          帮助我们了解访问者如何使用网站以及遇到的问题，以便改进用户体验。
+          <ul class="cookie-list">
+            <li>Umami Replay - 匿名化回放统计，页面文字与输入内容均在浏览器端遮蔽</li>
           </ul>
         </div>
       </div>
