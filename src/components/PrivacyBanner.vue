@@ -228,19 +228,19 @@ export default {
         </button>
         <button class="btn btn-manage" @click="handleManageCookie">
           <NIcon :component="Settings24Regular" :size="14" color="rgba(255, 255, 255, 0.87)" style="margin-right: 4px; vertical-align: -2px;" />
-          管理cookie
+          管理偏好
         </button>
       </div>
     </div>
   </Transition>
 
-  <!-- Cookie 管理弹窗 -->
+  <!-- 隐私偏好弹窗 -->
   <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
   <NModal
     v-model:show="showCookieModal"
     preset="card"
     :style="modalStyle"
-    title="Cookie 偏好设置"
+    title="隐私偏好"
     :bordered="false"
     closable
     :auto-focus="false"
@@ -248,32 +248,32 @@ export default {
     @close="handleCloseModal"
   >
 
-    <div class="cookie-modal-desc">选择您希望启用的 Cookie 类型。必要 Cookie 无法禁用，因为它们对网站的正常运行至关重要。</div>
+    <div class="cookie-modal-desc">选择您希望启用的服务类型。必要服务无法禁用，因为它们对网站的正常运行至关重要。</div>
 
     <div class="cookie-sections">
-      <!-- 必要 Cookie -->
+      <!-- 必要服务 -->
       <div class="cookie-section">
         <div class="cookie-header">
           <NCheckbox :checked="true" disabled />
-          <span class="cookie-title">必要 Cookie</span>
+          <span class="cookie-title">必要服务</span>
         </div>
         <div class="cookie-detail">
-          这些 Cookie 对于网站的基本功能是必需的，无法禁用。
+          这些服务对于网站的基本功能是必需的，无法禁用。
           <ul class="cookie-list">
-            <li>Umami Analytics - 网站统计</li>
+            <li>Umami Analytics - 隐私友好的匿名统计，不使用Cookie</li>
             <li>Cloudflare RUM - 性能监控</li>
           </ul>
         </div>
       </div>
 
-      <!-- 分析 Cookie -->
+      <!-- 分析服务 -->
       <div class="cookie-section">
         <div class="cookie-header">
           <NCheckbox v-model:checked="analyticsChecked" />
-          <span class="cookie-title">分析 Cookie</span>
+          <span class="cookie-title">分析服务</span>
         </div>
         <div class="cookie-detail">
-          这些 Cookie 帮助我们了解访问者如何使用网站，以便改进用户体验。
+          这些服务帮助我们了解访问者如何使用网站，以便改进用户体验。
           <ul class="cookie-list">
             <li>51.la - 访问分析</li>
           </ul>
