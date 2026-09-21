@@ -237,12 +237,18 @@ async function copyLink() {
 }
 
 // ---- 保存图片 ----
+function buildPosterFileName() {
+  const title = (shareTitle.value || '').trim() || '小舟工具箱'
+  const base = title === '小舟工具箱' ? title : `${title} - 小舟工具箱`
+  return `${base.replace(/[\\/:*?"<>|]/g, '').trim() || '小舟工具箱'}.png`
+}
+
 function downloadPoster() {
   trackShare()
   if (!posterImage.value) return
   const a = document.createElement('a')
   a.href = posterImage.value
-  a.download = 'poster-xiaozhou-toolkit.png'
+  a.download = buildPosterFileName()
   a.click()
 }
 
