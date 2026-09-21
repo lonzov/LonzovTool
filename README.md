@@ -81,9 +81,10 @@
 
 ### 页面切换与滚动行为
 
-- **桌面端 & 移动端**：统一使用 Naive UI 的 `NScrollbar` 组件管理滚动（桌面端 `desktopScrollbar`、移动端 `mobileScrollbar`），通过 `scrollTo()` 控制。
-- **逻辑**：同页面切换（如首页点击首页）使用平滑滚动（`behavior: 'smooth'`），跨页面切换瞬间回顶（`behavior: 'auto'`）。
-- **浏览器 scrollRestoration 禁用**：在 `main.js` 中设置 `history.scrollRestoration = 'manual'`，防止浏览器自动恢复滚动位置覆盖手动控制。
+- **两端都不是 window**：桌面端内容滚动由 `NScrollbar` 内部容器（`.n-scrollbar-container`）承担；移动端因 `html/body/#app` 均为 `height: 100%`，`html` 不产生滚动，溢出全部落在 `body` 上（实测 `window.scrollTo` 无效，须设 `document.body.scrollTop`）。浏览器的原生滚动恢复只认 window，两端都碰不到，故由 `handleRouteChange` 统一接管。
+- **缓动**：统一走 `src/utils/scrollToTop.js`，移植自 `@swup/scroll-plugin` 依赖的 scrl，每帧 `velocity += delta * acceleration; velocity *= 1 - friction; position += velocity`。起步快、尾巴长，总时长对距离不敏感（400px ≈ 700ms，6000px ≈ 917ms），比原生 `behavior: 'smooth'` 的匀减速更有吸附感。动画期间 `wheel` / `touchstart` 立即中断，`prefers-reduced-motion` 时瞬间到位。
+- **触发时机**：`router.afterEach` 中 `nextTick` 触发，等新页面 DOM 更新完再滚，避免"旧页面一边滚动一边被换掉"。
+- **浏览器 scrollRestoration 禁用**：在 `main.js` 中设置 `history.scrollRestoration = 'manual'`。该 API 只管 window 滚动，对上述两个容器均无影响，返回键位置同样由 `handleRouteChange` 处理。
 
 ### SEO Head 管理
 

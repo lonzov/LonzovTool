@@ -1,5 +1,5 @@
 <script>
-import { computed, ref, provide, watch, defineAsyncComponent } from 'vue'
+import { computed, ref, provide, watch, nextTick, onBeforeUnmount, defineAsyncComponent } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
 import { getGlobalHead } from './main.js'
@@ -12,6 +12,7 @@ import { useTheme } from './composables/useTheme'
 import { useWorkspace, isExternalPath, getExternalUrl, getExternalToolMeta } from './composables/useWorkspace.js'
 import { useSWUpdate } from './composables/useSWUpdate'
 import { useOfficialDomainCheck } from './composables/useOfficialDomainCheck'
+import { scrollToTop, cancelScrollToTop } from './utils/scrollToTop.js'
 import { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES } from './router'
 
 /* 懒加载：UpdateDialog → markdown-it、ShareModal → html2canvas 体积大且极少打开，
@@ -137,8 +138,36 @@ export default {
     const fakeTitleOpacity = ref(0)
     const fakeTitleTransition = ref('opacity 0.15s ease')
     let pendingCategoryIndex = null // 待处理的分类索引
-    let prevRoutePath = null // 上一次路由路径，用于判断同页面跳转
     const desktopScrollbar = ref(null) // 桌面端 NScrollbar 实例引用
+
+    // 两端都不是 window：桌面端是 NScrollbar 内部容器，移动端因 html/body/#app 均为 height:100%
+    // 导致 html 不滚动，溢出全部落在 body 上。浏览器的原生滚动恢复只认 window，两端都碰不到
+    function resolveScrollTarget() {
+      if (isMobile.value) {
+        const node = document.body
+        return {
+          node,
+          getTop: () => node.scrollTop,
+          setTop: (top) => {
+            node.scrollTop = top
+          },
+        }
+      }
+      const node = desktopScrollbar.value?.scrollbarInstRef?.containerRef
+      if (!node) return null
+      return {
+        node,
+        getTop: () => node.scrollTop,
+        setTop: (top) => {
+          node.scrollTop = top
+        },
+      }
+    }
+
+    function smoothScrollToTop() {
+      const target = resolveScrollTarget()
+      if (target) scrollToTop(target)
+    }
 
     // 用于存储首页 HomeView 的 triggerDimEffect 方法
     const homeViewMethods = ref(null)
@@ -272,11 +301,7 @@ export default {
           router.push('/')
         } else {
           // 已在首页，无路由变化，手动触发平滑滚动
-          if (isMobile.value) {
-            document.body.scrollTo({ top: 0, behavior: 'smooth' })
-          } else {
-            desktopScrollbar.value?.scrollTo({ top: 0, behavior: 'smooth' })
-          }
+          smoothScrollToTop()
         }
         activeKey.value = 'home'
         return
@@ -332,6 +357,8 @@ export default {
     }
 
     function scrollToCategory(index) {
+      // 若回顶动画还没结束，先掐掉，避免两段滚动互相覆盖
+      cancelScrollToTop()
       setTimeout(() => {
         const categoryElements = document.querySelectorAll('.tool-category')
         const target = categoryElements[index]
@@ -367,23 +394,16 @@ export default {
 
     function handleRouteChange() {
       const path = router.currentRoute.value.path
+      // 等新页面 DOM 更新完再回顶：立即滚会让用户看到"旧页面一边滚动一边被换掉"
+      nextTick(smoothScrollToTop)
 
-      // 仅当路径不变化时才用平滑动画（同页面跳转，如从首页点首页）
-      // 其他时候（跨页面切换）瞬间滚动到顶部，不继承上一页的浏览进度
-      const behavior = (prevRoutePath !== null && prevRoutePath === path) ? 'smooth' : 'auto'
-      if (isMobile.value) {
-        document.body.scrollTo({ top: 0, behavior })
-      } else {
-        desktopScrollbar.value?.scrollTo({ top: 0, behavior })
-      }
-      prevRoutePath = path
       if (path === '/') {
         activeKey.value = 'home'
         // 如果有待处理的分类索引，等待页面切换动画完成后再执行
         if (pendingCategoryIndex !== null) {
           const index = pendingCategoryIndex
           pendingCategoryIndex = null
-          // 等待 0.3s 动画完成后执行
+          // 等回顶动画走完再滚向目标分类，否则两段滚动互相打架
           setTimeout(() => {
             triggerCategoryDimEffect(index)
             scrollToCategory(index)
@@ -401,6 +421,7 @@ export default {
     }
 
     router.afterEach(handleRouteChange)
+    onBeforeUnmount(cancelScrollToTop)
 
     const isHome = computed(() => router.currentRoute.value.path === '/')
     const isWorkspaceRoute = computed(() =>
