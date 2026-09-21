@@ -41,6 +41,12 @@ export default {
     const hasConsent = !!stored
     const showBanner = ref(!hasConsent)
 
+    // 隐私政策/偏好更新公告：已同意过的用户若未记录本版本，再提示一次
+    const NOTICE_VERSION = '260921'
+    const NOTICE_KEY = 'privacy_notice_version'
+    const noticeVersion = typeof localStorage !== 'undefined' ? localStorage.getItem(NOTICE_KEY) : null
+    const showUpdateBanner = ref(hasConsent && noticeVersion !== NOTICE_VERSION)
+
     const analyticsChecked = ref(stored ? stored[1] === 1 : false)
     const replayChecked = ref(stored ? stored[2] === 1 : false)
 
@@ -106,7 +112,9 @@ export default {
     // 保存设置并关闭横幅
     function applyConsent(analyticsEnabled, replayEnabled) {
       localStorage.setItem(STORAGE_KEY, `1,${analyticsEnabled ? 1 : 0},${replayEnabled ? 1 : 0}`)
+      localStorage.setItem(NOTICE_KEY, NOTICE_VERSION)
       showBanner.value = false
+      showUpdateBanner.value = false
       showCookieModal.value = false
 
       if (analyticsEnabled) {
@@ -211,6 +219,7 @@ export default {
 
     return {
       showBanner,
+      showUpdateBanner,
       showCookieModal,
       necessaryChecked: ref(true),
       analyticsChecked,
@@ -250,6 +259,33 @@ export default {
           在继续使用前，请先阅读并同意
           <a href="/docs/privacy/" @click="handlePrivacyLink">隐私政策</a>
           ，若不同意请停止使用本站
+        </span>
+      </div>
+      <div class="banner-actions">
+        <button class="btn btn-agree" @click="handleAgree">
+          <NIcon :component="Checkmark24Filled" :size="14" color="#1A1A1A" style="margin-right: 4px; vertical-align: -2px;" />
+          接受全部
+        </button>
+        <button class="btn btn-manage" @click="handleManageCookie">
+          <NIcon :component="Settings24Regular" :size="14" color="rgba(255, 255, 255, 0.87)" style="margin-right: 4px; vertical-align: -2px;" />
+          管理偏好
+        </button>
+      </div>
+    </div>
+  </Transition>
+
+  <!-- 隐私政策/偏好更新提示（仅已同意过的用户） -->
+  <Transition name="privacy-banner">
+    <div v-if="showUpdateBanner"
+      class="privacy-banner"
+      :style="{ zIndex: showCookieModal ? 999 : 10000 }"
+    >
+      <div class="banner-content">
+        <NIcon :component="WarningShield20Regular" :size="18" class="banner-icon" />
+        <span class="banner-text">
+          我们更新了
+          <a href="/docs/privacy/" @click="handlePrivacyLink">隐私政策</a>
+          和新的隐私偏好，请重新阅读并选择偏好
         </span>
       </div>
       <div class="banner-actions">
