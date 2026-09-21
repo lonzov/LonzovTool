@@ -2,12 +2,14 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { NModal, NConfigProvider, useMessage } from 'naive-ui'
 import { darkTheme } from 'naive-ui'
+import { useRoute } from 'vue-router'
 import { useTheme } from '../composables/useTheme'
 
 const props = defineProps({ show: Boolean })
 const emit = defineEmits(['update:show'])
 const { isDark } = useTheme()
 const message = useMessage()
+const route = useRoute()
 
 const showLocal = computed({
   get: () => props.show,
@@ -100,6 +102,18 @@ function getMeta(name, property) {
     ? document.querySelector(`meta[property="${property}"]`)
     : document.querySelector(`meta[name="${name}"]`)
   return el?.getAttribute('content')?.trim() || ''
+}
+
+// ---- 分享事件上报去重 ----
+let shareReported = false
+watch(() => route.path, () => { shareReported = false })
+
+/* Umami事件上报 */
+function trackShare() {
+  if (shareReported) return
+  if (typeof window === 'undefined' || !window.umami) return
+  shareReported = true
+  window.umami.track(`Share+${window.location.pathname}`)
 }
 
 /** 清洗 URL 参数并追加 UTM 渠道追踪 */
@@ -199,6 +213,7 @@ async function generatePoster() {
 
 // ---- 复制链接 ----
 async function copyLink() {
+  trackShare()
   const url = window.location.href
   try {
     await navigator.clipboard.writeText(url)
@@ -223,6 +238,7 @@ async function copyLink() {
 
 // ---- 保存图片 ----
 function downloadPoster() {
+  trackShare()
   if (!posterImage.value) return
   const a = document.createElement('a')
   a.href = posterImage.value
@@ -371,6 +387,7 @@ const modalStyle = computed(() => ({
             alt="分享海报"
             class="poster-img"
             :class="{ 'is-in': posterShown }"
+            :style="{ '--img-fade': IMG_FADE_MS + 'ms' }"
           >
 
           <!-- 毛玻璃 + 进度条：真图就位后整体渐隐揭幕 -->
@@ -684,7 +701,7 @@ const modalStyle = computed(() => ({
   height: 100%;
   /* 从骨架渐显到真图，避免毛玻璃下露出硬切 */
   opacity: 0;
-  transition: opacity 0.62s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity var(--img-fade, 0.62s) cubic-bezier(0.4, 0, 0.2, 1);
 }
 .poster-img.is-in { opacity: 1; }
 
