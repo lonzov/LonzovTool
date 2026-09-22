@@ -9,7 +9,7 @@ const loadMarkdown = () => import('./MarkdownRenderer.vue')
 const MarkdownRenderer = defineAsyncComponent(loadMarkdown)
 
 const { isDark } = useTheme()
-const { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, silentUpdated, applyUpdate, deferUpdate } = useSWUpdate()
+const { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, forceUpdate, silentUpdated, applyUpdate, deferUpdate } = useSWUpdate()
 const message = useMessage()
 
 /**
@@ -42,6 +42,13 @@ const displayVersion = computed(() => {
   return 'v' + raw.split('.').slice(0, 3).join('.')
 })
 
+/** 是否为「暂不更新」类按钮 */
+function isDeferBtn(btn) {
+  return btn.action === 'close' || !btn.action
+}
+
+const deferTip = computed(() => (forceUpdate.value ? '重要更新无法稍后更新' : '若选择暂不更新，将在下次打开网站时自动更新'))
+
 /** 处理按钮点击 */
 function handleButtonClick(btn) {
   if (btn.link) {
@@ -49,7 +56,7 @@ function handleButtonClick(btn) {
   } else if (btn.action === 'update_sw') {
     applyUpdate()
     message.success('更新完成，即将刷新…', { duration: 1800 })
-  } else if (btn.action === 'close' || !btn.action) {
+  } else if (isDeferBtn(btn)) {
     deferUpdate()
   }
 }
@@ -57,9 +64,9 @@ function handleButtonClick(btn) {
 /** 获取按钮样式类 */
 function getBtnClass(btn) {
   const style = btn.style || 'outline'
-  if (style === 'fill') return 'btn btn-fill'
-  if (style === 'text') return 'btn btn-text'
-  return 'btn btn-outline'
+  const base = style === 'fill' ? 'btn btn-fill' : style === 'text' ? 'btn btn-text' : 'btn btn-outline'
+  // 大版本强制更新：「暂不更新」置灰不可点
+  return forceUpdate.value && isDeferBtn(btn) ? `${base} btn-force-disabled` : base
 }
 
 const darkOverrides = {
@@ -126,13 +133,18 @@ watch(showUpdateModal, (val) => {
       :title="popupTitle || '发现新版本'"
       :style="modalStyle"
       :segmented="{ content: true, footer: 'soft' }"
-      :closable="true"
+      :closable="!forceUpdate"
+      :mask-closable="!forceUpdate"
+      :close-on-esc="!forceUpdate"
       @close="deferUpdate"
       :auto-focus="false"
       content-scrollable
     >
       <div class="update-desc">
-        <p class="new-version-banner">{{ displayVersion || '新版本' }} 版本现已可用</p>
+        <p class="new-version-banner">
+          <template v-if="forceUpdate">【⚠️重要更新】{{ displayVersion || '新版本' }}</template>
+          <template v-else>{{ displayVersion || '新版本' }} 版本现已可用</template>
+        </p>
         <p class="guide-text">反馈或建议请前往 「侧边栏-关于本站-我要反馈」或 <a href="https://qm.qq.com/q/hjTqUyIKEo" target="_blank" rel="noopener" class="guide-link">加入QQ群</a>。</p>
         <p class="changelog-label">👾 更新日志：</p>
         <MarkdownRenderer v-if="popupContent" :raw="popupContent" />
@@ -144,21 +156,21 @@ watch(showUpdateModal, (val) => {
           <div class="modal-actions">
             <template v-if="popupButtons.length > 0">
               <template v-for="(btn, i) in popupButtons" :key="i">
-                <NTooltip v-if="btn.action === 'close'" placement="top">
+                <NTooltip v-if="btn.action === 'close'" placement="top" :trigger="forceUpdate ? 'click' : 'hover'">
                   <template #trigger>
                     <button :class="getBtnClass(btn)" @click="handleButtonClick(btn)">{{ btn.text }}</button>
                   </template>
-                  若选择暂不更新，将在下次打开网站时自动更新
+                  {{ deferTip }}
                 </NTooltip>
                 <button v-else :class="getBtnClass(btn)" @click="handleButtonClick(btn)">{{ btn.text }}</button>
               </template>
             </template>
             <template v-else>
-              <NTooltip placement="top">
+              <NTooltip placement="top" :trigger="forceUpdate ? 'click' : 'hover'">
                 <template #trigger>
-                  <button class="btn btn-outline" @click="deferUpdate">暂不更新</button>
+                  <button class="btn btn-outline" :class="{ 'btn-force-disabled': forceUpdate }" @click="deferUpdate">暂不更新</button>
                 </template>
-                若选择暂不更新，将在下次打开网站时自动更新
+                {{ deferTip }}
               </NTooltip>
               <button class="btn btn-fill" @click="applyUpdate">立即更新</button>
             </template>
@@ -296,6 +308,15 @@ watch(showUpdateModal, (val) => {
 
 .btn-fill:hover {
   opacity: 0.85;
+}
+
+/* 大版本强制更新：「暂不更新」置灰：无描边、无 hover 反馈，点击仅弹提示 */
+.btn-force-disabled,
+.btn-force-disabled:hover {
+  border: none !important;
+  background: transparent !important;
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* outline - 描边按钮 */

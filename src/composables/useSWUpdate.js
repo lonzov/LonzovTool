@@ -6,6 +6,8 @@ const popupContent = ref('')
 const popupVersionInfo = ref('')
 const popupNewVersion = ref('')
 const popupButtons = ref([])
+/** 大版本更新（前两位版本号变化）→ 弹窗不可关闭，只能立即更新 */
+const forceUpdate = ref(false)
 /** 静默更新（小版本）已接管页面，但页面未重载 → UI 提示用户刷新 */
 const silentUpdated = ref(false)
 let pendingRegistration = null
@@ -14,7 +16,8 @@ let pendingSilentUpdate = false
 
 /**
  * 版本号比较（沿用 V2 逻辑）
- * 1-3 级版本差异 → 'popup'（弹窗提示）
+ * 前两位版本差异（大版本，如 3.3 → 3.4、3.3 → 4.0）→ 'force'（强制更新）
+ * 第三位版本差异（如 3.3.1 → 3.3.2）→ 'popup'（弹窗提示，可暂不更新）
  * 4+ 级版本差异 → 'auto'（静默更新）
  * 无差异 → 'none'
  */
@@ -25,7 +28,10 @@ function compareVersions(current, next) {
   for (let i = 0; i < max; i++) {
     const c = i < cur.length ? cur[i] : 0
     const n = i < nw.length ? nw[i] : 0
-    if (n > c) return i + 1 <= 3 ? 'popup' : 'auto'
+    if (n > c) {
+      if (i <= 1) return 'force'
+      return i === 2 ? 'popup' : 'auto'
+    }
     if (n < c) return 'none'
   }
   return 'none'
@@ -68,7 +74,7 @@ async function handleUpdate(reg) {
       console.log('[SW] Auto-updating (minor), skipWaiting without reload')
       pendingSilentUpdate = true
       reg.waiting.postMessage('SKIP_WAITING')
-    } else if (type === 'popup') {
+    } else if (type === 'popup' || type === 'force') {
       // 从 SW 获取弹窗内容
       const data = await fetchPopupData(reg, curVer)
       popupTitle.value = data?.title || '发现新版本'
@@ -76,6 +82,7 @@ async function handleUpdate(reg) {
       popupNewVersion.value = `v${newVer}`
       popupVersionInfo.value = `v${curVer} → v${newVer}`
       popupButtons.value = Array.isArray(data?.buttons) ? data.buttons : []
+      forceUpdate.value = type === 'force'
       pendingRegistration = reg
       showUpdateModal.value = true
     }
@@ -141,8 +148,9 @@ export function useSWUpdate() {
     }
   }
 
-  /** 暂不更新：SW 保持 waiting 状态，下次访问自动生效 */
+  /** 暂不更新：SW 保持 waiting 状态，下次访问自动生效（大版本强制更新时不允许） */
   function deferUpdate() {
+    if (forceUpdate.value) return
     console.log('[SW] Update deferred, SW stays waiting. Will activate on next visit.')
     showUpdateModal.value = false
     // 不发送 SKIP_WAITING，SW 保持 waiting 状态
@@ -150,5 +158,5 @@ export function useSWUpdate() {
     pendingRegistration = null
   }
 
-  return { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, silentUpdated, initSW, applyUpdate, deferUpdate }
+  return { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, forceUpdate, silentUpdated, initSW, applyUpdate, deferUpdate }
 }

@@ -118,7 +118,8 @@
 - **离线诊断页**：导航请求失败时，SW 注入 `window.__SW_OFFLINE` 标记后返回缓存中的 `index.html`，Vue App 据此自动路由到 `/offline` 诊断页，展示连接诊断动画并 ping `tool.lonzov.top` + `www.baidu.com` 区分服务端异常 / 网络断开。
 - **更新机制**：
   - 检测到新 SW → 通过 `GET_VERSION` 消息获取版本号 → 与 `localStorage.current_sw_version` 比较
-  - 1-3 级版本差异（如 v3.0.0 → v3.1.0）：弹出更新确认弹窗（`UpdateDialog.vue`），用户选择立即更新或暂不更新
+  - 前两位版本号变化（大版本，如 v3.3.0 → v3.4.0、v3.3.0 → v4.0.0）：弹出强制更新弹窗（`UpdateDialog.vue`），无关闭按钮、点遮罩/Esc 不可关、「暂不更新」置灰禁用，只能立即更新
+  - 第三位版本号变化（如 v3.3.0 → v3.3.1）：弹出更新确认弹窗，用户选择立即更新或暂不更新
   - 4+ 级版本差异（如 v3.0.0 → v3.0.0.1）：静默 skipWaiting，下次访问自动生效
 - **V2 兼容**：SW 激活时清理 V2 旧缓存（`lonzovtool-cache-*`、`my-app-cache-*`），兼容 V2 消息协议（`GET_VERSION`、`GET_POPUP_DATA`、`SKIP_WAITING`），确保老访客平滑过渡。
 - **manifest.json**：`id: "com.lonzovtool.app"` 与 V2 保持一致，避免重复安装。
