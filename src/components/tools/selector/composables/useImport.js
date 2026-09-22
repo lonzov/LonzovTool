@@ -9,6 +9,7 @@ import {
 import { PARAM_KINDS } from '../constants.js'
 import { makeParam } from './useParams.js'
 import { triggerSave } from './usePersistence.js'
+import { confirmDialog } from '../../../../composables/useConfirm.js'
 
 // ========== 导入弹窗 ==========
 
@@ -24,7 +25,7 @@ export function closeImport() {
   importError.value = ''
 }
 
-export function parseImport() {
+export async function parseImport() {
   const text = importText.value.trim()
   importError.value = ''
 
@@ -40,7 +41,15 @@ export function parseImport() {
     const parsed = parseParamString(body)
     if (!parsed || parsed.length === 0) throw new Error('解析失败：未找到有效参数')
 
-    if (params.value.length > 0 && !window.confirm(`覆盖现有 ${params.value.length} 个参数?`)) return
+    if (params.value.length > 0) {
+      const confirmed = await confirmDialog({
+        title: '导入参数',
+        message: `导入将覆盖现有 ${params.value.length} 个参数，确定？`,
+        confirmText: '确认导入',
+        danger: true,
+      })
+      if (!confirmed) return
+    }
 
     selectorType.value = selType
     params.value = parsed

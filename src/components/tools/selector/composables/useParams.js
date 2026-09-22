@@ -31,6 +31,7 @@ import {
 } from './useState.js'
 import { PARAM_KINDS } from '../constants.js'
 import { triggerSave } from './usePersistence.js'
+import { confirmDialog } from '../../../../composables/useConfirm.js'
 
 // ========== 辅助 ==========
 
@@ -348,7 +349,7 @@ function doCoordCalcAdd() {
   triggerSave()
 }
 
-export function confirmCoordCalc() {
+export async function confirmCoordCalc() {
   // 关闭当前编辑/添加状态
   cancelEdit()
   cancelAdd()
@@ -360,9 +361,13 @@ export function confirmCoordCalc() {
 
   if (existingKeys.length > 0) {
     const duplicateNames = existingKeys.join('、')
-    if (!confirm(`继续添加将覆盖以下参数，是否确认覆盖？\n${duplicateNames}`)) {
-      return
-    }
+    const confirmed = await confirmDialog({
+      title: '覆盖已有坐标参数',
+      message: `继续添加将覆盖以下参数，是否确认覆盖？\n${duplicateNames}`,
+      confirmText: '确认覆盖',
+      danger: true,
+    })
+    if (!confirmed) return
   }
 
   doCoordCalcAdd()

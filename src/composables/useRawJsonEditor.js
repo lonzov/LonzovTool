@@ -5,6 +5,7 @@ import { renderTranslate, resolveSelector, resolveScore, PLACEHOLDER_GRAY } from
 import { parseJsonWithHint } from '../utils/jsonError.js'
 import { lookupTranslate, langRevision } from './useRawJsonLang.js'
 import { simulator } from './useRawJsonSimulator.js'
+import { confirmDialog } from './useConfirm.js'
 
 // ========== 模块级状态（单例，所有组件共享） ==========
 
@@ -800,7 +801,7 @@ export function closeImport() {
   importError.value = ''
 }
 
-export function parseImport() {
+export async function parseImport() {
   const text = importText.value.trim()
   importError.value = ''
   try {
@@ -821,7 +822,15 @@ export function parseImport() {
       e.text !== undefined || e.selector !== undefined || e.score !== undefined || e.translate !== undefined
     )
     if (valid.length === 0) throw new Error('未找到有效元素')
-    if (data.value.length > 0 && !window.confirm(`覆盖现有 ${data.value.length} 个元素?`)) return
+    if (data.value.length > 0) {
+      const confirmed = await confirmDialog({
+        title: '导入指令',
+        message: `导入将覆盖现有 ${data.value.length} 个元素，确定？`,
+        confirmText: '确认导入',
+        danger: true,
+      })
+      if (!confirmed) return
+    }
     pushUndo()
     data.value = valid
     cmdType.value = itype
@@ -869,11 +878,16 @@ export function copyCommand() {
   })
 }
 
-export function clearAll() {
+export async function clearAll() {
   if (data.value.length === 0) return
-  if (window.confirm(`清空 ${data.value.length} 个元素?`)) {
-    pushUndo(); data.value = []; triggerSave()
-  }
+  const confirmed = await confirmDialog({
+    title: '清空元素',
+    message: `清空 ${data.value.length} 个元素？`,
+    confirmText: '确认清空',
+    danger: true,
+  })
+  if (!confirmed) return
+  pushUndo(); data.value = []; triggerSave()
 }
 
 export function loadExample() {

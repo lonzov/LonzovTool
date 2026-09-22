@@ -8,6 +8,8 @@ import { Settings24Regular, ShareAndroid20Regular, Open16Filled } from '@vicons/
 import AppMenu from './components/AppMenu.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import PrivacyBanner from './components/PrivacyBanner.vue'
+import ConfirmDialog from './components/ConfirmDialog.vue'
+import { confirmDialog } from './composables/useConfirm'
 import { useTheme } from './composables/useTheme'
 import { useWorkspace, isExternalPath, getExternalUrl, getExternalToolMeta } from './composables/useWorkspace.js'
 import { useSWUpdate } from './composables/useSWUpdate'
@@ -22,7 +24,7 @@ const UpdateDialog = defineAsyncComponent(() => import('./components/UpdateDialo
 const ShareModal = defineAsyncComponent(() => import('./components/ShareModal.vue'))
 
 export default {
-  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog, ShareModal, NIcon, NTooltip },
+  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog, ShareModal, ConfirmDialog, NIcon, NTooltip },
   setup() {
     const router = useRouter()
     const route = useRoute()
@@ -292,7 +294,7 @@ export default {
       }
     }
 
-    function handleMenuNavigate(key) {
+    async function handleMenuNavigate(key) {
       // 清空首页搜索（当点击侧边栏任意内容时）
       clearHomeSearch()
 
@@ -325,7 +327,12 @@ export default {
         // 检查是否有已打开的标签页，并读取存储的活跃标签路径
         const { hasTabs, activeTab } = useWorkspace()
         if (!hasTabs()) {
-          alert('请至少先打开一个工具页面（从首页点击工具卡片）')
+          await confirmDialog({
+            title: '无法进入工作站',
+            message: '请至少先打开一个工具页面（从首页点击工具卡片）',
+            confirmText: '知道了',
+            showCancel: false,
+          })
           return
         }
         // 以本地存储的活跃标签为准，前往对应路径（站外标签路径本身即完整路由）
@@ -863,6 +870,7 @@ export default {
     </div>
     <PrivacyBanner />
     <UpdateDialog />
+    <ConfirmDialog />
     <ShareModal v-model:show="showShareModal" />
     </NMessageProvider>
   </NConfigProvider>

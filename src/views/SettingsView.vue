@@ -3,6 +3,7 @@ import { ref, computed, watch, nextTick, onBeforeUnmount, onMounted, onUnmounted
 import { NSelect, NSwitch, NConfigProvider, darkTheme, NModal, NIcon, useMessage } from 'naive-ui'
 import { ArrowDownload16Regular, ArrowExportUp24Filled, Settings24Regular, ChevronUp16Regular, ArrowCounterclockwise24Filled } from '@vicons/fluent'
 import { useTheme } from '../composables/useTheme'
+import { confirmDialog } from '../composables/useConfirm'
 import { useWorkspaceSettings } from '../composables/useWorkspaceSettings'
 import { useWorkspace } from '../composables/useWorkspace'
 
@@ -223,7 +224,13 @@ function toggleSection(key) {
 
 /* ========== 重置所有设置 ========== */
 async function handleReset() {
-  if (!confirm('确定要重置所有设置吗？此操作不可恢复。')) return
+  const confirmed = await confirmDialog({
+    title: '重置所有设置',
+    message: '确定要重置所有设置吗？此操作不可恢复。',
+    confirmText: '确认重置',
+    danger: true,
+  })
+  if (!confirmed) return
   localStorage.clear()
   // T显编辑器的语言包存在 IndexedDB 里，localStorage.clear() 清不掉，需单独清
   try {

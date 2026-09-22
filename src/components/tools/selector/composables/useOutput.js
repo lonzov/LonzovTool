@@ -4,6 +4,7 @@ import { cancelEdit, cancelAdd } from './useParams.js'
 import { makeParam } from './useParams.js'
 import { getParamKey, getParamEditor } from './useParams.js'
 import { triggerSave } from './usePersistence.js'
+import { confirmDialog } from '../../../../composables/useConfirm.js'
 
 // ========== 字符串转义 ==========
 
@@ -143,20 +144,33 @@ export function copyOutput() {
 
 // ========== 清空 ==========
 
-export function clearAll() {
+export async function clearAll() {
   if (params.value.length === 0) return
-  if (window.confirm(`清空所有 ${params.value.length} 个参数?`)) {
-    params.value = []
-    cancelEdit()
-    cancelAdd()
-    triggerSave()
-  }
+  const confirmed = await confirmDialog({
+    title: '清空参数',
+    message: `清空所有 ${params.value.length} 个参数？`,
+    confirmText: '确认清空',
+    danger: true,
+  })
+  if (!confirmed) return
+  params.value = []
+  cancelEdit()
+  cancelAdd()
+  triggerSave()
 }
 
 // ========== 示例 ==========
 
-export function loadExample() {
-  if (params.value.length > 0 && !window.confirm('加载示例将覆盖当前内容，确定?')) return
+export async function loadExample() {
+  if (params.value.length > 0) {
+    const confirmed = await confirmDialog({
+      title: '加载示例',
+      message: '加载示例将覆盖当前内容，确定？',
+      confirmText: '确认加载',
+      danger: true,
+    })
+    if (!confirmed) return
+  }
   selectorType.value = '@a'
   params.value = [
     makeParam('name', { value: 'Steve' }),
