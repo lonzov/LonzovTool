@@ -43,9 +43,16 @@
         {
           "id": "rawjson-editor",
           "title": "Dislink工具集",
-          "description": "mid/图片/文本转命令、命令链结构生成等",
+          "description": "mid/图片/文本转命令、命令链结构生成等硬核工具",
           "logo": "/logos/dislink_github_io.webp",
           "link": "https://dislink.github.io/"
+        },
+        {
+          "id": "HOSDLA-toolbox",
+          "title": "HOSDLA工具箱",
+          "description": "MC音乐、指令生成、建筑转换、多媒体处理等",
+          "logo": "/logos/HOSDLA_toolbox.webp",
+          "link": "https://nekolove.top/hosdla/tools/"
         },
         {
           "id": "tr",
@@ -347,13 +354,6 @@
           "description": "便捷易用的命令辅助输入应用",
           "logo": "/logos/projectxero_top.webp",
           "link": "https://projectxero.top/ca/"
-        },
-        {
-          "id": "HOSDLA-toolbox",
-          "title": "HOSDLA工具箱",
-          "description": "指令音乐视频合成器等自动复制文本其他工具",
-          "logo": "/logos/HOSDLA_toolbox.webp",
-          "link": "/down/HOSDLA-toolbox/"
         },
         {
           "id": "matrix-block",
