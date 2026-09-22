@@ -1,8 +1,11 @@
 import { ref } from 'vue'
 
+const UMAMI_BASE = 'https://imamu.lonzov.top'
+const SHARE_SLUG = 'FmUyTde668rZaCXX'
+
 // ===== 模块级单例（跨组件共享同一份缓存和状态） =====
 const CACHE_KEY = 'stats_cache'
-const CACHE_TTL_MS = 3 * 60 * 1000
+const CACHE_TTL_MS = 30 * 60 * 1000
 const memoryCache = new Map()
 
 const stats = ref({
@@ -50,6 +53,67 @@ function applyStatsData(data) {
   )
 }
 
+async function requestShareToken() {
+  const res = await fetch(`${UMAMI_BASE}/api/share/${SHARE_SLUG}`, {
+    headers: { Accept: 'application/json' },
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const { token, websiteId } = await res.json()
+  if (!token || !websiteId) throw new Error('分享 token 无效')
+  return { token, websiteId }
+}
+
+function requestRange(websiteId, token, startAt, endAt) {
+  const url = `${UMAMI_BASE}/api/websites/${websiteId}/stats?startAt=${startAt}&endAt=${endAt}`
+  return fetch(url, {
+    headers: {
+      'x-umami-share-token': token,
+      'x-umami-share-context': '1',
+      Accept: 'application/json',
+    },
+  }).then(res => {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return res.json()
+  })
+}
+
+// Umami 只给区间聚合值，按浏览器本地时区切出今天/昨天/本月/今年
+function getTimeRanges() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth()
+  const dayStart = new Date(year, month, now.getDate()).getTime()
+  const nextDayStart = new Date(year, month, now.getDate() + 1).getTime()
+  const todayEnd = nextDayStart - 1
+  const dayMs = nextDayStart - dayStart
+  return {
+    today: [dayStart, todayEnd],
+    yesterday: [dayStart - dayMs, dayStart - 1],
+    month: [new Date(year, month, 1).getTime(), todayEnd],
+    year: [new Date(year, 0, 1).getTime(), todayEnd],
+  }
+}
+
+async function requestStats() {
+  const { token, websiteId } = await requestShareToken()
+  const ranges = getTimeRanges()
+  const [today, yesterday, month, year] = await Promise.all([
+    requestRange(websiteId, token, ...ranges.today),
+    requestRange(websiteId, token, ...ranges.yesterday),
+    requestRange(websiteId, token, ...ranges.month),
+    requestRange(websiteId, token, ...ranges.year),
+  ])
+  return {
+    today_pv: today.pageviews,
+    today_uv: today.visitors,
+    yesterday_uv: yesterday.visitors,
+    month_uv: month.visitors,
+    year_pv: year.pageviews,
+    is_mocked: false,
+    last_update: Math.floor(Date.now() / 1000),
+  }
+}
+
 let fetchPromise = null
 
 async function fetchStats() {
@@ -77,11 +141,7 @@ async function fetchStats() {
 
   // 4. 请求 API 更新（去重：同一时刻只发一个请求）
   if (!fetchPromise) {
-    fetchPromise = fetch('https://api.lonzov.top/u/api/stats')
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.json()
-      })
+    fetchPromise = requestStats()
       .then(data => {
         applyStatsData(data)
         const now = Date.now()
