@@ -1,4 +1,4 @@
-import { h, onMounted, onUnmounted } from 'vue'
+import { h } from 'vue'
 import { getDiscreteMessage } from '../utils/discreteMessage'
 
 // 荣耀浏览器（HonorBrowser/3.8.1.x）内核会绕开页面资源加载，直接往 DOM 里塞侧边悬浮广告容器，
@@ -37,73 +37,64 @@ function reportAd(id, vendor) {
   })
 }
 
+// 由 useHonorGuard 确认是荣耀浏览器后动态 import 并调用。
+// 不做生命周期注册：动态 import 之后已拿不到组件实例，故调用即生效，返回停止函数。
 export function useFuckHonorAdGuard() {
-  let observer = null
+  const seen = new WeakSet()
 
-  onMounted(() => {
-    if (import.meta.env.SSR) return
+  function handleHit(el, vendor) {
+    // 容器与它内部的节点可能都命中选择器（如 HonorWebSideFloatingAdContainer
+    // 与 HonorWebSideFloatingObserveId），只处理最外层，避免一次注入弹多条提示
+    if (el.parentElement?.closest(AD_SELECTOR)) return
+    if (seen.has(el)) return
+    seen.add(el)
 
-    const seen = new WeakSet()
+    el.style.setProperty('display', 'none', 'important')
 
-    function handleHit(el, vendor) {
-      // 容器与它内部的节点可能都命中选择器（如 HonorWebSideFloatingAdContainer
-      // 与 HonorWebSideFloatingObserveId），只处理最外层，避免一次注入弹多条提示
-      if (el.parentElement?.closest(AD_SELECTOR)) return
-      if (seen.has(el)) return
-      seen.add(el)
+    const id = el.id ? `fuckHonorAd-${el.id}` : 'fuckHonorAd-unknown'
+    reportAd(id, vendor)
 
-      el.style.setProperty('display', 'none', 'important')
+    if (notifiedIds.has(id)) return
+    notifiedIds.add(id)
 
-      const id = el.id ? `fuckHonorAd-${el.id}` : 'fuckHonorAd-unknown'
-      reportAd(id, vendor)
+    getDiscreteMessage()?.warning(
+      () =>
+        h('div', { style: { lineHeight: '1.6', wordBreak: 'break-all' } }, [
+          '检测到【荣耀浏览器】注入广告，已尝试隐藏，请立即截图并前往关于页反馈！',
+          h('br'),
+          `(ID: ${id})`,
+        ]),
+      { duration: 0, closable: true },
+    )
+  }
 
-      if (notifiedIds.has(id)) return
-      notifiedIds.add(id)
-
-      getDiscreteMessage()?.warning(
-        () =>
-          h('div', { style: { lineHeight: '1.6', wordBreak: 'break-all' } }, [
-            '检测到【荣耀浏览器】注入广告，已尝试隐藏，请立即截图并前往关于页反馈！',
-            h('br'),
-            `(ID: ${id})`,
-          ]),
-        { duration: 0, closable: true },
-      )
+  function scanAll() {
+    for (const el of document.querySelectorAll(AD_SELECTOR)) {
+      const rule = AD_RULES.find((r) => r.selectors.some((s) => el.matches(s)))
+      if (rule) handleHit(el, rule.vendor)
     }
+  }
 
-    function scanAll() {
-      for (const el of document.querySelectorAll(AD_SELECTOR)) {
-        const rule = AD_RULES.find((r) => r.selectors.some((s) => el.matches(s)))
-        if (rule) handleHit(el, rule.vendor)
-      }
+  // 只检查新增子树，避免每次 DOM 变动都全量查询
+  function inspect(node) {
+    for (const rule of AD_RULES) {
+      const selector = rule.selectors.join(',')
+      if (node.matches(selector)) handleHit(node, rule.vendor)
+      for (const el of node.querySelectorAll(selector)) handleHit(el, rule.vendor)
     }
+  }
 
-    // 只检查新增子树，避免每次 DOM 变动都全量查询
-    function inspect(node) {
-      for (const rule of AD_RULES) {
-        const selector = rule.selectors.join(',')
-        if (node.matches(selector)) handleHit(node, rule.vendor)
-        for (const el of node.querySelectorAll(selector)) handleHit(el, rule.vendor)
+  // 广告可能在 Vue 挂载前就已注入
+  scanAll()
+
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (node.nodeType === 1) inspect(node)
       }
-    }
-
-    // 广告可能在 Vue 挂载前就已注入
-    scanAll()
-
-    observer = new MutationObserver((records) => {
-      for (const record of records) {
-        for (const node of record.addedNodes) {
-          if (node.nodeType === 1) inspect(node)
-        }
-      }
-    })
-    observer.observe(document.documentElement, { childList: true, subtree: true })
-  })
-
-  onUnmounted(() => {
-    if (observer) {
-      observer.disconnect()
-      observer = null
     }
   })
+  observer.observe(document.documentElement, { childList: true, subtree: true })
+
+  return () => observer.disconnect()
 }

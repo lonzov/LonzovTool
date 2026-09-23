@@ -68,9 +68,10 @@ src:
           HaspermissionModal.vue: haspermission 编辑器弹窗
           CoordinateCalcModal.vue: 坐标自动计算弹窗，输入起终点坐标自动生成 x,y,z,dx,dy,dz 参数
   composables:
+    honorBrowserNotice.js: 荣耀浏览器提示，建议用户更换标准浏览器（按需加载）
     useConfirm.js: 全局确认弹窗状态，confirmDialog() 返回 Promise 供任意模块（含 composable）调用
-    useFuckHonorAdGuard.js: 荣耀浏览器注入的侧边悬浮广告拦截，隐藏广告容器并向 Umami 上报
-    useHonorBrowserCheck.js: 荣耀浏览器 UA 检测，命中后提示用户更换标准浏览器
+    useFuckHonorAdGuard.js: 荣耀浏览器注入的侧边悬浮广告拦截，隐藏广告容器并向 Umami 上报（按需加载）
+    useHonorGuard.js: 荣耀浏览器 UA 判断入口，命中后才动态加载广告拦截与提示模块
     useMouseGlow.js: 卡片边框高光平滑跟随鼠标效果（lerp 插值）
     useOfficialDomainCheck.js: 非官方站点检测，URL 域名非 tool.lonzov.top（排除本地开发环境）时返回 true，用于注入红色警告横幅
     usePrivacyModal.js: 隐私弹窗状态共享组合式函数
