@@ -69,6 +69,8 @@ src:
           CoordinateCalcModal.vue: 坐标自动计算弹窗，输入起终点坐标自动生成 x,y,z,dx,dy,dz 参数
   composables:
     useConfirm.js: 全局确认弹窗状态，confirmDialog() 返回 Promise 供任意模块（含 composable）调用
+    useFuckHonorAdGuard.js: 荣耀浏览器注入的侧边悬浮广告拦截，隐藏广告容器并向 Umami 上报
+    useHonorBrowserCheck.js: 荣耀浏览器 UA 检测，命中后提示用户更换标准浏览器
     useMouseGlow.js: 卡片边框高光平滑跟随鼠标效果（lerp 插值）
     useOfficialDomainCheck.js: 非官方站点检测，URL 域名非 tool.lonzov.top（排除本地开发环境）时返回 true，用于注入红色警告横幅
     usePrivacyModal.js: 隐私弹窗状态共享组合式函数
@@ -86,6 +88,7 @@ src:
     useWorkspaceSettings.js: 工作站相关偏好设置（站外卡片 iframe 嵌入开关默认关闭、深色模式 iframe 遮罩 off/black/invert 默认黑色、按站点的深色滤镜开关持久化为同一密钥内 id:0/1）
     useDownloadIntro.js: 下载页 Markdown 功能介绍加载组合式函数（按需加载原始 md 字符串）
   utils:
+    discreteMessage.js: 全局共享的 Naive UI 独立 message 实例（供 NMessageProvider 之外的模块使用）
     jsonError.js: JSON 解析前修复字符串内的原始换行 + 语法错误定位与友好化提示
     mcTranslate.js: 基岩版翻译键渲染内核（.lang/JSON 解析、占位符算法、selector/score 求值），纯函数无框架依赖
     scrollToTop.js: 回顶的物理缓动

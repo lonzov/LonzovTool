@@ -14,6 +14,8 @@ import { useTheme } from './composables/useTheme'
 import { useWorkspace, isExternalPath, getExternalUrl, getExternalToolMeta } from './composables/useWorkspace.js'
 import { useSWUpdate } from './composables/useSWUpdate'
 import { useOfficialDomainCheck } from './composables/useOfficialDomainCheck'
+import { useFuckHonorAdGuard } from './composables/useFuckHonorAdGuard'
+import { useHonorBrowserCheck } from './composables/useHonorBrowserCheck'
 import { scrollToTop, cancelScrollToTop } from './utils/scrollToTop.js'
 import { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES } from './router'
 
@@ -31,6 +33,8 @@ export default {
     const { themeMode, cycleTheme, isDark } = useTheme()
     const { initSW } = useSWUpdate()
     const { isUnofficial } = useOfficialDomainCheck()
+    useFuckHonorAdGuard()
+    useHonorBrowserCheck()
 
     // SSR 期间在组件上下文中设置 SEO head（router.afterEach 中的 useHead 在 SSR 时
     // 不在 Vue 组件上下文中导致 inject 失败，必须在组件 setup 内调用）
