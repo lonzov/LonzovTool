@@ -104,8 +104,19 @@ export default {
     isInternalLink(link) {
       return typeof link === 'string' && link.charAt(0) === '/' && !link.startsWith('//')
     },
+    // 点击上报：配了 eventId 才报，前缀 Promo+ 便于在 Umami 里与工具点击区分。
+    // 上报失败一律吞掉：它跑在 preventDefault 之前，抛出去会把站内点击降级成整页跳转
+    trackSlideClick(slide) {
+      if (!slide || !slide.eventId || !window.umami) return
+      try {
+        window.umami.track(`Promo+${slide.eventId}`)
+      } catch {
+        /* 统计失败不影响滑片打开 */
+      }
+    },
     // 点击滑片：站内阻止默认整页跳转、改走 vue-router；站外放行，由 target="_blank" 新标签页打开
     handleSlideClick(e, slide) {
+      this.trackSlideClick(slide)
       const link = slide && slide.link
       if (!link || !this.isInternalLink(link)) return
       e.preventDefault()
