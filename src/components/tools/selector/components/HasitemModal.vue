@@ -71,7 +71,8 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
 import { NInput, NIcon } from 'naive-ui'
-import AppModal, { MODAL_CARD_CHROME_HEIGHT } from '../../../ui/AppModal.vue'
+import AppModal from '../../../ui/AppModal.vue'
+import { getModalContentHeight, findScrollParent } from '../../../../utils/modalHeight.js'
 import { Add16Filled, Delete24Filled } from '@vicons/fluent'
 import {
   hasitemEditId,
@@ -162,7 +163,7 @@ function animateHeightChange(changeFn, { scrollToBottom = false } = {}) {
   const savedTop = saveScroll()
 
   // 1. 锁定前测量：内容自然高度 vs 卡片可用区域，取较小值
-  const cap = getAvailableHeight(el)
+  const cap = getModalContentHeight(el)
   const fromHeight = Math.min(el.scrollHeight, cap)
   el.style.height = fromHeight + 'px'
   el.style.overflow = 'hidden'
@@ -178,7 +179,7 @@ function animateHeightChange(changeFn, { scrollToBottom = false } = {}) {
     requestAnimationFrame(() => {
       el.style.transition = 'none'
       el.style.height = ''
-      const newCap = getAvailableHeight(el)
+      const newCap = getModalContentHeight(el)
       const toHeight = Math.min(el.scrollHeight, newCap)
       console.log('[HasitemModal] 高度过渡:', Math.round(fromHeight), '→', Math.round(toHeight), '(cap:', Math.round(newCap), ')')
 
@@ -220,23 +221,6 @@ function animateHeightChange(changeFn, { scrollToBottom = false } = {}) {
   })
 }
 
-/** 卡片可用内容区高度 = 卡片总高 − 标题栏 − 按钮栏 − 内容 padding */
-function getAvailableHeight(el) {
-  const card = el.closest('.app-modal')
-  if (!card) return Infinity
-  return card.clientHeight - MODAL_CARD_CHROME_HEIGHT
-}
-
-/** 向上查找第一个可滚动的父元素 */
-function findScrollParent(el) {
-  let node = el.parentElement
-  while (node) {
-    const s = getComputedStyle(node)
-    if (s.overflowY === 'auto' || s.overflowY === 'scroll') return node
-    node = node.parentElement
-  }
-  return null
-}
 
 /** 数学预计算：两 tab 均为 flex:1，各占一半宽度，无需测量 DOM */
 function calcIndicator(instant = false) {

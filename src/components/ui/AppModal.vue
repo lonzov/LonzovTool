@@ -1,16 +1,3 @@
-<script>
-/**
- * Naive Card 装饰部分的固定高度：header 68 + footer 83 + content 上下 padding 40。
- *
- * 用于反推「卡片内容区最多能有多高」—— 内容区高度过渡动画需要这个上限，
- * 否则目标高度会取成内容完整高度，动画就白做了（可见区域被父级裁剪、高度值变化不体现出来）。
- *
- * 刻意用常量而不是查询 `.n-card-header` / `.n-card-footer` / `.n-scrollbar-content`：
- * 那些是 Naive 内部结构，升级或调整就会静默失效；这几个数值是它的固定样式。
- */
-export const MODAL_CARD_CHROME_HEIGHT = 191
-</script>
-
 <script setup>
 import { ref, computed, toRef } from 'vue'
 import { NModal } from 'naive-ui'

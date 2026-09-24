@@ -2,7 +2,8 @@
 import { ref, watch, nextTick } from 'vue'
 import { NIcon, NSelect } from 'naive-ui'
 import { Delete24Regular, ArrowUp24Regular, ArrowDown24Regular, Add24Regular, Edit24Filled } from '@vicons/fluent'
-import AppModal, { MODAL_CARD_CHROME_HEIGHT } from '../ui/AppModal.vue'
+import AppModal from '../ui/AppModal.vue'
+import { getModalContentHeight } from '../../utils/modalHeight.js'
 import {
   showEditModal, editIdx,
   editType, formText, formSelector, formScoreObj, formScoreName,
@@ -67,7 +68,7 @@ watch(
   el.style.overflow = ''
 
   // 1) 锁定旧高度（watch 在 pre 阶段运行，DOM 仍是旧分支）
-  const cap = getAvailableHeight(el)
+  const cap = getModalContentHeight(el)
   const fromHeight = Math.min(el.scrollHeight, cap)
   el.style.height = fromHeight + 'px'
   el.style.overflow = 'hidden'
@@ -77,7 +78,7 @@ watch(
     requestAnimationFrame(() => {
       el.style.transition = 'none'
       el.style.height = ''
-      const newCap = getAvailableHeight(el)
+      const newCap = getModalContentHeight(el)
       const toHeight = Math.min(el.scrollHeight, newCap)
 
       if (Math.abs(fromHeight - toHeight) < 2) {
@@ -108,12 +109,6 @@ function resetWrapStyle(el) {
   el.style.transition = ''
 }
 
-/** 卡片可用内容区高度 = 卡片总高 − 标题栏 − 按钮栏 − 内容 padding */
-function getAvailableHeight(el) {
-  const card = el.closest('.app-modal')
-  if (!card) return Infinity
-  return card.clientHeight - MODAL_CARD_CHROME_HEIGHT
-}
 </script>
 
 <template>
