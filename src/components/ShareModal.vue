@@ -123,8 +123,6 @@ function buildShareUrl() {
   u.search = ''
   // 统一 UTM 渠道标记
   u.searchParams.set('utm_source', 'user_sharing')
-  u.searchParams.set('utm_medium', 'user_sharing')
-  u.searchParams.set('utm_campaign', 'user_sharing')
   return u.toString()
 }
 
