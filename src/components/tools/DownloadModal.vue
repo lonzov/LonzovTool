@@ -127,6 +127,7 @@ onUnmounted(() => unsubGlow(handleGlow))
 
 <template>
   <AppModal
+    :auto-focus="false"
     :segmented="false"
     v-model:show="showLocal"
     title="下载方式"

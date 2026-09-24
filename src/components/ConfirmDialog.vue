@@ -28,6 +28,7 @@ const actions = computed(() => {
 
 <template>
   <AppModal
+    :auto-focus="false"
     :segmented="false"
     :show="confirmState.show"
     :title="confirmState.title"

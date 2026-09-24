@@ -234,6 +234,7 @@ export default {
 
   <!-- 隐私偏好弹窗 -->
   <AppModal
+    :auto-focus="false"
     :segmented="false"
     v-model:show="showCookieModal"
     title="隐私偏好"

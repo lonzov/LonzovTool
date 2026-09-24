@@ -12,14 +12,16 @@ export function getDiscreteMessage() {
   if (!_message && typeof window !== 'undefined') {
     try {
       // discrete API 是独立 app，不继承根级 NConfigProvider，必须自带主题。
-      // theme 传 computed 才能跟随深浅色切换，否则创建时是什么色就永远是那个色。
+      //
+      // 整个对象必须是 computed：naive 只对 configProviderProps 做一次 unref
+      // （discreteApp.mjs 里 `h(NConfigProvider, unref(configProviderProps))`），
+      // 里面的嵌套 ref 不会被解包，写成 { theme: computed(...) } 会被当成普通对象
+      // 传给 ConfigProvider，两条配置全部静默失效、message 永远停在 Naive 亮色主题。
       _message = createDiscreteApi(['message'], {
-        configProviderProps: {
-          theme: computed(() => (isDark.value ? darkTheme : lightTheme)),
-          themeOverrides: computed(() =>
-            isDark.value ? darkThemeOverrides : lightThemeOverrides,
-          ),
-        },
+        configProviderProps: computed(() => ({
+          theme: isDark.value ? darkTheme : lightTheme,
+          themeOverrides: isDark.value ? darkThemeOverrides : lightThemeOverrides,
+        })),
       }).message
     } catch { /* noop */ }
   }

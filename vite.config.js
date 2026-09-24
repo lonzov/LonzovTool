@@ -5,10 +5,15 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import { themeCssText } from './src/theme/tokens.js'
 
 /**
- * 把设计 token 生成的 CSS 以 head-prepend 注入 index.html。
+ * 把设计 token 生成的 CSS 注入 index.html。
+ *
  * 不走 useHead() 是因为 unhead 的 style 权重（60）低于 meta（100），
  * 会被 scripts/reorder-head.js 连同 og:title 之后的整段一起搬走，导致
- * dev 与线上产物的样式顺序不一致。注入到 head 最前面则两者顺序恒定。
+ * dev 与线上产物的样式顺序不一致。
+ *
+ * 用 injectTo: 'head' 而不是 'head-prepend' —— 这段样式有 3.6KB，
+ * 插到 head 最前面会把 <meta charset> 推到 1024 字节之外，中文环境下
+ * 浏览器可能先用回退编码渲染再重解析，出现花屏闪烁。
  */
 function injectThemeTokens() {
   return {
@@ -19,7 +24,7 @@ function injectThemeTokens() {
           tag: 'style',
           attrs: { id: 'theme-tokens' },
           children: themeCssText,
-          injectTo: 'head-prepend',
+          injectTo: 'head',
         },
       ]
     },

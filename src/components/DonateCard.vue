@@ -103,9 +103,10 @@ if (typeof document !== 'undefined') {
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
-/* 选项槽 */
+/* 选项槽：42px 高的分段切换器，圆角即半高 —— 是胶囊形，必须回退传统圆角 */
 .donate-tab-switch {
-  --radius: var(--radius-xl);
+  --radius: var(--radius-full);
+  corner-shape: round;
   --height: 42px;
   --speed: 0.25s;
   --count: 3;

@@ -837,6 +837,7 @@ const embedCloseActions = [
 
     <!-- 导入确认模态框 -->
     <AppModal
+      :auto-focus="false"
       :segmented="false"
       v-model:show="importModal.show"
       :max-width="420"
@@ -865,6 +866,7 @@ const embedCloseActions = [
 
     <!-- 缓存清理确认模态框（照搬版本更新模态框样式） -->
     <AppModal
+      :auto-focus="false"
       :segmented="false"
       v-model:show="cacheClearModal.show"
       :max-width="420"
@@ -882,6 +884,7 @@ const embedCloseActions = [
 
     <!-- 开启站外嵌入：第三方内容声明 + 9s 倒计时确认 -->
     <AppModal
+      :auto-focus="false"
       v-model:show="embedEnableModal.show"
       :max-width="540"
       title="在工作站内打开外部网页"
@@ -911,6 +914,7 @@ const embedCloseActions = [
 
     <!-- 关闭站外嵌入：是否清理已打开的嵌入标签页 -->
     <AppModal
+      :auto-focus="false"
       :segmented="false"
       v-model:show="embedCloseModal.show"
       :max-width="420"

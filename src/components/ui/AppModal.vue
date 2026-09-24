@@ -57,6 +57,12 @@ const props = defineProps({
    * 需要完全自由布局时改用 #footer 插槽。
    */
   actions: { type: Array, default: null },
+  /**
+   * 关闭前置守卫。返回 `false` 可拦截本次关闭（Naive 认这个协议：
+   * `Promise.resolve(onClose()).then(v => { if (v === false) return; ... })`）。
+   * 不能用 `@close` 代替 —— Vue 的 emit 不把监听器的返回值传回来。
+   */
+  beforeClose: { type: Function, default: null },
 })
 
 const emit = defineEmits(['update:show', 'close', 'esc', 'after-enter', 'after-leave'])
@@ -87,6 +93,12 @@ const isCompact = getCompactRef()
 const animWrap = ref(null)
 const animInner = ref(null)
 useHeightTransition({ show: toRef(props, 'show'), inner: animInner, wrap: animWrap })
+
+// @close 的返回值决定 Naive 是否真的关闭，必须原样传回去
+function handleClose() {
+  if (props.beforeClose) return props.beforeClose()
+  emit('close')
+}
 
 const modalStyle = computed(() => ({
   maxWidth: typeof props.maxWidth === 'number' ? `${props.maxWidth}px` : props.maxWidth,
@@ -119,7 +131,7 @@ const modalStyle = computed(() => ({
     :auto-focus="autoFocus"
     :content-scrollable="contentScrollable"
     @update:show="emit('update:show', $event)"
-    @close="emit('close')"
+    @close="handleClose"
     @esc="emit('esc')"
     @after-enter="emit('after-enter')"
     @after-leave="emit('after-leave')"

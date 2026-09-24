@@ -164,6 +164,16 @@ button {
   opacity: 0.85;
 }
 
+/* ===== Naive 内部元素的胶囊圆角 =====
+   开关的轨道/滑块与轮播指示点，半径是 50% 或 9999px，恰好落在
+   「2 × radius == 短边」的临界点上 —— 不加回退，平滑曲率会把形状挤垮。
+   这些元素在 Naive 内部，模板上够不到，只能在这里统一兜底。 */
+.n-switch__rail,
+.n-switch__button,
+.n-carousel__dot {
+  corner-shape: round;
+}
+
 /* ===== Naive 浮层的描边 =====
    下拉类浮层（Select / Dropdown / Cascader 的菜单）加一道描边以与页面底拉开层次。
    Naive 没有为菜单边框开放主题变量，只能覆盖内部类；集中在这里一份，

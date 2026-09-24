@@ -134,7 +134,7 @@ function getAvailableHeight(el) {
         { text: '保存', variant: 'fill', onClick: saveElement },
       ]"
     @esc="nestedIdx !== null ? cancelNestedEdit() : closeEditModal()"
-    @close="onModalClose"
+    :before-close="onModalClose"
   >
     <!-- 高度过渡动画载体：nestedIdx 切换时只替换其内部内容，本层始终存在 -->
     <div ref="formWrapRef" class="edit-form-wrap">

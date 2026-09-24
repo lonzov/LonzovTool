@@ -73,6 +73,7 @@ onUnmounted(() => {
 
 <template>
   <AppModal
+    :auto-focus="false"
     :segmented="false"
     v-model:show="showLocal"
     title="声明"

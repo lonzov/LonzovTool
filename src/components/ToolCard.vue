@@ -397,7 +397,7 @@ export default {
             style: {
               width: '40px',
               height: '40px',
-              borderRadius: 'var(--radius-lg)',
+              borderRadius: 'var(--radius-md)',
               background: isIconLogo ? '#ffffff' : 'var(--card)',
               marginRight: '12px',
               flexShrink: 0,

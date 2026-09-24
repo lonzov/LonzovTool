@@ -291,6 +291,7 @@ watch(() => props.show, (val) => {
   </div>
 
   <AppModal
+    :auto-focus="false"
     v-model:show="showLocal"
     title="分享"
     :max-width="560"
