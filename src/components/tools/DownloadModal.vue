@@ -210,19 +210,16 @@ onUnmounted(() => unsubGlow(handleGlow))
   min-width: 0;
 }
 
-.dl-version-cascader :deep(.n-base-selection),
-.dl-version-cascader :deep(.n-base-selection-label) {
-  border-radius: var(--radius-full) !important;
-  corner-shape: round;
-}
+/* 触发器的圆角交给 themeOverrides 的 Cascader.peers.InternalSelection.borderRadius，
+   这里不再硬覆盖 —— 否则会连同 __border / __state-border（它们用 border-radius: inherit）
+   一起钉死，静态、hover、展开三态就对不上全站统一的圆角了 */
 
 /* 光效画在 NCascader 根元素上（它的尺寸与内部触发器一致），
-   圆角对齐触发器的胶囊形，这样不必去查 Naive 内部的 .n-base-selection */
+   圆角与触发器对齐，这样不必去查 Naive 内部的 .n-base-selection */
 .dl-version-cascader.glow-border {
   position: relative;
   z-index: 0;
-  border-radius: var(--radius-full);
-  corner-shape: round;
+  border-radius: var(--radius-sm);
 }
 
 /* ===== 鼠标跟随边框高光（覆盖公共变量的差异化参数） ===== */
