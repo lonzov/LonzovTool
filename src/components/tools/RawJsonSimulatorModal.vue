@@ -12,6 +12,7 @@ import {
 
 <template>
   <AppModal
+    :bordered="true"
     v-model:show="showSimModal"
     title="预览模拟器"
     :max-width="560"

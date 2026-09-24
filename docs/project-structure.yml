@@ -37,6 +37,7 @@ src:
     StatsInfoBar.vue: 访问统计信息栏，显示统计起始日、更新时间与数据来源
     tools:
       ArtTextTool.vue: 艺术字转换工具页
+      DownloadDisclaimer.vue: 下载免责声明模态框，带冷却倒计时的确认后继续
       DownloadModal.vue: 下载方式选择模态框
       DownloadIntro.vue: 下载页功能介绍区，加载 Markdown 后交 MarkdownRenderer 渲染，兼容旧字符串配置
       DownloadTool.vue: 工具下载页（蓝奏云解析）

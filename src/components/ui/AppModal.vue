@@ -37,12 +37,18 @@ const props = defineProps({
   maskClosable: { type: Boolean, default: true },
   autoFocus: { type: Boolean, default: false },
   contentScrollable: { type: Boolean, default: false },
+  /** 卡片描边。默认关闭（模态框靠阴影区分层级），需要时传 true */
+  bordered: { type: Boolean, default: false },
   blurMask: { type: Boolean, default: false },
   /**
    * 内容高度变化时给模态框做高度过渡（增删条目、展开折叠、报错信息出现等）。
    * 内部会自行包一层 overflow:hidden 的动画容器，调用方不用再手写 wrap/inner 两层 DOM。
    */
   animated: { type: Boolean, default: false },
+  /**
+   * 内容/页脚分段。默认值取项目惯例（绝大多数模态框都用它），
+   * 注意与 NModal 的默认 false 不同 —— 不需要分段时显式传 `:segmented="false"`。
+   */
   segmented: { type: [Boolean, Object], default: () => ({ content: true, footer: 'soft' }) },
   /**
    * 页脚按钮。数组项为 { text, variant, disabled, onClick }，
@@ -106,7 +112,7 @@ const modalStyle = computed(() => ({
     :title="title"
     :style="modalStyle"
     :segmented="segmented"
-    :bordered="false"
+    :bordered="bordered"
     :closable="closable"
     :mask-closable="maskClosable"
     :auto-focus="autoFocus"

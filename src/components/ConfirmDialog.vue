@@ -28,6 +28,7 @@ const actions = computed(() => {
 
 <template>
   <AppModal
+    :segmented="false"
     :show="confirmState.show"
     :title="confirmState.title"
     :max-width="420"
