@@ -1375,7 +1375,13 @@ const embedCloseActions = [
 
 <style>
 /* NSelect 触发器 — 胶囊圆角、不换行、focus 不变色 */
+/* 设置页的控件一律是胶囊，这里跟着走。
+   边框画在 __border / __state-border 上（它们用 border-radius: inherit 取根元素的圆角），
+   而 corner-shape 不继承 —— 不显式写的话它们会被全局的 `* { corner-shape: squircle }`
+   接管，胶囊 + squircle 会破形（看起来反倒像个圆角矩形）。所以这三层都得写。 */
 .settings-select .n-base-selection,
+.settings-select .n-base-selection__border,
+.settings-select .n-base-selection__state-border,
 .settings-select .n-base-selection-label {
   border-radius: var(--radius-full) !important;
   corner-shape: round;
