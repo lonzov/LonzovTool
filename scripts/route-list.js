@@ -42,7 +42,8 @@ function extractStaticRoutes(content) {
 export function getPages() {
   const routerContent = readFileSync(join(SRC_DIR, 'router/index.js'), 'utf-8')
 
-  const staticRoutes = extractStaticRoutes(routerContent)
+  // /dev/* 是仅开发环境注册的预览页，源码里仍是正则可见的静态路径，需在此排除
+  const staticRoutes = extractStaticRoutes(routerContent).filter(p => !p.startsWith('/dev/'))
   const toolKeys = extractMapKeys(routerContent, 'TOOL_META_MAP').filter(k => k !== 'down')
   const docKeys = extractMapKeys(routerContent, 'DOCS_META_MAP')
 

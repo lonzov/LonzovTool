@@ -2,6 +2,29 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import { themeCssText } from './src/theme/tokens.js'
+
+/**
+ * 把设计 token 生成的 CSS 以 head-prepend 注入 index.html。
+ * 不走 useHead() 是因为 unhead 的 style 权重（60）低于 meta（100），
+ * 会被 scripts/reorder-head.js 连同 og:title 之后的整段一起搬走，导致
+ * dev 与线上产物的样式顺序不一致。注入到 head 最前面则两者顺序恒定。
+ */
+function injectThemeTokens() {
+  return {
+    name: 'inject-theme-tokens',
+    transformIndexHtml() {
+      return [
+        {
+          tag: 'style',
+          attrs: { id: 'theme-tokens' },
+          children: themeCssText,
+          injectTo: 'head-prepend',
+        },
+      ]
+    },
+  }
+}
 
 /* 构建时剔除 contributors.json 中的 qq 隐私字段，并压缩为单行 */
 function stripContributorQQ() {
@@ -32,6 +55,7 @@ function stripContributorQQ() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    injectThemeTokens(),
     vue(),
     vueDevTools(),
     stripContributorQQ(),

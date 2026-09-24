@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { createDiscreteApi } from 'naive-ui'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 
 import HomeView from '../components/HomeView.vue'
 import OfflineDiagnostic from '../components/OfflineDiagnostic.vue'
+import { getDiscreteMessage } from '../utils/discreteMessage'
 
 // 预加载所有下载配置，提取 slug → name 映射用于 SEO 动态标题
 const downloadModules = import.meta.glob('../data/downloads/*.json', { eager: true })
@@ -38,16 +38,8 @@ let refreshTimer = null
 let reloadTimer = null
 let abortController = null
 
-/** 懒加载 Naive UI message 实例（createDiscreteApi 无需 NMessageProvider 上下文） */
-let _messageApi = null
-function getMessage() {
-  if (!_messageApi && typeof window !== 'undefined') {
-    try {
-      _messageApi = createDiscreteApi(['message']).message
-    } catch { /* noop */ }
-  }
-  return _messageApi
-}
+/** router 无组件上下文，message 走全局共享的 discrete 实例 */
+const getMessage = getDiscreteMessage
 
 /** 清除所有定时器 + 中止在途 ping */
 function clearAllTimers() {
@@ -313,6 +305,21 @@ export const routes = [
       title: '连接失败 - 小舟工具箱',
     },
   },
+  // 开发专用预览页：仅 dev 注册，不进生产产物、不进 sitemap（见 scripts/route-list.js 的过滤）
+  ...(import.meta.env.DEV
+    ? [
+        {
+          path: '/dev/palette',
+          name: 'dev-palette',
+          component: () => import('../views/DevPaletteView.vue'),
+        },
+        {
+          path: '/dev/markdown',
+          name: 'dev-markdown',
+          component: () => import('../views/DevMarkdownView.vue'),
+        },
+      ]
+    : []),
   {
     path: '/:pathMatch(.*)*',
     name: 'not-found',

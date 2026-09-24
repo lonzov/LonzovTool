@@ -2,7 +2,12 @@ src:
   App.vue: 根组件，包含桌面/移动端双布局、主题配置、NScrollbar 滚动容器
   main.js: 应用入口，全局注册组件、@vueuse/head 插件注册、scrollRestoration 禁用
   assets:
-    main.css: 全局样式与 CSS 变量定义
+    main.css: 全局基础样式、全站过渡动画、NProgress 与通用工具类
+  theme:
+    palette.js: 基础色阶与强调色，纯色值的唯一来源
+    tokens.js: 语义 token（深浅两套）及注入 head 的 CSS 文本生成
+    naive-theme.js: 语义 token 到 Naive UI 主题变量的映射，按主题展开为具体值
+    index.js: 主题模块统一出口
   components:
     PromoCarousel.vue: 首页推广位轮播组件，滑片数据取自 homePromo.js，滑片支持站内外链接
     AppMenu.vue: 侧边栏导航菜单，支持分类折叠与 PWA 安装入口
@@ -128,6 +133,8 @@ src:
     DownView.vue: 下载页面，展示工具下载信息与下载选项
     SettingsView.vue: 设置页面，全局偏好设置（主题模式等）
     NotFoundView.vue: 404 页面，注入 noindex meta 防止爬虫收录无效 URL
+    DevPaletteView.vue: 设计规范调色板页（仅开发环境注册），展示色阶、语义 token、对比度与 Naive 组件渲染
+    DevMarkdownView.vue: Markdown 排版预览页（仅开发环境注册），留存排版基线供后续重构对照
 public:
   sw.js: Service Worker，手写实现 StaleWhileRevalidate 缓存优先 + 离线诊断回退 + 消息协议
   promo/: 首页推广素材目录，SW 对该目录不缓存

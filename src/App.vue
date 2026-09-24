@@ -3,7 +3,8 @@ import { computed, ref, provide, watch, nextTick, onBeforeUnmount, defineAsyncCo
 import { useRouter, useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
 import { getGlobalHead } from './main.js'
-import { NMessageProvider, NIcon, NTooltip } from 'naive-ui'
+import { NMessageProvider, NIcon, NTooltip, darkTheme, lightTheme } from 'naive-ui'
+import { lightThemeOverrides, darkThemeOverrides } from './theme'
 import { Settings24Regular, ShareAndroid20Regular, Open16Filled } from '@vicons/fluent'
 import AppMenu from './components/AppMenu.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
@@ -199,82 +200,6 @@ export default {
     provide('triggerCategoryDimEffect', triggerCategoryDimEffect)
     provide('clearHomeSearch', clearHomeSearch)
 
-    const themeOverrides = computed(() => {
-      const light = {
-        common: {
-          primaryColor: '#525252',
-          primaryColorHover: '#1A1A1A',
-          primaryColorPressed: '#1A1A1A',
-          primaryColorFocus: '#1A1A1A',
-        },
-        Menu: {
-          color: 'transparent',
-          itemTextColor: '#525252',
-          itemTextColorHover: '#1A1A1A',
-          itemTextColorActive: '#1A1A1A',
-          itemTextColorPressed: '#1A1A1A',
-          itemTextColorFocus: '#1A1A1A',
-          itemIconColor: '#525252',
-          itemIconColorHover: '#1A1A1A',
-          itemIconColorActive: '#1A1A1A',
-          itemIconColorPressed: '#1A1A1A',
-          itemIconColorFocus: '#1A1A1A',
-          itemColorHover: '#F0F2F5',
-          itemColorActive: '#F0F2F5',
-          itemColorPressed: '#F0F2F5',
-          itemColorFocus: '#F0F2F5',
-          itemChildColorActive: '#F0F2F5',
-          arrowColor: '#525252',
-          arrowColorHover: '#1A1A1A',
-          arrowColorActive: '#1A1A1A',
-          arrowColorPressed: '#1A1A1A',
-          arrowColorFocus: '#1A1A1A',
-          itemBorderRadius: '4px',
-          itemHeight: '40px',
-          itemPadding: '0 12px',
-          dividerColor: '#E0E0E0',
-        },
-        Divider: { dividerColor: '#E0E0E0' },
-      }
-      const dark = {
-        common: {
-          primaryColor: '#A0A0A0',
-          primaryColorHover: '#E8E8E8',
-          primaryColorPressed: '#E8E8E8',
-          primaryColorFocus: '#E8E8E8',
-        },
-        Menu: {
-          color: 'transparent',
-          itemTextColor: '#A0A0A0',
-          itemTextColorHover: '#E8E8E8',
-          itemTextColorActive: '#E8E8E8',
-          itemTextColorPressed: '#E8E8E8',
-          itemTextColorFocus: '#E8E8E8',
-          itemIconColor: '#A0A0A0',
-          itemIconColorHover: '#E8E8E8',
-          itemIconColorActive: '#E8E8E8',
-          itemIconColorPressed: '#E8E8E8',
-          itemIconColorFocus: '#E8E8E8',
-          itemColorHover: '#1E1E1E',
-          itemColorActive: '#1E1E1E',
-          itemColorPressed: '#1E1E1E',
-          itemColorFocus: '#1E1E1E',
-          itemChildColorActive: '#1E1E1E',
-          arrowColor: '#A0A0A0',
-          arrowColorHover: '#E8E8E8',
-          arrowColorActive: '#E8E8E8',
-          arrowColorPressed: '#E8E8E8',
-          arrowColorFocus: '#E8E8E8',
-          itemBorderRadius: '4px',
-          itemHeight: '40px',
-          itemPadding: '0 12px',
-          dividerColor: '#2B2B2B',
-        },
-        Divider: { dividerColor: '#2B2B2B' },
-      }
-      return isDark.value ? dark : light
-    })
-
     // 监听侧边栏打开状态，控制假标题透明度
     watch(mobileMenuOpen, (newVal) => {
       if (newVal) {
@@ -447,7 +372,10 @@ export default {
       themeMode,
       cycleTheme,
       isDark,
-      themeOverrides,
+      lightThemeOverrides,
+      darkThemeOverrides,
+      darkTheme,
+      lightTheme,
       activeKey,
       showShareModal,
       mobileMenuOpen,
@@ -494,7 +422,10 @@ export default {
 </script>
 
 <template>
-  <NConfigProvider :theme-overrides="themeOverrides">
+  <NConfigProvider
+    :theme="isDark ? darkTheme : lightTheme"
+    :theme-overrides="isDark ? darkThemeOverrides : lightThemeOverrides"
+  >
     <NMessageProvider>
     <!-- 桌面端 -->
     <div v-if="!isMobile" style="height: 100vh; display: flex">
