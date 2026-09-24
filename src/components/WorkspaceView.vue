@@ -5,7 +5,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { ChevronDown16Filled } from '@vicons/fluent'
 import { useWorkspace, isExternalPath, getExternalUrl, isExternalUrlAllowed, getLogoFromPath } from '../composables/useWorkspace.js'
 import { getToolIcon } from '../config/categoryIcons'
-import { useTheme } from '../composables/useTheme.js'
 import ToolLoading from './ToolLoading.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 
@@ -51,7 +50,6 @@ const router = useRouter()
 const route = useRoute()
 const message = useMessage()
 const { tabs, activeTab, closeTab, restoreTabs, ensureTabForPath, setActiveTabWithoutPersist } = useWorkspace()
-const { isDark } = useTheme()
 
 // 路径到组件的映射
 const componentMap = {
