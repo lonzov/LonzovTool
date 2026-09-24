@@ -309,7 +309,7 @@ onBeforeUnmount(() => {
   gap: 10px;
   padding: 12px 16px;
   background: var(--card);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
@@ -331,7 +331,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: stretch;
   background: var(--card);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   padding: 16px;
   gap: 0;
@@ -356,7 +356,7 @@ onBeforeUnmount(() => {
   width: 100%;
   flex: 1;
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   padding: 8px 12px;
   font-size: 0.9rem;
   background-color: transparent;
@@ -392,7 +392,7 @@ onBeforeUnmount(() => {
   gap: 0;
   flex: 1;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 8px 12px;
   font-size: 0.9rem;
   line-height: 1.4;
@@ -409,7 +409,7 @@ onBeforeUnmount(() => {
 
 .verify-preview::-webkit-scrollbar-thumb {
   background: var(--scrollbar);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
 }
 
 .preview-placeholder {
@@ -477,8 +477,7 @@ onBeforeUnmount(() => {
 /* ToolCard 基础样式 */
 .tool-card {
   background: var(--card);
-  border-radius: 12px;
-  corner-shape: squircle;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   transition: all 0.3s ease;
   box-shadow: 0 0 0 transparent;
@@ -487,14 +486,6 @@ onBeforeUnmount(() => {
   user-select: none;
 }
 
-@supports (corner-shape: squircle) {
-  .tool-card {
-    border-radius: 25px;
-  }
-  .tool-card.glow-border::before {
-    corner-shape: squircle;
-  }
-}
 
 /* ===== 精灵图图标 ===== */
 .icon-sprite {

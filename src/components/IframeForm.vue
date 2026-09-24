@@ -125,8 +125,7 @@ export default {
 /* 骨架屏扫光动画 */
 .iframe-skeleton {
   width: 100%;
-  border-radius: 18px;
-  corner-shape: squircle;
+  border-radius: var(--radius-xl);
   background: linear-gradient(
     105deg,
     var(--bg-sub) 0%,
@@ -139,11 +138,6 @@ export default {
   animation: skeleton-shimmer 1.8s ease-in-out infinite;
 }
 
-@supports (corner-shape: squircle) {
-  .iframe-skeleton {
-    border-radius: 30px;
-  }
-}
 
 @keyframes skeleton-shimmer {
   from { background-position: 200% 0; }

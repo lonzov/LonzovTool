@@ -131,7 +131,7 @@ import { openLangModal, activePackName } from '../../composables/useRawJsonLang.
 <style scoped>
 .config-card, .list-card {
   background: var(--card);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   padding: 16px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
@@ -161,7 +161,7 @@ import { openLangModal, activePackName } from '../../composables/useRawJsonLang.
   flex: 1;
   padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--muted);
   color: var(--foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
@@ -173,7 +173,7 @@ import { openLangModal, activePackName } from '../../composables/useRawJsonLang.
 .target-show {
   flex: 1;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--muted);
   color: var(--muted-foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
@@ -233,7 +233,7 @@ import { openLangModal, activePackName } from '../../composables/useRawJsonLang.
   background: var(--primary);
   color: var(--primary-foreground);
   font-size: 12px; font-weight: 500;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-family: inherit;
   transition: background-color 0.4s ease, opacity 0.15s ease, transform 0.1s ease;

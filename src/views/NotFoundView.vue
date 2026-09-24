@@ -94,7 +94,7 @@ onUnmounted(() => {
   justify-content: center;
   height: 38px;
   padding: 0 24px;
-  border-radius: 100px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 0.9rem;
   font-weight: 500;

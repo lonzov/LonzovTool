@@ -587,7 +587,7 @@ const modalStyle = computed(() => ({
   width: 100%;
   max-width: 360px;
   aspect-ratio: 360 / 540;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   /* 海报本体永远是白底，骨架与真图都铺在这上面，不随主题变 */
   background: #FFFFFF;
@@ -608,7 +608,7 @@ const modalStyle = computed(() => ({
   display: block;
   flex: none;
   height: 28px;
-  border-radius: 7px;
+  border-radius: var(--radius-md);
   background: #C2C2C2;
 }
 
@@ -629,7 +629,7 @@ const modalStyle = computed(() => ({
 .sk-rail {
   flex: none;
   width: 2.333%; /* 对应简介左侧方块 7px */
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   background: #C2C2C2;
 }
 .sk-desc-lines {
@@ -642,7 +642,7 @@ const modalStyle = computed(() => ({
 }
 .sk-desc-lines .sk-bar {
   height: 14px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
 }
 .sk-bar-desc3 { width: 60%; }
 
@@ -657,7 +657,7 @@ const modalStyle = computed(() => ({
   flex: none;
   width: 16.667%; /* 对应 logo 50px */
   aspect-ratio: 1;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: #C2C2C2;
 }
 .sk-brand {
@@ -670,18 +670,18 @@ const modalStyle = computed(() => ({
 .sk-bar-name {
   width: 62%;
   height: 14px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
 }
 .sk-bar-sub {
   width: 48%;
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
 }
 .sk-qr {
   flex: none;
   width: 32%; /* 对应二维码 96px */
   aspect-ratio: 1;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: #C2C2C2;
 }
 
@@ -718,7 +718,7 @@ const modalStyle = computed(() => ({
   width: 46%;
   max-width: 168px;
   height: 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   overflow: hidden;
   background: rgba(20, 20, 20, 0.12);
@@ -726,7 +726,7 @@ const modalStyle = computed(() => ({
 .poster-progress-fill {
   display: block;
   height: 100%;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   background: #141414;
 }
@@ -740,7 +740,7 @@ const modalStyle = computed(() => ({
 .foot-btn {
   height: 34px;
   padding: 0 20px;
-  border-radius: 17px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 14px;
   font-weight: 500;

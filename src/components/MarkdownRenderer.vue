@@ -115,7 +115,7 @@ onUnmounted(() => {
 .md-content :deep(code) {
   background: var(--bg-sub);
   padding: 0.25rem 0.375rem;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-sm);
   font-size: 0.875em;
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   font-weight: 400;
@@ -126,7 +126,7 @@ onUnmounted(() => {
 .md-content :deep(pre) {
   background: var(--bg-sub);
   padding: 16px;
-  border-radius: 0.75rem;
+  border-radius: var(--radius-lg);
   overflow-x: auto;
   margin: 1.5em 0;
   transition: background-color 0.4s ease;
@@ -162,7 +162,7 @@ onUnmounted(() => {
   width: 3.5px;
   height: 100%;
   background: color-mix(in srgb, var(--primary-color) 22%, transparent);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   z-index: 1;
   transition: background 0.4s;
 }
@@ -170,7 +170,7 @@ onUnmounted(() => {
 .md-content :deep(img) {
   max-width: 100%;
   height: auto;
-  border-radius: 0.75rem;
+  border-radius: var(--radius-lg);
 }
 
 .md-content :deep(table) {
@@ -179,8 +179,7 @@ onUnmounted(() => {
   width: 100%;
   margin: 16px 0;
   border: 1px solid var(--border-color);
-  border-radius: 0.75rem;
-  corner-shape: squircle;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   transition: border-color 0.3s cubic-bezier(.4, 0, .2, 1);
 }
@@ -290,11 +289,6 @@ onUnmounted(() => {
   to   { background-position: -200% 0; }
 }
 
-@supports (corner-shape: squircle) {
-  .md-content :deep(table) {
-    border-radius: 1.275rem;
-  }
-}
 </style>
 
 <style>
@@ -364,18 +358,12 @@ onUnmounted(() => {
 
 /* iframe 全局超椭圆圆角 */
 .md-content iframe {
-  border-radius: 18px;
-  corner-shape: squircle;
+  border-radius: var(--radius-xl);
   margin-left: auto;
   margin-right: auto;
   max-width: 100%;
 }
 
-@supports (corner-shape: squircle) {
-  .md-content iframe {
-    border-radius: 30px;
-  }
-}
 
 /* 深色模式下给 iframe 添加滤镜 */
 [data-theme='dark'] .md-content iframe {

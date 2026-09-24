@@ -441,7 +441,7 @@ export default {
   align-items: stretch;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
@@ -494,7 +494,7 @@ export default {
 .notice-main:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--foreground) 45%, transparent);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
 }
 
 .notice-main:disabled {
@@ -608,7 +608,7 @@ export default {
 .notice-panel {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   margin-top: 8px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
@@ -642,7 +642,7 @@ export default {
   width: 100%;
   padding: 6px 10px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   text-align: left;
   font: inherit;

@@ -273,12 +273,12 @@ function doDelete(id) {
 .lang-empty {
   margin: 0; padding: 10px 12px;
   font-size: 12px; line-height: 1.6; color: var(--muted-foreground);
-  background: var(--muted); border-radius: 8px;
+  background: var(--muted); border-radius: var(--radius-md);
   transition: color 0.4s ease, background-color 0.4s ease;
 }
 .lang-empty code {
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
-  font-size: 11px; padding: 1px 4px; border-radius: 4px;
+  font-size: 11px; padding: 1px 4px; border-radius: var(--radius-xs);
   background: var(--card); color: var(--foreground);
 }
 .lang-note { margin: 8px 0 0; font-size: 11px; color: var(--subtle-foreground); transition: color 0.4s ease; }
@@ -286,7 +286,7 @@ function doDelete(id) {
 .lang-current {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 10px 12px;
-  background: var(--muted); border: 1px solid var(--border); border-radius: 8px;
+  background: var(--muted); border: 1px solid var(--border); border-radius: var(--radius-md);
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 .lang-current-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -301,7 +301,7 @@ function doDelete(id) {
 .lang-item {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 8px 10px;
-  background: var(--muted); border: 1px solid var(--border); border-radius: 8px;
+  background: var(--muted); border: 1px solid var(--border); border-radius: var(--radius-md);
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 .lang-item--active { border-color: var(--muted-foreground); }
@@ -315,7 +315,7 @@ function doDelete(id) {
 .lang-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 
 .lang-badge {
-  font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+  font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-xs);
   color: var(--muted-foreground); background: var(--card);
   border: 1px solid var(--border);
   transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
@@ -323,7 +323,7 @@ function doDelete(id) {
 
 .lang-link {
   border: none; background: transparent; cursor: pointer;
-  font-size: 11px; font-family: inherit; padding: 2px 4px; border-radius: 4px;
+  font-size: 11px; font-family: inherit; padding: 2px 4px; border-radius: var(--radius-xs);
   color: var(--muted-foreground);
   transition: color 0.15s ease, background-color 0.15s ease;
 }
@@ -334,7 +334,7 @@ function doDelete(id) {
 .lang-icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 24px; height: 24px; padding: 0;
-  border: none; border-radius: 6px; background: transparent;
+  border: none; border-radius: var(--radius-sm); background: transparent;
   color: var(--muted-foreground); cursor: pointer;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
@@ -355,7 +355,7 @@ function doDelete(id) {
 }
 .lang-input {
   width: 100%; height: 34px; padding: 0 12px;
-  border: 1px solid var(--border); border-radius: 8px;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
   background: var(--muted); color: var(--foreground);
   font-size: 13px; font-family: inherit; outline: none; box-sizing: border-box;
   transition: border-color 0.3s ease, background-color 0.4s ease, color 0.4s ease;
@@ -367,7 +367,7 @@ function doDelete(id) {
 .lang-file-line { margin-top: 8px; }
 .lang-file-chip {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 8px; border-radius: 6px;
+  padding: 4px 8px; border-radius: var(--radius-sm);
   font-size: 11px; color: var(--muted-foreground);
   background: var(--muted); border: 1px solid var(--border);
   transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
@@ -383,7 +383,7 @@ function doDelete(id) {
 .lang-textarea {
   width: 100%; min-height: 120px;
   padding: 8px 12px;
-  border: 1px solid var(--border); border-radius: 8px;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
   background: var(--muted); color: var(--foreground);
   font-size: 12px; resize: vertical;
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
@@ -396,7 +396,7 @@ function doDelete(id) {
 .lang-error {
   margin: 0 0 10px; padding: 8px 12px;
   background: var(--muted); border: 1px solid var(--border);
-  border-radius: 6px; font-size: 12px; color: var(--muted-foreground);
+  border-radius: var(--radius-sm); font-size: 12px; color: var(--muted-foreground);
   /* JSON 报错是「诊断 + 位置」两行，靠换行断句 */
   white-space: pre-line; word-break: break-all;
   transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
@@ -418,7 +418,7 @@ function doDelete(id) {
 .btn {
   height: 34px;
   padding: 0 20px;
-  border-radius: 17px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 14px;
   font-weight: 500;
@@ -429,7 +429,7 @@ function doDelete(id) {
   align-items: center;
   border: none;
 }
-.btn-sm { height: 30px; padding: 0 14px; font-size: 12px; border-radius: 15px; corner-shape: round; }
+.btn-sm { height: 30px; padding: 0 14px; font-size: 12px; border-radius: var(--radius-xl); corner-shape: round; }
 .btn:disabled { opacity: 0.5; cursor: default; }
 
 .btn-fill {

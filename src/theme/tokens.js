@@ -200,7 +200,9 @@ ${vars(LEGACY_ALIASES)}
    就丢弃该属性，自动回退到传统 1/4 圆角。
    圆角达到元素短边一半的场景（胶囊、圆形）必须回退，理由与判定见 main.css 的 .corner-round。 */
 @supports (corner-shape: squircle) {
-  * {
+  *,
+  *::before,
+  *::after {
     corner-shape: squircle;
   }
 

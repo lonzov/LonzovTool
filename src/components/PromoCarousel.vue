@@ -215,7 +215,7 @@ export default {
   position: relative;
   width: 100%;
   aspect-ratio: 3 / 1;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--border-color);
   background: var(--bg-card);

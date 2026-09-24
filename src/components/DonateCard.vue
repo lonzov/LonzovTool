@@ -91,7 +91,7 @@ if (typeof document !== 'undefined') {
 .donate-card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -102,7 +102,7 @@ if (typeof document !== 'undefined') {
 
 /* 选项槽 */
 .donate-tab-switch {
-  --radius: 18px;
+  --radius: var(--radius-xl);
   --height: 42px;
   --speed: 0.25s;
   --count: 3;
@@ -130,7 +130,6 @@ if (typeof document !== 'undefined') {
   grid-auto-columns: 1fr;
   position: relative;
   border-radius: var(--radius);
-  corner-shape: squircle;
   width: 260px;
   background: var(--muted);
   box-shadow: none;
@@ -142,7 +141,6 @@ if (typeof document !== 'undefined') {
   position: absolute;
   inset: 0;
   border-radius: var(--radius);
-  corner-shape: squircle;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
   pointer-events: none;
   z-index: 2;
@@ -186,7 +184,6 @@ if (typeof document !== 'undefined') {
   height: 100%;
   display: grid;
   border-radius: calc(var(--radius));
-  corner-shape: squircle;
   place-items: center;
   font-weight: 600;
   font-size: 14px;
@@ -212,7 +209,6 @@ if (typeof document !== 'undefined') {
   background: var(--active-color, var(--primary));
   position: absolute;
   border-radius: calc(var(--radius));
-  corner-shape: squircle;
   translate: calc(var(--active, 0) * 100%) 0;
   transition: translate var(--speed), background-color var(--speed);
   transition-timing-function: var(--ease, ease);
@@ -228,7 +224,7 @@ if (typeof document !== 'undefined') {
 .donate-qr-wrapper {
   width: 220px;
   height: 220px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--muted);
   display: flex;
@@ -254,7 +250,7 @@ if (typeof document !== 'undefined') {
   gap: 0.5em;
   padding-block: 0.5rem;
   padding-inline: 1.25rem;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   background-color: #946CE6;
   color: #ffffff;
@@ -341,11 +337,6 @@ if (typeof document !== 'undefined') {
   border: 1px solid var(--border);
 }
 
-@supports (corner-shape: squircle) {
-  .donate-tab-switch {
-    --radius: 30px;
-  }
-}
 </style>
 
 <style>

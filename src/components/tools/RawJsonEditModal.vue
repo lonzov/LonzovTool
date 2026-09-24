@@ -354,7 +354,7 @@ function getAvailableHeight(el) {
 .edit-input {
   width: 100%; padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--muted);
   color: var(--foreground);
   font-size: 13px;
@@ -366,7 +366,7 @@ function getAvailableHeight(el) {
 .edit-textarea {
   width: 100%; padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--muted);
   color: var(--foreground);
   font-size: 13px;
@@ -383,7 +383,7 @@ function getAvailableHeight(el) {
 .with-empty-tag {
   flex-shrink: 0;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   font-size: 10px; font-weight: 700; line-height: 1.4;
   color: var(--subtle-foreground);
   background: var(--muted);
@@ -396,11 +396,11 @@ function getAvailableHeight(el) {
   padding: 6px 10px;
   background: var(--muted);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 .with-el-badge {
-  font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+  font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-xs);
   background: var(--muted); color: var(--muted-foreground);
   flex-shrink: 0;
   letter-spacing: 0.5px;
@@ -427,7 +427,7 @@ function getAvailableHeight(el) {
 .btn {
   height: 34px;
   padding: 0 20px;
-  border-radius: 17px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 14px;
   font-weight: 500;
@@ -468,7 +468,7 @@ function getAvailableHeight(el) {
   border: none; background: transparent;
   color: var(--muted-foreground);
   font-size: 12px; font-weight: 500;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-family: inherit;
   transition: background-color 0.15s ease, color 0.15s ease;
@@ -502,7 +502,7 @@ function getAvailableHeight(el) {
   padding: 0;
   border: none; background: transparent;
   color: var(--muted-foreground);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-family: inherit;
   transition: background-color 0.15s ease, color 0.15s ease;

@@ -248,7 +248,7 @@ onUnmounted(() => unsubGlow(handleGlow))
 
 .dl-version-cascader :deep(.n-base-selection),
 .dl-version-cascader :deep(.n-base-selection-label) {
-  border-radius: 100px !important;
+  border-radius: var(--radius-full) !important;
   corner-shape: round;
 }
 
@@ -295,7 +295,7 @@ onUnmounted(() => unsubGlow(handleGlow))
 
 .dl-option {
   padding: 16px 10px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: background-color 0.15s ease, opacity 0.15s ease;
   display: flex;

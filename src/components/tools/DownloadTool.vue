@@ -344,18 +344,12 @@ watch(config, (val) => {
 .header-icon {
   width: 80px;
   height: 80px;
-  border-radius: 22px;
-  corner-shape: squircle;
+  border-radius: var(--radius-xl);
   object-fit: cover;
   background: var(--muted);
   display: block;
 }
 
-@supports (corner-shape: squircle) {
-  .header-icon {
-    border-radius: 38px;
-  }
-}
 
 .header-version {
   position: absolute;
@@ -474,7 +468,7 @@ watch(config, (val) => {
   cursor: pointer;
   background-color: var(--primary);
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   overflow: hidden;
   font-family: inherit;
@@ -570,14 +564,7 @@ watch(config, (val) => {
   .header-icon {
     width: 64px;
     height: 64px;
-    border-radius: 18px;
-    corner-shape: squircle;
-  }
-
-  @supports (corner-shape: squircle) {
-    .header-icon {
-      border-radius: 30px;
-    }
+    border-radius: var(--radius-xl);
   }
 
   .header-version {

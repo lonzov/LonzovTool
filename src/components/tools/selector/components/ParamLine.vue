@@ -46,7 +46,7 @@ defineEmits(['edit'])
 }
 .code-line--param {
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   margin-left: 22px;
   padding-left: 6px;
   padding-right: 40px;
@@ -107,7 +107,7 @@ defineEmits(['edit'])
   padding: 0;
   border: none;
   background: transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--muted-foreground);
   cursor: pointer;
   transition:

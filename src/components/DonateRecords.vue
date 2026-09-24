@@ -66,8 +66,7 @@ onMounted(async () => {
   width: 100%;
   margin: 16px 0;
   border: 1px solid var(--border-color);
-  border-radius: 0.75rem;
-  corner-shape: squircle;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   transition: border-color 0.4s ease;
 }
@@ -96,11 +95,6 @@ onMounted(async () => {
   transition: background-color 0.4s ease;
 }
 
-@supports (corner-shape: squircle) {
-  .donate-records table {
-    border-radius: 1.275rem;
-  }
-}
 
 .donate-records a {
   color: var(--text-primary);

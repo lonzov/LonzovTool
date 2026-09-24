@@ -632,7 +632,7 @@ export default {
   z-index: 5;
   pointer-events: none;
   overflow: hidden;
-  border-radius: 0 8px 0 0;
+  border-radius: 0 var(--radius-md) 0 0;
 }
 
 .favorite-triangle {

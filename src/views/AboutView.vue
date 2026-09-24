@@ -622,7 +622,7 @@ const statCluster = computed(() => ([
 /* ===== 局部变量：映射到项目变量 ===== */
 .about-page {
   --mono: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
-  --r: 14px;
+  --r: var(--radius-lg);
   --ease: cubic-bezier(.22, .61, .36, 1);
   --wm: color-mix(in srgb, var(--foreground) 4.5%, transparent);
   --invert-bg: var(--primary);
@@ -796,7 +796,7 @@ const statCluster = computed(() => ([
   letter-spacing: .12em;
   padding: 6px 14px 6px 9px;
   border: 1px solid var(--line-2);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   color: var(--muted-foreground);
   background: var(--card);
@@ -903,7 +903,7 @@ const statCluster = computed(() => ([
   font-weight: 600;
   cursor: pointer;
   padding: 8px 26px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   border: 1px solid var(--foreground);
   text-decoration: none;
@@ -1155,7 +1155,7 @@ const statCluster = computed(() => ([
   background: var(--invert-bg);
   color: var(--invert-fg);
   padding: 1px 7px;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   font-family: var(--mono);
   font-size: .92em;
 }
@@ -1217,7 +1217,7 @@ const statCluster = computed(() => ([
   letter-spacing: .04em;
   color: var(--muted-foreground);
   border: 1px solid var(--line-2);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 7px 12px;
 }
 
@@ -1512,7 +1512,7 @@ const statCluster = computed(() => ([
   display: grid;
   place-items: center;
   border: 1px solid var(--line-2);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   color: var(--muted-foreground);
   text-decoration: none;
   transition: background .2s var(--ease), color .2s var(--ease), transform .2s var(--ease);

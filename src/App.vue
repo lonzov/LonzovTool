@@ -866,7 +866,8 @@ export default {
   height: 4px;
   width: 100%;
   background: var(--theme-icon-color);
-  border-radius: 9px;
+  border-radius: var(--radius-full);
+  corner-shape: round;
   opacity: 1;
   left: 0;
   transform: rotate(0deg);

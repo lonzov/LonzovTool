@@ -101,7 +101,7 @@ const modalStyle = computed(() => ({
   display: flex; align-items: center; gap: 8px;
   padding: 8px;
   background: var(--muted);
-  border-radius: 6px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
   cursor: pointer;
   transition: all 0.15s ease, background-color 0.4s ease, border-color 0.4s ease;
 }
@@ -111,7 +111,7 @@ const modalStyle = computed(() => ({
 }
 .color-item:active { transform: scale(0.98); }
 .color-box {
-  width: 24px; height: 24px; border-radius: 4px;
+  width: 24px; height: 24px; border-radius: var(--radius-xs);
   border: 1px solid var(--border); flex-shrink: 0;
 }
 .color-info { flex: 1; min-width: 0; }
@@ -137,7 +137,7 @@ const modalStyle = computed(() => ({
 .btn {
   height: 34px;
   padding: 0 20px;
-  border-radius: 17px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 14px;
   font-weight: 500;

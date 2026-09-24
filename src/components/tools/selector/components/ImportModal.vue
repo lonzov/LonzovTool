@@ -65,7 +65,7 @@ const modalStyle = computed(() => ({
   min-height: 120px;
   padding: 10px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--muted);
   color: var(--foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
@@ -100,7 +100,7 @@ const modalStyle = computed(() => ({
 .btn {
   height: 34px;
   padding: 0 20px;
-  border-radius: 17px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 14px;
   font-weight: 500;

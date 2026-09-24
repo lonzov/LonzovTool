@@ -206,7 +206,7 @@ export default {
   position: relative;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 
   /* 主题切换过渡动画 */
   transition: background-color 0.4s ease, border-color 0.4s ease;
@@ -290,7 +290,7 @@ export default {
   width: 44px;
   height: 1.7px;
   background: linear-gradient(to right, var(--foreground), transparent);
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   opacity: 1;
   transition: opacity 0.4s ease;
 }
@@ -373,8 +373,7 @@ export default {
   height: 36px;
   padding: 0;
   background: var(--card);
-  border-radius: 8px;
-  corner-shape: squircle;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
   color: var(--muted-foreground);
   text-decoration: none;
@@ -385,11 +384,6 @@ export default {
   -webkit-tap-highlight-color: transparent;
 }
 
-@supports (corner-shape: squircle) {
-  .social-btn {
-    border-radius: 14px;
-  }
-}
 
 .social-btn:hover {
   background: var(--muted) !important;

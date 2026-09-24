@@ -39,7 +39,7 @@ onMounted(() => {
   width: 3.5px;
   height: 100%;
   background: color-mix(in srgb, var(--primary-color) 22%, transparent);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   z-index: 1;
   transition: background 0.4s;
 }

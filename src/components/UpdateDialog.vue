@@ -273,7 +273,7 @@ watch(showUpdateModal, (val) => {
 .btn {
   height: 34px;
   padding: 0 20px;
-  border-radius: 17px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 14px;
   font-weight: 500;
@@ -337,7 +337,7 @@ watch(showUpdateModal, (val) => {
 .sw-reload-tip-btn {
   padding: 2px 12px;
   border: none;
-  border-radius: 100px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 13px;
   font-family: inherit;

@@ -197,7 +197,7 @@ onBeforeUnmount(() => {
   width: 32px;
   height: 32px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--muted-foreground);
   text-decoration: none;
@@ -225,7 +225,7 @@ onBeforeUnmount(() => {
   height: 34px;
   padding: 0 14px 0 3px;
   border: 1px solid var(--border);
-  border-radius: 100px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   background: var(--muted);
   transition: background-color 0.3s ease, border-color 0.3s ease;
@@ -263,7 +263,7 @@ onBeforeUnmount(() => {
   flex: 1;
   min-height: 0;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--background);
   transition: border-color 0.3s ease, background-color 0.3s ease;

@@ -117,12 +117,12 @@ const modalStyle = computed(() => ({
 .sim-hint {
   margin: 0 0 16px; padding: 10px 12px;
   font-size: 12px; line-height: 1.6; color: var(--muted-foreground);
-  background: var(--muted); border-radius: 8px;
+  background: var(--muted); border-radius: var(--radius-md);
   transition: color 0.4s ease, background-color 0.4s ease;
 }
 .sim-hint code {
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
-  font-size: 11px; padding: 1px 4px; border-radius: 4px;
+  font-size: 11px; padding: 1px 4px; border-radius: var(--radius-xs);
   background: var(--card); color: var(--foreground);
   transition: background-color 0.4s ease, color 0.4s ease;
 }
@@ -143,13 +143,13 @@ const modalStyle = computed(() => ({
 }
 .sim-field-hint code {
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
-  font-size: 10px; padding: 1px 3px; border-radius: 3px;
+  font-size: 10px; padding: 1px 3px; border-radius: var(--radius-xs);
   background: var(--muted); color: var(--muted-foreground);
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 .sim-input {
   width: 100%; height: 34px; padding: 0 12px;
-  border: 1px solid var(--border); border-radius: 8px;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
   background: var(--muted); color: var(--foreground);
   font-size: 13px; font-family: inherit; outline: none; box-sizing: border-box;
   transition: border-color 0.3s ease, background-color 0.4s ease, color 0.4s ease;
@@ -165,7 +165,7 @@ const modalStyle = computed(() => ({
 .sim-icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 28px; height: 28px; padding: 0; flex: none;
-  border: none; border-radius: 6px; background: transparent;
+  border: none; border-radius: var(--radius-sm); background: transparent;
   color: var(--muted-foreground); cursor: pointer;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
@@ -180,7 +180,7 @@ const modalStyle = computed(() => ({
 .sim-add-btn {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 6px 10px;
-  border: 1px dashed var(--border); border-radius: 8px;
+  border: 1px dashed var(--border); border-radius: var(--radius-md);
   background: transparent; cursor: pointer;
   font-size: 12px; font-family: inherit; color: var(--muted-foreground);
   transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
@@ -200,7 +200,7 @@ const modalStyle = computed(() => ({
 .btn {
   height: 34px;
   padding: 0 20px;
-  border-radius: 17px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 14px;
   font-weight: 500;

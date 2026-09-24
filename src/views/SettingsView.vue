@@ -1044,7 +1044,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
-  border-radius: 100px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   border: 1px solid var(--border);
   background: transparent;
@@ -1065,7 +1065,7 @@ watch(() => cacheClearModal.value.show, (val) => {
 .settings-card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   overflow: hidden;
   padding-top: 15px;
   padding-bottom: 15px;
@@ -1201,7 +1201,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   width: 102px;
   height: 34px;
   border: 1px solid var(--border);
-  border-radius: 100px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   box-sizing: border-box;
   transition: border-color 0.4s ease;
@@ -1216,7 +1216,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   height: 100%;
   padding: 0 34px 0 12px;
   border: none;
-  border-radius: 100px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   background: transparent;
   color: var(--foreground);
@@ -1247,7 +1247,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   display: inline-flex;
   align-items: center;
   border: 1px solid var(--border);
-  border-radius: 100px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   overflow: hidden;
   transition: border-color 0.4s ease;
@@ -1286,7 +1286,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   justify-content: center;
   height: 30px;
   padding: 0 16px;
-  border-radius: 100px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   border: 1px solid var(--border);
   background: transparent;
@@ -1334,7 +1334,7 @@ watch(() => cacheClearModal.value.show, (val) => {
 .import-rejected {
   margin-top: 12px !important;
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 13px;
   line-height: 1.6;
   color: color-mix(in srgb, var(--foreground) 65%, transparent);
@@ -1401,7 +1401,7 @@ watch(() => cacheClearModal.value.show, (val) => {
 .import-btn {
   height: 34px;
   padding: 0 20px;
-  border-radius: 17px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 14px;
   font-weight: 500;

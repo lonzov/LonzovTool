@@ -43,7 +43,7 @@ import { copyOutput, clearAll, loadExample } from '../composables/useOutput.js'
   color: var(--muted-foreground);
   font-size: 12px;
   font-weight: 500;
-  border-radius: 7px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font-family: inherit;
   transition:

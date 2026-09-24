@@ -562,7 +562,7 @@ function handleClear() {
 /* ===== 卡片 ===== */
 .tool-card {
   background: var(--card);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   padding: 16px;
   display: flex;
@@ -587,7 +587,7 @@ function handleClear() {
   width: 100%;
   flex: 1;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 15px;
   font-size: 1rem;
   resize: none;
@@ -628,7 +628,7 @@ function handleClear() {
   border: none;
   padding: 9px 20px;
   font-size: 0.95rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 0.4s ease, color 0.4s ease;

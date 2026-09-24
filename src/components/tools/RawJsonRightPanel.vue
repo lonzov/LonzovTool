@@ -86,7 +86,7 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
 <style scoped>
 .output-card {
   background: var(--card);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   padding: 16px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
@@ -104,7 +104,7 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
   font-size: 10px; color: var(--subtle-foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   background: var(--muted);
-  padding: 2px 8px; border-radius: 4px;
+  padding: 2px 8px; border-radius: var(--radius-xs);
   transition: color 0.4s ease, background-color 0.4s ease;
 }
 .output-card-actions { display: flex; gap: 2px; }
@@ -112,14 +112,14 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
 .preview-icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 24px; height: 24px; padding: 0;
-  border: none; border-radius: 6px; background: transparent;
+  border: none; border-radius: var(--radius-sm); background: transparent;
   color: var(--subtle-foreground); cursor: pointer;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
 .preview-icon-btn:hover { background: var(--muted); color: var(--foreground); }
 
 .preview-box {
-  background: #1a1a1a; border-radius: 8px; border: 1px solid #333;
+  background: #1a1a1a; border-radius: var(--radius-md); border: 1px solid #333;
   padding: 12px 16px; min-height: 60px;
   display: flex; align-items: center; justify-content: center;
   overflow-x: auto;
@@ -151,7 +151,7 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
   width: 100%; height: 100px;
   padding: 10px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--muted);
   color: var(--foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
@@ -163,7 +163,7 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
   padding: 10px 12px;
   background: var(--muted);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow-x: auto;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
@@ -182,7 +182,7 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
   border: none; background: transparent;
   color: var(--muted-foreground);
   font-size: 11px; font-weight: 500;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-family: inherit;
   transition: background-color 0.15s ease, color 0.15s ease;

@@ -380,7 +380,7 @@ export default {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.4);
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .banner-content {
@@ -420,7 +420,7 @@ export default {
 .btn {
   height: 30px;
   padding: 0 14px;
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   corner-shape: round;
   font-size: 13px;
   cursor: pointer;
@@ -519,7 +519,7 @@ export default {
 .btn-save {
   height: 34px;
   padding: 0 20px;
-  border-radius: 17px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 14px;
   font-weight: 500;
@@ -541,7 +541,7 @@ export default {
 .modal-actions .btn-agree {
   height: 34px;
   padding: 0 20px;
-  border-radius: 17px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 14px;
   font-weight: 500;

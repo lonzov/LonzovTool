@@ -228,7 +228,7 @@ function handleKeydown(e) {
   margin-left: 28px;
   margin-top: 1px;
   margin-bottom: 1px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 0 8px 0 8px;
   background: var(--muted);
   border: 1px solid var(--border);
@@ -326,7 +326,7 @@ function handleKeydown(e) {
   color: var(--muted-foreground);
   font-size: 11px;
   font-family: inherit;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -362,7 +362,7 @@ function handleKeydown(e) {
   padding: 0;
   border: none;
   background: transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--muted-foreground);
   cursor: pointer;
   flex-shrink: 0;

@@ -112,7 +112,7 @@ function makeTabLogoIcon(tab) {
   return () =>
     h(
       'span',
-      { style: 'width:18px;height:18px;border-radius:4px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center' },
+      { style: 'width:18px;height:18px;border-radius:var(--radius-xs);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center' },
       [h('img', { src: logo, alt: '', referrerpolicy: tabLogoPolicy(logo), style: 'width:100%;height:100%;object-fit:contain;display:block' })],
     )
 }
@@ -984,7 +984,7 @@ onMounted(() => {
   height: 39px;
   flex-shrink: 0;
   cursor: pointer;
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   color: var(--foreground);
   user-select: none;
   margin-right: 5px;
@@ -1079,7 +1079,7 @@ onMounted(() => {
   background: transparent;
   border: none;
   border-color: var(--border);
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
@@ -1157,7 +1157,7 @@ onMounted(() => {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   overflow: hidden;
   display: inline-flex;
   align-items: center;
@@ -1184,7 +1184,7 @@ onMounted(() => {
   height: 16px;
   font-size: 10px;
   color: var(--subtle-foreground);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   transition: color 0.15s ease, background-color 0.15s ease;
   line-height: 1;
   cursor: pointer;
@@ -1234,7 +1234,7 @@ onMounted(() => {
   font-weight: 500;
   color: var(--foreground);
   background: var(--muted);
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   opacity: 0.55;
   pointer-events: none;
   white-space: nowrap;
@@ -1257,7 +1257,7 @@ onMounted(() => {
   height: 16px;
   font-size: 10px;
   color: var(--subtle-foreground);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   line-height: 1;
   flex-shrink: 0;
 }

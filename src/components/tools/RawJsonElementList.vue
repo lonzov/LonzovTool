@@ -93,7 +93,7 @@ import {
   color: var(--text-tertiary);
   font-size: 13px;
   border: 2px dashed var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   transition: color 0.4s ease, border-color 0.4s ease;
 }
 .insert-gap {
@@ -122,7 +122,7 @@ import {
 .node {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 8px 12px;
   transition: all 0.15s ease, background-color 0.4s ease, border-color 0.4s ease;
 }
@@ -155,7 +155,7 @@ import {
 }
 .node-type-badge {
   font-size: 10px; font-weight: 700;
-  padding: 2px 6px; border-radius: 4px;
+  padding: 2px 6px; border-radius: var(--radius-xs);
   flex-shrink: 0; letter-spacing: 0.3px;
 }
 .type-text, .type-sel, .type-scr, .type-trn { background: var(--muted); color: var(--muted-foreground); }
@@ -172,7 +172,7 @@ import {
 .act-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 26px; height: 26px; padding: 0;
-  border: none; background: transparent; border-radius: 6px;
+  border: none; background: transparent; border-radius: var(--radius-sm);
   color: var(--text-secondary); cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease, opacity 0.4s ease;
 }
@@ -193,14 +193,14 @@ import {
 .error-box {
   margin-top: 12px;
   background: var(--muted); border: 1px solid var(--border);
-  border-radius: 6px; padding: 10px 12px;
+  border-radius: var(--radius-sm); padding: 10px 12px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 .error-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted-foreground); margin: 2px 0; transition: color 0.4s ease; }
 .warning-box {
   margin-top: 8px;
   background: var(--muted); border: 1px solid var(--border);
-  border-radius: 6px; padding: 10px 12px;
+  border-radius: var(--radius-sm); padding: 10px 12px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 .warning-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted-foreground); margin: 2px 0; transition: color 0.4s ease; }

@@ -60,7 +60,7 @@ const modalStyle = computed(() => ({
   width: 100%; min-height: 160px;
   padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--muted);
   color: var(--foreground);
   font-size: 13px; resize: vertical;
@@ -72,7 +72,7 @@ const modalStyle = computed(() => ({
 .import-error {
   margin-top: 10px; padding: 8px 12px;
   background: var(--muted); border: 1px solid var(--border);
-  border-radius: 6px; font-size: 12px; color: var(--muted-foreground);
+  border-radius: var(--radius-sm); font-size: 12px; color: var(--muted-foreground);
   /* JSON 报错是「诊断 + 位置」两行，靠换行断句 */
   white-space: pre-line; word-break: break-all;
   transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
@@ -89,7 +89,7 @@ const modalStyle = computed(() => ({
 .btn {
   height: 34px;
   padding: 0 20px;
-  border-radius: 17px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 14px;
   font-weight: 500;

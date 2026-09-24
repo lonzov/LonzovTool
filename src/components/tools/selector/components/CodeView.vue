@@ -75,7 +75,7 @@ function handleStartAdd() {
 <style scoped>
 .code-card {
   background: var(--card);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   padding: 20px 24px;
   transition:
@@ -131,7 +131,7 @@ function handleStartAdd() {
   color: var(--subtle-foreground);
   font-size: 12px;
   font-family: inherit;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition:
     border-color 0.15s ease,

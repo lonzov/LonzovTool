@@ -325,7 +325,7 @@ function onModalEntered() {
   display: flex;
   width: 100%;
   background: var(--muted);
-  border-radius: 50px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   padding: 4px;
   user-select: none;
@@ -339,7 +339,7 @@ function onModalEntered() {
   top: 4px;
   height: calc(100% - 8px);
   background: var(--card);
-  border-radius: 50px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   transition:
     transform 0.28s cubic-bezier(0.2, 0, 0, 1),
@@ -411,7 +411,7 @@ function onModalEntered() {
   gap: 10px;
   padding: 10px 12px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--muted);
   transition:
     background-color 0.4s ease,
@@ -460,7 +460,7 @@ function onModalEntered() {
   padding: 0;
   border: none;
   background: transparent;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   color: var(--muted-foreground);
   cursor: pointer;
   transition:
@@ -489,7 +489,7 @@ function onModalEntered() {
   color: var(--subtle-foreground);
   font-size: 11px;
   font-family: inherit;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -513,7 +513,7 @@ function onModalEntered() {
 .btn {
   height: 34px;
   padding: 0 20px;
-  border-radius: 17px;
+  border-radius: var(--radius-full);
   corner-shape: round;
   font-size: 14px;
   font-weight: 500;
