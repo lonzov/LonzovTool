@@ -2,7 +2,7 @@
 import { inject, onMounted, ref, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import NoticeBar from './NoticeBar.vue'
-import AdCarousel from './AdCarousel.vue'
+import PromoCarousel from './PromoCarousel.vue'
 import SearchBar from './SearchBar.vue'
 import ToolGrid from './ToolGrid.vue'
 import SearchGrid from './SearchGrid.vue'
@@ -11,7 +11,7 @@ import searchEngines from '../data/searchEngines.json'
 
 export default {
   name: 'HomeView',
-  components: { NoticeBar, AdCarousel, SearchBar, ToolGrid, SearchGrid, AppFooter },
+  components: { NoticeBar, PromoCarousel, SearchBar, ToolGrid, SearchGrid, AppFooter },
   setup() {
     const registerHomeView = inject('registerHomeView')
     const route = useRoute()
@@ -107,7 +107,7 @@ export default {
         <NoticeBar />
         <SearchBar ref="searchBar" v-model="searchQuery" @internalSearch="handleInternalSearch" @toggleFavorites="handleToggleFavorites" />
       </div>
-      <AdCarousel class="home-hero__ad" />
+      <PromoCarousel class="home-hero__promo" />
     </div>
     <SearchGrid :searchQuery="searchQuery" />
     <ToolGrid ref="toolGrid" :searchQuery="searchQuery" :showFavorites="showFavorites" />
@@ -127,7 +127,7 @@ export default {
   min-width: 0;
 }
 
-.home-hero__ad {
+.home-hero__promo {
   margin-bottom: 24px;
 }
 
@@ -141,7 +141,7 @@ export default {
     align-items: start;
   }
 
-  .home-hero__ad {
+  .home-hero__promo {
     margin-bottom: 0;
   }
 }

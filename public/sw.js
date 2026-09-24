@@ -16,8 +16,8 @@ const STATIC_CACHE_PATHS = ['/logos/', '/fonts/', '/img/', '/sprites/']
 
 // ===== 广告素材目录：始终走网络，不缓存 =====
 // 广告图需随素材更换即时生效，而 /img/ 落在 STATIC_CACHE_PATHS（lt-static 永不清理），
-// 同名换图会永远命中旧缓存，故广告素材单独放 /ads/ 并在此拦截
-const ADS_PATH = '/ads/'
+// 同名换图会永远命中旧缓存，故广告素材单独放 /promo/ 并在此拦截
+const PROMO_PATH = '/promo/'
 
 // ===== 二级版本缓存：仅在 minor 版本变更时清除（如 3.3.x → 3.4.x） =====
 // 含带 hash 的 JS/CSS（/assets/）：hash 不变即内容不变，跨补丁版本复用可省掉重复下载
@@ -257,7 +257,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // 广告素材: 始终走网络，不缓存。必须排在下面 image 分支之前，否则会被 CacheFirst 缓存
-  if (url.pathname.startsWith(ADS_PATH)) {
+  if (url.pathname.startsWith(PROMO_PATH)) {
     event.respondWith(fetch(request))
     return
   }

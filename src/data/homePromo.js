@@ -1,4 +1,4 @@
-// 首页广告推广位图片索引（独立模块：构建后为独立 chunk，由 AdCarousel 动态导入）
+// 首页推广位图片索引（独立模块：构建后为独立 chunk，由 PromoCarousel 动态导入）
 // 单项结构 { id, image, title?, link? }；image 为空的条目视为没配（不占位），图片加载失败的滑片渲染灰底图标占位
 export default {
   // 首屏位

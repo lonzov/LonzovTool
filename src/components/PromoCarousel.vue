@@ -1,7 +1,7 @@
 <script>
 import { NCarousel, NCarouselItem } from 'naive-ui'
 
-// 滑片数据来自 src/data/homeAds.js（独立模块，构建后为独立 chunk，动态导入），
+// 滑片数据来自 src/data/homePromo.js（独立模块，构建后为独立 chunk，动态导入），
 // 按首屏位 / 付费位 / 免费位 / 公告位四档拼成轮播顺序，见下方 resolveSlides
 // 配置加载完成前用占位滑片顶位；只放一条，避免首屏闪现多条才有的指示点与切换按钮
 const PLACEHOLDER_SLIDES = [{ id: 1, image: '' }]
@@ -10,10 +10,10 @@ const PLACEHOLDER_SLIDES = [{ id: 1, image: '' }]
 const PAID_ORDER_KEY = 'ad_paid_order_reversed'
 
 // 缓存加载 Promise，避免重复请求该 chunk
-let homeAdSlidesPromise = null
-function loadHomeAdsConfig() {
-  if (!homeAdSlidesPromise) {
-    homeAdSlidesPromise = import('../data/homeAds.js')
+let homePromoSlidesPromise = null
+function loadHomePromoConfig() {
+  if (!homePromoSlidesPromise) {
+    homePromoSlidesPromise = import('../data/homePromo.js')
       .then((mod) =>
         mod.default && typeof mod.default === 'object' && !Array.isArray(mod.default)
           ? mod.default
@@ -21,7 +21,7 @@ function loadHomeAdsConfig() {
       )
       .catch(() => null)
   }
-  return homeAdSlidesPromise
+  return homePromoSlidesPromise
 }
 
 // 读取上次的付费位顺序。存储不可用（无痕模式等）时按首次处理
@@ -50,7 +50,7 @@ function isConfigured(item) {
  * 分档配置 → 本次轮播顺序：首屏位 → 付费位 → 免费位 → 公告位（固定压尾）
  * 没配的档位/条目忽略，后面的顺位顶上；付费位价格相同，配满 2 个时来回换先后
  * （本次 2,3 则下次 3,2），换完把记录翻转给下次；只配 1 个时不交替、也不翻转记录
- * @param {object} config homeAds.js 的四档配置
+ * @param {object} config homePromo.js 的四档配置
  * @returns {Array|null} 轮播滑片数组，配置非法时返回 null
  */
 function resolveSlides(config) {
@@ -76,7 +76,7 @@ function resolveSlides(config) {
 }
 
 export default {
-  name: 'AdCarousel',
+  name: 'PromoCarousel',
   components: { NCarousel, NCarouselItem },
   props: {
     // 自动轮播间隔(ms)
@@ -131,11 +131,11 @@ export default {
     // NCarousel 的滑片容器只有 role="listbox" 没有可访问名称（未开放该属性），直接补在容器上
     this.$nextTick(() => {
       const slidesEl = this.$el && this.$el.querySelector('.n-carousel__slides')
-      if (slidesEl) slidesEl.setAttribute('aria-label', '广告推广位轮播')
+      if (slidesEl) slidesEl.setAttribute('aria-label', '推广位轮播')
     })
 
     // 异步导入分档配置并拼成本次轮播顺序
-    loadHomeAdsConfig().then((config) => {
+    loadHomePromoConfig().then((config) => {
       const list = resolveSlides(config)
       if (Array.isArray(list) && list.length) this.loadedSlides = list
     })
@@ -144,12 +144,12 @@ export default {
 </script>
 
 <template>
-  <div class="ad-carousel">
+  <div class="promo-carousel">
     <!-- 只有 1 张时关掉 loop：naive 的首尾克隆仅在 ≥2 张时才补，但 realIndex 恒按已补克隆算
          （displayIndex + 1），单张时下标对不上，会把正在显示的那张误判成“非当前” -->
     <n-carousel
       v-if="items.length"
-      class="ad-carousel__inner"
+      class="promo-carousel__inner"
       direction="horizontal"
       dot-placement="bottom"
       dot-type="dot"
@@ -167,26 +167,26 @@ export default {
              图片加载失败只换里面的内容，外层链接照旧可点 -->
         <component
           :is="slide.link ? 'a' : 'div'"
-          class="ad-carousel__media"
+          class="promo-carousel__media"
           v-bind="inactiveSlideLinkAttrs(slide, isActive)"
           :href="slide.link ? slide.link : undefined"
           :target="slide.link && !isInternalLink(slide.link) ? '_blank' : undefined"
           :rel="slide.link && !isInternalLink(slide.link) ? 'noopener noreferrer' : undefined"
-          :aria-label="slide.link ? slide.title || '广告' : undefined"
+          :aria-label="slide.link ? slide.title || '推广' : undefined"
           @click="handleSlideClick($event, slide)"
         >
           <img
             v-if="slide.image && !failedSlides[i]"
-            class="ad-carousel__img"
+            class="promo-carousel__img"
             :src="slide.image"
-            :alt="slide.title || '广告'"
+            :alt="slide.title || '推广'"
             loading="lazy"
             draggable="false"
             @error="handleImageError(i)"
           />
           <!-- 无图 / 加载失败占位：灰底 + 居中图标（与工具卡片 logo 错误占位同款图标） -->
-          <div v-else class="ad-carousel__ph">
-            <svg class="ad-carousel__ph-icon" viewBox="0 0 20 20" aria-hidden="true">
+          <div v-else class="promo-carousel__ph">
+            <svg class="promo-carousel__ph-icon" viewBox="0 0 20 20" aria-hidden="true">
               <path
                 d="M2.854 2.146a.5.5 0 1 0-.708.708l3.67 3.668a5.326 5.326 0 0 0-.463 1.724h-.07C3.468 8.246 2 9.758 2 11.623C2 13.488 3.47 15 5.282 15h9.01l2.854 2.854a.5.5 0 0 0 .708-.708l-15-15zM18 11.623a3.4 3.4 0 0 1-1.452 2.804l-9.49-9.49C7.808 4.353 8.792 4 10 4c2.817 0 4.415 1.923 4.647 4.246h.07c1.814 0 3.283 1.512 3.283 3.377z"
               />
@@ -200,7 +200,7 @@ export default {
 
 <style scoped>
 /* 容器：固定 3:1 比例。窄屏宽度驱动（整行通栏），桌面由 HomeView 双栏侧贴、宽度驱动为 324×108 */
-.ad-carousel {
+.promo-carousel {
   position: relative;
   width: 100%;
   aspect-ratio: 3 / 1;
@@ -211,7 +211,7 @@ export default {
   transition: border-color 0.4s ease;
 }
 
-.ad-carousel__inner {
+.promo-carousel__inner {
   width: 100%;
   height: 100%;
 }
@@ -219,7 +219,7 @@ export default {
 /* ===== Naive NCarousel 深浅色/尺寸适配 =====
    覆盖默认亮色变量，跟随广告画面使用白色系指示点/箭头；cssVar 打在 .n-carousel 行内，
    需 !important 才压得住行内值（与 main.css 适配范式一致） */
-.ad-carousel :deep(.n-carousel) {
+.promo-carousel :deep(.n-carousel) {
   --n-dot-color: rgba(255, 255, 255, 0.38) !important;
   --n-dot-color-focus: rgba(255, 255, 255, 0.62) !important;
   --n-dot-color-active: #ffffff !important;
@@ -231,14 +231,14 @@ export default {
 
 /* 滑片：图片撑满（非 3:1 素材拉伸变形，不裁切不留边）；
    有 link 时该层为 <a>，否则为 <div> */
-.ad-carousel__media {
+.promo-carousel__media {
   display: block;
   width: 100%;
   height: 100%;
   text-decoration: none;
 }
 
-.ad-carousel__img {
+.promo-carousel__img {
   display: block;
   width: 100%;
   height: 100%;
@@ -249,7 +249,7 @@ export default {
 }
 
 /* 无图 / 加载失败占位：灰底 + 居中图标 */
-.ad-carousel__ph {
+.promo-carousel__ph {
   position: relative;
   width: 100%;
   height: 100%;
@@ -261,7 +261,7 @@ export default {
   transition: background-color 0.4s ease;
 }
 
-.ad-carousel__ph-icon {
+.promo-carousel__ph-icon {
   width: 28px;
   height: 28px;
   fill: var(--text-tertiary);
@@ -271,7 +271,7 @@ export default {
 /* 双栏侧贴：固定宽 324 → 高 108（3:1）。与 HomeView 双栏区间一致：
    639–770（移动布局）与 ≥889（桌面）双栏；771–888 中间退回整行通栏 */
 @media (min-width: 639px) and (max-width: 770px), (min-width: 889px) {
-  .ad-carousel {
+  .promo-carousel {
     width: 324px;
   }
 }
