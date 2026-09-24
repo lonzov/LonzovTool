@@ -150,6 +150,7 @@ public:
   .well-known/assetlinks.json: Android 数字资产链接验证文件
 docs:
   project-structure.yml: 项目结构描述文件（本文件）
+  customize-theme.md: 主题与设计规范，token 三层结构、颜色与圆角规则
 deploy.config.example.json: 部署配置模板，复制为 deploy.config.json 后填写服务器信息（不参与 git）
 scripts:
   route-list.js: 共享模块：从路由配置自动提取所有公开页面路径
