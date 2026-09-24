@@ -291,11 +291,20 @@ const neutralSwatches = computed(() => Object.entries(neutral))
       <h2>圆角</h2>
       <p class="hint">
         平滑曲率圆角（<code>corner-shape: squircle</code>）在支持它的浏览器里半径自动放大
-        1.75×，以保持视觉等效；不支持的浏览器回退到传统 1/4 圆角。下面展示的是当前浏览器的实际渲染。
+        1.75×，以保持视觉等效；不支持的浏览器回退到传统 1/4 圆角。下面展示的是当前浏览器的实际渲染。<br />
+        <code>radius-full</code> 是胶囊与圆形，半径必然达到元素短边的一半，平滑曲率在此会因两角曲线
+        相互挤压而破形，所以它固定走传统圆角 —— 这也是全站 50 余处胶囊/圆形都显式声明
+        <code>corner-shape: round</code> 的原因。
       </p>
       <div class="radius-row">
         <div v-for="key in RADIUS_KEYS" :key="key" class="radius-item">
-          <div class="radius-box" :style="{ borderRadius: `var(--${key})` }" />
+          <div
+            class="radius-box"
+            :style="{
+              borderRadius: `var(--${key})`,
+              cornerShape: key === 'radius-full' ? 'round' : undefined,
+            }"
+          />
           <span class="radius-name">--{{ key }}</span>
           <span class="radius-value" data-theme="light">{{ staticTokens[key] }}</span>
         </div>
