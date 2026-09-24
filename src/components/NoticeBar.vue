@@ -441,7 +441,7 @@ export default {
   align-items: stretch;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
@@ -608,7 +608,7 @@ export default {
 .notice-panel {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   margin-top: 8px;
   transition: background-color 0.4s ease, border-color 0.4s ease;

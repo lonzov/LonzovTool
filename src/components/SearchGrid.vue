@@ -29,7 +29,7 @@ export default {
             width: '480px',
             backgroundColor: 'var(--card)',
             border: '1px solid var(--border-strong)',
-            borderRadius: '3px',
+            borderRadius: 'var(--radius-xs)',
             boxShadow: 'var(--n-box-shadow)',
           },
         },

@@ -318,7 +318,7 @@ export default {
       padding: '12px 16px',
       background: 'var(--card)',
       border: '1px solid var(--border)',
-      borderRadius: '8px',
+      borderRadius: 'var(--radius-lg)',
       cursor: this.link ? 'pointer' : 'default',
       transition: 'all 0.3s ease',
       boxShadow: '0 0 0 transparent',
@@ -397,7 +397,7 @@ export default {
             style: {
               width: '40px',
               height: '40px',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: 'var(--radius-lg)',
               background: isIconLogo ? '#ffffff' : 'var(--card)',
               marginRight: '12px',
               flexShrink: 0,
@@ -542,7 +542,7 @@ export default {
                     backgroundColor: 'var(--highlight)',
                     color: 'var(--highlight-foreground)',
                     padding: '0 2px',
-                    borderRadius: '2px',
+                    borderRadius: 'var(--radius-xs)',
                   },
                 }),
               ],
@@ -565,7 +565,7 @@ export default {
                     backgroundColor: 'var(--highlight)',
                     color: 'var(--highlight-foreground)',
                     padding: '0 2px',
-                    borderRadius: '2px',
+                    borderRadius: 'var(--radius-xs)',
                   },
                 }),
               ],
@@ -632,7 +632,7 @@ export default {
   z-index: 5;
   pointer-events: none;
   overflow: hidden;
-  border-radius: 0 var(--radius-md) 0 0;
+  border-radius: 0 var(--radius-lg) 0 0;
 }
 
 .favorite-triangle {

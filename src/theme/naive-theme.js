@@ -377,18 +377,54 @@ const baseOverrides = {
     textColor: 'var(--foreground)',
     iconColor: 'var(--primary-foreground)',
     boxShadowFocus: '0 0 0 2px var(--ring)',
+    // 轨道与滑块都做成胶囊
+    railBorderRadiusSmall: 'var(--radius-full)',
+    railBorderRadiusMedium: 'var(--radius-full)',
+    railBorderRadiusLarge: 'var(--radius-full)',
+    buttonBorderRadiusSmall: 'var(--radius-full)',
+    buttonBorderRadiusMedium: 'var(--radius-full)',
+    buttonBorderRadiusLarge: 'var(--radius-full)',
   },
 
+  /* Message 的每个变量都有 6 组变体（无后缀 + Info / Success / Error / Warning / Loading）。
+     只覆盖无后缀那组的话，message.success() 这类带类型的消息会全部退回 Naive 默认值
+     —— 深色下它的 textColor2 偏灰、popoverColor 偏紫，与页面底几乎糊在一起。 */
   Message: {
     color: 'var(--muted)',
+    colorInfo: 'var(--muted)',
+    colorSuccess: 'var(--muted)',
+    colorError: 'var(--muted)',
+    colorWarning: 'var(--muted)',
+    colorLoading: 'var(--muted)',
+
     textColor: 'var(--foreground)',
+    textColorInfo: 'var(--foreground)',
+    textColorSuccess: 'var(--foreground)',
+    textColorError: 'var(--foreground)',
+    textColorWarning: 'var(--foreground)',
+    textColorLoading: 'var(--foreground)',
+
+    // 图标保留语义区分，但取项目自己的强调色，不用 Naive 的那套调色板
     iconColor: 'var(--muted-foreground)',
+    iconColorInfo: 'var(--muted-foreground)',
+    iconColorSuccess: 'var(--success)',
+    iconColorError: 'var(--destructive)',
+    iconColorWarning: 'var(--warning)',
+    iconColorLoading: 'var(--muted-foreground)',
+
+    boxShadow: 'var(--shadow-popover)',
+    boxShadowInfo: 'var(--shadow-popover)',
+    boxShadowSuccess: 'var(--shadow-popover)',
+    boxShadowError: 'var(--shadow-popover)',
+    boxShadowWarning: 'var(--shadow-popover)',
+    boxShadowLoading: 'var(--shadow-popover)',
+
     closeIconColor: 'var(--subtle-foreground)',
     closeIconColorHover: 'var(--foreground)',
     closeIconColorPressed: 'var(--foreground)',
     closeColorHover: 'var(--accent)',
     closeColorPressed: 'var(--accent)',
-    boxShadow: 'var(--shadow-md)',
+
     borderRadius: 'var(--radius-md)',
   },
 
