@@ -137,7 +137,7 @@ export default {
           component: icon,
           size: 18,
           style: {
-            color: 'var(--text-secondary)',
+            color: 'var(--muted-foreground)',
             transition: 'color 0.4s ease',
           },
         })

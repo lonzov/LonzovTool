@@ -26,7 +26,7 @@ onMounted(() => {
   position: relative;
   padding-left: 20px;
   margin: 16px 0;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: inherit;
   line-height: 1.8;
 }
@@ -38,7 +38,7 @@ onMounted(() => {
   top: 0;
   width: 3.5px;
   height: 100%;
-  background: color-mix(in srgb, var(--primary-color) 22%, transparent);
+  background: color-mix(in srgb, var(--foreground) 22%, transparent);
   border-radius: var(--radius-xs);
   z-index: 1;
   transition: background 0.4s;

@@ -39,7 +39,7 @@ const { introRaw, introMdLoading, introError } = useDownloadIntro(() => props.co
 }
 
 .intro-error {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   font-size: 14px;
   margin: 0;
 }
@@ -54,20 +54,20 @@ const { introRaw, introMdLoading, introError } = useDownloadIntro(() => props.co
 .intro-title {
   font-size: 21px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--foreground);
   letter-spacing: 0.5px;
   margin: 0;
 }
 
 .intro-text {
   font-size: 15px;
-  color: color-mix(in srgb, var(--text-primary) 87%, transparent);
+  color: color-mix(in srgb, var(--foreground) 87%, transparent);
   line-height: 1.75;
   margin: 0;
 }
 
 .intro-text :deep(a) {
-  color: var(--text-primary);
+  color: var(--foreground);
   text-decoration: none;
   position: relative;
   padding-bottom: 2px;
@@ -86,7 +86,7 @@ const { introRaw, introMdLoading, introError } = useDownloadIntro(() => props.co
   bottom: 5px;
   height: 1px;
   background-image: repeating-linear-gradient(to right,
-      color-mix(in srgb, var(--text-primary), transparent 30%) 0 4px,
+      color-mix(in srgb, var(--foreground), transparent 30%) 0 4px,
       transparent 4px 8px);
   background-repeat: repeat-x;
   background-size: 8px 1px;
@@ -104,7 +104,7 @@ const { introRaw, introMdLoading, introError } = useDownloadIntro(() => props.co
   right: 0;
   bottom: 5px;
   height: 1px;
-  background-color: var(--text-primary);
+  background-color: var(--foreground);
   opacity: 0;
   transition: opacity 0.3s;
   pointer-events: none;

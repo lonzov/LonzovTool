@@ -35,7 +35,7 @@ onMounted(async () => {
           <td>加载中…</td>
         </tr>
         <tr v-else-if="records.length === 0">
-          <td colspan="3" style="text-align: center; color: var(--text-tertiary)">暂无记录</td>
+          <td colspan="3" style="text-align: center; color: var(--subtle-foreground)">暂无记录</td>
         </tr>
         <tr v-else v-for="(record, index) in records" :key="index">
           <td>
@@ -65,7 +65,7 @@ onMounted(async () => {
   border-spacing: 0;
   width: 100%;
   margin: 16px 0;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
   transition: border-color 0.4s ease;
@@ -73,8 +73,8 @@ onMounted(async () => {
 
 .donate-records th,
 .donate-records td {
-  border-bottom: 1px solid var(--border-color);
-  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   padding: 8px 12px;
   text-align: left;
   transition: border-color 0.4s ease, background-color 0.4s ease;
@@ -90,14 +90,14 @@ onMounted(async () => {
 }
 
 .donate-records th {
-  background: var(--bg-sub);
+  background: var(--muted);
   font-weight: 600;
   transition: background-color 0.4s ease;
 }
 
 
 .donate-records a {
-  color: var(--text-primary);
+  color: var(--foreground);
   text-decoration: none;
   position: relative;
   padding-bottom: 2px;
@@ -112,7 +112,7 @@ onMounted(async () => {
   bottom: 0;
   height: 1px;
   background-image: repeating-linear-gradient(to right,
-      color-mix(in srgb, var(--text-primary), transparent 30%) 0 4px,
+      color-mix(in srgb, var(--foreground), transparent 30%) 0 4px,
       transparent 4px 8px);
   background-repeat: repeat-x;
   background-size: 8px 1px;
@@ -129,7 +129,7 @@ onMounted(async () => {
   right: 0;
   bottom: 0;
   height: 1px;
-  background-color: var(--text-primary);
+  background-color: var(--foreground);
   opacity: 0;
   transition: opacity 0.3s;
   pointer-events: none;

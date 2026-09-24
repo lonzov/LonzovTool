@@ -440,8 +440,8 @@ export default {
             position: 'relative',
             display: 'flex',
             flexDirection: 'column',
-            background: 'var(--bg-color)',
-            borderRight: '1px solid var(--sider-border)',
+            background: 'var(--background)',
+            borderRight: '1px solid var(--border-strong)',
           }"
           :content-style="{
             display: 'flex',
@@ -457,7 +457,7 @@ export default {
               padding: '28px 16px 16px 16px',
               fontWeight: 'bold',
               fontSize: '18px',
-              color: 'var(--text-primary)',
+              color: 'var(--foreground)',
               gap: '8px',
             }"
           >
@@ -467,7 +467,7 @@ export default {
           <div
             :style="{
               height: '1px',
-              background: 'var(--sider-border)',
+              background: 'var(--border-strong)',
               width: '80%',
               margin: '0 auto 0px auto',
             }"
@@ -482,13 +482,13 @@ export default {
             :style="{
               flexShrink: 0,
               padding: '0 14px 16px 14px',
-              background: 'var(--bg-color)',
+              background: 'var(--background)',
             }"
           >
             <div
               :style="{
                 height: '1px',
-                background: 'var(--sider-border)',
+                background: 'var(--border-strong)',
                 width: '80%',
                 margin: '0 auto 16px auto',
               }"
@@ -512,7 +512,7 @@ export default {
                     }"
                     @click="goSettings"
                   >
-                    <NIcon :component="SettingsIcon" :size="22" :color="'var(--theme-icon-color)'" />
+                    <NIcon :component="SettingsIcon" :size="22" :color="'var(--muted-foreground)'" />
                   </button>
                 </template>
                 设置
@@ -536,7 +536,7 @@ export default {
                     }"
                     @click="showShareModal = true"
                   >
-                    <NIcon :component="ShareIcon" :size="22" :color="'var(--theme-icon-color)'" />
+                    <NIcon :component="ShareIcon" :size="22" :color="'var(--muted-foreground)'" />
                   </button>
                 </template>
                 分享
@@ -545,7 +545,7 @@ export default {
           </div>
         </NLayoutSider>
 
-        <NLayoutContent style="height: 100%; background: var(--bg-color)">
+        <NLayoutContent style="height: 100%; background: var(--background)">
           <NScrollbar ref="desktopScrollbar" :style="{ height: '100%' }">
             <div style="padding: 12px 24px 24px; scrollMarginTop: 56px">
               <div style="max-width: 1200px; margin: 0 auto">
@@ -574,7 +574,7 @@ export default {
     </div>
 
     <!-- 移动端 -->
-    <div v-else :style="{ minHeight: '100vh', background: 'var(--bg-color)', transition: 'background-color 0.3s cubic-bezier(.4, 0, .2, 1)' }">
+    <div v-else :style="{ minHeight: '100vh', background: 'var(--background)', transition: 'background-color 0.3s cubic-bezier(.4, 0, .2, 1)' }">
       <NLayoutHeader
         :style="{
           display: 'flex',
@@ -597,7 +597,7 @@ export default {
             fontSize: '18px',
             flex: 1,
             textAlign: 'center',
-            color: 'var(--text-primary)',
+            color: 'var(--foreground)',
           }"
           >小舟工具箱</span
         >
@@ -618,7 +618,7 @@ export default {
                 }"
                 @click="showShareModal = true"
               >
-                <NIcon :component="ShareIcon" :size="20" :color="'var(--theme-icon-color)'" />
+                <NIcon :component="ShareIcon" :size="20" :color="'var(--muted-foreground)'" />
               </button>
             </template>
             分享
@@ -710,7 +710,7 @@ export default {
                     fontSize: '18px',
                     flex: 1,
                     textAlign: 'center',
-                    color: 'var(--text-primary)',
+                    color: 'var(--foreground)',
                     whiteSpace: 'nowrap',
                   }"
                   >小舟工具箱</span
@@ -736,11 +736,11 @@ export default {
               @navigate="handleMenuNavigate"
               style="flex: 1; overflow-y: auto"
             />
-            <div :style="{ padding: '0 14px 16px 14px', background: 'var(--bg-color)' }">
+            <div :style="{ padding: '0 14px 16px 14px', background: 'var(--background)' }">
               <div
                 :style="{
                   height: '1px',
-                  background: 'var(--sider-border)',
+                  background: 'var(--border-strong)',
                   width: '80%',
                   margin: '0 auto 16px auto',
                 }"
@@ -764,7 +764,7 @@ export default {
                       }"
                       @click="goSettings"
                     >
-                      <NIcon :component="SettingsIcon" :size="20" :color="'var(--theme-icon-color)'" />
+                      <NIcon :component="SettingsIcon" :size="20" :color="'var(--muted-foreground)'" />
                     </button>
                   </template>
                   设置
@@ -788,7 +788,7 @@ export default {
                       }"
                       @click="showShareModal = true"
                     >
-                      <NIcon :component="ShareIcon" :size="20" :color="'var(--theme-icon-color)'" />
+                      <NIcon :component="ShareIcon" :size="20" :color="'var(--muted-foreground)'" />
                     </button>
                   </template>
                   分享
@@ -865,7 +865,7 @@ export default {
   position: absolute;
   height: 4px;
   width: 100%;
-  background: var(--theme-icon-color);
+  background: var(--muted-foreground);
   border-radius: var(--radius-full);
   corner-shape: round;
   opacity: 1;

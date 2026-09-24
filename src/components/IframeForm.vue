@@ -128,11 +128,11 @@ export default {
   border-radius: var(--radius-xl);
   background: linear-gradient(
     105deg,
-    var(--bg-sub) 0%,
-    var(--bg-sub) 35%,
-    var(--bg-card) 50%,
-    var(--bg-sub) 65%,
-    var(--bg-sub) 100%
+    var(--muted) 0%,
+    var(--muted) 35%,
+    var(--card) 50%,
+    var(--muted) 65%,
+    var(--muted) 100%
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.8s ease-in-out infinite;

@@ -142,26 +142,6 @@ const staticTokens = {
  */
 const SQUIRCLE_SCALE = 1.75
 
-/** 阶段三逐组件替换为语义 token 后，这一整段删除 */
-const LEGACY_ALIASES = {
-  'primary-color': 'var(--foreground)',
-  'bg-color': 'var(--background)',
-  'bg-card': 'var(--card)',
-  'bg-sub': 'var(--muted)',
-  'footer-bg': 'var(--footer)',
-  'text-primary': 'var(--foreground)',
-  'text-secondary': 'var(--muted-foreground)',
-  'text-tertiary': 'var(--subtle-foreground)',
-  'border-color': 'var(--border)',
-  'sider-border': 'var(--border-strong)',
-  'theme-icon-color': 'var(--muted-foreground)',
-  'menu-text': 'var(--muted-foreground)',
-  'menu-text-hover': 'var(--foreground)',
-  'menu-bg-hover': 'var(--accent)',
-  'highlight-bg': 'var(--highlight)',
-  'highlight-color': 'var(--highlight-foreground)',
-}
-
 function vars(obj) {
   return Object.entries(obj)
     .map(([k, v]) => `  --${k}: ${v};`)
@@ -186,13 +166,6 @@ ${vars(darkTokens)}
 
 :root {
 ${vars(staticTokens)}
-}
-
-/* 旧变量名到语义 token 的过渡别名 */
-:root,
-[data-theme="light"],
-[data-theme="dark"] {
-${vars(LEGACY_ALIASES)}
 }
 
 /* 平滑曲率圆角。corner-shape 按规范不继承（Inherited: no），只能逐元素设置；

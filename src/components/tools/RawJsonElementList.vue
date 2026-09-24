@@ -90,9 +90,9 @@ import {
   align-items: center;
   justify-content: center;
   padding: 40px 16px;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   font-size: 13px;
-  border: 2px dashed var(--border-color);
+  border: 2px dashed var(--border);
   border-radius: var(--radius-md);
   transition: color 0.4s ease, border-color 0.4s ease;
 }
@@ -106,7 +106,7 @@ import {
 @media (min-width: 640px) { .insert-gap { display: block; } }
 .insert-line {
   position: absolute; top: 50%; left: 0; right: 0;
-  height: 2px; background: var(--text-secondary); border-radius: 1px;
+  height: 2px; background: var(--muted-foreground); border-radius: 1px;
 }
 .insert-plus {
   position: absolute; top: 50%; left: 50%;
@@ -120,14 +120,14 @@ import {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 .node {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 8px 12px;
   transition: all 0.15s ease, background-color 0.4s ease, border-color 0.4s ease;
 }
 .node:hover {
-  border-color: var(--text-secondary);
+  border-color: var(--muted-foreground);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
   transform: translateY(-1px);
 }
@@ -161,7 +161,7 @@ import {
 .type-text, .type-sel, .type-scr, .type-trn { background: var(--muted); color: var(--muted-foreground); }
 .type-err { background: var(--primary); color: var(--primary-foreground); }
 .node-text {
-  font-size: 12px; color: var(--text-primary);
+  font-size: 12px; color: var(--foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   transition: color 0.4s ease;
@@ -173,17 +173,17 @@ import {
   display: inline-flex; align-items: center; justify-content: center;
   width: 26px; height: 26px; padding: 0;
   border: none; background: transparent; border-radius: var(--radius-sm);
-  color: var(--text-secondary); cursor: pointer;
+  color: var(--muted-foreground); cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease, opacity 0.4s ease;
 }
-.act-btn:hover { background: var(--bg-sub); }
+.act-btn:hover { background: var(--muted); }
 .act-btn:active { transform: scale(0.95); }
 .act-btn:disabled { opacity: 0.3; cursor: default; }
 .act-btn:disabled:hover { background: transparent; }
-.act-btn--primary { color: var(--text-primary); }
-.act-btn--primary:hover { background: var(--bg-sub); }
-.act-btn--danger { color: var(--text-secondary); }
-.act-btn--danger:hover { background: var(--bg-sub); }
+.act-btn--primary { color: var(--foreground); }
+.act-btn--primary:hover { background: var(--muted); }
+.act-btn--danger { color: var(--muted-foreground); }
+.act-btn--danger:hover { background: var(--muted); }
 .act-delete-confirmed,
 .act-delete-confirmed:hover {
   background: var(--destructive) !important;

@@ -115,7 +115,7 @@ export default {
                 h(NIcon, {
                   component: currentIcon,
                   size: iconSize,
-                  color: 'var(--theme-icon-color)',
+                  color: 'var(--muted-foreground)',
                   style: iconStyle
                 })
               ]

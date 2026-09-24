@@ -217,8 +217,8 @@ export default {
   aspect-ratio: 3 / 1;
   border-radius: var(--radius-md);
   overflow: hidden;
-  border: 1px solid var(--border-color);
-  background: var(--bg-card);
+  border: 1px solid var(--border);
+  background: var(--card);
   transition: border-color 0.4s ease;
 }
 
@@ -268,14 +268,14 @@ export default {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: var(--bg-sub);
+  background: var(--muted);
   transition: background-color 0.4s ease;
 }
 
 .promo-carousel__ph-icon {
   width: 28px;
   height: 28px;
-  fill: var(--text-tertiary);
+  fill: var(--subtle-foreground);
   transition: fill 0.4s ease;
 }
 

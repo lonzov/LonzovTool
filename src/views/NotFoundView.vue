@@ -63,7 +63,7 @@ onUnmounted(() => {
 .nf-code {
   font-size: 7rem;
   font-weight: 800;
-  color: var(--text-primary);
+  color: var(--foreground);
   opacity: 0.12;
   line-height: 1;
   margin-bottom: 8px;
@@ -74,7 +74,7 @@ onUnmounted(() => {
 .nf-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--foreground);
   margin: 0 0 10px;
   letter-spacing: -0.02em;
   transition: color 0.4s ease;
@@ -82,7 +82,7 @@ onUnmounted(() => {
 
 .nf-desc {
   font-size: 0.95rem;
-  color: color-mix(in srgb, var(--text-primary) 65%, transparent);
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
   margin: 0 0 28px;
   line-height: 1.5;
   transition: color 0.4s ease;

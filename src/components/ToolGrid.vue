@@ -215,7 +215,7 @@ export default {
               h(NIcon, {
                 component: iconComponent,
                 size: 18,
-                color: isActive ? 'var(--primary-color)' : 'var(--text-secondary)',
+                color: isActive ? 'var(--foreground)' : 'var(--muted-foreground)',
                 style: {
                   marginRight: '8px',
                   transition: 'all 0.4s ease',
@@ -227,7 +227,7 @@ export default {
                   style: {
                     fontSize: '14px',
                     fontWeight: this.isAnimating && isActive ? '700' : '600',
-                    color: isActive ? 'var(--primary-color)' : 'var(--text-secondary)',
+                    color: isActive ? 'var(--foreground)' : 'var(--muted-foreground)',
                     transition: 'all 0.4s ease',
                   },
                 },

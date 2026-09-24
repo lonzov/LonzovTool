@@ -79,7 +79,7 @@ onUnmounted(() => {
 <style scoped>
 /* ===== Markdown 内容基础样式 ===== */
 .md-content {
-  color: var(--text-primary);
+  color: var(--foreground);
   line-height: 1.8;
 }
 
@@ -113,7 +113,7 @@ onUnmounted(() => {
 }
 
 .md-content :deep(code) {
-  background: var(--bg-sub);
+  background: var(--muted);
   padding: 0.25rem 0.375rem;
   border-radius: var(--radius-sm);
   font-size: 0.875em;
@@ -124,7 +124,7 @@ onUnmounted(() => {
 }
 
 .md-content :deep(pre) {
-  background: var(--bg-sub);
+  background: var(--muted);
   padding: 16px;
   border-radius: var(--radius-lg);
   overflow-x: auto;
@@ -150,7 +150,7 @@ onUnmounted(() => {
   position: relative;
   padding-left: 20px;
   margin: 16px 0;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   border-left: none !important;
 }
 
@@ -161,7 +161,7 @@ onUnmounted(() => {
   top: 0;
   width: 3.5px;
   height: 100%;
-  background: color-mix(in srgb, var(--primary-color) 22%, transparent);
+  background: color-mix(in srgb, var(--foreground) 22%, transparent);
   border-radius: var(--radius-xs);
   z-index: 1;
   transition: background 0.4s;
@@ -178,7 +178,7 @@ onUnmounted(() => {
   border-spacing: 0;
   width: 100%;
   margin: 16px 0;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
   transition: border-color 0.3s cubic-bezier(.4, 0, .2, 1);
@@ -186,8 +186,8 @@ onUnmounted(() => {
 
 .md-content :deep(th),
 .md-content :deep(td) {
-  border-bottom: 1px solid var(--border-color);
-  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   padding: 8px 12px;
   text-align: left;
   transition: border-color 0.3s cubic-bezier(.4, 0, .2, 1);
@@ -203,7 +203,7 @@ onUnmounted(() => {
 }
 
 .md-content :deep(th) {
-  background: var(--bg-sub);
+  background: var(--muted);
   font-weight: 600;
   transition: background-color 0.3s cubic-bezier(.4, 0, .2, 1),
     border-color 0.3s cubic-bezier(.4, 0, .2, 1);
@@ -212,7 +212,7 @@ onUnmounted(() => {
 .md-content :deep(hr) {
   border: none;
   height: 0;
-  border-top: 1px dashed var(--border-color);
+  border-top: 1px dashed var(--border);
   margin: 2em 0;
   transition: border-color 0.4s ease;
 }
@@ -296,7 +296,7 @@ onUnmounted(() => {
 .md-content a,
 .md-content .trigger-feedback,
 .md-content .trigger-url-tj {
-  color: var(--text-primary);
+  color: var(--foreground);
   text-decoration: none;
   position: relative;
   padding-bottom: 2px;
@@ -317,7 +317,7 @@ onUnmounted(() => {
   bottom: 5px;
   height: 1px;
   background-image: repeating-linear-gradient(to right,
-      color-mix(in srgb, var(--text-primary), transparent 30%) 0 4px,
+      color-mix(in srgb, var(--foreground), transparent 30%) 0 4px,
       transparent 4px 8px);
   background-repeat: repeat-x;
   background-size: 8px 1px;
@@ -337,7 +337,7 @@ onUnmounted(() => {
   right: 0;
   bottom: 5px;
   height: 1px;
-  background-color: var(--text-primary);
+  background-color: var(--foreground);
   opacity: 0;
   transition: opacity 0.3s;
   pointer-events: none;
