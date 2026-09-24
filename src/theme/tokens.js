@@ -124,8 +124,10 @@ const staticTokens = {
   // 胶囊与圆形：半径必然达到短边一半，平滑曲率在此会破形，用法见 main.css 的 .corner-round
   'radius-full': '9999px',
 
-  // 抽屉与弹窗遮罩：两套主题下都应为黑，不随主题变化
+  // 抽屉与弹窗遮罩：两套主题下都应为黑，不随主题变化。
+  // mask-blur 是叠在 NModal 自带遮罩之上的毛玻璃层，比 mask 浅。
   mask: alpha(BLACK, 0.4),
+  'mask-blur': alpha(BLACK, 0.1),
 
   'duration-theme': '0.4s',
   'ease-theme': 'ease',

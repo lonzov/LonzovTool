@@ -1,13 +1,14 @@
 <script>
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { NIcon, NModal, NCheckbox } from 'naive-ui'
+import { NIcon, NCheckbox } from 'naive-ui'
 import { WarningShield20Regular, Checkmark24Filled, Settings24Regular, Dismiss24Filled } from '@vicons/fluent'
 import { usePrivacyModal } from '../composables/usePrivacyModal'
+import AppModal from './ui/AppModal.vue'
 
 export default {
   name: 'PrivacyBanner',
-  components: { NIcon, NModal, NCheckbox },
+  components: { NIcon, AppModal, NCheckbox },
   setup() {
     const STORAGE_KEY = 'privacy_consent'
     const router = useRouter()
@@ -150,68 +151,10 @@ export default {
       showCookieModal.value = false
     }
 
-    // 手动创建模糊遮罩（NModal 自带遮罩不支持 backdrop-filter + 遮罩不够黑）
-    watch(showCookieModal, (val) => {
-      if (val) {
-        nextTick(() => {
-          const existing = document.getElementById('privacy-blur-overlay')
-          if (!existing) {
-            const overlay = document.createElement('div')
-            overlay.id = 'privacy-blur-overlay'
-            overlay.style.cssText = [
-              'position: fixed',
-              'top: 0',
-              'left: 0',
-              'right: 0',
-              'bottom: 0',
-              'z-index: 1990', // 盖住移动端汉堡(1950)/菜单抽屉(1900)，仍低于 NModal 遮罩(≥2000)
-              '-webkit-backdrop-filter: blur(8px)',
-              'backdrop-filter: blur(8px)',
-              'background: rgba(0, 0, 0, 0.1)', // 半透明黑色滤镜，叠加 NModal 遮罩后整体更深
-              'pointer-events: none', // 不阻挡点击，点击穿透到 NModal 遮罩
-              'opacity: 0',
-              'transition: opacity 0.3s ease'
-            ].join(';')
-            document.body.appendChild(overlay)
-            // 下一帧触发进场动画
-            requestAnimationFrame(() => {
-              overlay.style.opacity = '1'
-            })
-          }
-        })
-      } else {
-        const overlay = document.getElementById('privacy-blur-overlay')
-        if (overlay) {
-          overlay.style.opacity = '0'
-          setTimeout(() => overlay.remove(), 300)
-        }
-      }
-    })
-
     function handlePrivacyLink(e) {
       e.preventDefault()
       router.push('/docs/privacy')
     }
-
-    // 移动端弹窗高度响应式：60px 上下间距
-    const isCompact = ref(false)
-    let _mq
-    function _onMqChange(e) { isCompact.value = e.matches }
-    onMounted(() => {
-      _mq = window.matchMedia('(max-width: 640px)')
-      isCompact.value = _mq.matches
-      _mq.addEventListener('change', _onMqChange)
-    })
-    onUnmounted(() => {
-      if (_mq) _mq.removeEventListener('change', _onMqChange)
-    })
-
-    const modalStyle = computed(() => ({
-      maxWidth: '540px',
-      width: 'calc(100% - 32px)',
-      maxHeight: isCompact.value ? 'calc(100vh - 120px)' : undefined,
-      borderRadius: 'var(--radius-xl)',
-    }))
 
     return {
       showBanner,
@@ -220,7 +163,6 @@ export default {
       necessaryChecked: ref(true),
       analyticsChecked,
       replayChecked,
-      modalStyle,
       WarningShield20Regular,
       Checkmark24Filled,
       Settings24Regular,
@@ -291,15 +233,17 @@ export default {
   </Transition>
 
   <!-- 隐私偏好弹窗 -->
-  <NModal
+  <AppModal
     v-model:show="showCookieModal"
-    preset="card"
-    :style="modalStyle"
     title="隐私偏好"
-    :bordered="false"
+    :max-width="540"
     closable
-    :auto-focus="false"
     content-scrollable
+    blur-mask
+    :actions="[
+      { text: '保存设置', variant: 'fill', onClick: handleSaveSettings },
+      { text: '接受全部', variant: 'outline', onClick: handleAcceptAllInModal },
+    ]"
     @close="handleCloseModal"
   >
 
@@ -350,15 +294,7 @@ export default {
       </div>
     </div>
 
-    <template #footer>
-      <div class="modal-actions">
-        <button class="btn btn-save" @click="handleSaveSettings">保存设置</button>
-        <button class="btn btn-agree" @click="handleAcceptAllInModal">
-          接受全部
-        </button>
-      </div>
-    </template>
-  </NModal>
+  </AppModal>
 </template>
 
 <style scoped>
@@ -506,59 +442,6 @@ export default {
 
 .cookie-list li {
   line-height: 1.8;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding-top: 8px;
-}
-
-/* 保存设置按钮 - 实心主按钮（反色块，两套主题由 token 翻转） */
-.btn-save {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  border: none;
-  background: var(--primary);
-  color: var(--primary-foreground) !important;
-}
-
-.btn-save:hover {
-  opacity: 0.85;
-}
-
-/* 弹窗内接受全部按钮 - 空心描边（底与文字同卡片表面，只留一圈描边） */
-.modal-actions .btn-agree {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  overflow: hidden;
-  position: relative;
-  border: 1.5px solid currentColor;
-  background: var(--card);
-  color: var(--foreground);
-}
-
-.modal-actions .btn-agree:hover {
-  background: var(--muted);
 }
 
 /* 横幅动画 */

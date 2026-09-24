@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { NModal, NIcon, NSelect } from 'naive-ui'
+import { ref, watch, nextTick } from 'vue'
+import { NIcon, NSelect } from 'naive-ui'
 import { Delete24Regular, ArrowUp24Regular, ArrowDown24Regular, Add24Regular, Edit24Filled } from '@vicons/fluent'
+import AppModal from '../ui/AppModal.vue'
 import {
   showEditModal, editIdx,
   editType, formText, formSelector, formScoreObj, formScoreName,
@@ -14,25 +15,6 @@ import {
   withParamConfirmIdx, withElConfirmIdx, nestedWithParamConfirmIdx,
   getElTypeLabel, getElPreviewText,
 } from '../../composables/useRawJsonEditor.js'
-
-const isCompact = ref(false)
-let _mq
-function _onMqChange(e) { isCompact.value = e.matches }
-onMounted(() => {
-  _mq = window.matchMedia('(max-width: 640px)')
-  isCompact.value = _mq.matches
-  _mq.addEventListener('change', _onMqChange)
-})
-onUnmounted(() => {
-  if (_mq) _mq.removeEventListener('change', _onMqChange)
-})
-
-const modalStyle = computed(() => ({
-  maxWidth: '520px',
-  width: 'calc(100% - 32px)',
-  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: 'var(--radius-xl)',
-}))
 
 const typeOptions = [
   { label: '文本 (text)', value: 'text' },
@@ -150,14 +132,21 @@ function getAvailableHeight(el) {
 </script>
 
 <template>
-  <NModal
+  <AppModal
     v-model:show="showEditModal"
-    preset="card"
     :title="nestedIdx !== null ? '编辑 With 元素' : (editIdx !== null ? '编辑元素' : '添加元素')"
-    :style="modalStyle"
-    :segmented="{ content: true, footer: 'soft' }"
+    :max-width="520"
     content-scrollable
     :mask-closable="false"
+    :actions="nestedIdx !== null
+      ? [
+        { text: '取消', variant: 'outline', onClick: cancelNestedEdit },
+        { text: '确认', variant: 'fill', onClick: saveNestedEdit },
+      ]
+      : [
+        { text: '取消', variant: 'outline', onClick: closeEditModal },
+        { text: '保存', variant: 'fill', onClick: saveElement },
+      ]"
     @esc="nestedIdx !== null ? cancelNestedEdit() : closeEditModal()"
     @close="onModalClose"
   >
@@ -326,19 +315,7 @@ function getAvailableHeight(el) {
       </div>
     </template>
     </div>
-
-    <!-- 统一 footer -->
-    <template #footer>
-      <div v-if="nestedIdx !== null" class="modal-actions">
-        <button class="btn btn-outline" @click="cancelNestedEdit">取消</button>
-        <button class="btn btn-fill" @click="saveNestedEdit">确认</button>
-      </div>
-      <div v-else class="modal-actions">
-        <button class="btn btn-outline" @click="closeEditModal">取消</button>
-        <button class="btn btn-fill" @click="saveElement">保存</button>
-      </div>
-    </template>
-  </NModal>
+  </AppModal>
 </template>
 
 <style scoped>
@@ -414,51 +391,6 @@ function getAvailableHeight(el) {
 }
 .with-el-actions {
   display: flex; gap: 2px; flex-shrink: 0;
-}
-
-/* 页脚操作按钮 */
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding-top: 8px;
-}
-
-.btn {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  border: none;
-}
-
-/* fill - 全填充主按钮 */
-.btn-fill {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.btn-fill:hover { opacity: 0.85; }
-
-/* outline - 描边次要按钮 */
-.btn-outline {
-  border: 1.5px solid currentColor;
-}
-
-.btn-outline {
-  background: var(--card);
-  color: var(--foreground);
-}
-
-.btn-outline:hover {
-  background: var(--muted);
 }
 
 /* minor - 表单内小按钮 */

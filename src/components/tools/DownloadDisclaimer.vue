@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { NModal, useMessage } from 'naive-ui'
+import { ref, computed, watch, onUnmounted } from 'vue'
+import { useMessage } from 'naive-ui'
+import AppModal from '../ui/AppModal.vue'
 
 const props = defineProps({
   show: Boolean,
@@ -55,71 +56,29 @@ function handleContinue() {
   showLocal.value = false
 }
 
-// 模糊遮罩 + 启动冷却
+// 启动冷却
 watch(() => props.show, (val) => {
   if (val) {
     startCooldown()
-    nextTick(() => {
-      if (document.getElementById('disclaimer-blur-overlay')) return
-      const overlay = document.createElement('div')
-      overlay.id = 'disclaimer-blur-overlay'
-      overlay.style.cssText = [
-        'position: fixed', 'top: 0', 'left: 0', 'right: 0', 'bottom: 0',
-        'z-index: 1990', // 盖住移动端汉堡(1950)/菜单抽屉(1900)，仍低于 NModal(≥2000)
-        '-webkit-backdrop-filter: blur(8px)', 'backdrop-filter: blur(8px)',
-        'background: rgba(0, 0, 0, 0.1)',
-        'pointer-events: none',
-        'opacity: 0', 'transition: opacity 0.3s ease',
-      ].join(';')
-      document.body.appendChild(overlay)
-      requestAnimationFrame(() => { overlay.style.opacity = '1' })
-    })
   } else {
     clearInterval(cooldownTimer)
     cooldownTimer = null
-    const overlay = document.getElementById('disclaimer-blur-overlay')
-    if (overlay) {
-      overlay.style.opacity = '0'
-      setTimeout(() => overlay.remove(), 300)
-    }
   }
 })
 
 onUnmounted(() => {
   clearInterval(cooldownTimer)
 })
-
-// 响应式
-const isCompact = ref(false)
-let _mq
-function _onMqChange(e) { isCompact.value = e.matches }
-onMounted(() => {
-  _mq = window.matchMedia('(max-width: 640px)')
-  isCompact.value = _mq.matches
-  _mq.addEventListener('change', _onMqChange)
-})
-onUnmounted(() => {
-  if (_mq) _mq.removeEventListener('change', _onMqChange)
-})
-
-const modalStyle = computed(() => ({
-  maxWidth: '540px',
-  width: 'calc(100% - 32px)',
-  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: 'var(--radius-xl)',
-}))
 </script>
 
 <template>
-  <NModal
+  <AppModal
     v-model:show="showLocal"
-    preset="card"
-    :style="modalStyle"
     title="声明"
-    :bordered="false"
+    :max-width="540"
     :closable="false"
     :mask-closable="false"
-    :auto-focus="false"
+    blur-mask
   >
     <div class="disclaimer-desc">
       本工具由 <strong>{{ developer }}</strong> 开发，小舟工具箱仅提供下载分发服务。感谢使用，请支持原作者！
@@ -127,14 +86,14 @@ const modalStyle = computed(() => ({
     <template #footer>
       <div class="modal-actions">
         <button
-          class="btn btn-outline"
+          class="app-modal-btn app-modal-btn--outline"
           :class="{ 'btn-disabled': !canDismiss }"
           @click="handleDismiss"
         >不再提醒{{ canDismiss ? '' : ' ' + cooldownRemaining }}</button>
-        <button class="btn btn-fill" @click="handleContinue">继续下载</button>
+        <button class="app-modal-btn app-modal-btn--fill" @click="handleContinue">继续下载</button>
       </div>
     </template>
-  </NModal>
+  </AppModal>
 </template>
 
 <style scoped>
@@ -151,45 +110,6 @@ const modalStyle = computed(() => ({
   justify-content: flex-end;
   gap: 10px;
   padding-top: 8px;
-}
-
-.btn {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  border: none;
-}
-
-/* fill - 全填充主按钮 */
-.btn-fill {
-  background: var(--primary);
-  color: var(--primary-foreground) !important;
-}
-
-.btn-fill:hover {
-  opacity: 0.85;
-}
-
-/* outline - 描边按钮 */
-.btn-outline {
-  border: 1.5px solid currentColor;
-}
-
-.btn-outline {
-  background: var(--card);
-  color: var(--foreground);
-}
-
-.btn-outline:hover {
-  background: var(--muted);
 }
 
 /* disabled - 置灰：无描边，文字透明度降低 */

@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { NModal, useMessage } from 'naive-ui'
+import { ref, computed, watch, nextTick, onUnmounted } from 'vue'
+import { useMessage } from 'naive-ui'
 import { useRoute } from 'vue-router'
+import AppModal from './ui/AppModal.vue'
 
 const props = defineProps({ show: Boolean })
 const emit = defineEmits(['update:show'])
@@ -72,17 +73,7 @@ function tweenProgress(target, duration = 520) {
 
 let revealTimer = 0
 
-// 移动端自适应高度（参考 UpdateDialog）
-const isCompact = ref(false)
-let mq = null
-function onMqChange(e) { isCompact.value = e.matches }
-onMounted(() => {
-  mq = window.matchMedia('(max-width: 640px)')
-  isCompact.value = mq.matches
-  mq.addEventListener('change', onMqChange)
-})
 onUnmounted(() => {
-  if (mq) mq.removeEventListener('change', onMqChange)
   cancelTween()
   clearTimeout(revealTimer)
 })
@@ -253,42 +244,6 @@ watch(() => props.show, (val) => {
     nextTick(() => generatePoster())
   }
 })
-
-// ---- 模糊遮罩 ----
-watch(() => props.show, (val) => {
-  const id = 'share-modal-blur'
-  if (val) {
-    nextTick(() => {
-      if (document.getElementById(id)) return
-      const overlay = document.createElement('div')
-      overlay.id = id
-      overlay.style.cssText = [
-        'position:fixed','top:0','left:0','right:0','bottom:0',
-        'z-index:1990', // 盖住移动端汉堡(1950)/菜单抽屉(1900)，仍低于 NModal(≥2000)
-        '-webkit-backdrop-filter:blur(8px)','backdrop-filter:blur(8px)',
-        'background:rgba(0,0,0,0.1)',
-        'pointer-events:none',
-        'opacity:0','transition:opacity 0.3s ease',
-      ].join(';')
-      document.body.appendChild(overlay)
-      requestAnimationFrame(() => { overlay.style.opacity = '1' })
-    })
-  } else {
-    const overlay = document.getElementById(id)
-    if (overlay) {
-      overlay.style.opacity = '0'
-      setTimeout(() => overlay.remove(), 300)
-    }
-  }
-})
-
-// ---- Naive UI ----
-const modalStyle = computed(() => ({
-  maxWidth: '560px',
-  width: 'calc(100% - 32px)',
-  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: 'var(--radius-xl)',
-}))
 </script>
 
 <template>
@@ -335,17 +290,19 @@ const modalStyle = computed(() => ({
     </article>
   </div>
 
-  <NModal
+  <AppModal
     v-model:show="showLocal"
-    preset="card"
-    :style="modalStyle"
     title="分享"
-    :bordered="false"
+    :max-width="560"
     :closable="true"
     :mask-closable="true"
-    :auto-focus="false"
     content-scrollable
+    blur-mask
     :segmented="{ content: true, footer: true }"
+    :actions="[
+      { text: '复制链接', variant: 'outline', onClick: copyLink },
+      { text: '保存图片', variant: 'fill', disabled: !posterImage, onClick: downloadPoster },
+    ]"
   >
     <div class="poster-wrap">
       <!-- 海报框：始终按海报 2:3 占位，高度从打开到出图都不变 -->
@@ -396,18 +353,7 @@ const modalStyle = computed(() => ({
         </div>
       </div>
     </div>
-
-    <template #footer>
-      <div class="modal-foot">
-        <button class="foot-btn foot-btn-outline" @click="copyLink">复制链接</button>
-        <button
-          class="foot-btn foot-btn-fill"
-          :disabled="!posterImage"
-          @click="downloadPoster"
-        >保存图片</button>
-      </div>
-    </template>
-  </NModal>
+  </AppModal>
 </template>
 
 <style>
@@ -730,41 +676,4 @@ const modalStyle = computed(() => ({
   corner-shape: round;
   background: #141414;
 }
-
-.modal-foot {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.foot-btn {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  border: none;
-  font-family: inherit;
-}
-
-.foot-btn:disabled { opacity: 0.4; cursor: default; }
-
-.foot-btn-outline {
-  border: 1.5px solid currentColor;
-  background: var(--card);
-  color: var(--foreground);
-}
-.foot-btn-outline:hover { background: var(--muted); }
-
-.foot-btn-fill {
-  background: var(--primary);
-  color: var(--primary-foreground) !important;
-}
-.foot-btn-fill:hover { opacity: 0.85; }
 </style>

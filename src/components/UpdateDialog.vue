@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onUnmounted, defineAsyncComponent, h } from 'vue'
-import { NModal, NTooltip, useMessage } from 'naive-ui'
+import { computed, watch, defineAsyncComponent, h } from 'vue'
+import { NTooltip, useMessage } from 'naive-ui'
 import { useSWUpdate } from '../composables/useSWUpdate'
+import AppModal from './ui/AppModal.vue'
 /* MarkdownRenderer 携带 markdown-it（~47K gz），只在弹窗真正展示更新内容时加载 */
 const loadMarkdown = () => import('./MarkdownRenderer.vue')
 const MarkdownRenderer = defineAsyncComponent(loadMarkdown)
@@ -61,74 +62,32 @@ function handleButtonClick(btn) {
 /** 获取按钮样式类 */
 function getBtnClass(btn) {
   const style = btn.style || 'outline'
-  const base = style === 'fill' ? 'btn btn-fill' : style === 'text' ? 'btn btn-text' : 'btn btn-outline'
+  const base = style === 'fill'
+    ? 'app-modal-btn app-modal-btn--fill'
+    : style === 'text'
+      ? 'app-modal-btn app-modal-btn--text'
+      : 'app-modal-btn app-modal-btn--outline'
   // 大版本强制更新：「暂不更新」置灰不可点
   return forceUpdate.value && isDeferBtn(btn) ? `${base} btn-force-disabled` : base
 }
 
-const isCompact = ref(false)
-let _mq
-function _onMqChange(e) { isCompact.value = e.matches }
-onMounted(() => {
-  _mq = window.matchMedia('(max-width: 640px)')
-  isCompact.value = _mq.matches
-  _mq.addEventListener('change', _onMqChange)
-})
-onUnmounted(() => {
-  if (_mq) _mq.removeEventListener('change', _onMqChange)
-})
-
-const modalStyle = computed(() => ({
-  maxWidth: '540px',
-  width: 'calc(100% - 32px)',
-  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: 'var(--radius-xl)',
-}))
-
 // 弹窗打开即预热 Markdown 渲染 chunk，使更新内容加载与弹窗动画重叠
 watch(showUpdateModal, (val) => {
   if (val) loadMarkdown()
-
-  // 模糊遮罩（与 cookie 弹窗一致）
-  if (val) {
-    nextTick(() => {
-      if (document.getElementById('update-blur-overlay')) return
-      const overlay = document.createElement('div')
-      overlay.id = 'update-blur-overlay'
-      overlay.style.cssText = [
-        'position: fixed', 'top: 0', 'left: 0', 'right: 0', 'bottom: 0',
-        'z-index: 1990', // 盖住移动端汉堡(1950)/菜单抽屉(1900)，仍低于 NModal(≥2000)
-        '-webkit-backdrop-filter: blur(8px)', 'backdrop-filter: blur(8px)',
-        'background: rgba(0, 0, 0, 0.1)',
-        'pointer-events: none',
-        'opacity: 0', 'transition: opacity 0.3s ease',
-      ].join(';')
-      document.body.appendChild(overlay)
-      requestAnimationFrame(() => { overlay.style.opacity = '1' })
-    })
-  } else {
-    const overlay = document.getElementById('update-blur-overlay')
-    if (overlay) {
-      overlay.style.opacity = '0'
-      setTimeout(() => overlay.remove(), 300)
-    }
-  }
 })
 </script>
 
 <template>
-  <NModal
+  <AppModal
     v-model:show="showUpdateModal"
-    preset="card"
     :title="popupTitle || '发现新版本'"
-    :style="modalStyle"
-    :segmented="{ content: true, footer: 'soft' }"
+    :max-width="540"
     :closable="!forceUpdate"
     :mask-closable="!forceUpdate"
     :close-on-esc="!forceUpdate"
-    @close="deferUpdate"
-    :auto-focus="false"
     content-scrollable
+    blur-mask
+    @close="deferUpdate"
   >
     <div class="update-desc">
       <p class="new-version-banner">
@@ -158,16 +117,16 @@ watch(showUpdateModal, (val) => {
           <template v-else>
             <NTooltip placement="top" :trigger="forceUpdate ? 'click' : 'hover'">
               <template #trigger>
-                <button class="btn btn-outline" :class="{ 'btn-force-disabled': forceUpdate }" @click="deferUpdate">暂不更新</button>
+                <button class="app-modal-btn app-modal-btn--outline" :class="{ 'btn-force-disabled': forceUpdate }" @click="deferUpdate">暂不更新</button>
               </template>
               {{ deferTip }}
             </NTooltip>
-            <button class="btn btn-fill" @click="applyUpdate">立即更新</button>
+            <button class="app-modal-btn app-modal-btn--fill" @click="applyUpdate">立即更新</button>
           </template>
         </div>
       </div>
     </template>
-  </NModal>
+  </AppModal>
 </template>
 
 <style scoped>
@@ -270,31 +229,6 @@ watch(showUpdateModal, (val) => {
   gap: 10px;
 }
 
-.btn {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  border: none;
-}
-
-/* fill - 全填充主按钮（反色块） */
-.btn-fill {
-  background: var(--primary);
-  color: var(--primary-foreground) !important;
-}
-
-.btn-fill:hover {
-  opacity: 0.85;
-}
-
 /* 大版本强制更新：「暂不更新」置灰：无描边、无 hover 反馈，点击仅弹提示 */
 .btn-force-disabled,
 .btn-force-disabled:hover {
@@ -302,27 +236,6 @@ watch(showUpdateModal, (val) => {
   background: transparent !important;
   opacity: 0.5;
   cursor: default;
-}
-
-/* outline - 描边按钮 */
-.btn-outline {
-  border: 1.5px solid currentColor;
-  background: var(--card);
-  color: var(--foreground);
-}
-
-.btn-outline:hover {
-  background: var(--muted);
-}
-
-/* text - 仅文字按钮 */
-.btn-text {
-  background: transparent;
-  color: var(--foreground);
-}
-
-.btn-text:hover {
-  background: var(--accent);
 }
 </style>
 

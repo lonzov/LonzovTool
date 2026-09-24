@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { NIcon, NModal, NCascader, useMessage } from 'naive-ui'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { NIcon, NCascader, useMessage } from 'naive-ui'
 import { Link24Filled, ArrowDownload24Filled, ArrowUpRight20Filled } from '@vicons/fluent'
 import { useMouseGlow, applyGlow } from '../../composables/useMouseGlow'
+import AppModal from '../ui/AppModal.vue'
 
 const props = defineProps({
   show: Boolean,
@@ -17,43 +18,6 @@ const message = useMessage()
 const showLocal = computed({
   get: () => props.show,
   set: (val) => emit('update:show', val),
-})
-
-// 模糊遮罩
-watch(() => props.show, (val) => {
-  if (val) {
-    nextTick(() => {
-      const existing = document.getElementById('download-blur-overlay')
-      if (!existing) {
-        const overlay = document.createElement('div')
-        overlay.id = 'download-blur-overlay'
-        overlay.style.cssText = [
-          'position: fixed',
-          'top: 0',
-          'left: 0',
-          'right: 0',
-          'bottom: 0',
-          'z-index: 1990', // 盖住移动端汉堡(1950)/菜单抽屉(1900)，仍低于 NModal(≥2000)
-          '-webkit-backdrop-filter: blur(8px)',
-          'backdrop-filter: blur(8px)',
-          'background: rgba(0, 0, 0, 0.1)',
-          'pointer-events: none',
-          'opacity: 0',
-          'transition: opacity 0.3s ease'
-        ].join(';')
-        document.body.appendChild(overlay)
-        requestAnimationFrame(() => {
-          overlay.style.opacity = '1'
-        })
-      }
-    })
-  } else {
-    const overlay = document.getElementById('download-blur-overlay')
-    if (overlay) {
-      overlay.style.opacity = '0'
-      setTimeout(() => overlay.remove(), 300)
-    }
-  }
 })
 
 // ===== 多版本选择 =====
@@ -163,14 +127,12 @@ onUnmounted(() => unsubGlow(handleGlow))
 </script>
 
 <template>
-  <NModal
+  <AppModal
     v-model:show="showLocal"
-    preset="card"
-    :style="{ maxWidth: '540px', width: 'calc(100% - 32px)', borderRadius: 'var(--radius-xl)' }"
     title="下载方式"
-    :bordered="false"
+    :max-width="540"
     closable
-    :auto-focus="false"
+    blur-mask
   >
     <div class="dl-modal-header-row">
       <span class="dl-modal-desc">{{ hasNoLinks ? '暂无可用下载' : hasMultiVersion ? '请选择下载方式和版本' : '选择一个适合你的下载方式' }}</span>
@@ -216,7 +178,7 @@ onUnmounted(() => unsubGlow(handleGlow))
         <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
       </div>
     </div>
-  </NModal>
+  </AppModal>
 </template>
 
 <style scoped>

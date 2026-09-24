@@ -1,38 +1,17 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { NModal } from 'naive-ui'
+import AppModal from '../ui/AppModal.vue'
 import {
   showColorModal, colorsStandard, colorsMaterial,
   closeColorTable, copyColorCode,
 } from '../../composables/useRawJsonEditor.js'
-
-const isCompact = ref(false)
-let _mq
-function _onMqChange(e) { isCompact.value = e.matches }
-onMounted(() => {
-  _mq = window.matchMedia('(max-width: 640px)')
-  isCompact.value = _mq.matches
-  _mq.addEventListener('change', _onMqChange)
-})
-onUnmounted(() => {
-  if (_mq) _mq.removeEventListener('change', _onMqChange)
-})
-
-const modalStyle = computed(() => ({
-  maxWidth: '640px',
-  width: 'calc(100% - 32px)',
-  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 110px)',
-  borderRadius: 'var(--radius-xl)',
-}))
 </script>
 
 <template>
-  <NModal
+  <AppModal
     v-model:show="showColorModal"
-    preset="card"
     title="颜色代码参考表"
-    :style="modalStyle"
-    :segmented="{ content: true, footer: 'soft' }"
+    :max-width="640"
+    :max-height-offset="110"
     content-scrollable
   >
     <div class="color-section">
@@ -75,10 +54,10 @@ const modalStyle = computed(() => ({
     <template #footer>
       <div class="modal-actions">
         <span class="color-footer-hint">点击颜色项可复制 § 代码</span>
-        <button class="btn btn-fill" @click="closeColorTable">关闭</button>
+        <button class="app-modal-btn app-modal-btn--fill" @click="closeColorTable">关闭</button>
       </div>
     </template>
-  </NModal>
+  </AppModal>
 </template>
 
 <style scoped>
@@ -133,27 +112,4 @@ const modalStyle = computed(() => ({
   padding-top: 8px;
 }
 .modal-actions > :first-child:not(span) { margin-right: auto; }
-
-.btn {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  border: none;
-}
-
-/* fill - 全填充主按钮 */
-.btn-fill {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.btn-fill:hover { opacity: 0.85; }
 </style>

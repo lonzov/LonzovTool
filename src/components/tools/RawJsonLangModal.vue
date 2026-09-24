@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { NModal, NIcon, useMessage } from 'naive-ui'
+import { ref, computed } from 'vue'
+import { NIcon, useMessage } from 'naive-ui'
+import AppModal from '../ui/AppModal.vue'
 import { Delete24Regular, Edit24Filled } from '@vicons/fluent'
 import { useHeightTransition } from '../../composables/useHeightTransition.js'
 import {
@@ -17,25 +18,6 @@ const message = useMessage()
 const animWrap = ref(null)
 const animInner = ref(null)
 useHeightTransition({ show: showLangModal, inner: animInner, wrap: animWrap })
-
-const isCompact = ref(false)
-let _mq
-function _onMqChange(e) { isCompact.value = e.matches }
-onMounted(() => {
-  _mq = window.matchMedia('(max-width: 640px)')
-  isCompact.value = _mq.matches
-  _mq.addEventListener('change', _onMqChange)
-})
-onUnmounted(() => {
-  if (_mq) _mq.removeEventListener('change', _onMqChange)
-})
-
-const modalStyle = computed(() => ({
-  maxWidth: '640px',
-  width: 'calc(100% - 32px)',
-  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 110px)',
-  borderRadius: 'var(--radius-xl)',
-}))
 
 const activePack = computed(() => langPackList.value.find(p => p.id === activePackId.value) || null)
 const sourceLabel = { lang: '.lang', json: 'JSON', paste: '粘贴' }
@@ -99,12 +81,11 @@ function doDelete(id) {
 </script>
 
 <template>
-  <NModal
+  <AppModal
     v-model:show="showLangModal"
-    preset="card"
     title="语言包"
-    :style="modalStyle"
-    :segmented="{ content: true, footer: 'soft' }"
+    :max-width="640"
+    :max-height-offset="110"
     content-scrollable
   >
     <div ref="animWrap" class="modal-anim">
@@ -209,10 +190,16 @@ function doDelete(id) {
           <div class="lang-field">
             <label class="lang-label">来源</label>
             <div class="lang-source-row">
-              <button class="btn btn-fill btn-sm" :disabled="langImporting" @click="doImport">
+              <button
+                class="app-modal-btn app-modal-btn--fill app-modal-btn--sm"
+                :disabled="langImporting"
+                @click="doImport"
+              >
                 {{ langImporting ? '导入中…' : '导入并启用' }}
               </button>
-              <button class="btn btn-outline btn-sm" @click="pickFile">选择文件</button>
+              <button class="app-modal-btn app-modal-btn--outline app-modal-btn--sm" @click="pickFile">
+                选择文件
+              </button>
             </div>
             <div v-if="langImportFileName" class="lang-file-line">
               <span class="lang-file-chip">
@@ -239,12 +226,12 @@ function doDelete(id) {
     </div>
 
     <template #footer>
-      <div class="modal-actions">
+      <div class="app-modal-actions">
         <span class="lang-footer-hint">语言数据全部保存在本地浏览器，不会上传</span>
-        <button class="btn btn-fill" @click="closeLangModal">关闭</button>
+        <button class="app-modal-btn app-modal-btn--fill" @click="closeLangModal">关闭</button>
       </div>
     </template>
-  </NModal>
+  </AppModal>
 </template>
 
 <style scoped>
@@ -404,51 +391,4 @@ function doDelete(id) {
 
 .lang-footer-hint { font-size: 11px; color: var(--subtle-foreground); transition: color 0.4s ease; }
 
-/* 页脚操作按钮 (与 UpdateDialog 一致) */
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  align-items: center;
-  width: 100%;
-  padding-top: 8px;
-}
-.modal-actions > :first-child:not(span) { margin-right: auto; }
-
-.btn {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  border: none;
-}
-.btn-sm { height: 30px; padding: 0 14px; font-size: 12px; border-radius: var(--radius-xl); corner-shape: round; }
-.btn:disabled { opacity: 0.5; cursor: default; }
-
-.btn-fill {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.btn-fill:hover:not(:disabled) { opacity: 0.85; }
-
-.btn-outline {
-  border: 1.5px solid currentColor;
-}
-
-.btn-outline {
-  background: var(--card);
-  color: var(--foreground);
-}
-
-.btn-outline:hover {
-  background: var(--muted);
-}
 </style>

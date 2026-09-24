@@ -9,6 +9,8 @@ src:
     naive-theme.js: 语义 token 到 Naive UI 主题变量的映射，按主题展开为具体值
     index.js: 主题模块统一出口
   components:
+    ui:
+      AppModal.vue: 全站统一的模态框外壳（宽度/紧凑高度/毛玻璃遮罩/页脚按钮），事件一律透传
     PromoCarousel.vue: 首页推广位轮播组件，滑片数据取自 homePromo.js，滑片支持站内外链接
     AppMenu.vue: 侧边栏导航菜单，支持分类折叠与 PWA 安装入口
     DonateCard.vue: 打赏收款码卡片，含三平台切换 + 爱发电按钮

@@ -1,12 +1,14 @@
 <template>
-  <NModal
+  <AppModal
     v-model:show="showCoordCalcModal"
-    preset="card"
     title="坐标自动计算"
-    :style="modalStyle"
-    :segmented="{ content: true, footer: 'soft' }"
+    :max-width="500"
     content-scrollable
     :mask-closable="false"
+    :actions="[
+      { text: '取消', variant: 'outline', onClick: onCancel },
+      { text: '确定', variant: 'fill', onClick: onConfirm },
+    ]"
     @after-leave="onAfterLeave"
   >
     <div v-if="contentVisible" class="coord-calc-body">
@@ -49,18 +51,13 @@
       </div>
     </div>
 
-    <template #footer>
-      <div class="modal-actions">
-        <button class="btn btn-outline" @click="onCancel">取消</button>
-        <button class="btn btn-fill" @click="onConfirm">确定</button>
-      </div>
-    </template>
-  </NModal>
+  </AppModal>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { NModal, NInput } from 'naive-ui'
+import { computed } from 'vue'
+import { NInput } from 'naive-ui'
+import AppModal from '../../../ui/AppModal.vue'
 import {
   coordCalcModalOpen,
   coordCalcStart,
@@ -73,25 +70,6 @@ import {
 import { useModalContent } from '../composables/useModalContent.js'
 
 const { contentVisible, onAfterLeave } = useModalContent(coordCalcModalOpen)
-
-const isCompact = ref(false)
-let _mq
-function _onMqChange(e) { isCompact.value = e.matches }
-onMounted(() => {
-  _mq = window.matchMedia('(max-width: 640px)')
-  isCompact.value = _mq.matches
-  _mq.addEventListener('change', _onMqChange)
-})
-onUnmounted(() => {
-  if (_mq) _mq.removeEventListener('change', _onMqChange)
-})
-
-const modalStyle = computed(() => ({
-  maxWidth: '500px',
-  width: 'calc(100% - 32px)',
-  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: 'var(--radius-xl)',
-}))
 
 const showCoordCalcModal = computed({
   get: () => coordCalcModalOpen.value,
@@ -167,50 +145,5 @@ function onConfirm() {
   .coord-inputs {
     width: 100%;
   }
-}
-
-/* 页脚操作按钮 */
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding-top: 8px;
-}
-
-.btn {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  border: none;
-}
-
-/* fill - 全填充主按钮 */
-.btn-fill {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.btn-fill:hover { opacity: 0.85; }
-
-/* outline - 描边次要按钮 */
-.btn-outline {
-  border: 1.5px solid currentColor;
-}
-
-.btn-outline {
-  background: var(--card);
-  color: var(--foreground);
-}
-
-.btn-outline:hover {
-  background: var(--muted);
 }
 </style>

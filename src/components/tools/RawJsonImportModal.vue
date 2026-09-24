@@ -1,36 +1,18 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { NModal } from 'naive-ui'
+import AppModal from '../ui/AppModal.vue'
 import { showImportModal, importText, importError, closeImport, parseImport } from '../../composables/useRawJsonEditor.js'
-
-const isCompact = ref(false)
-let _mq
-function _onMqChange(e) { isCompact.value = e.matches }
-onMounted(() => {
-  _mq = window.matchMedia('(max-width: 640px)')
-  isCompact.value = _mq.matches
-  _mq.addEventListener('change', _onMqChange)
-})
-onUnmounted(() => {
-  if (_mq) _mq.removeEventListener('change', _onMqChange)
-})
-
-const modalStyle = computed(() => ({
-  maxWidth: '520px',
-  width: 'calc(100% - 32px)',
-  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: 'var(--radius-xl)',
-}))
 </script>
 
 <template>
-  <NModal
+  <AppModal
     v-model:show="showImportModal"
-    preset="card"
     title="导入指令"
-    :style="modalStyle"
-    :segmented="{ content: true, footer: 'soft' }"
+    :max-width="520"
     content-scrollable
+    :actions="[
+      { text: '取消', variant: 'outline', onClick: closeImport },
+      { text: '解析', variant: 'fill', onClick: parseImport },
+    ]"
   >
     <p class="import-hint">粘贴 tellraw 或 titleraw 指令（开头可加 / 或不加），自动解析 JSON 部分</p>
     <textarea
@@ -41,13 +23,7 @@ const modalStyle = computed(() => ({
       spellcheck="false"
     />
     <div v-if="importError" class="import-error">{{ importError }}</div>
-    <template #footer>
-      <div class="modal-actions">
-        <button class="btn btn-outline" @click="closeImport">取消</button>
-        <button class="btn btn-fill" @click="parseImport">解析</button>
-      </div>
-    </template>
-  </NModal>
+  </AppModal>
 </template>
 
 <style scoped>
@@ -76,50 +52,5 @@ const modalStyle = computed(() => ({
   /* JSON 报错是「诊断 + 位置」两行，靠换行断句 */
   white-space: pre-line; word-break: break-all;
   transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
-}
-
-/* 页脚操作按钮 (与 UpdateDialog 一致) */
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding-top: 8px;
-}
-
-.btn {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  border: none;
-}
-
-/* fill - 全填充主按钮 */
-.btn-fill {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.btn-fill:hover { opacity: 0.85; }
-
-/* outline - 描边次要按钮 */
-.btn-outline {
-  border: 1.5px solid currentColor;
-}
-
-.btn-outline {
-  background: var(--card);
-  color: var(--foreground);
-}
-
-.btn-outline:hover {
-  background: var(--muted);
 }
 </style>

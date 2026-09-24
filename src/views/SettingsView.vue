@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, watch, nextTick, onBeforeUnmount, onMounted, onUnmounted } from 'vue'
-import { NSelect, NSwitch, NModal, NIcon, useMessage } from 'naive-ui'
+import { ref, computed, onBeforeUnmount } from 'vue'
+import { NSelect, NSwitch, NIcon, useMessage } from 'naive-ui'
 import { ArrowDownload16Regular, ArrowExportUp24Filled, Settings24Regular, ChevronUp16Regular, ArrowCounterclockwise24Filled } from '@vicons/fluent'
+import AppModal from '../components/ui/AppModal.vue'
 import { useTheme } from '../composables/useTheme'
 import { confirmDialog } from '../composables/useConfirm'
 import { useWorkspaceSettings } from '../composables/useWorkspaceSettings'
@@ -117,26 +118,6 @@ function closeEmbedEnableModal() {
 onBeforeUnmount(() => {
   if (embedEnableTimer) clearInterval(embedEnableTimer)
 })
-
-/* ========== 开启站外嵌入弹窗样式 ========== */
-const isCompact = ref(false)
-let _compactMq = null
-function _onCompactChange(e) { isCompact.value = e.matches }
-onMounted(() => {
-  _compactMq = window.matchMedia('(max-width: 640px)')
-  isCompact.value = _compactMq.matches
-  _compactMq.addEventListener('change', _onCompactChange)
-})
-onUnmounted(() => {
-  if (_compactMq) _compactMq.removeEventListener('change', _onCompactChange)
-})
-
-const embedEnableModalStyle = computed(() => ({
-  maxWidth: '540px',
-  width: 'calc(100% - 32px)',
-  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: 'var(--radius-xl)',
-}))
 
 /* ========== 关闭站外嵌入：选择是否清理标签页 ========== */
 const embedCloseModal = ref({ show: false })
@@ -589,32 +570,25 @@ function cancelClearResourceCache() {
   cacheClearModal.value.show = false
 }
 
-// 缓存清理模态框模糊遮罩
-watch(() => cacheClearModal.value.show, (val) => {
-  if (val) {
-    nextTick(() => {
-      if (document.getElementById('cache-clear-blur-overlay')) return
-      const overlay = document.createElement('div')
-      overlay.id = 'cache-clear-blur-overlay'
-      overlay.style.cssText = [
-        'position: fixed', 'top: 0', 'left: 0', 'right: 0', 'bottom: 0',
-        'z-index: 1990', // 盖住移动端汉堡(1950)/菜单抽屉(1900)，仍低于 NModal(≥2000)
-        '-webkit-backdrop-filter: blur(8px)', 'backdrop-filter: blur(8px)',
-        'background: rgba(0, 0, 0, 0.1)',
-        'pointer-events: none',
-        'opacity: 0', 'transition: opacity 0.3s ease',
-      ].join(';')
-      document.body.appendChild(overlay)
-      requestAnimationFrame(() => { overlay.style.opacity = '1' })
-    })
-  } else {
-    const overlay = document.getElementById('cache-clear-blur-overlay')
-    if (overlay) {
-      overlay.style.opacity = '0'
-      setTimeout(() => overlay.remove(), 300)
-    }
-  }
-})
+/* ========== 模态框页脚按钮 ========== */
+const importActions = computed(() => [
+  { text: '取消', variant: 'outline', onClick: cancelImport },
+  {
+    text: importModal.value.hasLocalData ? '覆盖并导入' : '确认导入',
+    variant: 'fill',
+    onClick: confirmImport,
+  },
+])
+
+const cacheClearActions = [
+  { text: '取消', variant: 'outline', onClick: cancelClearResourceCache },
+  { text: '确认清理', variant: 'fill', onClick: confirmClearResourceCache },
+]
+
+const embedCloseActions = [
+  { text: '清理', variant: 'outline', onClick: cleanupEmbedClose },
+  { text: '直接关闭', variant: 'fill', onClick: directEmbedClose },
+]
 </script>
 
 <template>
@@ -862,19 +836,13 @@ watch(() => cacheClearModal.value.show, (val) => {
     </div>
 
     <!-- 导入确认模态框 -->
-    <NModal
+    <AppModal
       v-model:show="importModal.show"
-      preset="card"
-      :style="{
-        maxWidth: '420px',
-        width: 'calc(100% - 32px)',
-        borderRadius: 'var(--radius-xl)',
-      }"
+      :max-width="420"
       title="导入配置"
-      :bordered="false"
       :closable="true"
+      :actions="importActions"
       @close="cancelImport"
-      :auto-focus="false"
     >
       <div class="import-modal-body">
         <p v-if="importModal.hasLocalData">
@@ -892,56 +860,33 @@ watch(() => cacheClearModal.value.show, (val) => {
           <code>{{ importModal.rejectedKeys.join('、') }}</code>
         </p>
       </div>
-      <template #footer>
-        <div class="import-modal-actions">
-          <button class="import-btn import-btn--outline" @click="cancelImport">取消</button>
-          <button class="import-btn import-btn--fill" @click="confirmImport">
-            {{ importModal.hasLocalData ? '覆盖并导入' : '确认导入' }}
-          </button>
-        </div>
-      </template>
-    </NModal>
+    </AppModal>
 
     <!-- 缓存清理确认模态框（照搬版本更新模态框样式） -->
-    <NModal
+    <AppModal
       v-model:show="cacheClearModal.show"
-      preset="card"
-      :style="{
-        maxWidth: '420px',
-        width: 'calc(100% - 32px)',
-        borderRadius: 'var(--radius-xl)',
-      }"
+      :max-width="420"
       title="清理资源缓存"
-      :bordered="false"
       :closable="true"
+      blur-mask
+      :actions="cacheClearActions"
       @close="cancelClearResourceCache"
-      :auto-focus="false"
     >
       <div class="cache-clear-modal-body">
         资源共占用 {{ cacheClearModal.sizeMB }} MB，确认要清理吗？<br />
         下次打开网站时加载速度可能变慢
       </div>
-      <template #footer>
-        <div class="import-modal-actions">
-          <button class="import-btn import-btn--outline" @click="cancelClearResourceCache">取消</button>
-          <button class="import-btn import-btn--fill" @click="confirmClearResourceCache">确认清理</button>
-        </div>
-      </template>
-    </NModal>
+    </AppModal>
 
     <!-- 开启站外嵌入：第三方内容声明 + 9s 倒计时确认 -->
-    <NModal
+    <AppModal
       v-model:show="embedEnableModal.show"
-      preset="card"
-      :style="embedEnableModalStyle"
-      :segmented="{ content: true, footer: 'soft' }"
-      content-scrollable
+      :max-width="540"
       title="在工作站内打开外部网页"
-      :bordered="false"
       :closable="true"
-      @close="closeEmbedEnableModal"
       :mask-closable="false"
-      :auto-focus="false"
+      content-scrollable
+      @close="closeEmbedEnableModal"
     >
       <div class="embed-enable-modal-body">
         <p>开启后，点击站外卡片将直接在工作站内打开网页，方便你同时使用多个工具。<strong>请注意：</strong></p>
@@ -950,10 +895,9 @@ watch(() => cacheClearModal.value.show, (val) => {
         <p>3. 因浏览器安全策略，打开的网页可能会无法读取 cookie，这会导致无法登录、人机验证卡住、记录消失等问题，此时同样请改用新标签页打开。</p>
       </div>
       <template #footer>
-        <div class="import-modal-actions">
+        <div class="app-modal-actions">
           <button
-            class="import-btn import-btn--fill embed-confirm-btn"
-            :class="{ 'embed-confirm-btn--disabled': !embedEnableReady }"
+            class="app-modal-btn app-modal-btn--fill"
             :disabled="!embedEnableReady"
             @click="confirmEmbedEnable"
           >
@@ -961,35 +905,23 @@ watch(() => cacheClearModal.value.show, (val) => {
           </button>
         </div>
       </template>
-    </NModal>
+    </AppModal>
 
     <!-- 关闭站外嵌入：是否清理已打开的嵌入标签页 -->
-    <NModal
+    <AppModal
       v-model:show="embedCloseModal.show"
-      preset="card"
-      :style="{
-        maxWidth: '420px',
-        width: 'calc(100% - 32px)',
-        borderRadius: 'var(--radius-xl)',
-      }"
+      :max-width="420"
       title="关闭站外嵌入"
-      :bordered="false"
       :closable="true"
-      @close="cancelEmbedClose"
       :mask-closable="true"
-      :auto-focus="false"
+      :actions="embedCloseActions"
+      @close="cancelEmbedClose"
     >
       <div class="embed-close-modal-body">
         <p>是否需要清理已打开的站外嵌入标签页？</p>
         <p class="embed-close-hint">关闭后，站外卡片将恢复为在浏览器新标签页中打开。</p>
       </div>
-      <template #footer>
-        <div class="import-modal-actions">
-          <button class="import-btn import-btn--outline" @click="cleanupEmbedClose">清理</button>
-          <button class="import-btn import-btn--fill" @click="directEmbedClose">直接关闭</button>
-        </div>
-      </template>
-    </NModal>
+    </AppModal>
   </div>
 </template>
 
@@ -1384,54 +1316,6 @@ watch(() => cacheClearModal.value.show, (val) => {
   font-size: 13px;
   color: var(--n-text-color-3);
   opacity: 0.8;
-}
-
-/* 倒计时未结束：确认按钮填充与文字降至 60% 透明度 */
-.embed-confirm-btn--disabled {
-  opacity: 0.6;
-}
-
-.import-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding-top: 8px;
-}
-
-.import-btn {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  border: none;
-}
-
-/* fill */
-.import-btn--fill {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.import-btn--fill:hover {
-  opacity: 0.85;
-}
-
-/* outline */
-.import-btn--outline {
-  border: 1.5px solid currentColor;
-  background: var(--card);
-  color: var(--foreground);
-}
-
-.import-btn--outline:hover {
-  background: var(--muted);
 }
 
 /* 响应式 */

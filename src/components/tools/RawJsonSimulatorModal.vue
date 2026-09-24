@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { NModal, NIcon } from 'naive-ui'
+import { ref } from 'vue'
+import { NIcon } from 'naive-ui'
+import AppModal from '../ui/AppModal.vue'
 import { Add16Filled, Delete24Regular } from '@vicons/fluent'
 import { useHeightTransition } from '../../composables/useHeightTransition.js'
 import {
@@ -13,35 +14,19 @@ import {
 const animWrap = ref(null)
 const animInner = ref(null)
 useHeightTransition({ show: showSimModal, inner: animInner, wrap: animWrap })
-
-const isCompact = ref(false)
-let _mq
-function _onMqChange(e) { isCompact.value = e.matches }
-onMounted(() => {
-  _mq = window.matchMedia('(max-width: 640px)')
-  isCompact.value = _mq.matches
-  _mq.addEventListener('change', _onMqChange)
-})
-onUnmounted(() => {
-  if (_mq) _mq.removeEventListener('change', _onMqChange)
-})
-
-const modalStyle = computed(() => ({
-  maxWidth: '560px',
-  width: 'calc(100% - 32px)',
-  maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 110px)',
-  borderRadius: 'var(--radius-xl)',
-}))
 </script>
 
 <template>
-  <NModal
+  <AppModal
     v-model:show="showSimModal"
-    preset="card"
     title="预览模拟器"
-    :style="modalStyle"
-    :segmented="{ content: true, footer: 'soft' }"
+    :max-width="560"
+    :max-height-offset="110"
     content-scrollable
+    :actions="[
+      { text: '重置', variant: 'outline', onClick: resetSimulator },
+      { text: '完成', variant: 'fill', onClick: closeSimModal },
+    ]"
   >
     <div ref="animWrap" class="modal-anim">
       <div ref="animInner">
@@ -97,14 +82,7 @@ const modalStyle = computed(() => ({
         </div>
       </div>
     </div>
-
-    <template #footer>
-      <div class="modal-actions">
-        <button class="btn btn-outline" @click="resetSimulator">重置</button>
-        <button class="btn btn-fill" @click="closeSimModal">完成</button>
-      </div>
-    </template>
-  </NModal>
+  </AppModal>
 </template>
 
 <style scoped>
@@ -186,49 +164,4 @@ const modalStyle = computed(() => ({
   transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
 .sim-add-btn:hover { color: var(--foreground); border-color: var(--muted-foreground); background: var(--muted); }
-
-/* 页脚操作按钮 (与 UpdateDialog 一致) */
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  align-items: center;
-  width: 100%;
-  padding-top: 8px;
-}
-
-.btn {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  border: none;
-}
-
-.btn-fill {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.btn-fill:hover { opacity: 0.85; }
-
-.btn-outline {
-  border: 1.5px solid currentColor;
-}
-
-.btn-outline {
-  background: var(--card);
-  color: var(--foreground);
-}
-
-.btn-outline:hover {
-  background: var(--muted);
-}
 </style>
