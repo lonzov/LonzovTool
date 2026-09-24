@@ -392,38 +392,18 @@ export default {
           },
           [
             // 图标 logo（白底黑图标，图片 logo 走下方图片逻辑）
-            // 与图片分支共用 tool-card-logo-inner —— hover 的放大效果挂在那个类上
+            // 与图片分支共用 tool-card-logo-inner —— 尺寸、居中与 hover 放大都挂在那个类上
             isIconLogo
               ? h(
                   'div',
-                  {
-                    class: 'tool-card-logo-inner',
-                    style: {
-                      width: '100%',
-                      height: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    },
-                  },
+                  { class: 'tool-card-logo-inner' },
                   [h(NIcon, { component: iconComp, size: 24, color: '#000000' })],
                 )
               : null,
             // Logo 图片容器
             h(
               'div',
-              {
-                class: 'tool-card-logo-inner',
-                style: {
-                  width: '100%',
-                  height: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative',
-                  transition: 'transform 0.3s ease',
-                },
-              },
+              { class: 'tool-card-logo-inner' },
               [
                 // 骨架屏扫光效果
                 showSkeleton
@@ -610,6 +590,19 @@ export default {
   border-color: var(--border);
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* 图标 logo 与图片 logo 共用这个容器。
+   样式集中在这里而不是各写一份行内 style —— 之前两份是手工同步的，
+   图标那份漏了 transition，导致它 hover 时是"啪"地跳变而不是放大。 */
+.tool-card-logo-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.3s ease;
 }
 
 .tool-card:hover .tool-card-logo-inner {
