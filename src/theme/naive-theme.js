@@ -63,6 +63,12 @@ const baseOverrides = {
     primaryColorHover: 'var(--foreground)',
     primaryColorPressed: 'var(--foreground)',
     primaryColorSuppl: 'var(--foreground)',
+
+    // quaternary / tertiary / secondary 按钮的 hover / pressed 底色走这三个，
+    // Naive 的默认值是带蓝调的自定义 rgba，不随我们的叠层体系走
+    buttonColor2: 'var(--accent)',
+    buttonColor2Hover: 'var(--accent)',
+    buttonColor2Pressed: 'var(--ripple)',
     warningColor: 'var(--warning)',
     warningColorHover: 'var(--warning)',
     warningColorPressed: 'var(--warning)',
@@ -121,7 +127,7 @@ const baseOverrides = {
     dividerColor: 'var(--border)',
     borderRadius: 'var(--radius-xs)',
     itemHeight: '40px',
-    itemPadding: '0 12px',
+    // 没有 itemPadding 这个变量，item 内边距在 Naive 里是写死的
   },
 
   Card: {
@@ -179,7 +185,11 @@ const baseOverrides = {
     borderPressed: '1px solid var(--foreground)',
     borderFocus: '1px solid var(--foreground)',
     borderDisabled: '1px solid var(--border)',
-    boxShadowFocus: '0 0 0 2px var(--ring)',
+    // Button 的 cssr 里没有 box-shadow 声明，focus 只靠 borderFocus 表达
+
+    // 点按涟漪。默认取 primaryColor，比项目的 --ripple 重一个量级
+    rippleColor: 'var(--ripple)',
+    rippleColorPrimary: 'var(--ripple)',
 
     // primary 类型沿用项目既有观感：静止是二级文字色，交互时收敛到一级文字色
     colorPrimary: 'var(--muted-foreground)',
@@ -280,6 +290,12 @@ const baseOverrides = {
     menuBoxShadow: 'var(--shadow-popover)',
     optionArrowColor: 'var(--subtle-foreground)',
     loadingColor: 'var(--muted-foreground)',
+    // Cascader 的选项列表不走 InternalSelectMenu，用的是自己这几个变量，
+    // 默认取 textColor2 / primaryColor —— 而我们的 primaryColor 与 textColor2 同值，
+    // 不显式覆盖的话当前路径项会和未选项完全同色，选中态消失。
+    optionTextColor: 'var(--foreground)',
+    optionTextColorActive: 'var(--foreground)',
+    optionCheckMarkColor: 'var(--foreground)',
     peers: {
       InternalSelection: {
         color: 'var(--input-background)',
@@ -338,12 +354,19 @@ const baseOverrides = {
     borderRadius: 'var(--radius-md)',
   },
 
-  // 全站统一反色气泡，不随背景色变化
+  /* 全站统一反色气泡。
+     Tooltip 自己没有样式表，气泡整个交给 NPopover 渲染，并把自己的 self 当
+     builtinThemeOverrides 传下去 —— 而 builtin 在同名合并里优先级最低，会被全局的
+     Popover 块整个打掉。所以颜色必须写在 peers.Popover 里，写在 Tooltip 这一层是白费。 */
   Tooltip: {
-    color: 'var(--primary)',
-    textColor: 'var(--primary-foreground)',
-    boxShadow: 'var(--shadow-md)',
-    borderRadius: 'var(--radius-sm)',
+    peers: {
+      Popover: {
+        color: 'var(--primary)',
+        textColor: 'var(--primary-foreground)',
+        boxShadow: 'var(--shadow-md)',
+        borderRadius: 'var(--radius-sm)',
+      },
+    },
   },
 
   Scrollbar: {
@@ -373,9 +396,12 @@ const baseOverrides = {
   Switch: {
     railColor: 'var(--border)',
     railColorActive: 'var(--primary)',
-    loadingColor: 'var(--primary)',
-    textColor: 'var(--foreground)',
-    iconColor: 'var(--primary-foreground)',
+    loadingColor: 'var(--muted-foreground)',
+    // 这个 textColor 用在轨道上的 #checked / #unchecked 文字，而激活轨道的底是 --primary，
+    // 所以它是配 --primary-foreground 的，不是普通正文色
+    textColor: 'var(--primary-foreground)',
+    // 图标画在白色滑块里（滑块色未覆盖，仍是 Naive 的 #FFF），不能用反色块的前景色
+    iconColor: 'var(--muted-foreground)',
     boxShadowFocus: '0 0 0 2px var(--ring)',
     // 轨道与滑块都做成胶囊
     railBorderRadiusSmall: 'var(--radius-full)',
