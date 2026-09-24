@@ -41,7 +41,7 @@ export default {
               flexShrink: '0',
               marginTop: '2px',
               // 警告琥珀色：全站没有 warning token，保留固定值（在深浅两套底上都可读）
-              color: '#d48806',
+              color: 'var(--warning)',
             },
             innerHTML: '&#9888;', // 警告图标 ⚠
           }),

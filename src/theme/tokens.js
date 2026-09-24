@@ -1,4 +1,4 @@
-import { neutral, highlight, destructive, alpha } from './palette.js'
+import { neutral, highlight, destructive, warning, success, alpha } from './palette.js'
 
 const BLACK = '#000000'
 
@@ -49,6 +49,10 @@ const lightTokens = {
   'highlight-foreground': neutral[1000],
   destructive: destructive.light,
   'destructive-foreground': neutral[0],
+  warning: warning.light,
+  'warning-foreground': neutral[1000],
+  success: success.light,
+  'success-foreground': neutral[0],
 
   // 阴影
   'shadow-sm': `0 1px 2px ${alpha(BLACK, 0.04)}`,
@@ -91,6 +95,10 @@ const darkTokens = {
   'highlight-foreground': neutral[1000],
   destructive: destructive.dark,
   'destructive-foreground': neutral[0],
+  warning: warning.dark,
+  'warning-foreground': neutral[1000],
+  success: success.dark,
+  'success-foreground': neutral[1000],
 
   'shadow-sm': `0 1px 2px ${alpha(BLACK, 0.3)}`,
   'shadow-md': `0 2px 8px ${alpha(BLACK, 0.4)}`,

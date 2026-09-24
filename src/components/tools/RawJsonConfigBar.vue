@@ -200,7 +200,7 @@ import { openLangModal, activePackName } from '../../composables/useRawJsonLang.
   margin-left: 5px;
   border-radius: 50%;
   corner-shape: round;
-  background: #18A058;
+  background: var(--success);
   vertical-align: middle;
 }
 .toolbar-count {

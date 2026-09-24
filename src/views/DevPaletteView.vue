@@ -91,7 +91,16 @@ const TOKEN_GROUPS = [
   { title: '反色块', keys: ['primary', 'primary-foreground'] },
   {
     title: '强调色',
-    keys: ['highlight', 'highlight-foreground', 'destructive', 'destructive-foreground'],
+    keys: [
+      'highlight',
+      'highlight-foreground',
+      'destructive',
+      'destructive-foreground',
+      'warning',
+      'warning-foreground',
+      'success',
+      'success-foreground',
+    ],
   },
   { title: '阴影', keys: ['shadow-sm', 'shadow-md', 'shadow-popover', 'shadow-drawer'] },
 ]
@@ -109,6 +118,8 @@ const PAIRS = [
   ['primary-foreground', 'primary'],
   ['highlight-foreground', 'highlight'],
   ['destructive-foreground', 'destructive'],
+  ['warning-foreground', 'warning'],
+  ['success-foreground', 'success'],
 ]
 
 const RADIUS_KEYS = ['radius-xs', 'radius-sm', 'radius-md', 'radius-lg', 'radius-xl', 'radius-full']

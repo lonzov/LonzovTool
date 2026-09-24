@@ -33,10 +33,22 @@ export const highlight = {
   dark: '#D4B106',
 }
 
-// 强调色：危险操作与警告，所有红色归并到这一组
+// 强调色：危险操作，所有红色归并到这一组
 export const destructive = {
   light: '#DC2626',
   dark: '#DC2626',
+}
+
+// 强调色：警告（琥珀）。深色下用更亮的一档，否则在深底上会糊掉
+export const warning = {
+  light: '#D48806',
+  dark: '#F0A020',
+}
+
+// 强调色：成功（绿）。浅色取 Naive 的 successColor，深色下换更亮的一档
+export const success = {
+  light: '#18A058',
+  dark: '#63E469',
 }
 
 /**

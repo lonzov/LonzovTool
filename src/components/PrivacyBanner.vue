@@ -395,7 +395,7 @@ export default {
 .banner-icon {
   flex-shrink: 0;
   /* 警告琥珀色：全站没有 warning token，保留固定值（在两套主题的反色底上都可读） */
-  color: #d48806;
+  color: var(--warning);
   margin-top: 2px;
 }
 

@@ -166,7 +166,7 @@ onUnmounted(() => {
 
 .diagnostic-loader--ok {
   animation: none;
-  border-color: #63E469 transparent;
+  border-color: var(--success) transparent;
   filter: drop-shadow(0 0 8px rgba(99, 228, 105, 0.4));
 }
 
