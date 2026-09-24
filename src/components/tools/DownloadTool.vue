@@ -319,6 +319,7 @@ watch(config, (val) => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
+  corner-shape: round;
   border: 4px solid;
   animation: dl-loader-spin 1s infinite;
 }
@@ -476,6 +477,7 @@ watch(config, (val) => {
   background-color: var(--text-primary);
   border: none;
   border-radius: 999px;
+  corner-shape: round;
   overflow: hidden;
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;

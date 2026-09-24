@@ -258,6 +258,7 @@ onUnmounted(() => unsubGlow(handleGlow))
 .dl-version-cascader :deep(.n-base-selection),
 .dl-version-cascader :deep(.n-base-selection-label) {
   border-radius: 100px !important;
+  corner-shape: round;
 }
 
 .dl-version-cascader :deep(.n-base-selection) {

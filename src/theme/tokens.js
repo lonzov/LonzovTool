@@ -106,7 +106,7 @@ export const radiusTokens = Object.fromEntries(
 
 const staticTokens = {
   ...radiusTokens,
-  // full 是胶囊与圆形，曲率放大对它无意义，保持不放大
+  // 胶囊与圆形：半径必然达到短边一半，平滑曲率在此会破形，用法见 main.css 的 .corner-round
   'radius-full': '9999px',
 
   'duration-theme': '0.4s',
@@ -179,7 +179,8 @@ ${vars(LEGACY_ALIASES)}
 
 /* 平滑曲率圆角。corner-shape 按规范不继承（Inherited: no），只能逐元素设置；
    半径同步放大 ${SQUIRCLE_SCALE}× 抵消曲率带来的"变方"感。不支持的浏览器在解析阶段
-   就丢弃该属性，自动回退到传统 1/4 圆角。需要局部回退时给元素加 .corner-round。 */
+   就丢弃该属性，自动回退到传统 1/4 圆角。
+   圆角达到元素短边一半的场景（胶囊、圆形）必须回退，理由与判定见 main.css 的 .corner-round。 */
 @supports (corner-shape: squircle) {
   * {
     corner-shape: squircle;

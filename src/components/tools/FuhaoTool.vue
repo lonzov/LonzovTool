@@ -456,6 +456,7 @@ onBeforeUnmount(() => {
   height: 0.2em;
   background: #e74c3c;
   border-radius: 50%;
+  corner-shape: round;
   vertical-align: middle;
   flex-shrink: 0;
 }

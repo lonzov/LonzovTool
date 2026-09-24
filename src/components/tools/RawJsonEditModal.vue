@@ -428,6 +428,7 @@ function getAvailableHeight(el) {
   height: 34px;
   padding: 0 20px;
   border-radius: 17px;
+  corner-shape: round;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;

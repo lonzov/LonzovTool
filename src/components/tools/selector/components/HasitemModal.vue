@@ -326,6 +326,7 @@ function onModalEntered() {
   width: 100%;
   background: var(--bg-sub);
   border-radius: 50px;
+  corner-shape: round;
   padding: 4px;
   user-select: none;
   margin-bottom: 14px;
@@ -339,6 +340,7 @@ function onModalEntered() {
   height: calc(100% - 8px);
   background: var(--bg-card);
   border-radius: 50px;
+  corner-shape: round;
   transition:
     transform 0.28s cubic-bezier(0.2, 0, 0, 1),
     width 0.28s cubic-bezier(0.2, 0, 0, 1);
@@ -512,6 +514,7 @@ function onModalEntered() {
   height: 34px;
   padding: 0 20px;
   border-radius: 17px;
+  corner-shape: round;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;

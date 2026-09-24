@@ -151,6 +151,7 @@ onUnmounted(() => {
   width: 50px;
   aspect-ratio: 1;
   border-radius: 50%;
+  corner-shape: round;
   border: 8px solid;
   animation: diagnostic-spin 1s infinite;
   filter: drop-shadow(0 0 8px rgba(128, 140, 160, 0.4));
@@ -252,6 +253,7 @@ onUnmounted(() => {
   height: 34px;
   padding: 0 20px;
   border-radius: 17px;
+  corner-shape: round;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;

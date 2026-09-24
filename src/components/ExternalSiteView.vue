@@ -226,6 +226,7 @@ onBeforeUnmount(() => {
   padding: 0 14px 0 3px;
   border: 1px solid var(--border-color);
   border-radius: 100px;
+  corner-shape: round;
   background: var(--bg-sub);
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
@@ -240,6 +241,7 @@ onBeforeUnmount(() => {
   width: 28px;
   height: 28px;
   border-radius: 50%;
+  corner-shape: round;
   flex-shrink: 0;
 }
 

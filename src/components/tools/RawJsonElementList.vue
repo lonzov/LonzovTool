@@ -114,6 +114,7 @@ import {
   width: 24px; height: 24px;
   background: #555; color: white;
   border-radius: 50%;
+  corner-shape: round;
   display: flex; align-items: center; justify-content: center;
   font-size: 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);

@@ -395,6 +395,7 @@ function handleKeydown(e) {
   width: 18px;
   height: 18px;
   border-radius: 50%;
+  corner-shape: round;
   font-size: 12px;
   font-weight: 700;
   line-height: 1;

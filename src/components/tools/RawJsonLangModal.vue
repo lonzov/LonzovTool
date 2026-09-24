@@ -429,6 +429,7 @@ function doDelete(id) {
   height: 34px;
   padding: 0 20px;
   border-radius: 17px;
+  corner-shape: round;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -438,7 +439,7 @@ function doDelete(id) {
   align-items: center;
   border: none;
 }
-.btn-sm { height: 30px; padding: 0 14px; font-size: 12px; border-radius: 15px; }
+.btn-sm { height: 30px; padding: 0 14px; font-size: 12px; border-radius: 15px; corner-shape: round; }
 .btn:disabled { opacity: 0.5; cursor: default; }
 
 [data-theme="light"] .btn-fill {

@@ -204,6 +204,7 @@ import { openLangModal, activePackName } from '../../composables/useRawJsonLang.
   width: 5px; height: 5px;
   margin-left: 5px;
   border-radius: 50%;
+  corner-shape: round;
   background: #18A058;
   vertical-align: middle;
 }

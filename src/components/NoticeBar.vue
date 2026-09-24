@@ -598,6 +598,7 @@ export default {
   width: 7px;
   height: 7px;
   border-radius: 50%;
+  corner-shape: round;
   background: #cc3333;
   box-shadow: 0 0 0 1px var(--bg-card);
   pointer-events: none;

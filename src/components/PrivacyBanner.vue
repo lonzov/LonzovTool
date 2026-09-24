@@ -419,6 +419,7 @@ export default {
   height: 30px;
   padding: 0 14px;
   border-radius: 16px;
+  corner-shape: round;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -517,6 +518,7 @@ export default {
   height: 34px;
   padding: 0 20px;
   border-radius: 17px;
+  corner-shape: round;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -548,6 +550,7 @@ export default {
   height: 34px;
   padding: 0 20px;
   border-radius: 17px;
+  corner-shape: round;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;

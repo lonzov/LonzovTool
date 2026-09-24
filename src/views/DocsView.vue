@@ -195,6 +195,7 @@ watchEffect(() => {
   width: 50px;
   aspect-ratio: 1;
   border-radius: 50%;
+  corner-shape: round;
   border: 8px solid;
   animation: docs-loader-spin 1s infinite;
   filter: drop-shadow(0 0 8px rgba(128, 140, 160, 0.4));

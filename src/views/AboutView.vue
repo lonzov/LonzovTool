@@ -797,6 +797,7 @@ const statCluster = computed(() => ([
   padding: 6px 14px 6px 9px;
   border: 1px solid var(--line-2);
   border-radius: 999px;
+  corner-shape: round;
   color: var(--text-secondary);
   background: var(--bg-card);
 }
@@ -805,6 +806,7 @@ const statCluster = computed(() => ([
   width: 22px;
   height: 22px;
   border-radius: 50%;
+  corner-shape: round;
   object-fit: cover;
   flex: none;
 }
@@ -902,6 +904,7 @@ const statCluster = computed(() => ([
   cursor: pointer;
   padding: 8px 26px;
   border-radius: 999px;
+  corner-shape: round;
   border: 1px solid var(--text-primary);
   text-decoration: none;
   color: var(--text-primary);
@@ -1059,6 +1062,7 @@ const statCluster = computed(() => ([
   width: 7px;
   height: 7px;
   border-radius: 50%;
+  corner-shape: round;
   background: #ff3b30;
   animation: pulse 1.6s infinite;
 }
@@ -1360,6 +1364,7 @@ const statCluster = computed(() => ([
   width: var(--av-size);
   height: var(--av-size);
   border-radius: 50%;
+  corner-shape: round;
   flex: none;
   border: 1px solid var(--line-2);
   overflow: hidden;

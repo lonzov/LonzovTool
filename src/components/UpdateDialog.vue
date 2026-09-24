@@ -274,6 +274,7 @@ watch(showUpdateModal, (val) => {
   height: 34px;
   padding: 0 20px;
   border-radius: 17px;
+  corner-shape: round;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -365,6 +366,7 @@ watch(showUpdateModal, (val) => {
   padding: 2px 12px;
   border: none;
   border-radius: 100px;
+  corner-shape: round;
   font-size: 13px;
   font-family: inherit;
   line-height: 1.6;

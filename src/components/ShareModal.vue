@@ -719,6 +719,7 @@ const modalStyle = computed(() => ({
   max-width: 168px;
   height: 6px;
   border-radius: 999px;
+  corner-shape: round;
   overflow: hidden;
   background: rgba(20, 20, 20, 0.12);
 }
@@ -726,6 +727,7 @@ const modalStyle = computed(() => ({
   display: block;
   height: 100%;
   border-radius: 999px;
+  corner-shape: round;
   background: #141414;
 }
 
@@ -739,6 +741,7 @@ const modalStyle = computed(() => ({
   height: 34px;
   padding: 0 20px;
   border-radius: 17px;
+  corner-shape: round;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;

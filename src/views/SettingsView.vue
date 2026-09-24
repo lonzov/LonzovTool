@@ -1045,6 +1045,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   gap: 6px;
   padding: 7px 14px;
   border-radius: 100px;
+  corner-shape: round;
   border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-secondary);
@@ -1201,6 +1202,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   height: 34px;
   border: 1px solid var(--border-color);
   border-radius: 100px;
+  corner-shape: round;
   box-sizing: border-box;
   transition: border-color 0.4s ease;
 }
@@ -1215,6 +1217,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   padding: 0 34px 0 12px;
   border: none;
   border-radius: 100px;
+  corner-shape: round;
   background: transparent;
   color: var(--text-primary);
   font-size: 0.85rem;
@@ -1245,6 +1248,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   align-items: center;
   border: 1px solid var(--border-color);
   border-radius: 100px;
+  corner-shape: round;
   overflow: hidden;
   transition: border-color 0.4s ease;
 }
@@ -1283,6 +1287,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   height: 30px;
   padding: 0 16px;
   border-radius: 100px;
+  corner-shape: round;
   border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-secondary);
@@ -1397,6 +1402,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   height: 34px;
   padding: 0 20px;
   border-radius: 17px;
+  corner-shape: round;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -1498,6 +1504,7 @@ watch(() => cacheClearModal.value.show, (val) => {
 .settings-select .n-base-selection,
 .settings-select .n-base-selection-label {
   border-radius: 100px !important;
+  corner-shape: round;
 }
 
 .settings-select .n-base-selection-label {

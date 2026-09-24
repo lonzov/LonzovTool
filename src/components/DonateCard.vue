@@ -264,6 +264,7 @@ if (typeof document !== 'undefined') {
   padding-block: 0.5rem;
   padding-inline: 1.25rem;
   border-radius: 9999px;
+  corner-shape: round;
   background-color: #946CE6;
   color: #ffffff;
   font-size: 15px;
