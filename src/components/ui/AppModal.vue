@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, toRef, onMounted, onUnmounted } from 'vue'
 import { NModal } from 'naive-ui'
+import { useHeightTransition } from '../../composables/useHeightTransition.js'
 
 /**
  * 全站统一的模态框外壳。
@@ -24,6 +25,11 @@ const props = defineProps({
   autoFocus: { type: Boolean, default: false },
   contentScrollable: { type: Boolean, default: false },
   blurMask: { type: Boolean, default: false },
+  /**
+   * 内容高度变化时给模态框做高度过渡（增删条目、展开折叠、报错信息出现等）。
+   * 内部会自行包一层 overflow:hidden 的动画容器，调用方不用再手写 wrap/inner 两层 DOM。
+   */
+  animated: { type: Boolean, default: false },
   segmented: { type: [Boolean, Object], default: () => ({ content: true, footer: 'soft' }) },
   /**
    * 页脚按钮。数组项为 { text, variant, disabled, onClick }，
@@ -52,6 +58,12 @@ onMounted(() => {
 onUnmounted(() => {
   if (mq) mq.removeEventListener('change', onMqChange)
 })
+
+// 高度过渡：外层容器的高度由 hook 接管，内层高度自适应。
+// 两层都由本组件持有，调用方只需加 animated 属性。
+const animWrap = ref(null)
+const animInner = ref(null)
+useHeightTransition({ show: toRef(props, 'show'), inner: animInner, wrap: animWrap })
 
 const modalStyle = computed(() => ({
   maxWidth: typeof props.maxWidth === 'number' ? `${props.maxWidth}px` : props.maxWidth,
@@ -89,7 +101,12 @@ const modalStyle = computed(() => ({
     @after-enter="emit('after-enter')"
     @after-leave="emit('after-leave')"
   >
-    <slot />
+    <div v-if="animated" ref="animWrap" class="app-modal-anim">
+      <div ref="animInner">
+        <slot />
+      </div>
+    </div>
+    <slot v-else />
 
     <template #footer>
       <slot name="footer">
@@ -116,6 +133,12 @@ const modalStyle = computed(() => ({
    半径走 token，平滑曲率下自动放大，不需要各处再写 @supports */
 .app-modal {
   border-radius: var(--radius-xl);
+}
+
+/* 高度过渡容器：外层高度由 useHeightTransition 接管，内层高度自适应 */
+.app-modal-anim {
+  overflow: hidden;
+  transition: height 260ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .app-modal-blur {

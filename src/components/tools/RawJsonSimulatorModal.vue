@@ -1,19 +1,13 @@
 <script setup>
-import { ref } from 'vue'
 import { NIcon } from 'naive-ui'
 import AppModal from '../ui/AppModal.vue'
 import { Add16Filled, Delete24Regular } from '@vicons/fluent'
-import { useHeightTransition } from '../../composables/useHeightTransition.js'
 import {
   simPlayer, simMissing, simTagsText, simScores,
   showSimModal, simScoreConfirmIdx,
   closeSimModal, addSimScore, removeSimScore, resetSimulator, triggerSimSave,
 } from '../../composables/useRawJsonSimulator.js'
 
-// 增删记分板行、说明文案换行等都会改变高度，统一交给它做过渡
-const animWrap = ref(null)
-const animInner = ref(null)
-useHeightTransition({ show: showSimModal, inner: animInner, wrap: animWrap })
 </script>
 
 <template>
@@ -23,75 +17,66 @@ useHeightTransition({ show: showSimModal, inner: animInner, wrap: animWrap })
     :max-width="560"
     :max-height-offset="110"
     content-scrollable
+    animated
     :actions="[
       { text: '重置', variant: 'outline', onClick: resetSimulator },
       { text: '完成', variant: 'fill', onClick: closeSimModal },
     ]"
   >
-    <div ref="animWrap" class="modal-anim">
-      <div ref="animInner">
-        <p class="sim-hint">
-          预览里的 <code>selector</code> 和 <code>score</code> 元素需要知道「谁在看这条消息」才能求值。
-          这里填的就是那套模拟数据——只影响预览，不会写进 JSON。
-        </p>
+    <p class="sim-hint">
+      预览里的 <code>selector</code> 和 <code>score</code> 元素需要知道「谁在看这条消息」才能求值。
+      这里填的就是那套模拟数据——只影响预览，不会写进 JSON。
+    </p>
 
-        <div class="sim-field">
-          <label class="sim-label">玩家名</label>
-          <input v-model="simPlayer" type="text" class="sim-input" placeholder="Steve" @input="triggerSimSave" />
-          <span class="sim-field-hint">@s / @p / @a / @e 都会取这个值</span>
-        </div>
+    <div class="sim-field">
+      <label class="sim-label">玩家名</label>
+      <input v-model="simPlayer" type="text" class="sim-input" placeholder="Steve" @input="triggerSimSave" />
+      <span class="sim-field-hint">@s / @p / @a / @e 都会取这个值</span>
+    </div>
 
-        <div class="sim-field">
-          <label class="sim-label">缺失分值</label>
-          <input v-model="simMissing" type="text" class="sim-input" placeholder="0" @input="triggerSimSave" />
-          <span class="sim-field-hint">记分板查不到该玩家/计分项时显示的兜底值</span>
-        </div>
+    <div class="sim-field">
+      <label class="sim-label">缺失分值</label>
+      <input v-model="simMissing" type="text" class="sim-input" placeholder="0" @input="triggerSimSave" />
+      <span class="sim-field-hint">记分板查不到该玩家/计分项时显示的兜底值</span>
+    </div>
 
-        <div class="sim-field">
-          <label class="sim-label">实体标签</label>
-          <input v-model="simTagsText" type="text" class="sim-input" placeholder="vip, admin" @input="triggerSimSave" />
-          <span class="sim-field-hint">逗号分隔。用于 @e[tag=vip] 这类带标签过滤的选择器</span>
-        </div>
+    <div class="sim-field">
+      <label class="sim-label">实体标签</label>
+      <input v-model="simTagsText" type="text" class="sim-input" placeholder="vip, admin" @input="triggerSimSave" />
+      <span class="sim-field-hint">逗号分隔。用于 @e[tag=vip] 这类带标签过滤的选择器</span>
+    </div>
 
-        <div class="sim-field">
-          <label class="sim-label">记分板</label>
-          <div class="sim-score-list">
-            <div v-if="simScores.length === 0" class="sim-empty">暂无记分板数据</div>
-            <div v-for="(row, i) in simScores" :key="i" class="sim-score-row">
-              <input v-model="row.player" type="text" class="sim-input sim-score-input" placeholder="玩家" @input="triggerSimSave" />
-              <input v-model="row.objective" type="text" class="sim-input sim-score-input" placeholder="计分项" @input="triggerSimSave" />
-              <input v-model="row.score" type="text" class="sim-input sim-score-value" placeholder="0" @input="triggerSimSave" />
-              <button
-                class="sim-icon-btn"
-                :class="{ 'sim-icon-btn--danger': simScoreConfirmIdx === i }"
-                :title="simScoreConfirmIdx === i ? '再次点击确认删除' : '删除'"
-                @click="removeSimScore(i)"
-              >
-                <NIcon :component="Delete24Regular" :size="14" />
-              </button>
-            </div>
-          </div>
-          <button class="sim-add-btn" @click="addSimScore">
-            <NIcon :component="Add16Filled" :size="14" />
-            <span>添加记分板项</span>
+    <div class="sim-field">
+      <label class="sim-label">记分板</label>
+      <div class="sim-score-list">
+        <div v-if="simScores.length === 0" class="sim-empty">暂无记分板数据</div>
+        <div v-for="(row, i) in simScores" :key="i" class="sim-score-row">
+          <input v-model="row.player" type="text" class="sim-input sim-score-input" placeholder="玩家" @input="triggerSimSave" />
+          <input v-model="row.objective" type="text" class="sim-input sim-score-input" placeholder="计分项" @input="triggerSimSave" />
+          <input v-model="row.score" type="text" class="sim-input sim-score-value" placeholder="0" @input="triggerSimSave" />
+          <button
+            class="sim-icon-btn"
+            :class="{ 'sim-icon-btn--danger': simScoreConfirmIdx === i }"
+            :title="simScoreConfirmIdx === i ? '再次点击确认删除' : '删除'"
+            @click="removeSimScore(i)"
+          >
+            <NIcon :component="Delete24Regular" :size="14" />
           </button>
-          <span class="sim-field-hint">
-            既用于 <code>score</code> 元素求值，也用于 <code>@p[scores={{ a=1 }}]</code> 这类条件选择器。
-            没有列出的计分项一律视为「条件不成立」，该参数会被移出参数表。
-          </span>
         </div>
       </div>
+      <button class="sim-add-btn" @click="addSimScore">
+        <NIcon :component="Add16Filled" :size="14" />
+        <span>添加记分板项</span>
+      </button>
+      <span class="sim-field-hint">
+        既用于 <code>score</code> 元素求值，也用于 <code>@p[scores={{ a=1 }}]</code> 这类条件选择器。
+        没有列出的计分项一律视为「条件不成立」，该参数会被移出参数表。
+      </span>
     </div>
   </AppModal>
 </template>
 
 <style scoped>
-/* 高度过渡容器：外层高度由 useHeightTransition 接管，内层高度自适应 */
-.modal-anim {
-  overflow: hidden;
-  transition: height 260ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 .sim-hint {
   margin: 0 0 16px; padding: 10px 12px;
   font-size: 12px; line-height: 1.6; color: var(--muted-foreground);
