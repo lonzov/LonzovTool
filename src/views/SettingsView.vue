@@ -1503,7 +1503,7 @@ watch(() => cacheClearModal.value.show, (val) => {
 /* NSelect 触发器 — 胶囊圆角、不换行、focus 不变色 */
 .settings-select .n-base-selection,
 .settings-select .n-base-selection-label {
-  border-radius: 100px !important;
+  border-radius: var(--radius-full) !important;
   corner-shape: round;
 }
 
@@ -1520,35 +1520,15 @@ watch(() => cacheClearModal.value.show, (val) => {
   --n-box-shadow-active: none !important;
 }
 
-/* NSelect 下拉面板 */
+/* NSelect 下拉面板，颜色与阴影由 themeOverrides 提供 */
 .n-select-menu {
-  --n-option-color-hover: var(--bg-sub) !important;
-  border: 1px solid var(--border-color) !important;
+  border: 1px solid var(--border) !important;
 }
 
 /* 仅加宽"主题写入 URL 参数"下拉的面板（触发器宽度不变） */
 .settings-select-menu-wide {
   min-width: 0 !important;
   --n-option-padding: 0 0px;
-}
-
-[data-theme='dark'] .n-select-menu {
-  --n-option-color-hover: #2A2A2A !important;
-}
-
-[data-theme='light'] .n-select-menu,
-html:not([data-theme='dark']) .n-select-menu {
-  box-shadow:
-    0 3px 6px -4px rgba(0, 0, 0, 0.16),
-    0 6px 16px 0 rgba(0, 0, 0, 0.12),
-    0 9px 28px 8px rgba(0, 0, 0, 0.08) !important;
-}
-
-[data-theme='dark'] .n-select-menu {
-  box-shadow:
-    0 3px 6px -4px rgba(0, 0, 0, 0.48),
-    0 6px 12px 0 rgba(0, 0, 0, 0.36),
-    0 9px 18px 8px rgba(0, 0, 0, 0.24) !important;
 }
 
 /* 小屏下保持下拉菜单宽度 */

@@ -7,15 +7,6 @@
         size="small"
         :options="kindDropdownOptions"
         @select="handleKindSelect"
-        :style="{
-          '--n-color': 'var(--bg-card)',
-          '--n-text-color': 'var(--text-primary)',
-          '--n-icon-color': 'var(--text-secondary)',
-          '--n-divider-color': 'var(--border-color)',
-          '--n-option-color-hover': 'var(--bg-sub)',
-          '--n-option-color-active': 'var(--bg-sub)',
-          '--n-group-header-color': 'var(--text-secondary)',
-        }"
       >
         <div class="kind-trigger">
           <span>{{ kindLabel || '参数类型' }}</span>

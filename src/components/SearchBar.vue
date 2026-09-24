@@ -339,27 +339,8 @@ export default {
   -ms-user-select: none !important;
 }
 
-/* 搜索方式下拉菜单描边（包括二级菜单） */
+/* 搜索方式下拉菜单描边（包括二级菜单），圆角与阴影由 themeOverrides 提供 */
 .n-dropdown-menu {
-  border: 1px solid var(--border-color) !important;
-  border-radius: 6px !important;
-}
-
-/* 加强搜索方式下拉菜单阴影 */
-/* 浅色模式 - 略微增强 */
-[data-theme='light'] .n-dropdown-menu,
-html:not([data-theme='dark']) .n-dropdown-menu {
-  box-shadow:
-    0 3px 6px -4px rgba(0, 0, 0, 0.16),
-    0 6px 16px 0 rgba(0, 0, 0, 0.12),
-    0 9px 28px 8px rgba(0, 0, 0, 0.08) !important;
-}
-
-/* 深色模式 - 着重增强 */
-[data-theme='dark'] .n-dropdown-menu {
-  box-shadow:
-    0 3px 6px -4px rgba(0, 0, 0, 0.48),
-    0 6px 12px 0 rgba(0, 0, 0, 0.36),
-    0 9px 18px 8px rgba(0, 0, 0, 0.24) !important;
+  border: 1px solid var(--border) !important;
 }
 </style>

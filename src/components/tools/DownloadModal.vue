@@ -220,14 +220,9 @@ onUnmounted(() => unsubGlow(handleGlow))
 </template>
 
 <style scoped>
-/* 弹窗标题加粗 */
+/* 弹窗标题加粗；文字色由 themeOverrides 的 Card.titleTextColor 提供 */
 :deep(.n-card-header__main) {
   font-weight: 700 !important;
-  color: rgba(0, 0, 0, 1) !important;
-}
-
-[data-theme='dark'] :deep(.n-card-header__main) {
-  color: rgba(255, 255, 255, 1) !important;
 }
 
 /* ===== 版本选择行 ===== */
@@ -378,43 +373,19 @@ onUnmounted(() => unsubGlow(handleGlow))
 </style>
 
 <style>
-/* 级联选择器下拉面板 */
+/* 级联选择器下拉面板：颜色与阴影由 themeOverrides 提供，这里只管列宽与描边 */
 .n-cascader-menu {
-  --n-menu-color: var(--bg-card) !important;
-  --n-option-color-hover: var(--bg-sub) !important;
-  --n-option-text-color: var(--text-primary) !important;
-  --n-menu-divider-color: var(--border-color) !important;
   --n-column-width: 126px !important;
-  --n-menu-border-radius: 8px !important;
-  border: 1px solid var(--border-color) !important;
+  border: 1px solid var(--border) !important;
 }
 
 /* 级联选择器 focus 状态不变 */
 .dl-version-cascader .n-base-selection {
-  --n-border: 1px solid var(--border-color) !important;
-  --n-border-hover: 1px solid var(--border-color) !important;
-  --n-border-focus: 1px solid var(--border-color) !important;
-  --n-border-active: 1px solid var(--border-color) !important;
+  --n-border: 1px solid var(--border) !important;
+  --n-border-hover: 1px solid var(--border) !important;
+  --n-border-focus: 1px solid var(--border) !important;
+  --n-border-active: 1px solid var(--border) !important;
   --n-box-shadow-focus: none !important;
   --n-box-shadow-active: none !important;
-}
-
-[data-theme='dark'] .dl-version-cascader .n-base-selection {
-  --n-color: #191919 !important;
-}
-
-[data-theme='light'] .n-cascader-menu,
-html:not([data-theme='dark']) .n-cascader-menu {
-  box-shadow:
-    0 3px 6px -4px rgba(0, 0, 0, 0.16),
-    0 6px 16px 0 rgba(0, 0, 0, 0.12),
-    0 9px 28px 8px rgba(0, 0, 0, 0.08) !important;
-}
-
-[data-theme='dark'] .n-cascader-menu {
-  box-shadow:
-    0 3px 6px -4px rgba(0, 0, 0, 0.48),
-    0 6px 12px 0 rgba(0, 0, 0, 0.36),
-    0 9px 18px 8px rgba(0, 0, 0, 0.24) !important;
 }
 </style>

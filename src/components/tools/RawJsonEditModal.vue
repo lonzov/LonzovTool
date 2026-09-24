@@ -556,8 +556,8 @@ function getAvailableHeight(el) {
 </style>
 
 <style>
-/* NSelect 下拉菜单描边 */
+/* NSelect 下拉菜单描边；颜色、圆角与阴影由 themeOverrides 提供 */
 .n-select-menu {
-  border: 1px solid var(--border-color) !important;
+  border: 1px solid var(--border) !important;
 }
 </style>

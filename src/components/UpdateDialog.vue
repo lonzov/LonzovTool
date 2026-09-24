@@ -385,15 +385,4 @@ watch(showUpdateModal, (val) => {
   background: #fff;
   color: #1A1A1A;
 }
-
-/* 更新弹窗 Tooltip 深浅色覆盖（popover 渲染到 body，须全局样式） */
-.n-popover {
-  --n-color: #fff !important;
-  --n-text-color: #1A1A1A !important;
-}
-
-[data-theme="dark"] .n-popover {
-  --n-color: #2A2A2A !important;
-  --n-text-color: rgba(255, 255, 255, 0.87) !important;
-}
 </style>
