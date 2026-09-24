@@ -18,14 +18,6 @@
       size="medium"
       :options="dropdownOptions"
       @select="handleSelect"
-      :style="{
-        '--n-color': 'var(--bg-card)',
-        '--n-text-color': 'var(--text-primary)',
-        '--n-icon-color': 'var(--text-secondary)',
-        '--n-divider-color': 'var(--border-color)',
-        '--n-option-color-hover': 'var(--bg-sub)',
-        '--n-group-header-color': 'var(--text-secondary)',
-      }"
     >
       <div
         :style="{

@@ -1,9 +1,7 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { NModal, NConfigProvider, NIcon, NSelect } from 'naive-ui'
-import { darkTheme } from 'naive-ui'
+import { NModal, NIcon, NSelect } from 'naive-ui'
 import { Delete24Regular, ArrowUp24Regular, ArrowDown24Regular, Add24Regular, Edit24Filled } from '@vicons/fluent'
-import { useTheme } from '../../composables/useTheme'
 import {
   showEditModal, editIdx,
   editType, formText, formSelector, formScoreObj, formScoreName,
@@ -16,13 +14,6 @@ import {
   withParamConfirmIdx, withElConfirmIdx, nestedWithParamConfirmIdx,
   getElTypeLabel, getElPreviewText,
 } from '../../composables/useRawJsonEditor.js'
-
-const { isDark } = useTheme()
-
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
 
 const isCompact = ref(false)
 let _mq
@@ -40,8 +31,7 @@ const modalStyle = computed(() => ({
   maxWidth: '520px',
   width: 'calc(100% - 32px)',
   maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: '16px',
-  cornerShape: 'squircle',
+  borderRadius: 'var(--radius-xl)',
 }))
 
 const typeOptions = [
@@ -160,197 +150,195 @@ function getAvailableHeight(el) {
 </script>
 
 <template>
-  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-    <NModal
-      v-model:show="showEditModal"
-      preset="card"
-      :title="nestedIdx !== null ? '编辑 With 元素' : (editIdx !== null ? '编辑元素' : '添加元素')"
-      :style="modalStyle"
-      :segmented="{ content: true, footer: 'soft' }"
-      content-scrollable
-      :mask-closable="false"
-      @esc="nestedIdx !== null ? cancelNestedEdit() : closeEditModal()"
-      @close="onModalClose"
-    >
-      <!-- 高度过渡动画载体：nestedIdx 切换时只替换其内部内容，本层始终存在 -->
-      <div ref="formWrapRef" class="edit-form-wrap">
-      <!-- ========== 嵌套编辑器：编辑 with.rawtext 内元素 ========== -->
-      <template v-if="nestedIdx !== null">
-        <div class="edit-form">
-          <div class="edit-field">
-            <label class="edit-label">类型</label>
-            <NSelect v-model:value="nestedType" :options="typeOptions" size="small" />
-          </div>
-
-          <div v-if="nestedType === 'text'" class="edit-field">
-            <label class="edit-label">内容</label>
-            <textarea v-model="nestedText" class="edit-textarea" rows="3" placeholder="文本内容" spellcheck="false" />
-          </div>
-
-          <div v-if="nestedType === 'selector'" class="edit-field">
-            <label class="edit-label">选择器</label>
-            <input v-model="nestedSelector" type="text" class="edit-input" placeholder="@p" />
-          </div>
-
-          <template v-if="nestedType === 'score'">
-            <div class="edit-field-row">
-              <div class="edit-field edit-field-half">
-                <label class="edit-label">记分项</label>
-                <input v-model="nestedScoreObj" type="text" class="edit-input" placeholder="money" />
-              </div>
-              <div class="edit-field edit-field-half">
-                <label class="edit-label">目标</label>
-                <input v-model="nestedScoreName" type="text" class="edit-input" placeholder="@s" />
-              </div>
-            </div>
-          </template>
-
-          <template v-if="nestedType === 'translate'">
-            <div class="edit-field">
-              <label class="edit-label">键名</label>
-              <input v-model="nestedTranslateKey" type="text" class="edit-input" placeholder="tile.stone.name" />
-            </div>
-            <div class="edit-field">
-              <label class="edit-label">With 参数</label>
-              <div class="with-list">
-                <div v-if="nestedWith.length === 0" class="with-empty">无参数</div>
-                <div v-for="(_w, wi) in nestedWith" :key="wi" class="with-row">
-                  <input v-model="nestedWith[wi]" type="text" class="edit-input with-input" :placeholder="`参数 ${wi + 1}`" />
-                  <span v-if="nestedWith[wi] === ''" class="with-empty-tag" title="这一行是空参数，仍会占用一个槽位">空</span>
-                  <button class="btn-minor" :class="{ 'btn-delete-confirmed': nestedWithParamConfirmIdx === wi }" :title="nestedWithParamConfirmIdx === wi ? '再次点击确认删除' : '删除'" @click="removeNestedWithParam(wi)">
-                    <NIcon :component="Delete24Regular" :size="14" />
-                  </button>
-                </div>
-              </div>
-              <button class="btn-minor" @click="addNestedWithParam">添加参数</button>
-            </div>
-          </template>
+  <NModal
+    v-model:show="showEditModal"
+    preset="card"
+    :title="nestedIdx !== null ? '编辑 With 元素' : (editIdx !== null ? '编辑元素' : '添加元素')"
+    :style="modalStyle"
+    :segmented="{ content: true, footer: 'soft' }"
+    content-scrollable
+    :mask-closable="false"
+    @esc="nestedIdx !== null ? cancelNestedEdit() : closeEditModal()"
+    @close="onModalClose"
+  >
+    <!-- 高度过渡动画载体：nestedIdx 切换时只替换其内部内容，本层始终存在 -->
+    <div ref="formWrapRef" class="edit-form-wrap">
+    <!-- ========== 嵌套编辑器：编辑 with.rawtext 内元素 ========== -->
+    <template v-if="nestedIdx !== null">
+      <div class="edit-form">
+        <div class="edit-field">
+          <label class="edit-label">类型</label>
+          <NSelect v-model:value="nestedType" :options="typeOptions" size="small" />
         </div>
-      </template>
 
-      <!-- ========== 主编辑器 ========== -->
-      <template v-else>
-        <div class="edit-form">
-          <!-- 类型选择 -->
-          <div class="edit-field">
-            <label class="edit-label">类型</label>
-            <NSelect v-model:value="editType" :options="typeOptions" size="small" />
-          </div>
-
-          <!-- text 表单 -->
-          <div v-if="editType === 'text'" class="edit-field">
-            <label class="edit-label">内容</label>
-            <textarea
-              v-model="formText"
-              class="edit-textarea"
-              rows="4"
-              placeholder="支持 § 颜色代码，使用 \n 换行"
-              spellcheck="false"
-            />
-          </div>
-
-          <!-- selector 表单 -->
-          <div v-if="editType === 'selector'" class="edit-field">
-            <label class="edit-label">选择器</label>
-            <input v-model="formSelector" type="text" class="edit-input" placeholder="@p" />
-          </div>
-
-          <!-- score 表单 -->
-          <template v-if="editType === 'score'">
-            <div class="edit-field-row">
-              <div class="edit-field edit-field-half">
-                <label class="edit-label">记分项</label>
-                <input v-model="formScoreObj" type="text" class="edit-input" placeholder="money" />
-              </div>
-              <div class="edit-field edit-field-half">
-                <label class="edit-label">目标</label>
-                <input v-model="formScoreName" type="text" class="edit-input" placeholder="@s" />
-              </div>
-            </div>
-          </template>
-
-          <!-- translate 表单 -->
-          <template v-if="editType === 'translate'">
-            <div class="edit-field">
-              <label class="edit-label">键名</label>
-              <input v-model="formTranslateKey" type="text" class="edit-input" placeholder="tile.stone.name" />
-            </div>
-            <div class="edit-field">
-              <label class="edit-label">With 类型</label>
-              <NSelect v-model:value="withMode" :options="withModeOptions" size="small" />
-            </div>
-
-            <!-- With [...] 列表模式 -->
-            <div v-if="withMode === 'array'" class="edit-field">
-              <label class="edit-label">With 参数</label>
-              <div class="with-list">
-                <div v-if="tempWith.length === 0" class="with-empty">无参数</div>
-                <div v-for="(_w, wi) in tempWith" :key="wi" class="with-row">
-                  <input
-                    v-model="tempWith[wi]"
-                    type="text"
-                    class="edit-input with-input"
-                    :placeholder="`参数 ${wi + 1}`"
-                  />
-                  <span v-if="tempWith[wi] === ''" class="with-empty-tag" title="这一行是空参数，仍会占用一个槽位">空</span>
-                  <button class="btn-delete" :class="{ 'btn-delete-confirmed': withParamConfirmIdx === wi }" :title="withParamConfirmIdx === wi ? '再次点击确认删除' : '删除'" @click="removeWithParam(wi)">
-                    <NIcon :component="Delete24Regular" :size="14" />
-                  </button>
-                </div>
-              </div>
-              <button class="btn-minor btn-add" @click="addWithParam">
-                <NIcon :component="Add24Regular" :size="14" />
-                <span>添加参数</span>
-              </button>
-            </div>
-
-            <!-- With {...} 对象模式 -->
-            <div v-if="withMode === 'object'" class="edit-field">
-              <label class="edit-label">With Rawtext 元素</label>
-              <div class="with-list">
-                <div v-if="withRawtext.length === 0" class="with-empty">无元素，请添加</div>
-                <div v-for="(el, ei) in withRawtext" :key="ei" class="with-el-row">
-                  <span class="with-el-badge">{{ nestedElLabel(el) }}</span>
-                  <span class="with-el-preview">{{ nestedElPreview(el) }}</span>
-                  <div class="with-el-actions">
-                    <button class="btn-minor" :disabled="ei === 0" @click="moveWithEl(ei, 'up')">
-                      <NIcon :component="ArrowUp24Regular" :size="14" />
-                    </button>
-                    <button class="btn-minor" :disabled="ei === withRawtext.length - 1" @click="moveWithEl(ei, 'down')">
-                      <NIcon :component="ArrowDown24Regular" :size="14" />
-                    </button>
-                    <button class="btn-minor" @click="startNestedEdit(ei)">
-                      <NIcon :component="Edit24Filled" :size="14" />
-                    </button>
-                    <button class="btn-minor" :class="{ 'btn-delete-confirmed': withElConfirmIdx === ei }" :title="withElConfirmIdx === ei ? '再次点击确认删除' : '删除'" @click="deleteWithEl(ei)">
-                      <NIcon :component="Delete24Regular" :size="14" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <button class="btn-minor btn-add" @click="startNestedEdit(null)">
-                <NIcon :component="Add24Regular" :size="14" />
-                <span>添加元素</span>
-              </button>
-            </div>
-          </template>
+        <div v-if="nestedType === 'text'" class="edit-field">
+          <label class="edit-label">内容</label>
+          <textarea v-model="nestedText" class="edit-textarea" rows="3" placeholder="文本内容" spellcheck="false" />
         </div>
-      </template>
+
+        <div v-if="nestedType === 'selector'" class="edit-field">
+          <label class="edit-label">选择器</label>
+          <input v-model="nestedSelector" type="text" class="edit-input" placeholder="@p" />
+        </div>
+
+        <template v-if="nestedType === 'score'">
+          <div class="edit-field-row">
+            <div class="edit-field edit-field-half">
+              <label class="edit-label">记分项</label>
+              <input v-model="nestedScoreObj" type="text" class="edit-input" placeholder="money" />
+            </div>
+            <div class="edit-field edit-field-half">
+              <label class="edit-label">目标</label>
+              <input v-model="nestedScoreName" type="text" class="edit-input" placeholder="@s" />
+            </div>
+          </div>
+        </template>
+
+        <template v-if="nestedType === 'translate'">
+          <div class="edit-field">
+            <label class="edit-label">键名</label>
+            <input v-model="nestedTranslateKey" type="text" class="edit-input" placeholder="tile.stone.name" />
+          </div>
+          <div class="edit-field">
+            <label class="edit-label">With 参数</label>
+            <div class="with-list">
+              <div v-if="nestedWith.length === 0" class="with-empty">无参数</div>
+              <div v-for="(_w, wi) in nestedWith" :key="wi" class="with-row">
+                <input v-model="nestedWith[wi]" type="text" class="edit-input with-input" :placeholder="`参数 ${wi + 1}`" />
+                <span v-if="nestedWith[wi] === ''" class="with-empty-tag" title="这一行是空参数，仍会占用一个槽位">空</span>
+                <button class="btn-minor" :class="{ 'btn-delete-confirmed': nestedWithParamConfirmIdx === wi }" :title="nestedWithParamConfirmIdx === wi ? '再次点击确认删除' : '删除'" @click="removeNestedWithParam(wi)">
+                  <NIcon :component="Delete24Regular" :size="14" />
+                </button>
+              </div>
+            </div>
+            <button class="btn-minor" @click="addNestedWithParam">添加参数</button>
+          </div>
+        </template>
       </div>
+    </template>
 
-      <!-- 统一 footer -->
-      <template #footer>
-        <div v-if="nestedIdx !== null" class="modal-actions">
-          <button class="btn btn-outline" @click="cancelNestedEdit">取消</button>
-          <button class="btn btn-fill" @click="saveNestedEdit">确认</button>
+    <!-- ========== 主编辑器 ========== -->
+    <template v-else>
+      <div class="edit-form">
+        <!-- 类型选择 -->
+        <div class="edit-field">
+          <label class="edit-label">类型</label>
+          <NSelect v-model:value="editType" :options="typeOptions" size="small" />
         </div>
-        <div v-else class="modal-actions">
-          <button class="btn btn-outline" @click="closeEditModal">取消</button>
-          <button class="btn btn-fill" @click="saveElement">保存</button>
+
+        <!-- text 表单 -->
+        <div v-if="editType === 'text'" class="edit-field">
+          <label class="edit-label">内容</label>
+          <textarea
+            v-model="formText"
+            class="edit-textarea"
+            rows="4"
+            placeholder="支持 § 颜色代码，使用 \n 换行"
+            spellcheck="false"
+          />
         </div>
-      </template>
-    </NModal>
-  </NConfigProvider>
+
+        <!-- selector 表单 -->
+        <div v-if="editType === 'selector'" class="edit-field">
+          <label class="edit-label">选择器</label>
+          <input v-model="formSelector" type="text" class="edit-input" placeholder="@p" />
+        </div>
+
+        <!-- score 表单 -->
+        <template v-if="editType === 'score'">
+          <div class="edit-field-row">
+            <div class="edit-field edit-field-half">
+              <label class="edit-label">记分项</label>
+              <input v-model="formScoreObj" type="text" class="edit-input" placeholder="money" />
+            </div>
+            <div class="edit-field edit-field-half">
+              <label class="edit-label">目标</label>
+              <input v-model="formScoreName" type="text" class="edit-input" placeholder="@s" />
+            </div>
+          </div>
+        </template>
+
+        <!-- translate 表单 -->
+        <template v-if="editType === 'translate'">
+          <div class="edit-field">
+            <label class="edit-label">键名</label>
+            <input v-model="formTranslateKey" type="text" class="edit-input" placeholder="tile.stone.name" />
+          </div>
+          <div class="edit-field">
+            <label class="edit-label">With 类型</label>
+            <NSelect v-model:value="withMode" :options="withModeOptions" size="small" />
+          </div>
+
+          <!-- With [...] 列表模式 -->
+          <div v-if="withMode === 'array'" class="edit-field">
+            <label class="edit-label">With 参数</label>
+            <div class="with-list">
+              <div v-if="tempWith.length === 0" class="with-empty">无参数</div>
+              <div v-for="(_w, wi) in tempWith" :key="wi" class="with-row">
+                <input
+                  v-model="tempWith[wi]"
+                  type="text"
+                  class="edit-input with-input"
+                  :placeholder="`参数 ${wi + 1}`"
+                />
+                <span v-if="tempWith[wi] === ''" class="with-empty-tag" title="这一行是空参数，仍会占用一个槽位">空</span>
+                <button class="btn-delete" :class="{ 'btn-delete-confirmed': withParamConfirmIdx === wi }" :title="withParamConfirmIdx === wi ? '再次点击确认删除' : '删除'" @click="removeWithParam(wi)">
+                  <NIcon :component="Delete24Regular" :size="14" />
+                </button>
+              </div>
+            </div>
+            <button class="btn-minor btn-add" @click="addWithParam">
+              <NIcon :component="Add24Regular" :size="14" />
+              <span>添加参数</span>
+            </button>
+          </div>
+
+          <!-- With {...} 对象模式 -->
+          <div v-if="withMode === 'object'" class="edit-field">
+            <label class="edit-label">With Rawtext 元素</label>
+            <div class="with-list">
+              <div v-if="withRawtext.length === 0" class="with-empty">无元素，请添加</div>
+              <div v-for="(el, ei) in withRawtext" :key="ei" class="with-el-row">
+                <span class="with-el-badge">{{ nestedElLabel(el) }}</span>
+                <span class="with-el-preview">{{ nestedElPreview(el) }}</span>
+                <div class="with-el-actions">
+                  <button class="btn-minor" :disabled="ei === 0" @click="moveWithEl(ei, 'up')">
+                    <NIcon :component="ArrowUp24Regular" :size="14" />
+                  </button>
+                  <button class="btn-minor" :disabled="ei === withRawtext.length - 1" @click="moveWithEl(ei, 'down')">
+                    <NIcon :component="ArrowDown24Regular" :size="14" />
+                  </button>
+                  <button class="btn-minor" @click="startNestedEdit(ei)">
+                    <NIcon :component="Edit24Filled" :size="14" />
+                  </button>
+                  <button class="btn-minor" :class="{ 'btn-delete-confirmed': withElConfirmIdx === ei }" :title="withElConfirmIdx === ei ? '再次点击确认删除' : '删除'" @click="deleteWithEl(ei)">
+                    <NIcon :component="Delete24Regular" :size="14" />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button class="btn-minor btn-add" @click="startNestedEdit(null)">
+              <NIcon :component="Add24Regular" :size="14" />
+              <span>添加元素</span>
+            </button>
+          </div>
+        </template>
+      </div>
+    </template>
+    </div>
+
+    <!-- 统一 footer -->
+    <template #footer>
+      <div v-if="nestedIdx !== null" class="modal-actions">
+        <button class="btn btn-outline" @click="cancelNestedEdit">取消</button>
+        <button class="btn btn-fill" @click="saveNestedEdit">确认</button>
+      </div>
+      <div v-else class="modal-actions">
+        <button class="btn btn-outline" @click="closeEditModal">取消</button>
+        <button class="btn btn-fill" @click="saveElement">保存</button>
+      </div>
+    </template>
+  </NModal>
 </template>
 
 <style scoped>

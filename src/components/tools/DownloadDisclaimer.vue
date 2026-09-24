@@ -1,8 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { NModal, NConfigProvider, useMessage } from 'naive-ui'
-import { darkTheme } from 'naive-ui'
-import { useTheme } from '../../composables/useTheme'
+import { NModal, useMessage } from 'naive-ui'
 
 const props = defineProps({
   show: Boolean,
@@ -12,7 +10,6 @@ const props = defineProps({
 const emit = defineEmits(['update:show', 'continue'])
 
 const message = useMessage()
-const { isDark } = useTheme()
 
 const showLocal = computed({
   get: () => props.show,
@@ -92,11 +89,6 @@ onUnmounted(() => {
   clearInterval(cooldownTimer)
 })
 
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
-
 // 响应式
 const isCompact = ref(false)
 let _mq
@@ -114,38 +106,35 @@ const modalStyle = computed(() => ({
   maxWidth: '540px',
   width: 'calc(100% - 32px)',
   maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: '16px',
-  cornerShape: 'squircle',
+  borderRadius: 'var(--radius-xl)',
 }))
 </script>
 
 <template>
-  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-    <NModal
-      v-model:show="showLocal"
-      preset="card"
-      :style="modalStyle"
-      title="声明"
-      :bordered="false"
-      :closable="false"
-      :mask-closable="false"
-      :auto-focus="false"
-    >
-      <div class="disclaimer-desc">
-        本工具由 <strong>{{ developer }}</strong> 开发，小舟工具箱仅提供下载分发服务。感谢使用，请支持原作者！
+  <NModal
+    v-model:show="showLocal"
+    preset="card"
+    :style="modalStyle"
+    title="声明"
+    :bordered="false"
+    :closable="false"
+    :mask-closable="false"
+    :auto-focus="false"
+  >
+    <div class="disclaimer-desc">
+      本工具由 <strong>{{ developer }}</strong> 开发，小舟工具箱仅提供下载分发服务。感谢使用，请支持原作者！
+    </div>
+    <template #footer>
+      <div class="modal-actions">
+        <button
+          class="btn btn-outline"
+          :class="{ 'btn-disabled': !canDismiss }"
+          @click="handleDismiss"
+        >不再提醒{{ canDismiss ? '' : ' ' + cooldownRemaining }}</button>
+        <button class="btn btn-fill" @click="handleContinue">继续下载</button>
       </div>
-      <template #footer>
-        <div class="modal-actions">
-          <button
-            class="btn btn-outline"
-            :class="{ 'btn-disabled': !canDismiss }"
-            @click="handleDismiss"
-          >不再提醒{{ canDismiss ? '' : ' ' + cooldownRemaining }}</button>
-          <button class="btn btn-fill" @click="handleContinue">继续下载</button>
-        </div>
-      </template>
-    </NModal>
-  </NConfigProvider>
+    </template>
+  </NModal>
 </template>
 
 <style scoped>

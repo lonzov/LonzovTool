@@ -1,16 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { NModal, NConfigProvider } from 'naive-ui'
-import { darkTheme } from 'naive-ui'
-import { useTheme } from '../../composables/useTheme'
+import { NModal } from 'naive-ui'
 import { showImportModal, importText, importError, closeImport, parseImport } from '../../composables/useRawJsonEditor.js'
-
-const { isDark } = useTheme()
-
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
 
 const isCompact = ref(false)
 let _mq
@@ -28,38 +19,35 @@ const modalStyle = computed(() => ({
   maxWidth: '520px',
   width: 'calc(100% - 32px)',
   maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: '16px',
-  cornerShape: 'squircle',
+  borderRadius: 'var(--radius-xl)',
 }))
 </script>
 
 <template>
-  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-    <NModal
-      v-model:show="showImportModal"
-      preset="card"
-      title="导入指令"
-      :style="modalStyle"
-      :segmented="{ content: true, footer: 'soft' }"
-      content-scrollable
-    >
-      <p class="import-hint">粘贴 tellraw 或 titleraw 指令（开头可加 / 或不加），自动解析 JSON 部分</p>
-      <textarea
-        v-model="importText"
-        class="import-textarea"
-        rows="8"
-        placeholder='tellraw @a {"rawtext":[...]} 或 /tellraw @a {...}'
-        spellcheck="false"
-      />
-      <div v-if="importError" class="import-error">{{ importError }}</div>
-      <template #footer>
-        <div class="modal-actions">
-          <button class="btn btn-outline" @click="closeImport">取消</button>
-          <button class="btn btn-fill" @click="parseImport">解析</button>
-        </div>
-      </template>
-    </NModal>
-  </NConfigProvider>
+  <NModal
+    v-model:show="showImportModal"
+    preset="card"
+    title="导入指令"
+    :style="modalStyle"
+    :segmented="{ content: true, footer: 'soft' }"
+    content-scrollable
+  >
+    <p class="import-hint">粘贴 tellraw 或 titleraw 指令（开头可加 / 或不加），自动解析 JSON 部分</p>
+    <textarea
+      v-model="importText"
+      class="import-textarea"
+      rows="8"
+      placeholder='tellraw @a {"rawtext":[...]} 或 /tellraw @a {...}'
+      spellcheck="false"
+    />
+    <div v-if="importError" class="import-error">{{ importError }}</div>
+    <template #footer>
+      <div class="modal-actions">
+        <button class="btn btn-outline" @click="closeImport">取消</button>
+        <button class="btn btn-fill" @click="parseImport">解析</button>
+      </div>
+    </template>
+  </NModal>
 </template>
 
 <style scoped>

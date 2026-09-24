@@ -1,23 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { NConfigProvider, NTooltip, darkTheme } from 'naive-ui'
+import { NTooltip } from 'naive-ui'
 import { RiBilibiliLine, RiTiktokFill, RiGithubFill, RiQqFill, RiRssFill } from '@remixicon/vue'
-import { useTheme } from '../composables/useTheme'
 import { useStats } from '../composables/useStats'
 import IframeForm from '../components/IframeForm.vue'
 
-const { isDark } = useTheme()
 const { stats, fetchStats } = useStats()
 const router = useRouter()
-
-const naiveTheme = computed(() => isDark.value ? darkTheme : null)
-
-/* Tooltip 配色覆盖为项目风格：反色（亮色模式深底浅字，暗色模式浅底深字） */
-const naiveThemeOverrides = computed(() => isDark.value
-  ? { Tooltip: { color: '#E8E8E8', textColor: '#111111' } }
-  : { Tooltip: { color: '#1A1A1A', textColor: '#F5F7F9' } }
-)
 
 /* ===== 贡献者数据（异步 import，参考打赏记录） ===== */
 const contributors = ref([])
@@ -401,225 +391,223 @@ const statCluster = computed(() => ([
 </script>
 
 <template>
-  <NConfigProvider :theme="naiveTheme" :theme-overrides="naiveThemeOverrides">
-    <div class="about-page">
-      <!-- ===== 1. HERO ===== -->
-      <header class="hero">
-        <span class="wm wm--slash" aria-hidden="true">/</span>
-        <span class="hero-rail" aria-hidden="true"><b>01</b> about · <b>02</b> features · <b>03</b> contributors</span>
+  <div class="about-page">
+    <!-- ===== 1. HERO ===== -->
+    <header class="hero">
+      <span class="wm wm--slash" aria-hidden="true">/</span>
+      <span class="hero-rail" aria-hidden="true"><b>01</b> about · <b>02</b> features · <b>03</b> contributors</span>
 
-        <span class="hero-tag"><img src="/favicon.ico" alt="" class="hero-tag-logo" />小舟工具箱 / tool.lonzov.top</span>
+      <span class="hero-tag"><img src="/favicon.ico" alt="" class="hero-tag-logo" />小舟工具箱 / tool.lonzov.top</span>
 
-        <h1>
-          <span class="w l-mc">Minecraft<small>BEDROCK EDITION</small></span>
-          <span class="w l-solid">指令工具</span>
-          <span class="w l-hollow">聚合平台</span>
-        </h1>
+      <h1>
+        <span class="w l-mc">Minecraft<small>BEDROCK EDITION</small></span>
+        <span class="w l-solid">指令工具</span>
+        <span class="w l-hollow">聚合平台</span>
+      </h1>
 
-        <p class="hero-sub">聚合各类命令相关工具、文档与社区资源——<br>让复杂重复，变得简单高效。</p>
+      <p class="hero-sub">聚合各类命令相关工具、文档与社区资源——<br>让复杂重复，变得简单高效。</p>
 
-        <div class="hero-cta">
-          <button class="btn btn-solid" @click="router.push('/docs/faq/')">常见问题</button>
-          <button class="btn btn-ghost" @click="scrollToFeedback">我要反馈</button>
+      <div class="hero-cta">
+        <button class="btn btn-solid" @click="router.push('/docs/faq/')">常见问题</button>
+        <button class="btn btn-ghost" @click="scrollToFeedback">我要反馈</button>
+      </div>
+    </header>
+
+    <!-- ===== 2. 数据统计 ===== -->
+    <section class="sec stats">
+      <span class="wm" aria-hidden="true">∑</span>
+      <div class="grid">
+        <div class="stat-hero" v-reveal>
+          <div class="k">本年浏览</div>
+          <div class="v">
+            <span :ref="(el) => setCountRef(el, () => statMain)">0</span>
+          </div>
+          <div class="bar"></div>
         </div>
-      </header>
-
-      <!-- ===== 2. 数据统计 ===== -->
-      <section class="sec stats">
-        <span class="wm" aria-hidden="true">∑</span>
-        <div class="grid">
-          <div class="stat-hero" v-reveal>
-            <div class="k">本年浏览</div>
+        <div class="stat-cluster">
+          <div
+            v-for="(s, i) in statCluster"
+            :key="s.label"
+            class="stat"
+            v-reveal="i + 1"
+          >
+            <div class="k">{{ s.label }}</div>
             <div class="v">
-              <span :ref="(el) => setCountRef(el, () => statMain)">0</span>
+              <span :ref="(el) => setCountRef(el, () => s.v)">0</span>
             </div>
-            <div class="bar"></div>
           </div>
-          <div class="stat-cluster">
-            <div
-              v-for="(s, i) in statCluster"
-              :key="s.label"
-              class="stat"
-              v-reveal="i + 1"
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 3. 视频 ===== -->
+    <section class="sec video">
+      <span class="wm" aria-hidden="true">▶</span>
+      <div class="grid">
+        <div class="video-stage" v-reveal>
+          <span class="ghost" aria-hidden="true">// demo</span>
+          <div class="video-frame">
+            <span class="rec"><i></i>REC</span>
+            <iframe
+              src="//player.bilibili.com/player.html?isOutside=true&amp;aid=116619267281992&amp;bvid=BV1i6Ga6EELe&amp;cid=38536282740&amp;p=1&amp;autoplay=0"
+              scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen
+            ></iframe>
+          </div>
+        </div>
+        <aside class="video-meta" v-reveal="1">
+          <span class="vt" aria-hidden="true">WATCH</span>
+          <ul>
+            <li><span class="k">播放量</span><span class="v">
+              <span :ref="(el) => setCountRef(el, () => videoStats.view, formatCount)">0</span>
+            </span></li>
+            <li><span class="k">点赞</span><span class="v">
+              <span :ref="(el) => setCountRef(el, () => videoStats.like, formatCount)">0</span>
+            </span></li>
+            <li><span class="k">收藏</span><span class="v">
+              <span :ref="(el) => setCountRef(el, () => videoStats.favorite, formatCount)">0</span>
+            </span></li>
+          </ul>
+          <p>60 秒看懂为什么值得选择小舟工具箱</p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===== 4. 关于 ===== -->
+    <section class="sec about" id="about">
+      <span class="wm" aria-hidden="true">01</span>
+      <div class="eyebrow" v-reveal><b>01</b> about / 关于项目 <span class="ln"></span></div>
+      <div class="grid">
+        <div class="about-body" v-reveal>
+          <p>这是一个 <span class="code">Minecraft</span> 基岩版指令工具聚合平台。提供在线 ID 查询、智能补全与各种快捷工具，<span class="hl">浏览器点开即用</span>。</p>
+          <p>这是我自学的第一个完整作品，很多地方是边做边学磨出来的。代码基本都是 AI 敲的，我可以说是离开 AI 不会写 Hello World :(</p>
+          <p>我只负架构设计、业务逻辑梳理与 Debug 环节……说人话就是出点子，做测试。相关的实践经验，以后如果有空会在博客做些总结。</p>
+          <p>代码谈不上优雅，结构也未必规范，但它 <span class="big">能跑、能用，还能帮到别人</span>，我就挺开心的。</p>
+        </div>
+        <blockquote class="pullquote" v-reveal="1">
+          <span class="mark" aria-hidden="true">/*</span>
+          <q>能跑、能用，还能帮到别人，我就挺开心的。</q>
+        </blockquote>
+        <div class="lic" v-reveal="2">
+          <span>100% LLM 生成</span>
+          <span>Apache 2.0</span>
+          <span>CC BY-NC 4.0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 5. 功能亮点 ===== -->
+    <section class="sec features" id="features">
+      <span class="wm" aria-hidden="true">02</span>
+      <div class="eyebrow" v-reveal><b>02</b> features / 功能亮点 <span class="ln"></span></div>
+      <ul class="feat">
+        <li v-for="item in highlights" :key="item.n" v-reveal>
+          <span class="n">{{ item.n }}</span>
+          <div>
+            <div class="t">{{ item.t }}</div>
+            <div class="d">{{ item.d }}</div>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ===== 6. 贡献者跑马灯 ===== -->
+    <section class="sec contrib" id="contributors">
+      <span class="wm" aria-hidden="true">03</span>
+      <div class="eyebrow" v-reveal><b>03</b> contributors / 贡献者 <span class="ln"></span></div>
+      <div class="contrib-head" v-reveal>
+        <h2 class="contrib-title">社区共建</h2>
+        <p>每一条反馈、每一次收录、每一份打赏，都让小舟行得更远。感谢一路同行的每一位。</p>
+      </div>
+      <div class="marquee" v-reveal="1" aria-label="贡献者头像墙">
+        <div class="marquee-row" v-for="(rowItems, rowIdx) in marqueeRows" :key="rowIdx">
+          <div class="marquee-track">
+            <div class="marquee-offset" :class="{ 'marquee-offset--shift': rowIdx === 1 }">
+              <div class="marquee-set" v-for="set in 3" :key="set">
+                <NTooltip v-for="(c, i) in rowItems" :key="i" trigger="hover" :placement="rowIdx === 1 ? 'bottom' : 'top'">
+                  <template #trigger>
+                    <a
+                      class="av"
+                      :href="c.link || null"
+                      :target="c.link ? '_blank' : null"
+                      rel="noopener noreferrer"
+                    >
+                      <img
+                        v-if="c.avatar && !avatarFailed(c.avatar)"
+                        :src="c.avatar"
+                        :alt="c.name"
+                        loading="lazy"
+                        @error="onAvatarError(c.avatar)"
+                      />
+                      <span v-else class="av-text">{{ c.name ? c.name.charAt(0) : '?' }}</span>
+                    </a>
+                  </template>
+                  {{ c.name }}
+                </NTooltip>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 7. 反馈 CTA（唯一反差块） ===== -->
+    <section class="sec cta" id="feedback">
+      <div class="cta-inner">
+        <span class="wm" aria-hidden="true">!</span>
+        <div class="eyebrow cta-eyebrow" v-reveal><b>04</b> feedback / 建议 &amp; 反馈 <span class="ln"></span></div>
+        <h2 class="cta-title" v-reveal>有 Bug？<br>有 <span class="o">新想法？</span></h2>
+        <div class="cta-row" v-reveal="1">
+          <span class="cmd">$ 通过下方表单告诉我们 →</span>
+          <span class="btn btn-inv trigger-feedback">在线反馈</span>
+        </div>
+        <div class="md-content cta-form-wrap">
+          <IframeForm
+            src="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnSkK8TS3y8eR4bnHkI1wmlc"
+            :height="600"
+            id="feedback"
+          />
+        </div>
+        <div class="channels" v-reveal="2">
+          <span>其它方式:</span>
+          <a href="mailto:i@lonzov.top">邮件</a>
+          <a href="https://qm.qq.com/q/hjTqUyIKEo" target="_blank" rel="noopener noreferrer">QQ 群 587984701</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 8. 关注我们 + 特别鸣谢 ===== -->
+    <section class="sec credits" id="credits">
+      <span class="wm" aria-hidden="true">eof</span>
+      <div class="grid">
+        <div class="follow" v-reveal>
+          <div class="eyebrow"><b>05</b> follow / 关注我们 <span class="ln"></span></div>
+          <p class="follow-lead">如果觉得有用，欢迎点个 Star，或把它分享给身边同样在写指令的朋友。</p>
+          <div class="social-row">
+            <a
+              v-for="btn in socialFollowLinks"
+              :key="btn.name"
+              class="soc"
+              :href="btn.href"
+              :target="btn.targetBlank ? '_blank' : null"
+              :rel="btn.targetBlank ? 'noopener noreferrer' : null"
+              :title="btn.title"
             >
-              <div class="k">{{ s.label }}</div>
-              <div class="v">
-                <span :ref="(el) => setCountRef(el, () => s.v)">0</span>
-              </div>
-            </div>
+              <component :is="btn.icon" size="18" />
+            </a>
           </div>
         </div>
-      </section>
-
-      <!-- ===== 3. 视频 ===== -->
-      <section class="sec video">
-        <span class="wm" aria-hidden="true">▶</span>
-        <div class="grid">
-          <div class="video-stage" v-reveal>
-            <span class="ghost" aria-hidden="true">// demo</span>
-            <div class="video-frame">
-              <span class="rec"><i></i>REC</span>
-              <iframe
-                src="//player.bilibili.com/player.html?isOutside=true&amp;aid=116619267281992&amp;bvid=BV1i6Ga6EELe&amp;cid=38536282740&amp;p=1&amp;autoplay=0"
-                scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen
-              ></iframe>
-            </div>
-          </div>
-          <aside class="video-meta" v-reveal="1">
-            <span class="vt" aria-hidden="true">WATCH</span>
-            <ul>
-              <li><span class="k">播放量</span><span class="v">
-                <span :ref="(el) => setCountRef(el, () => videoStats.view, formatCount)">0</span>
-              </span></li>
-              <li><span class="k">点赞</span><span class="v">
-                <span :ref="(el) => setCountRef(el, () => videoStats.like, formatCount)">0</span>
-              </span></li>
-              <li><span class="k">收藏</span><span class="v">
-                <span :ref="(el) => setCountRef(el, () => videoStats.favorite, formatCount)">0</span>
-              </span></li>
-            </ul>
-            <p>60 秒看懂为什么值得选择小舟工具箱</p>
-          </aside>
+        <div class="thanks" v-reveal="1">
+          <div class="eyebrow"><b>06</b> credits / 特别鸣谢 <span class="ln"></span></div>
+          <ul>
+            <li v-for="item in thanks" :key="item.name">
+              <a class="name" :href="item.href" target="_blank" rel="noopener noreferrer">{{ item.name }}</a>
+              <span class="desc">{{ item.desc }}</span>
+            </li>
+          </ul>
         </div>
-      </section>
-
-      <!-- ===== 4. 关于 ===== -->
-      <section class="sec about" id="about">
-        <span class="wm" aria-hidden="true">01</span>
-        <div class="eyebrow" v-reveal><b>01</b> about / 关于项目 <span class="ln"></span></div>
-        <div class="grid">
-          <div class="about-body" v-reveal>
-            <p>这是一个 <span class="code">Minecraft</span> 基岩版指令工具聚合平台。提供在线 ID 查询、智能补全与各种快捷工具，<span class="hl">浏览器点开即用</span>。</p>
-            <p>这是我自学的第一个完整作品，很多地方是边做边学磨出来的。代码基本都是 AI 敲的，我可以说是离开 AI 不会写 Hello World :(</p>
-            <p>我只负架构设计、业务逻辑梳理与 Debug 环节……说人话就是出点子，做测试。相关的实践经验，以后如果有空会在博客做些总结。</p>
-            <p>代码谈不上优雅，结构也未必规范，但它 <span class="big">能跑、能用，还能帮到别人</span>，我就挺开心的。</p>
-          </div>
-          <blockquote class="pullquote" v-reveal="1">
-            <span class="mark" aria-hidden="true">/*</span>
-            <q>能跑、能用，还能帮到别人，我就挺开心的。</q>
-          </blockquote>
-          <div class="lic" v-reveal="2">
-            <span>100% LLM 生成</span>
-            <span>Apache 2.0</span>
-            <span>CC BY-NC 4.0</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== 5. 功能亮点 ===== -->
-      <section class="sec features" id="features">
-        <span class="wm" aria-hidden="true">02</span>
-        <div class="eyebrow" v-reveal><b>02</b> features / 功能亮点 <span class="ln"></span></div>
-        <ul class="feat">
-          <li v-for="item in highlights" :key="item.n" v-reveal>
-            <span class="n">{{ item.n }}</span>
-            <div>
-              <div class="t">{{ item.t }}</div>
-              <div class="d">{{ item.d }}</div>
-            </div>
-          </li>
-        </ul>
-      </section>
-
-      <!-- ===== 6. 贡献者跑马灯 ===== -->
-      <section class="sec contrib" id="contributors">
-        <span class="wm" aria-hidden="true">03</span>
-        <div class="eyebrow" v-reveal><b>03</b> contributors / 贡献者 <span class="ln"></span></div>
-        <div class="contrib-head" v-reveal>
-          <h2 class="contrib-title">社区共建</h2>
-          <p>每一条反馈、每一次收录、每一份打赏，都让小舟行得更远。感谢一路同行的每一位。</p>
-        </div>
-        <div class="marquee" v-reveal="1" aria-label="贡献者头像墙">
-          <div class="marquee-row" v-for="(rowItems, rowIdx) in marqueeRows" :key="rowIdx">
-            <div class="marquee-track">
-              <div class="marquee-offset" :class="{ 'marquee-offset--shift': rowIdx === 1 }">
-                <div class="marquee-set" v-for="set in 3" :key="set">
-                  <NTooltip v-for="(c, i) in rowItems" :key="i" trigger="hover" :placement="rowIdx === 1 ? 'bottom' : 'top'">
-                    <template #trigger>
-                      <a
-                        class="av"
-                        :href="c.link || null"
-                        :target="c.link ? '_blank' : null"
-                        rel="noopener noreferrer"
-                      >
-                        <img
-                          v-if="c.avatar && !avatarFailed(c.avatar)"
-                          :src="c.avatar"
-                          :alt="c.name"
-                          loading="lazy"
-                          @error="onAvatarError(c.avatar)"
-                        />
-                        <span v-else class="av-text">{{ c.name ? c.name.charAt(0) : '?' }}</span>
-                      </a>
-                    </template>
-                    {{ c.name }}
-                  </NTooltip>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== 7. 反馈 CTA（唯一反差块） ===== -->
-      <section class="sec cta" id="feedback">
-        <div class="cta-inner">
-          <span class="wm" aria-hidden="true">!</span>
-          <div class="eyebrow cta-eyebrow" v-reveal><b>04</b> feedback / 建议 &amp; 反馈 <span class="ln"></span></div>
-          <h2 class="cta-title" v-reveal>有 Bug？<br>有 <span class="o">新想法？</span></h2>
-          <div class="cta-row" v-reveal="1">
-            <span class="cmd">$ 通过下方表单告诉我们 →</span>
-            <span class="btn btn-inv trigger-feedback">在线反馈</span>
-          </div>
-          <div class="md-content cta-form-wrap">
-            <IframeForm
-              src="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnSkK8TS3y8eR4bnHkI1wmlc"
-              :height="600"
-              id="feedback"
-            />
-          </div>
-          <div class="channels" v-reveal="2">
-            <span>其它方式:</span>
-            <a href="mailto:i@lonzov.top">邮件</a>
-            <a href="https://qm.qq.com/q/hjTqUyIKEo" target="_blank" rel="noopener noreferrer">QQ 群 587984701</a>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== 8. 关注我们 + 特别鸣谢 ===== -->
-      <section class="sec credits" id="credits">
-        <span class="wm" aria-hidden="true">eof</span>
-        <div class="grid">
-          <div class="follow" v-reveal>
-            <div class="eyebrow"><b>05</b> follow / 关注我们 <span class="ln"></span></div>
-            <p class="follow-lead">如果觉得有用，欢迎点个 Star，或把它分享给身边同样在写指令的朋友。</p>
-            <div class="social-row">
-              <a
-                v-for="btn in socialFollowLinks"
-                :key="btn.name"
-                class="soc"
-                :href="btn.href"
-                :target="btn.targetBlank ? '_blank' : null"
-                :rel="btn.targetBlank ? 'noopener noreferrer' : null"
-                :title="btn.title"
-              >
-                <component :is="btn.icon" size="18" />
-              </a>
-            </div>
-          </div>
-          <div class="thanks" v-reveal="1">
-            <div class="eyebrow"><b>06</b> credits / 特别鸣谢 <span class="ln"></span></div>
-            <ul>
-              <li v-for="item in thanks" :key="item.name">
-                <a class="name" :href="item.href" target="_blank" rel="noopener noreferrer">{{ item.name }}</a>
-                <span class="desc">{{ item.desc }}</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-    </div>
-  </NConfigProvider>
+      </div>
+    </section>
+  </div>
 </template>
 
 <style scoped>

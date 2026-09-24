@@ -1,8 +1,7 @@
 <script setup>
 import { onMounted, onBeforeUnmount } from 'vue'
-import { NIcon, NConfigProvider, darkTheme } from 'naive-ui'
+import { NIcon } from 'naive-ui'
 import { Braces24Filled } from '@vicons/fluent'
-import { useTheme } from '../../composables/useTheme'
 import {
   useRawJsonEditor,
   showEditModal, showImportModal, showColorModal,
@@ -26,7 +25,6 @@ defineProps({
   tabPath: { type: String, default: '' },
 })
 
-const { isDark } = useTheme()
 
 // 初始化编辑器（捕获 message 实例 + localStorage 加载 + 生命周期）
 useRawJsonEditor()
@@ -58,75 +56,41 @@ onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleKeydown)
   disposeSimulator()
 })
-
-/** NSelect 深色模式 peer 覆盖（按 customize-theme.md 文档方式） */
-const darkSelectOverrides = {
-  Select: {
-    peers: {
-      InternalSelection: {
-        color: '#191919',
-        textColor: '#E8E8E8',
-        border: '1px solid #333333',
-        borderHover: '1px solid #555555',
-        borderFocus: '1px solid #E8E8E8',
-        borderActive: '1px solid #E8E8E8',
-        boxShadowFocus: 'none',
-        boxShadowActive: 'none',
-      },
-      InternalSelectMenu: {
-        color: '#1E1E1E',
-        optionTextColor: '#E8E8E8',
-        optionTextColorActive: '#E8E8E8',
-        optionTextColorPressed: '#E8E8E8',
-        optionCheckColor: '#E8E8E8',
-        optionColorActive: '#2A2A2A',
-        optionColorActivePending: '#2A2A2A',
-        optionColorPending: '#2A2A2A',
-        loadingColor: '#E8E8E8',
-      },
-    },
-  },
-}
 </script>
 
 <template>
-  <NConfigProvider
-    :theme="isDark ? darkTheme : null"
-    :theme-overrides="isDark ? darkSelectOverrides : undefined"
-  >
-    <div class="rawjson-tool">
-      <!-- 页面标题 -->
-      <div class="page-header">
-        <div class="page-title-row">
-          <NIcon :component="Braces24Filled" class="page-title-icon" />
-          <h1 class="page-title">T显可视化编辑器</h1>
-        </div>
-        <p class="page-desc">可视化构建 rawtext JSON，原项目@矩阵方块，详见关于页</p>
+  <div class="rawjson-tool">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <div class="page-title-row">
+        <NIcon :component="Braces24Filled" class="page-title-icon" />
+        <h1 class="page-title">T显可视化编辑器</h1>
       </div>
-
-      <!-- 双栏布局 -->
-      <div class="panels">
-        <!-- 左栏 -->
-        <div class="left-col">
-          <RawJsonConfigBar>
-            <RawJsonElementList />
-          </RawJsonConfigBar>
-        </div>
-
-        <!-- 右栏 -->
-        <div class="right-col">
-          <RawJsonRightPanel />
-        </div>
-      </div>
-
-      <!-- 弹窗 -->
-      <RawJsonEditModal />
-      <RawJsonImportModal />
-      <RawJsonColorModal />
-      <RawJsonLangModal />
-      <RawJsonSimulatorModal />
+      <p class="page-desc">可视化构建 rawtext JSON，原项目@矩阵方块，详见关于页</p>
     </div>
-  </NConfigProvider>
+
+    <!-- 双栏布局 -->
+    <div class="panels">
+      <!-- 左栏 -->
+      <div class="left-col">
+        <RawJsonConfigBar>
+          <RawJsonElementList />
+        </RawJsonConfigBar>
+      </div>
+
+      <!-- 右栏 -->
+      <div class="right-col">
+        <RawJsonRightPanel />
+      </div>
+    </div>
+
+    <!-- 弹窗 -->
+    <RawJsonEditModal />
+    <RawJsonImportModal />
+    <RawJsonColorModal />
+    <RawJsonLangModal />
+    <RawJsonSimulatorModal />
+  </div>
 </template>
 
 <style scoped>

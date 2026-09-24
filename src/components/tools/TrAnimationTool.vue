@@ -1,9 +1,8 @@
 <script setup>
 import { ref } from 'vue'
-import { NIcon, NSelect, NConfigProvider, darkTheme, useMessage } from 'naive-ui'
+import { NIcon, NSelect, useMessage } from 'naive-ui'
 import { Copy24Regular, Delete24Regular, TextGrammarWand24Regular, ConvertRange24Regular } from '@vicons/fluent'
 import { useToolStorage } from '../../composables/useToolStorage.js'
-import { useTheme } from '../../composables/useTheme'
 
 defineProps({
   tabPath: {
@@ -13,43 +12,6 @@ defineProps({
 })
 
 const message = useMessage()
-const { isDark } = useTheme()
-
-/** NSelect 主题覆盖：增强下拉菜单阴影 + 深色模式 peer 覆盖（按 customize-theme.md 文档方式） */
-const lightSelectOverrides = {
-  Select: {
-    menuBoxShadow: '0 8px 24px -6px rgba(0, 0, 0, .14), 0 12px 32px 4px rgba(0, 0, 0, .08), 0 16px 48px 16px rgba(0, 0, 0, .05)',
-  },
-}
-
-const darkSelectOverrides = {
-  Select: {
-    menuBoxShadow: '0 8px 24px -6px rgba(0, 0, 0, .6), 0 12px 32px 4px rgba(0, 0, 0, .4), 0 16px 48px 16px rgba(0, 0, 0, .3)',
-    peers: {
-      InternalSelection: {
-        color: '#191919',
-        textColor: '#E8E8E8',
-        border: '1px solid #333333',
-        borderHover: '1px solid #555555',
-        borderFocus: '1px solid #E8E8E8',
-        borderActive: '1px solid #E8E8E8',
-        boxShadowFocus: 'none',
-        boxShadowActive: 'none',
-      },
-      InternalSelectMenu: {
-        color: '#1E1E1E',
-        optionTextColor: '#E8E8E8',
-        optionTextColorActive: '#E8E8E8',
-        optionTextColorPressed: '#E8E8E8',
-        optionCheckColor: '#E8E8E8',
-        optionColorActive: '#2A2A2A',
-        optionColorActivePending: '#2A2A2A',
-        optionColorPending: '#2A2A2A',
-        loadingColor: '#E8E8E8',
-      },
-    },
-  },
-}
 
 const initOptions = [
   { label: '否', value: false },
@@ -225,91 +187,86 @@ function handleClear() {
 </script>
 
 <template>
-  <NConfigProvider
-    :theme="isDark ? darkTheme : null"
-    :theme-overrides="isDark ? darkSelectOverrides : lightSelectOverrides"
-  >
-    <div class="tr-tool">
-      <!-- 页面主标题与简介 -->
-      <div class="page-header">
-        <div class="page-title-row">
-          <NIcon :component="TextGrammarWand24Regular" class="page-title-icon" />
-          <h1 class="page-title">T显动画生成</h1>
-        </div>
-        <p class="page-desc">生成打字机动画效果的rawJSON</p>
+  <div class="tr-tool">
+    <!-- 页面主标题与简介 -->
+    <div class="page-header">
+      <div class="page-title-row">
+        <NIcon :component="TextGrammarWand24Regular" class="page-title-icon" />
+        <h1 class="page-title">T显动画生成</h1>
+      </div>
+      <p class="page-desc">生成打字机动画效果的rawJSON</p>
+    </div>
+
+    <!-- 配置+输入+按钮 合并卡片 -->
+    <div class="tool-card">
+      <div class="form-field">
+        <label for="startScoreInput">初始的分数</label>
+        <input
+          id="startScoreInput"
+          v-model="startScore"
+          type="number"
+          class="field-input"
+          placeholder="不填默认为0"
+          min="0"
+        />
       </div>
 
-      <!-- 配置+输入+按钮 合并卡片 -->
-      <div class="tool-card">
-        <div class="form-field">
-          <label for="startScoreInput">初始的分数</label>
-          <input
-            id="startScoreInput"
-            v-model="startScore"
-            type="number"
-            class="field-input"
-            placeholder="不填默认为0"
-            min="0"
-          />
-        </div>
-
-        <div class="form-field">
-          <label for="scoreboardInput">计分板名称</label>
-          <input
-            id="scoreboardInput"
-            v-model="scoreboardName"
-            type="text"
-            class="field-input"
-            placeholder="例如: T显"
-          />
-        </div>
-
-        <div class="form-field">
-          <label>是否初始化</label>
-          <NSelect
-            v-model:value="initialize"
-            :options="initOptions"
-            class="field-select"
-          />
-        </div>
-
-      <textarea
-        v-model="inputText"
-        class="text-input"
-        placeholder="请输入需要转换的文本（支持 §颜色码 和 \n 换行）..."
-        spellcheck="false"
-        autocomplete="off"
-        autocapitalize="off"
-      ></textarea>
-
-      <div class="btn-row">
-        <button class="control-btn" @click="handleConvert">
-          <NIcon :component="ConvertRange24Regular" />
-          <span>转换</span>
-        </button>
-        <button class="control-btn" @click="handleCopy">
-          <NIcon :component="Copy24Regular" />
-          <span>复制</span>
-        </button>
-        <button class="control-btn" @click="handleClear">
-          <NIcon :component="Delete24Regular" />
-          <span>清空</span>
-        </button>
+      <div class="form-field">
+        <label for="scoreboardInput">计分板名称</label>
+        <input
+          id="scoreboardInput"
+          v-model="scoreboardName"
+          type="text"
+          class="field-input"
+          placeholder="例如: T显"
+        />
       </div>
-    </div>
 
-    <!-- 输出区（单独卡片） -->
-    <div class="tool-card tool-card--output">
-      <textarea
-        :value="outputText"
-        class="text-input"
-        placeholder="转换结果将显示在这里..."
-        spellcheck="false"
-        readonly
-      ></textarea>
+      <div class="form-field">
+        <label>是否初始化</label>
+        <NSelect
+          v-model:value="initialize"
+          :options="initOptions"
+          class="field-select"
+        />
+      </div>
+
+    <textarea
+      v-model="inputText"
+      class="text-input"
+      placeholder="请输入需要转换的文本（支持 §颜色码 和 \n 换行）..."
+      spellcheck="false"
+      autocomplete="off"
+      autocapitalize="off"
+    ></textarea>
+
+    <div class="btn-row">
+      <button class="control-btn" @click="handleConvert">
+        <NIcon :component="ConvertRange24Regular" />
+        <span>转换</span>
+      </button>
+      <button class="control-btn" @click="handleCopy">
+        <NIcon :component="Copy24Regular" />
+        <span>复制</span>
+      </button>
+      <button class="control-btn" @click="handleClear">
+        <NIcon :component="Delete24Regular" />
+        <span>清空</span>
+      </button>
     </div>
-    </div>
-  </NConfigProvider>
+  </div>
+
+  <!-- 输出区（单独卡片） -->
+  <div class="tool-card tool-card--output">
+    <textarea
+      :value="outputText"
+      class="text-input"
+      placeholder="转换结果将显示在这里..."
+      spellcheck="false"
+      readonly
+    ></textarea>
+  </div>
+  </div>
 </template>
 
 <style scoped>

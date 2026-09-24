@@ -1,14 +1,11 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted, defineAsyncComponent, h } from 'vue'
-import { NModal, NConfigProvider, NTooltip, useMessage } from 'naive-ui'
-import { darkTheme } from 'naive-ui'
-import { useTheme } from '../composables/useTheme'
+import { NModal, NTooltip, useMessage } from 'naive-ui'
 import { useSWUpdate } from '../composables/useSWUpdate'
 /* MarkdownRenderer 携带 markdown-it（~47K gz），只在弹窗真正展示更新内容时加载 */
 const loadMarkdown = () => import('./MarkdownRenderer.vue')
 const MarkdownRenderer = defineAsyncComponent(loadMarkdown)
 
-const { isDark } = useTheme()
 const { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, forceUpdate, silentUpdated, applyUpdate, deferUpdate } = useSWUpdate()
 const message = useMessage()
 
@@ -69,11 +66,6 @@ function getBtnClass(btn) {
   return forceUpdate.value && isDeferBtn(btn) ? `${base} btn-force-disabled` : base
 }
 
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
-
 const isCompact = ref(false)
 let _mq
 function _onMqChange(e) { isCompact.value = e.matches }
@@ -90,8 +82,7 @@ const modalStyle = computed(() => ({
   maxWidth: '540px',
   width: 'calc(100% - 32px)',
   maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: '16px',
-  cornerShape: 'squircle',
+  borderRadius: 'var(--radius-xl)',
 }))
 
 // 弹窗打开即预热 Markdown 渲染 chunk，使更新内容加载与弹窗动画重叠
@@ -126,59 +117,57 @@ watch(showUpdateModal, (val) => {
 </script>
 
 <template>
-  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-    <NModal
-      v-model:show="showUpdateModal"
-      preset="card"
-      :title="popupTitle || '发现新版本'"
-      :style="modalStyle"
-      :segmented="{ content: true, footer: 'soft' }"
-      :closable="!forceUpdate"
-      :mask-closable="!forceUpdate"
-      :close-on-esc="!forceUpdate"
-      @close="deferUpdate"
-      :auto-focus="false"
-      content-scrollable
-    >
-      <div class="update-desc">
-        <p class="new-version-banner">
-          <template v-if="forceUpdate">【⚠️重要更新】{{ displayVersion || '新版本' }}</template>
-          <template v-else>{{ displayVersion || '新版本' }} 版本现已可用</template>
-        </p>
-        <p class="guide-text">反馈或建议请前往 「侧边栏-关于本站-我要反馈」或 <a href="https://qm.qq.com/q/hjTqUyIKEo" target="_blank" rel="noopener" class="guide-link">加入QQ群</a>。</p>
-        <p class="changelog-label">👾 更新日志：</p>
-        <MarkdownRenderer v-if="popupContent" :raw="popupContent" />
-        <p v-else>小舟工具箱已更新，点击"立即更新"刷新页面获取最新体验。</p>
-      </div>
-      <template #footer>
-        <div class="update-footer">
-          <p v-if="popupVersionInfo" class="version-info">{{ popupVersionInfo }}</p>
-          <div class="modal-actions">
-            <template v-if="popupButtons.length > 0">
-              <template v-for="(btn, i) in popupButtons" :key="i">
-                <NTooltip v-if="btn.action === 'close'" placement="top" :trigger="forceUpdate ? 'click' : 'hover'">
-                  <template #trigger>
-                    <button :class="getBtnClass(btn)" @click="handleButtonClick(btn)">{{ btn.text }}</button>
-                  </template>
-                  {{ deferTip }}
-                </NTooltip>
-                <button v-else :class="getBtnClass(btn)" @click="handleButtonClick(btn)">{{ btn.text }}</button>
-              </template>
-            </template>
-            <template v-else>
-              <NTooltip placement="top" :trigger="forceUpdate ? 'click' : 'hover'">
+  <NModal
+    v-model:show="showUpdateModal"
+    preset="card"
+    :title="popupTitle || '发现新版本'"
+    :style="modalStyle"
+    :segmented="{ content: true, footer: 'soft' }"
+    :closable="!forceUpdate"
+    :mask-closable="!forceUpdate"
+    :close-on-esc="!forceUpdate"
+    @close="deferUpdate"
+    :auto-focus="false"
+    content-scrollable
+  >
+    <div class="update-desc">
+      <p class="new-version-banner">
+        <template v-if="forceUpdate">【⚠️重要更新】{{ displayVersion || '新版本' }}</template>
+        <template v-else>{{ displayVersion || '新版本' }} 版本现已可用</template>
+      </p>
+      <p class="guide-text">反馈或建议请前往 「侧边栏-关于本站-我要反馈」或 <a href="https://qm.qq.com/q/hjTqUyIKEo" target="_blank" rel="noopener" class="guide-link">加入QQ群</a>。</p>
+      <p class="changelog-label">👾 更新日志：</p>
+      <MarkdownRenderer v-if="popupContent" :raw="popupContent" />
+      <p v-else>小舟工具箱已更新，点击"立即更新"刷新页面获取最新体验。</p>
+    </div>
+    <template #footer>
+      <div class="update-footer">
+        <p v-if="popupVersionInfo" class="version-info">{{ popupVersionInfo }}</p>
+        <div class="modal-actions">
+          <template v-if="popupButtons.length > 0">
+            <template v-for="(btn, i) in popupButtons" :key="i">
+              <NTooltip v-if="btn.action === 'close'" placement="top" :trigger="forceUpdate ? 'click' : 'hover'">
                 <template #trigger>
-                  <button class="btn btn-outline" :class="{ 'btn-force-disabled': forceUpdate }" @click="deferUpdate">暂不更新</button>
+                  <button :class="getBtnClass(btn)" @click="handleButtonClick(btn)">{{ btn.text }}</button>
                 </template>
                 {{ deferTip }}
               </NTooltip>
-              <button class="btn btn-fill" @click="applyUpdate">立即更新</button>
+              <button v-else :class="getBtnClass(btn)" @click="handleButtonClick(btn)">{{ btn.text }}</button>
             </template>
-          </div>
+          </template>
+          <template v-else>
+            <NTooltip placement="top" :trigger="forceUpdate ? 'click' : 'hover'">
+              <template #trigger>
+                <button class="btn btn-outline" :class="{ 'btn-force-disabled': forceUpdate }" @click="deferUpdate">暂不更新</button>
+              </template>
+              {{ deferTip }}
+            </NTooltip>
+            <button class="btn btn-fill" @click="applyUpdate">立即更新</button>
+          </template>
         </div>
-      </template>
-    </NModal>
-  </NConfigProvider>
+      </div>
+    </template>
+  </NModal>
 </template>
 
 <style scoped>

@@ -1,84 +1,81 @@
 <template>
-  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-    <NModal
-      v-model:show="showHasitemModal"
-      preset="card"
-      :title="modalTitle"
-      :style="modalStyle"
-      :segmented="{ content: true, footer: 'soft' }"
-      content-scrollable
-      :mask-closable="false"
-      @after-enter="onModalEntered"
-      @after-leave="onAfterLeave"
-    >
-      <div v-if="contentVisible" ref="contentRef" class="hasitem-modal-body" @click.stop>
-        <!-- 模式切换胶囊 -->
-        <div ref="tabContainerRef" class="tab-container">
-          <div class="tab-indicator" :class="{ locked: indicatorLocked }" :style="indicatorStyle"></div>
-          <button
-            class="tab-item"
-            :class="{ active: !hasitemEditIsArray }"
-            @click="switchMode(false)"
-          >
-            单物品 {...}
-          </button>
-          <button
-            class="tab-item"
-            :class="{ active: hasitemEditIsArray }"
-            @click="switchMode(true)"
-          >
-            多物品 [{...}, {...}]
-          </button>
-        </div>
-
-        <div class="hasitem-items-list">
-          <div v-if="hasitemEditItems.length === 0" class="hasitem-empty">暂无物品，请添加</div>
-          <div v-for="(it, ii) in displayItems" :key="ii" class="hasitem-item-row">
-            <span class="hasitem-item-label"
-              >物品 {{ hasitemEditIsArray ? '#' + (ii + 1) : '' }}</span
-            >
-            <div class="hasitem-item-fields">
-              <div class="hi-field"><label class="hi-label">item</label><NInput v-model:value="it.item" size="tiny" placeholder="物品ID" /></div>
-              <div class="hi-field hi-field--half"><label class="hi-label">data</label><NInput v-model:value="it.data" size="tiny" placeholder="数据值" /></div>
-              <div class="hi-field hi-field--half"><label class="hi-label">location</label><NInput v-model:value="it.location" size="tiny" placeholder="槽位ID" /></div>
-              <div class="hi-field hi-field--half"><label class="hi-label">slot</label><NInput v-model:value="it.slot" size="tiny" placeholder="槽位数值" /></div>
-              <div class="hi-field hi-field--half"><label class="hi-label">quantity</label><NInput v-model:value="it.quantity" size="tiny" placeholder="数量" /></div>
-            </div>
-            <button
-              v-if="hasitemEditIsArray || hasitemEditItems.length > 1"
-              class="code-act-btn code-act-btn--danger-sm"
-              title="删除此物品"
-              @click="onRemoveItem(ii)"
-            >
-              <NIcon :component="Delete24Filled" :size="14" />
-            </button>
-          </div>
-        </div>
+  <NModal
+    v-model:show="showHasitemModal"
+    preset="card"
+    :title="modalTitle"
+    :style="modalStyle"
+    :segmented="{ content: true, footer: 'soft' }"
+    content-scrollable
+    :mask-closable="false"
+    @after-enter="onModalEntered"
+    @after-leave="onAfterLeave"
+  >
+    <div v-if="contentVisible" ref="contentRef" class="hasitem-modal-body" @click.stop>
+      <!-- 模式切换胶囊 -->
+      <div ref="tabContainerRef" class="tab-container">
+        <div class="tab-indicator" :class="{ locked: indicatorLocked }" :style="indicatorStyle"></div>
         <button
-          v-if="(!hasitemEditIsArray && hasitemEditItems.length === 0) || hasitemEditIsArray"
-          class="add-hasitem-sub-btn"
-          @click="onAddItem"
+          class="tab-item"
+          :class="{ active: !hasitemEditIsArray }"
+          @click="switchMode(false)"
         >
-          <NIcon :component="Add16Filled" :size="12" />
-          <span>添加物品</span>
+          单物品 {...}
+        </button>
+        <button
+          class="tab-item"
+          :class="{ active: hasitemEditIsArray }"
+          @click="switchMode(true)"
+        >
+          多物品 [{...}, {...}]
         </button>
       </div>
 
-      <template #footer>
-        <div class="modal-actions">
-          <button class="btn btn-outline" @click="onCancel">取消</button>
-          <button class="btn btn-fill" @click="onSave">保存</button>
+      <div class="hasitem-items-list">
+        <div v-if="hasitemEditItems.length === 0" class="hasitem-empty">暂无物品，请添加</div>
+        <div v-for="(it, ii) in displayItems" :key="ii" class="hasitem-item-row">
+          <span class="hasitem-item-label"
+            >物品 {{ hasitemEditIsArray ? '#' + (ii + 1) : '' }}</span
+          >
+          <div class="hasitem-item-fields">
+            <div class="hi-field"><label class="hi-label">item</label><NInput v-model:value="it.item" size="tiny" placeholder="物品ID" /></div>
+            <div class="hi-field hi-field--half"><label class="hi-label">data</label><NInput v-model:value="it.data" size="tiny" placeholder="数据值" /></div>
+            <div class="hi-field hi-field--half"><label class="hi-label">location</label><NInput v-model:value="it.location" size="tiny" placeholder="槽位ID" /></div>
+            <div class="hi-field hi-field--half"><label class="hi-label">slot</label><NInput v-model:value="it.slot" size="tiny" placeholder="槽位数值" /></div>
+            <div class="hi-field hi-field--half"><label class="hi-label">quantity</label><NInput v-model:value="it.quantity" size="tiny" placeholder="数量" /></div>
+          </div>
+          <button
+            v-if="hasitemEditIsArray || hasitemEditItems.length > 1"
+            class="code-act-btn code-act-btn--danger-sm"
+            title="删除此物品"
+            @click="onRemoveItem(ii)"
+          >
+            <NIcon :component="Delete24Filled" :size="14" />
+          </button>
         </div>
-      </template>
-    </NModal>
-  </NConfigProvider>
+      </div>
+      <button
+        v-if="(!hasitemEditIsArray && hasitemEditItems.length === 0) || hasitemEditIsArray"
+        class="add-hasitem-sub-btn"
+        @click="onAddItem"
+      >
+        <NIcon :component="Add16Filled" :size="12" />
+        <span>添加物品</span>
+      </button>
+    </div>
+
+    <template #footer>
+      <div class="modal-actions">
+        <button class="btn btn-outline" @click="onCancel">取消</button>
+        <button class="btn btn-fill" @click="onSave">保存</button>
+      </div>
+    </template>
+  </NModal>
 </template>
 
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { NModal, NConfigProvider, NInput, NIcon, darkTheme } from 'naive-ui'
+import { NModal, NInput, NIcon } from 'naive-ui'
 import { Add16Filled, Delete24Filled } from '@vicons/fluent'
-import { useTheme } from '../../../../composables/useTheme.js'
 import {
   hasitemEditId,
   hasitemEditItems,
@@ -95,13 +92,6 @@ import {
   cleanupHasitemModal,
 } from '../composables/useParams.js'
 import { useModalContent } from '../composables/useModalContent.js'
-
-const { isDark } = useTheme()
-
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
 
 const { contentVisible, onAfterLeave } = useModalContent(hasitemEditId, cleanupHasitemModal)
 
@@ -121,8 +111,7 @@ const modalStyle = computed(() => ({
   maxWidth: '620px',
   width: 'calc(100% - 32px)',
   maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: '16px',
-  cornerShape: 'squircle',
+  borderRadius: 'var(--radius-xl)',
 }))
 
 const showHasitemModal = computed({

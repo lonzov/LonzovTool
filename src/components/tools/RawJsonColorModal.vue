@@ -1,19 +1,10 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { NModal, NConfigProvider } from 'naive-ui'
-import { darkTheme } from 'naive-ui'
-import { useTheme } from '../../composables/useTheme'
+import { NModal } from 'naive-ui'
 import {
   showColorModal, colorsStandard, colorsMaterial,
   closeColorTable, copyColorCode,
 } from '../../composables/useRawJsonEditor.js'
-
-const { isDark } = useTheme()
-
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
 
 const isCompact = ref(false)
 let _mq
@@ -31,66 +22,63 @@ const modalStyle = computed(() => ({
   maxWidth: '640px',
   width: 'calc(100% - 32px)',
   maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 110px)',
-  borderRadius: '16px',
-  cornerShape: 'squircle',
+  borderRadius: 'var(--radius-xl)',
 }))
 </script>
 
 <template>
-  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-    <NModal
-      v-model:show="showColorModal"
-      preset="card"
-      title="颜色代码参考表"
-      :style="modalStyle"
-      :segmented="{ content: true, footer: 'soft' }"
-      content-scrollable
-    >
-      <div class="color-section">
-        <div class="color-section-header">
-          <span class="color-section-title">标准颜色</span>
-          <span class="color-section-hint">点击复制</span>
-        </div>
-        <div class="color-grid">
-          <div
-            v-for="c in colorsStandard" :key="c.code"
-            class="color-item" @click="copyColorCode(c.code)"
-          >
-            <div class="color-box" :style="{ backgroundColor: c.color }" />
-            <div class="color-info">
-              <span class="color-code">§{{ c.code }}</span>
-              <span class="color-name">{{ c.name }}</span>
-            </div>
+  <NModal
+    v-model:show="showColorModal"
+    preset="card"
+    title="颜色代码参考表"
+    :style="modalStyle"
+    :segmented="{ content: true, footer: 'soft' }"
+    content-scrollable
+  >
+    <div class="color-section">
+      <div class="color-section-header">
+        <span class="color-section-title">标准颜色</span>
+        <span class="color-section-hint">点击复制</span>
+      </div>
+      <div class="color-grid">
+        <div
+          v-for="c in colorsStandard" :key="c.code"
+          class="color-item" @click="copyColorCode(c.code)"
+        >
+          <div class="color-box" :style="{ backgroundColor: c.color }" />
+          <div class="color-info">
+            <span class="color-code">§{{ c.code }}</span>
+            <span class="color-name">{{ c.name }}</span>
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="color-section">
-        <div class="color-section-header">
-          <span class="color-section-title">材料颜色 (1.16.0+)</span>
-        </div>
-        <div class="color-grid">
-          <div
-            v-for="c in colorsMaterial" :key="c.code"
-            class="color-item" @click="copyColorCode(c.code)"
-          >
-            <div class="color-box" :style="{ backgroundColor: c.color }" />
-            <div class="color-info">
-              <span class="color-code">§{{ c.code }}</span>
-              <span class="color-name">{{ c.name }}</span>
-            </div>
+    <div class="color-section">
+      <div class="color-section-header">
+        <span class="color-section-title">材料颜色 (1.16.0+)</span>
+      </div>
+      <div class="color-grid">
+        <div
+          v-for="c in colorsMaterial" :key="c.code"
+          class="color-item" @click="copyColorCode(c.code)"
+        >
+          <div class="color-box" :style="{ backgroundColor: c.color }" />
+          <div class="color-info">
+            <span class="color-code">§{{ c.code }}</span>
+            <span class="color-name">{{ c.name }}</span>
           </div>
         </div>
       </div>
+    </div>
 
-      <template #footer>
-        <div class="modal-actions">
-          <span class="color-footer-hint">点击颜色项可复制 § 代码</span>
-          <button class="btn btn-fill" @click="closeColorTable">关闭</button>
-        </div>
-      </template>
-    </NModal>
-  </NConfigProvider>
+    <template #footer>
+      <div class="modal-actions">
+        <span class="color-footer-hint">点击颜色项可复制 § 代码</span>
+        <button class="btn btn-fill" @click="closeColorTable">关闭</button>
+      </div>
+    </template>
+  </NModal>
 </template>
 
 <style scoped>

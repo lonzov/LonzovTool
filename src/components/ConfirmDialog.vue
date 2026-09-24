@@ -1,12 +1,6 @@
 <script setup>
-import { NModal, NConfigProvider, darkTheme } from 'naive-ui'
-import { isDark } from '../composables/useTheme'
+import { NModal } from 'naive-ui'
 import { confirmState, resolveConfirm } from '../composables/useConfirm'
-
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
 
 // 点遮罩/Esc/关闭按钮都会走这里，否则调用方的 Promise 收不到结果
 function onShowChange(show) {
@@ -22,44 +16,41 @@ function onShowChange(show) {
     </Transition>
   </Teleport>
 
-  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-    <NModal
-      :show="confirmState.show"
-      preset="card"
-      :style="{
-        maxWidth: '420px',
-        width: 'calc(100% - 32px)',
-        borderRadius: '16px',
-        cornerShape: 'squircle',
-      }"
-      :title="confirmState.title"
-      :bordered="false"
-      :closable="confirmState.showCancel"
-      :auto-focus="false"
-      @update:show="onShowChange"
-      @close="onShowChange(false)"
-    >
-      <div class="confirm-modal-body">{{ confirmState.message }}</div>
-      <template #footer>
-        <div class="confirm-modal-actions">
-          <button
-            v-if="confirmState.showCancel"
-            class="confirm-btn confirm-btn--outline"
-            @click="resolveConfirm(false)"
-          >
-            {{ confirmState.cancelText }}
-          </button>
-          <button
-            class="confirm-btn"
-            :class="confirmState.danger ? 'confirm-btn--danger' : 'confirm-btn--fill'"
-            @click="resolveConfirm(true)"
-          >
-            {{ confirmState.confirmText }}
-          </button>
-        </div>
-      </template>
-    </NModal>
-  </NConfigProvider>
+  <NModal
+    :show="confirmState.show"
+    preset="card"
+    :style="{
+      maxWidth: '420px',
+      width: 'calc(100% - 32px)',
+      borderRadius: 'var(--radius-xl)',
+    }"
+    :title="confirmState.title"
+    :bordered="false"
+    :closable="confirmState.showCancel"
+    :auto-focus="false"
+    @update:show="onShowChange"
+    @close="onShowChange(false)"
+  >
+    <div class="confirm-modal-body">{{ confirmState.message }}</div>
+    <template #footer>
+      <div class="confirm-modal-actions">
+        <button
+          v-if="confirmState.showCancel"
+          class="confirm-btn confirm-btn--outline"
+          @click="resolveConfirm(false)"
+        >
+          {{ confirmState.cancelText }}
+        </button>
+        <button
+          class="confirm-btn"
+          :class="confirmState.danger ? 'confirm-btn--danger' : 'confirm-btn--fill'"
+          @click="resolveConfirm(true)"
+        >
+          {{ confirmState.confirmText }}
+        </button>
+      </div>
+    </template>
+  </NModal>
 </template>
 
 <style scoped>

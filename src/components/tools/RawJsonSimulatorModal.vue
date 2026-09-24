@@ -1,9 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { NModal, NConfigProvider, NIcon } from 'naive-ui'
-import { darkTheme } from 'naive-ui'
+import { NModal, NIcon } from 'naive-ui'
 import { Add16Filled, Delete24Regular } from '@vicons/fluent'
-import { useTheme } from '../../composables/useTheme'
 import { useHeightTransition } from '../../composables/useHeightTransition.js'
 import {
   simPlayer, simMissing, simTagsText, simScores,
@@ -11,17 +9,10 @@ import {
   closeSimModal, addSimScore, removeSimScore, resetSimulator, triggerSimSave,
 } from '../../composables/useRawJsonSimulator.js'
 
-const { isDark } = useTheme()
-
 // 增删记分板行、说明文案换行等都会改变高度，统一交给它做过渡
 const animWrap = ref(null)
 const animInner = ref(null)
 useHeightTransition({ show: showSimModal, inner: animInner, wrap: animWrap })
-
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
 
 const isCompact = ref(false)
 let _mq
@@ -39,84 +30,81 @@ const modalStyle = computed(() => ({
   maxWidth: '560px',
   width: 'calc(100% - 32px)',
   maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 110px)',
-  borderRadius: '16px',
-  cornerShape: 'squircle',
+  borderRadius: 'var(--radius-xl)',
 }))
 </script>
 
 <template>
-  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-    <NModal
-      v-model:show="showSimModal"
-      preset="card"
-      title="预览模拟器"
-      :style="modalStyle"
-      :segmented="{ content: true, footer: 'soft' }"
-      content-scrollable
-    >
-      <div ref="animWrap" class="modal-anim">
-        <div ref="animInner">
-          <p class="sim-hint">
-            预览里的 <code>selector</code> 和 <code>score</code> 元素需要知道「谁在看这条消息」才能求值。
-            这里填的就是那套模拟数据——只影响预览，不会写进 JSON。
-          </p>
+  <NModal
+    v-model:show="showSimModal"
+    preset="card"
+    title="预览模拟器"
+    :style="modalStyle"
+    :segmented="{ content: true, footer: 'soft' }"
+    content-scrollable
+  >
+    <div ref="animWrap" class="modal-anim">
+      <div ref="animInner">
+        <p class="sim-hint">
+          预览里的 <code>selector</code> 和 <code>score</code> 元素需要知道「谁在看这条消息」才能求值。
+          这里填的就是那套模拟数据——只影响预览，不会写进 JSON。
+        </p>
 
-          <div class="sim-field">
-            <label class="sim-label">玩家名</label>
-            <input v-model="simPlayer" type="text" class="sim-input" placeholder="Steve" @input="triggerSimSave" />
-            <span class="sim-field-hint">@s / @p / @a / @e 都会取这个值</span>
-          </div>
+        <div class="sim-field">
+          <label class="sim-label">玩家名</label>
+          <input v-model="simPlayer" type="text" class="sim-input" placeholder="Steve" @input="triggerSimSave" />
+          <span class="sim-field-hint">@s / @p / @a / @e 都会取这个值</span>
+        </div>
 
-          <div class="sim-field">
-            <label class="sim-label">缺失分值</label>
-            <input v-model="simMissing" type="text" class="sim-input" placeholder="0" @input="triggerSimSave" />
-            <span class="sim-field-hint">记分板查不到该玩家/计分项时显示的兜底值</span>
-          </div>
+        <div class="sim-field">
+          <label class="sim-label">缺失分值</label>
+          <input v-model="simMissing" type="text" class="sim-input" placeholder="0" @input="triggerSimSave" />
+          <span class="sim-field-hint">记分板查不到该玩家/计分项时显示的兜底值</span>
+        </div>
 
-          <div class="sim-field">
-            <label class="sim-label">实体标签</label>
-            <input v-model="simTagsText" type="text" class="sim-input" placeholder="vip, admin" @input="triggerSimSave" />
-            <span class="sim-field-hint">逗号分隔。用于 @e[tag=vip] 这类带标签过滤的选择器</span>
-          </div>
+        <div class="sim-field">
+          <label class="sim-label">实体标签</label>
+          <input v-model="simTagsText" type="text" class="sim-input" placeholder="vip, admin" @input="triggerSimSave" />
+          <span class="sim-field-hint">逗号分隔。用于 @e[tag=vip] 这类带标签过滤的选择器</span>
+        </div>
 
-          <div class="sim-field">
-            <label class="sim-label">记分板</label>
-            <div class="sim-score-list">
-              <div v-if="simScores.length === 0" class="sim-empty">暂无记分板数据</div>
-              <div v-for="(row, i) in simScores" :key="i" class="sim-score-row">
-                <input v-model="row.player" type="text" class="sim-input sim-score-input" placeholder="玩家" @input="triggerSimSave" />
-                <input v-model="row.objective" type="text" class="sim-input sim-score-input" placeholder="计分项" @input="triggerSimSave" />
-                <input v-model="row.score" type="text" class="sim-input sim-score-value" placeholder="0" @input="triggerSimSave" />
-                <button
-                  class="sim-icon-btn"
-                  :class="{ 'sim-icon-btn--danger': simScoreConfirmIdx === i }"
-                  :title="simScoreConfirmIdx === i ? '再次点击确认删除' : '删除'"
-                  @click="removeSimScore(i)"
-                >
-                  <NIcon :component="Delete24Regular" :size="14" />
-                </button>
-              </div>
+        <div class="sim-field">
+          <label class="sim-label">记分板</label>
+          <div class="sim-score-list">
+            <div v-if="simScores.length === 0" class="sim-empty">暂无记分板数据</div>
+            <div v-for="(row, i) in simScores" :key="i" class="sim-score-row">
+              <input v-model="row.player" type="text" class="sim-input sim-score-input" placeholder="玩家" @input="triggerSimSave" />
+              <input v-model="row.objective" type="text" class="sim-input sim-score-input" placeholder="计分项" @input="triggerSimSave" />
+              <input v-model="row.score" type="text" class="sim-input sim-score-value" placeholder="0" @input="triggerSimSave" />
+              <button
+                class="sim-icon-btn"
+                :class="{ 'sim-icon-btn--danger': simScoreConfirmIdx === i }"
+                :title="simScoreConfirmIdx === i ? '再次点击确认删除' : '删除'"
+                @click="removeSimScore(i)"
+              >
+                <NIcon :component="Delete24Regular" :size="14" />
+              </button>
             </div>
-            <button class="sim-add-btn" @click="addSimScore">
-              <NIcon :component="Add16Filled" :size="14" />
-              <span>添加记分板项</span>
-            </button>
-            <span class="sim-field-hint">
-              既用于 <code>score</code> 元素求值，也用于 <code>@p[scores={{ a=1 }}]</code> 这类条件选择器。
-              没有列出的计分项一律视为「条件不成立」，该参数会被移出参数表。
-            </span>
           </div>
+          <button class="sim-add-btn" @click="addSimScore">
+            <NIcon :component="Add16Filled" :size="14" />
+            <span>添加记分板项</span>
+          </button>
+          <span class="sim-field-hint">
+            既用于 <code>score</code> 元素求值，也用于 <code>@p[scores={{ a=1 }}]</code> 这类条件选择器。
+            没有列出的计分项一律视为「条件不成立」，该参数会被移出参数表。
+          </span>
         </div>
       </div>
+    </div>
 
-      <template #footer>
-        <div class="modal-actions">
-          <button class="btn btn-outline" @click="resetSimulator">重置</button>
-          <button class="btn btn-fill" @click="closeSimModal">完成</button>
-        </div>
-      </template>
-    </NModal>
-  </NConfigProvider>
+    <template #footer>
+      <div class="modal-actions">
+        <button class="btn btn-outline" @click="resetSimulator">重置</button>
+        <button class="btn btn-fill" @click="closeSimModal">完成</button>
+      </div>
+    </template>
+  </NModal>
 </template>
 
 <style scoped>

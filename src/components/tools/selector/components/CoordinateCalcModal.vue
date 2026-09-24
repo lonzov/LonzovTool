@@ -1,69 +1,66 @@
 <template>
-  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-    <NModal
-      v-model:show="showCoordCalcModal"
-      preset="card"
-      title="坐标自动计算"
-      :style="modalStyle"
-      :segmented="{ content: true, footer: 'soft' }"
-      content-scrollable
-      :mask-closable="false"
-      @after-leave="onAfterLeave"
-    >
-      <div v-if="contentVisible" class="coord-calc-body">
-        <!-- 起始坐标 -->
-        <div class="coord-row">
-          <label class="coord-row-label">起始坐标</label>
-          <div class="coord-inputs">
-            <div class="coord-field">
-              <span class="coord-label">X</span>
-              <NInput v-model:value="coordCalcStart.x" size="small" placeholder="0" />
-            </div>
-            <div class="coord-field">
-              <span class="coord-label">Y</span>
-              <NInput v-model:value="coordCalcStart.y" size="small" placeholder="0" />
-            </div>
-            <div class="coord-field">
-              <span class="coord-label">Z</span>
-              <NInput v-model:value="coordCalcStart.z" size="small" placeholder="0" />
-            </div>
+  <NModal
+    v-model:show="showCoordCalcModal"
+    preset="card"
+    title="坐标自动计算"
+    :style="modalStyle"
+    :segmented="{ content: true, footer: 'soft' }"
+    content-scrollable
+    :mask-closable="false"
+    @after-leave="onAfterLeave"
+  >
+    <div v-if="contentVisible" class="coord-calc-body">
+      <!-- 起始坐标 -->
+      <div class="coord-row">
+        <label class="coord-row-label">起始坐标</label>
+        <div class="coord-inputs">
+          <div class="coord-field">
+            <span class="coord-label">X</span>
+            <NInput v-model:value="coordCalcStart.x" size="small" placeholder="0" />
           </div>
-        </div>
-
-        <!-- 终点坐标 -->
-        <div class="coord-row">
-          <label class="coord-row-label">终点坐标</label>
-          <div class="coord-inputs">
-            <div class="coord-field">
-              <span class="coord-label">X</span>
-              <NInput v-model:value="coordCalcEnd.x" size="small" placeholder="0" />
-            </div>
-            <div class="coord-field">
-              <span class="coord-label">Y</span>
-              <NInput v-model:value="coordCalcEnd.y" size="small" placeholder="0" />
-            </div>
-            <div class="coord-field">
-              <span class="coord-label">Z</span>
-              <NInput v-model:value="coordCalcEnd.z" size="small" placeholder="0" />
-            </div>
+          <div class="coord-field">
+            <span class="coord-label">Y</span>
+            <NInput v-model:value="coordCalcStart.y" size="small" placeholder="0" />
+          </div>
+          <div class="coord-field">
+            <span class="coord-label">Z</span>
+            <NInput v-model:value="coordCalcStart.z" size="small" placeholder="0" />
           </div>
         </div>
       </div>
 
-      <template #footer>
-        <div class="modal-actions">
-          <button class="btn btn-outline" @click="onCancel">取消</button>
-          <button class="btn btn-fill" @click="onConfirm">确定</button>
+      <!-- 终点坐标 -->
+      <div class="coord-row">
+        <label class="coord-row-label">终点坐标</label>
+        <div class="coord-inputs">
+          <div class="coord-field">
+            <span class="coord-label">X</span>
+            <NInput v-model:value="coordCalcEnd.x" size="small" placeholder="0" />
+          </div>
+          <div class="coord-field">
+            <span class="coord-label">Y</span>
+            <NInput v-model:value="coordCalcEnd.y" size="small" placeholder="0" />
+          </div>
+          <div class="coord-field">
+            <span class="coord-label">Z</span>
+            <NInput v-model:value="coordCalcEnd.z" size="small" placeholder="0" />
+          </div>
         </div>
-      </template>
-    </NModal>
-  </NConfigProvider>
+      </div>
+    </div>
+
+    <template #footer>
+      <div class="modal-actions">
+        <button class="btn btn-outline" @click="onCancel">取消</button>
+        <button class="btn btn-fill" @click="onConfirm">确定</button>
+      </div>
+    </template>
+  </NModal>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { NModal, NConfigProvider, NInput, darkTheme } from 'naive-ui'
-import { useTheme } from '../../../../composables/useTheme.js'
+import { NModal, NInput } from 'naive-ui'
 import {
   coordCalcModalOpen,
   coordCalcStart,
@@ -74,13 +71,6 @@ import {
   confirmCoordCalc,
 } from '../composables/useParams.js'
 import { useModalContent } from '../composables/useModalContent.js'
-
-const { isDark } = useTheme()
-
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
 
 const { contentVisible, onAfterLeave } = useModalContent(coordCalcModalOpen)
 
@@ -100,8 +90,7 @@ const modalStyle = computed(() => ({
   maxWidth: '500px',
   width: 'calc(100% - 32px)',
   maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: '16px',
-  cornerShape: 'squircle',
+  borderRadius: 'var(--radius-xl)',
 }))
 
 const showCoordCalcModal = computed({

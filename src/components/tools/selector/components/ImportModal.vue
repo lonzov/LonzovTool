@@ -1,46 +1,36 @@
 <template>
-  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-    <NModal
-      v-model:show="showImportModal"
-      preset="card"
-      title="导入选择器"
-      :style="modalStyle"
-      :segmented="{ content: true, footer: 'soft' }"
-      content-scrollable
-    >
-      <p class="import-hint">粘贴选择器参数文本，自动解析并导入</p>
-      <textarea
-        v-model="importText"
-        class="import-textarea"
-        placeholder='粘贴选择器参数文本，例如：&#10;@a[name="Steve",tag=admin,scores={money=1..}]'
-        rows="5"
-        spellcheck="false"
-      />
-      <div v-if="importError" class="import-error">{{ importError }}</div>
+  <NModal
+    v-model:show="showImportModal"
+    preset="card"
+    title="导入选择器"
+    :style="modalStyle"
+    :segmented="{ content: true, footer: 'soft' }"
+    content-scrollable
+  >
+    <p class="import-hint">粘贴选择器参数文本，自动解析并导入</p>
+    <textarea
+      v-model="importText"
+      class="import-textarea"
+      placeholder='粘贴选择器参数文本，例如：&#10;@a[name="Steve",tag=admin,scores={money=1..}]'
+      rows="5"
+      spellcheck="false"
+    />
+    <div v-if="importError" class="import-error">{{ importError }}</div>
 
-      <template #footer>
-        <div class="modal-actions">
-          <button class="btn btn-outline" @click="closeImport">取消</button>
-          <button class="btn btn-fill" @click="parseImport">确定导入</button>
-        </div>
-      </template>
-    </NModal>
-  </NConfigProvider>
+    <template #footer>
+      <div class="modal-actions">
+        <button class="btn btn-outline" @click="closeImport">取消</button>
+        <button class="btn btn-fill" @click="parseImport">确定导入</button>
+      </div>
+    </template>
+  </NModal>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { NModal, NConfigProvider, darkTheme } from 'naive-ui'
-import { useTheme } from '../../../../composables/useTheme.js'
+import { NModal } from 'naive-ui'
 import { importText, importError, showImportModal } from '../composables/useState.js'
 import { closeImport, parseImport } from '../composables/useImport.js'
-
-const { isDark } = useTheme()
-
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
 
 const isCompact = ref(false)
 let _mq
@@ -58,8 +48,7 @@ const modalStyle = computed(() => ({
   maxWidth: '520px',
   width: 'calc(100% - 32px)',
   maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: '16px',
-  cornerShape: 'squircle',
+  borderRadius: 'var(--radius-xl)',
 }))
 </script>
 

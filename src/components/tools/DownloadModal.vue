@@ -1,9 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { NIcon, NModal, NConfigProvider, NCascader, useMessage } from 'naive-ui'
-import { darkTheme } from 'naive-ui'
+import { NIcon, NModal, NCascader, useMessage } from 'naive-ui'
 import { Link24Filled, ArrowDownload24Filled, ArrowUpRight20Filled } from '@vicons/fluent'
-import { useTheme } from '../../composables/useTheme'
 import { useMouseGlow, applyGlow } from '../../composables/useMouseGlow'
 
 const props = defineProps({
@@ -15,22 +13,11 @@ const props = defineProps({
 const emit = defineEmits(['update:show', 'download'])
 
 const message = useMessage()
-const { isDark } = useTheme()
 
 const showLocal = computed({
   get: () => props.show,
   set: (val) => emit('update:show', val),
 })
-
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
-
-const lightOverrides = {
-  common: { neutralModal: '#FFFFFF' },
-  Card: { colorModal: '#FFFFFF' },
-}
 
 // 模糊遮罩
 watch(() => props.show, (val) => {
@@ -176,62 +163,60 @@ onUnmounted(() => unsubGlow(handleGlow))
 </script>
 
 <template>
-  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : lightOverrides" style="display: contents">
-    <NModal
-      v-model:show="showLocal"
-      preset="card"
-      :style="{ maxWidth: '540px', width: 'calc(100% - 32px)', borderRadius: '16px', cornerShape: 'squircle' }"
-      title="下载方式"
-      :bordered="false"
-      closable
-      :auto-focus="false"
-    >
-      <div class="dl-modal-header-row">
-        <span class="dl-modal-desc">{{ hasNoLinks ? '暂无可用下载' : hasMultiVersion ? '请选择下载方式和版本' : '选择一个适合你的下载方式' }}</span>
-        <NCascader
-          v-if="hasMultiVersion && !hasNoLinks"
-          v-model:value="selectedVersionIndex"
-          :options="cascaderOptions"
-          placeholder="选择版本"
-          :show-path="false"
-          :menu-props="cascaderMenuProps"
-          placement="bottom-end"
-          size="medium"
-          class="dl-version-cascader"
-        />
-      </div>
+  <NModal
+    v-model:show="showLocal"
+    preset="card"
+    :style="{ maxWidth: '540px', width: 'calc(100% - 32px)', borderRadius: 'var(--radius-xl)' }"
+    title="下载方式"
+    :bordered="false"
+    closable
+    :auto-focus="false"
+  >
+    <div class="dl-modal-header-row">
+      <span class="dl-modal-desc">{{ hasNoLinks ? '暂无可用下载' : hasMultiVersion ? '请选择下载方式和版本' : '选择一个适合你的下载方式' }}</span>
+      <NCascader
+        v-if="hasMultiVersion && !hasNoLinks"
+        v-model:value="selectedVersionIndex"
+        :options="cascaderOptions"
+        placeholder="选择版本"
+        :show-path="false"
+        :menu-props="cascaderMenuProps"
+        placement="bottom-end"
+        size="medium"
+        class="dl-version-cascader"
+      />
+    </div>
 
-      <div v-if="hasNoLinks" class="dl-no-links">
-        <span class="dl-no-links-text">暂不提供下载</span>
+    <div v-if="hasNoLinks" class="dl-no-links">
+      <span class="dl-no-links-text">暂不提供下载</span>
+    </div>
+    <div v-else class="dl-options">
+      <div class="dl-option glow-border" @click="handleDirectParse">
+        <NIcon :component="Link24Filled" :size="22" class="dl-option-icon" />
+        <div class="dl-option-text">
+          <span class="dl-option-title">直链解析（推荐）</span>
+          <span class="dl-option-desc">一键下载，不可用时尝试其他通道</span>
+        </div>
+        <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
       </div>
-      <div v-else class="dl-options">
-        <div class="dl-option glow-border" @click="handleDirectParse">
-          <NIcon :component="Link24Filled" :size="22" class="dl-option-icon" />
-          <div class="dl-option-text">
-            <span class="dl-option-title">直链解析（推荐）</span>
-            <span class="dl-option-desc">一键下载，不可用时尝试其他通道</span>
-          </div>
-          <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
+      <div class="dl-option glow-border" @click="handleBackupParse">
+        <NIcon :component="Link24Filled" :size="22" class="dl-option-icon" />
+        <div class="dl-option-text">
+          <span class="dl-option-title">备用解析</span>
+          <span class="dl-option-desc">一键下载，不可用时尝试其他通道</span>
         </div>
-        <div class="dl-option glow-border" @click="handleBackupParse">
-          <NIcon :component="Link24Filled" :size="22" class="dl-option-icon" />
-          <div class="dl-option-text">
-            <span class="dl-option-title">备用解析</span>
-            <span class="dl-option-desc">一键下载，不可用时尝试其他通道</span>
-          </div>
-          <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
-        </div>
-        <div class="dl-option glow-border" @click="handleOriginalLink">
-          <NIcon :component="ArrowDownload24Filled" :size="22" class="dl-option-icon" />
-          <div class="dl-option-text">
-            <span class="dl-option-title">蓝奏云网盘</span>
-            <span class="dl-option-desc">解析失效时使用，密码会自动复制({{ currentLanzou.password }})</span>
-          </div>
-          <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
-        </div>
+        <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
       </div>
-    </NModal>
-  </NConfigProvider>
+      <div class="dl-option glow-border" @click="handleOriginalLink">
+        <NIcon :component="ArrowDownload24Filled" :size="22" class="dl-option-icon" />
+        <div class="dl-option-text">
+          <span class="dl-option-title">蓝奏云网盘</span>
+          <span class="dl-option-desc">解析失效时使用，密码会自动复制({{ currentLanzou.password }})</span>
+        </div>
+        <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
+      </div>
+    </div>
+  </NModal>
 </template>
 
 <style scoped>

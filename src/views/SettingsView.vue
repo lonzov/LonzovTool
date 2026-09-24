@@ -1,13 +1,13 @@
 <script setup>
 import { ref, computed, watch, nextTick, onBeforeUnmount, onMounted, onUnmounted } from 'vue'
-import { NSelect, NSwitch, NConfigProvider, darkTheme, NModal, NIcon, useMessage } from 'naive-ui'
+import { NSelect, NSwitch, NModal, NIcon, useMessage } from 'naive-ui'
 import { ArrowDownload16Regular, ArrowExportUp24Filled, Settings24Regular, ChevronUp16Regular, ArrowCounterclockwise24Filled } from '@vicons/fluent'
 import { useTheme } from '../composables/useTheme'
 import { confirmDialog } from '../composables/useConfirm'
 import { useWorkspaceSettings } from '../composables/useWorkspaceSettings'
 import { useWorkspace } from '../composables/useWorkspace'
 
-const { themeMode, setThemeMode, isDark } = useTheme()
+const { themeMode, setThemeMode } = useTheme()
 const message = useMessage()
 
 const themeOptions = [
@@ -135,8 +135,7 @@ const embedEnableModalStyle = computed(() => ({
   maxWidth: '540px',
   width: 'calc(100% - 32px)',
   maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: '16px',
-  cornerShape: 'squircle',
+  borderRadius: 'var(--radius-xl)',
 }))
 
 /* ========== 关闭站外嵌入：选择是否清理标签页 ========== */
@@ -616,399 +615,381 @@ watch(() => cacheClearModal.value.show, (val) => {
     }
   }
 })
-
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
 </script>
 
 <template>
   <div>
-    <NConfigProvider :theme="isDark ? darkTheme : null" style="display: contents">
-      <div class="settings-container">
-        <!-- 页面头部 -->
-        <div class="settings-page-header">
-          <div class="page-title-row">
-            <NIcon :component="Settings24Regular" class="page-title-icon" />
-            <h1 class="settings-h1">设置</h1>
-          </div>
-          <div class="header-actions">
-            <p class="settings-subtitle">自定义你的使用体验</p>
-            <button class="reset-btn" @click="handleReset">
-              <NIcon :component="ArrowCounterclockwise24Filled" size="14" />
-              重置
-            </button>
-          </div>
+    <div class="settings-container">
+      <!-- 页面头部 -->
+      <div class="settings-page-header">
+        <div class="page-title-row">
+          <NIcon :component="Settings24Regular" class="page-title-icon" />
+          <h1 class="settings-h1">设置</h1>
         </div>
-
-        <!-- 外观 -->
-        <div class="settings-card">
-          <div
-            class="card-header"
-            :class="{ 'card-header--collapsed': collapsedSections.personalization }"
-            @click="toggleSection('personalization')"
-          >
-            <span>个性化</span>
-            <NIcon
-              :component="ChevronUp16Regular"
-              size="16"
-              class="chevron-icon"
-              :class="{ 'chevron-icon--rotated': collapsedSections.personalization }"
-            />
-          </div>
-          <Transition name="collapse">
-            <div v-show="!collapsedSections.personalization" class="card-body">
-              <div class="setting-row">
-                <div class="setting-info">
-                  <span class="setting-title">主题模式</span>
-                </div>
-                <div class="setting-control">
-                  <NSelect
-                    v-model:value="themeValue"
-                    :options="themeOptions"
-                    placement="bottom-end"
-                    size="medium"
-                    class="settings-select"
-                  />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <span class="setting-title">同步主题模式到外部网站</span>
-                  <p class="setting-desc">需要目标网站支持相关 URL 参数，否则不生效</p>
-                </div>
-                <div class="setting-control">
-                  <NSelect
-                    v-model:value="urlThemeValue"
-                    :options="URL_THEME_OPTIONS"
-                    placement="bottom-end"
-                    size="medium"
-                    class="settings-select"
-                    :consistent-menu-width="false"
-                    :menu-props="{ class: 'settings-select-menu-wide' }"
-                  />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <span class="setting-title">边缘高光效果</span>
-                  <p class="setting-desc">元素边缘跟随鼠标移动的高光效果</p>
-                </div>
-                <div class="setting-control">
-                  <NSwitch
-                    :value="glowEnabled"
-                    @update:value="onGlowToggle"
-                    :rail-style="switchRailStyle"
-                    class="settings-switch"
-                  />
-                </div>
-              </div>
-            </div>
-          </Transition>
-        </div>
-
-        <!-- 工作站 -->
-        <div class="settings-card">
-          <div
-            class="card-header"
-            :class="{ 'card-header--collapsed': collapsedSections.workspace }"
-            @click="toggleSection('workspace')"
-          >
-            <span>工作站</span>
-            <NIcon
-              :component="ChevronUp16Regular"
-              size="16"
-              class="chevron-icon"
-              :class="{ 'chevron-icon--rotated': collapsedSections.workspace }"
-            />
-          </div>
-          <Transition name="collapse">
-            <div v-show="!collapsedSections.workspace" class="card-body">
-              <div class="setting-row">
-                <div class="setting-info">
-                  <span class="setting-title">标签页长按拖拽时长</span>
-                  <p class="setting-desc">长按标签页多久后可以拖动，默认 700 ms</p>
-                </div>
-                <div class="setting-control setting-control--drag-delay">
-                  <span class="drag-delay-input-wrap">
-                    <input
-                      type="text"
-                      inputmode="numeric"
-                      class="drag-delay-input"
-                      :value="dragDelayInput"
-                      placeholder="700"
-                      @input="onDragDelayInput($event.target.value)"
-                      @blur="onDragDelayBlur"
-                    />
-                    <span class="drag-delay-unit">ms</span>
-                  </span>
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <span class="setting-title">在工作站内打开外部网页</span>
-                  <p class="setting-desc">开启后，点击站外卡片直接在工作站里查看网页；关闭则照旧在浏览器新标签页打开</p>
-                </div>
-                <div class="setting-control">
-                  <NSwitch
-                    :value="embedEnabled"
-                    @update:value="onEmbedToggle"
-                    :rail-style="switchRailStyle"
-                    class="settings-switch"
-                  />
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <span class="setting-title">深色模式下压暗外部网页</span>
-                  <p class="setting-desc">将工作站内的外部网页统一调暗（部分浏览器可能不支持颜色反转）</p>
-                </div>
-                <div class="setting-control">
-                  <NSelect
-                    v-model:value="maskValue"
-                    :options="IFRAME_MASK_OPTIONS"
-                    placement="bottom-end"
-                    size="medium"
-                    class="settings-select"
-                  />
-                </div>
-              </div>
-            </div>
-          </Transition>
-        </div>
-
-        <!-- 配置管理 -->
-        <div class="settings-card">
-          <div
-            class="card-header"
-            :class="{ 'card-header--collapsed': collapsedSections.config }"
-            @click="toggleSection('config')"
-          >
-            <span>配置管理</span>
-            <NIcon
-              :component="ChevronUp16Regular"
-              size="16"
-              class="chevron-icon"
-              :class="{ 'chevron-icon--rotated': collapsedSections.config }"
-            />
-          </div>
-          <Transition name="collapse">
-            <div v-show="!collapsedSections.config" class="card-body">
-              <div
-                v-for="(scope, key) in CONFIG_SCOPES"
-                :key="key"
-                class="setting-row"
-              >
-                <div class="setting-info">
-                  <span class="setting-title">{{ scope.label }}</span>
-                  <p class="setting-desc">{{ scope.desc }}</p>
-                </div>
-                <div class="setting-control">
-                  <div class="config-pill">
-                    <button class="config-pill-btn" title="导入" @click="handleImport(key)">
-                      <NIcon :component="ArrowDownload16Regular" size="16" />
-                    </button>
-                    <span class="config-pill-divider"></span>
-                    <button class="config-pill-btn" title="导出" @click="handleExport(key)">
-                      <NIcon :component="ArrowExportUp24Filled" size="16" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Transition>
-        </div>
-
-        <!-- 缓存管理 -->
-        <div class="settings-card">
-          <div
-            class="card-header"
-            :class="{ 'card-header--collapsed': collapsedSections.cache }"
-            @click="toggleSection('cache')"
-          >
-            <span>缓存管理</span>
-            <NIcon
-              :component="ChevronUp16Regular"
-              size="16"
-              class="chevron-icon"
-              :class="{ 'chevron-icon--rotated': collapsedSections.cache }"
-            />
-          </div>
-          <Transition name="collapse">
-            <div v-show="!collapsedSections.cache" class="card-body">
-              <div class="setting-row">
-                <div class="setting-info">
-                  <span class="setting-title">检查更新</span>
-                </div>
-                <div class="setting-control">
-                  <button class="cache-btn" @click="handleCheckUpdate">检查</button>
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <span class="setting-title">重置版本缓存</span>
-                  <p class="setting-desc">无法更新时可尝试重置</p>
-                </div>
-                <div class="setting-control">
-                  <button class="cache-btn cache-btn--danger" @click="handleResetVersionCache">重置</button>
-                </div>
-              </div>
-              <div class="setting-row">
-                <div class="setting-info">
-                  <span class="setting-title">清理资源缓存</span>
-                  <p class="setting-desc">清理所有资源缓存释放空间，下次加载会变慢</p>
-                </div>
-                <div class="setting-control">
-                  <button class="cache-btn cache-btn--danger" @click="handleClearResourceCache">清理</button>
-                </div>
-              </div>
-            </div>
-          </Transition>
+        <div class="header-actions">
+          <p class="settings-subtitle">自定义你的使用体验</p>
+          <button class="reset-btn" @click="handleReset">
+            <NIcon :component="ArrowCounterclockwise24Filled" size="14" />
+            重置
+          </button>
         </div>
       </div>
-    </NConfigProvider>
+
+      <!-- 外观 -->
+      <div class="settings-card">
+        <div
+          class="card-header"
+          :class="{ 'card-header--collapsed': collapsedSections.personalization }"
+          @click="toggleSection('personalization')"
+        >
+          <span>个性化</span>
+          <NIcon
+            :component="ChevronUp16Regular"
+            size="16"
+            class="chevron-icon"
+            :class="{ 'chevron-icon--rotated': collapsedSections.personalization }"
+          />
+        </div>
+        <Transition name="collapse">
+          <div v-show="!collapsedSections.personalization" class="card-body">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">主题模式</span>
+              </div>
+              <div class="setting-control">
+                <NSelect
+                  v-model:value="themeValue"
+                  :options="themeOptions"
+                  placement="bottom-end"
+                  size="medium"
+                  class="settings-select"
+                />
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">同步主题模式到外部网站</span>
+                <p class="setting-desc">需要目标网站支持相关 URL 参数，否则不生效</p>
+              </div>
+              <div class="setting-control">
+                <NSelect
+                  v-model:value="urlThemeValue"
+                  :options="URL_THEME_OPTIONS"
+                  placement="bottom-end"
+                  size="medium"
+                  class="settings-select"
+                  :consistent-menu-width="false"
+                  :menu-props="{ class: 'settings-select-menu-wide' }"
+                />
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">边缘高光效果</span>
+                <p class="setting-desc">元素边缘跟随鼠标移动的高光效果</p>
+              </div>
+              <div class="setting-control">
+                <NSwitch
+                  :value="glowEnabled"
+                  @update:value="onGlowToggle"
+                  :rail-style="switchRailStyle"
+                  class="settings-switch"
+                />
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </div>
+
+      <!-- 工作站 -->
+      <div class="settings-card">
+        <div
+          class="card-header"
+          :class="{ 'card-header--collapsed': collapsedSections.workspace }"
+          @click="toggleSection('workspace')"
+        >
+          <span>工作站</span>
+          <NIcon
+            :component="ChevronUp16Regular"
+            size="16"
+            class="chevron-icon"
+            :class="{ 'chevron-icon--rotated': collapsedSections.workspace }"
+          />
+        </div>
+        <Transition name="collapse">
+          <div v-show="!collapsedSections.workspace" class="card-body">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">标签页长按拖拽时长</span>
+                <p class="setting-desc">长按标签页多久后可以拖动，默认 700 ms</p>
+              </div>
+              <div class="setting-control setting-control--drag-delay">
+                <span class="drag-delay-input-wrap">
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    class="drag-delay-input"
+                    :value="dragDelayInput"
+                    placeholder="700"
+                    @input="onDragDelayInput($event.target.value)"
+                    @blur="onDragDelayBlur"
+                  />
+                  <span class="drag-delay-unit">ms</span>
+                </span>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">在工作站内打开外部网页</span>
+                <p class="setting-desc">开启后，点击站外卡片直接在工作站里查看网页；关闭则照旧在浏览器新标签页打开</p>
+              </div>
+              <div class="setting-control">
+                <NSwitch
+                  :value="embedEnabled"
+                  @update:value="onEmbedToggle"
+                  :rail-style="switchRailStyle"
+                  class="settings-switch"
+                />
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">深色模式下压暗外部网页</span>
+                <p class="setting-desc">将工作站内的外部网页统一调暗（部分浏览器可能不支持颜色反转）</p>
+              </div>
+              <div class="setting-control">
+                <NSelect
+                  v-model:value="maskValue"
+                  :options="IFRAME_MASK_OPTIONS"
+                  placement="bottom-end"
+                  size="medium"
+                  class="settings-select"
+                />
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </div>
+
+      <!-- 配置管理 -->
+      <div class="settings-card">
+        <div
+          class="card-header"
+          :class="{ 'card-header--collapsed': collapsedSections.config }"
+          @click="toggleSection('config')"
+        >
+          <span>配置管理</span>
+          <NIcon
+            :component="ChevronUp16Regular"
+            size="16"
+            class="chevron-icon"
+            :class="{ 'chevron-icon--rotated': collapsedSections.config }"
+          />
+        </div>
+        <Transition name="collapse">
+          <div v-show="!collapsedSections.config" class="card-body">
+            <div
+              v-for="(scope, key) in CONFIG_SCOPES"
+              :key="key"
+              class="setting-row"
+            >
+              <div class="setting-info">
+                <span class="setting-title">{{ scope.label }}</span>
+                <p class="setting-desc">{{ scope.desc }}</p>
+              </div>
+              <div class="setting-control">
+                <div class="config-pill">
+                  <button class="config-pill-btn" title="导入" @click="handleImport(key)">
+                    <NIcon :component="ArrowDownload16Regular" size="16" />
+                  </button>
+                  <span class="config-pill-divider"></span>
+                  <button class="config-pill-btn" title="导出" @click="handleExport(key)">
+                    <NIcon :component="ArrowExportUp24Filled" size="16" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </div>
+
+      <!-- 缓存管理 -->
+      <div class="settings-card">
+        <div
+          class="card-header"
+          :class="{ 'card-header--collapsed': collapsedSections.cache }"
+          @click="toggleSection('cache')"
+        >
+          <span>缓存管理</span>
+          <NIcon
+            :component="ChevronUp16Regular"
+            size="16"
+            class="chevron-icon"
+            :class="{ 'chevron-icon--rotated': collapsedSections.cache }"
+          />
+        </div>
+        <Transition name="collapse">
+          <div v-show="!collapsedSections.cache" class="card-body">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">检查更新</span>
+              </div>
+              <div class="setting-control">
+                <button class="cache-btn" @click="handleCheckUpdate">检查</button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">重置版本缓存</span>
+                <p class="setting-desc">无法更新时可尝试重置</p>
+              </div>
+              <div class="setting-control">
+                <button class="cache-btn cache-btn--danger" @click="handleResetVersionCache">重置</button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">清理资源缓存</span>
+                <p class="setting-desc">清理所有资源缓存释放空间，下次加载会变慢</p>
+              </div>
+              <div class="setting-control">
+                <button class="cache-btn cache-btn--danger" @click="handleClearResourceCache">清理</button>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </div>
+    </div>
 
     <!-- 导入确认模态框 -->
-    <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-      <NModal
-        v-model:show="importModal.show"
-        preset="card"
-        :style="{
-          maxWidth: '420px',
-          width: 'calc(100% - 32px)',
-          borderRadius: '16px',
-          cornerShape: 'squircle',
-        }"
-        title="导入配置"
-        :bordered="false"
-        :closable="true"
-        @close="cancelImport"
-        :auto-focus="false"
-      >
-        <div class="import-modal-body">
-          <p v-if="importModal.hasLocalData">
-            检测到本地已有「{{ importModal.scopeLabel }}」的配置数据。<br />
-            <strong>是否覆盖已有的本地数据？此操作不可恢复。</strong>
-          </p>
-          <p v-else>
-            即将导入「{{ importModal.scopeLabel }}」的配置数据，是否确认导入？
-          </p>
-          <p
-            v-if="importModal.rejectedKeys.length"
-            class="import-rejected"
-          >
-            以下 {{ importModal.rejectedKeys.length }} 项不在白名单中，已自动忽略：<br />
-            <code>{{ importModal.rejectedKeys.join('、') }}</code>
-          </p>
+    <NModal
+      v-model:show="importModal.show"
+      preset="card"
+      :style="{
+        maxWidth: '420px',
+        width: 'calc(100% - 32px)',
+        borderRadius: 'var(--radius-xl)',
+      }"
+      title="导入配置"
+      :bordered="false"
+      :closable="true"
+      @close="cancelImport"
+      :auto-focus="false"
+    >
+      <div class="import-modal-body">
+        <p v-if="importModal.hasLocalData">
+          检测到本地已有「{{ importModal.scopeLabel }}」的配置数据。<br />
+          <strong>是否覆盖已有的本地数据？此操作不可恢复。</strong>
+        </p>
+        <p v-else>
+          即将导入「{{ importModal.scopeLabel }}」的配置数据，是否确认导入？
+        </p>
+        <p
+          v-if="importModal.rejectedKeys.length"
+          class="import-rejected"
+        >
+          以下 {{ importModal.rejectedKeys.length }} 项不在白名单中，已自动忽略：<br />
+          <code>{{ importModal.rejectedKeys.join('、') }}</code>
+        </p>
+      </div>
+      <template #footer>
+        <div class="import-modal-actions">
+          <button class="import-btn import-btn--outline" @click="cancelImport">取消</button>
+          <button class="import-btn import-btn--fill" @click="confirmImport">
+            {{ importModal.hasLocalData ? '覆盖并导入' : '确认导入' }}
+          </button>
         </div>
-        <template #footer>
-          <div class="import-modal-actions">
-            <button class="import-btn import-btn--outline" @click="cancelImport">取消</button>
-            <button class="import-btn import-btn--fill" @click="confirmImport">
-              {{ importModal.hasLocalData ? '覆盖并导入' : '确认导入' }}
-            </button>
-          </div>
-        </template>
-      </NModal>
-    </NConfigProvider>
+      </template>
+    </NModal>
 
     <!-- 缓存清理确认模态框（照搬版本更新模态框样式） -->
-    <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-      <NModal
-        v-model:show="cacheClearModal.show"
-        preset="card"
-        :style="{
-          maxWidth: '420px',
-          width: 'calc(100% - 32px)',
-          borderRadius: '16px',
-          cornerShape: 'squircle',
-        }"
-        title="清理资源缓存"
-        :bordered="false"
-        :closable="true"
-        @close="cancelClearResourceCache"
-        :auto-focus="false"
-      >
-        <div class="cache-clear-modal-body">
-          资源共占用 {{ cacheClearModal.sizeMB }} MB，确认要清理吗？<br />
-          下次打开网站时加载速度可能变慢
+    <NModal
+      v-model:show="cacheClearModal.show"
+      preset="card"
+      :style="{
+        maxWidth: '420px',
+        width: 'calc(100% - 32px)',
+        borderRadius: 'var(--radius-xl)',
+      }"
+      title="清理资源缓存"
+      :bordered="false"
+      :closable="true"
+      @close="cancelClearResourceCache"
+      :auto-focus="false"
+    >
+      <div class="cache-clear-modal-body">
+        资源共占用 {{ cacheClearModal.sizeMB }} MB，确认要清理吗？<br />
+        下次打开网站时加载速度可能变慢
+      </div>
+      <template #footer>
+        <div class="import-modal-actions">
+          <button class="import-btn import-btn--outline" @click="cancelClearResourceCache">取消</button>
+          <button class="import-btn import-btn--fill" @click="confirmClearResourceCache">确认清理</button>
         </div>
-        <template #footer>
-          <div class="import-modal-actions">
-            <button class="import-btn import-btn--outline" @click="cancelClearResourceCache">取消</button>
-            <button class="import-btn import-btn--fill" @click="confirmClearResourceCache">确认清理</button>
-          </div>
-        </template>
-      </NModal>
-    </NConfigProvider>
+      </template>
+    </NModal>
 
     <!-- 开启站外嵌入：第三方内容声明 + 9s 倒计时确认 -->
-    <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-      <NModal
-        v-model:show="embedEnableModal.show"
-        preset="card"
-        :style="embedEnableModalStyle"
-        :segmented="{ content: true, footer: 'soft' }"
-        content-scrollable
-        title="在工作站内打开外部网页"
-        :bordered="false"
-        :closable="true"
-        @close="closeEmbedEnableModal"
-        :mask-closable="false"
-        :auto-focus="false"
-      >
-        <div class="embed-enable-modal-body">
-          <p>开启后，点击站外卡片将直接在工作站内打开网页，方便你同时使用多个工具。<strong>请注意：</strong></p>
-          <p>1. 打开的网页均为 <strong>第三方网站</strong>，与本站无关，本站无法保证其稳定性与绝对的安全性，登录账号或填写个人信息时请谨慎。<strong>如遇 BUG 请联系对应网站反馈，本站无法处理第三方网站的问题😥</strong></p>
-          <p>2. 部分网站因安全策略 <strong>不支持在工作站内打开</strong>，若遇到无法打开的情况，请点击顶部导航栏中的按钮，改用新标签页打开。</p>
-          <p>3. 因浏览器安全策略，打开的网页可能会无法读取 cookie，这会导致无法登录、人机验证卡住、记录消失等问题，此时同样请改用新标签页打开。</p>
+    <NModal
+      v-model:show="embedEnableModal.show"
+      preset="card"
+      :style="embedEnableModalStyle"
+      :segmented="{ content: true, footer: 'soft' }"
+      content-scrollable
+      title="在工作站内打开外部网页"
+      :bordered="false"
+      :closable="true"
+      @close="closeEmbedEnableModal"
+      :mask-closable="false"
+      :auto-focus="false"
+    >
+      <div class="embed-enable-modal-body">
+        <p>开启后，点击站外卡片将直接在工作站内打开网页，方便你同时使用多个工具。<strong>请注意：</strong></p>
+        <p>1. 打开的网页均为 <strong>第三方网站</strong>，与本站无关，本站无法保证其稳定性与绝对的安全性，登录账号或填写个人信息时请谨慎。<strong>如遇 BUG 请联系对应网站反馈，本站无法处理第三方网站的问题😥</strong></p>
+        <p>2. 部分网站因安全策略 <strong>不支持在工作站内打开</strong>，若遇到无法打开的情况，请点击顶部导航栏中的按钮，改用新标签页打开。</p>
+        <p>3. 因浏览器安全策略，打开的网页可能会无法读取 cookie，这会导致无法登录、人机验证卡住、记录消失等问题，此时同样请改用新标签页打开。</p>
+      </div>
+      <template #footer>
+        <div class="import-modal-actions">
+          <button
+            class="import-btn import-btn--fill embed-confirm-btn"
+            :class="{ 'embed-confirm-btn--disabled': !embedEnableReady }"
+            :disabled="!embedEnableReady"
+            @click="confirmEmbedEnable"
+          >
+            {{ embedConfirmLabel }}
+          </button>
         </div>
-        <template #footer>
-          <div class="import-modal-actions">
-            <button
-              class="import-btn import-btn--fill embed-confirm-btn"
-              :class="{ 'embed-confirm-btn--disabled': !embedEnableReady }"
-              :disabled="!embedEnableReady"
-              @click="confirmEmbedEnable"
-            >
-              {{ embedConfirmLabel }}
-            </button>
-          </div>
-        </template>
-      </NModal>
-    </NConfigProvider>
+      </template>
+    </NModal>
 
     <!-- 关闭站外嵌入：是否清理已打开的嵌入标签页 -->
-    <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-      <NModal
-        v-model:show="embedCloseModal.show"
-        preset="card"
-        :style="{
-          maxWidth: '420px',
-          width: 'calc(100% - 32px)',
-          borderRadius: '16px',
-          cornerShape: 'squircle',
-        }"
-        title="关闭站外嵌入"
-        :bordered="false"
-        :closable="true"
-        @close="cancelEmbedClose"
-        :mask-closable="true"
-        :auto-focus="false"
-      >
-        <div class="embed-close-modal-body">
-          <p>是否需要清理已打开的站外嵌入标签页？</p>
-          <p class="embed-close-hint">关闭后，站外卡片将恢复为在浏览器新标签页中打开。</p>
+    <NModal
+      v-model:show="embedCloseModal.show"
+      preset="card"
+      :style="{
+        maxWidth: '420px',
+        width: 'calc(100% - 32px)',
+        borderRadius: 'var(--radius-xl)',
+      }"
+      title="关闭站外嵌入"
+      :bordered="false"
+      :closable="true"
+      @close="cancelEmbedClose"
+      :mask-closable="true"
+      :auto-focus="false"
+    >
+      <div class="embed-close-modal-body">
+        <p>是否需要清理已打开的站外嵌入标签页？</p>
+        <p class="embed-close-hint">关闭后，站外卡片将恢复为在浏览器新标签页中打开。</p>
+      </div>
+      <template #footer>
+        <div class="import-modal-actions">
+          <button class="import-btn import-btn--outline" @click="cleanupEmbedClose">清理</button>
+          <button class="import-btn import-btn--fill" @click="directEmbedClose">直接关闭</button>
         </div>
-        <template #footer>
-          <div class="import-modal-actions">
-            <button class="import-btn import-btn--outline" @click="cleanupEmbedClose">清理</button>
-            <button class="import-btn import-btn--fill" @click="directEmbedClose">直接关闭</button>
-          </div>
-        </template>
-      </NModal>
-    </NConfigProvider>
+      </template>
+    </NModal>
   </div>
 </template>
 

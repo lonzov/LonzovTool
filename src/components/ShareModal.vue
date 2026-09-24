@@ -1,13 +1,10 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
-import { NModal, NConfigProvider, useMessage } from 'naive-ui'
-import { darkTheme } from 'naive-ui'
+import { NModal, useMessage } from 'naive-ui'
 import { useRoute } from 'vue-router'
-import { useTheme } from '../composables/useTheme'
 
 const props = defineProps({ show: Boolean })
 const emit = defineEmits(['update:show'])
-const { isDark } = useTheme()
 const message = useMessage()
 const route = useRoute()
 
@@ -286,17 +283,11 @@ watch(() => props.show, (val) => {
 })
 
 // ---- Naive UI ----
-const darkOverrides = {
-  common: { neutralModal: '#191919' },
-  Card: { colorModal: '#191919' },
-}
-
 const modalStyle = computed(() => ({
   maxWidth: '560px',
   width: 'calc(100% - 32px)',
   maxHeight: isCompact.value ? 'calc(100vh - 120px)' : 'calc(100vh - 48px)',
-  borderRadius: '16px',
-  cornerShape: 'squircle',
+  borderRadius: 'var(--radius-xl)',
 }))
 </script>
 
@@ -344,81 +335,79 @@ const modalStyle = computed(() => ({
     </article>
   </div>
 
-  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
-    <NModal
-      v-model:show="showLocal"
-      preset="card"
-      :style="modalStyle"
-      title="分享"
-      :bordered="false"
-      :closable="true"
-      :mask-closable="true"
-      :auto-focus="false"
-      content-scrollable
-      :segmented="{ content: true, footer: true }"
-    >
-      <div class="poster-wrap">
-        <!-- 海报框：始终按海报 2:3 占位，高度从打开到出图都不变 -->
-        <div class="poster-frame">
-          <!-- 占位骨架：按海报真实版式排，压在毛玻璃下只看大意 -->
-          <div v-if="phase !== 'idle'" class="poster-skeleton" aria-hidden="true">
-            <div class="sk-title">
-              <span class="sk-bar sk-bar-title1"></span>
-              <span class="sk-bar sk-bar-title2"></span>
-            </div>
-            <div class="sk-desc">
-              <span class="sk-rail"></span>
-              <div class="sk-desc-lines">
-                <span class="sk-bar"></span>
-                <span class="sk-bar"></span>
-                <span class="sk-bar sk-bar-desc3"></span>
-              </div>
-            </div>
-            <div class="sk-foot">
-              <span class="sk-logo"></span>
-              <div class="sk-brand">
-                <span class="sk-bar sk-bar-name"></span>
-                <span class="sk-bar sk-bar-sub"></span>
-              </div>
-              <span class="sk-qr"></span>
+  <NModal
+    v-model:show="showLocal"
+    preset="card"
+    :style="modalStyle"
+    title="分享"
+    :bordered="false"
+    :closable="true"
+    :mask-closable="true"
+    :auto-focus="false"
+    content-scrollable
+    :segmented="{ content: true, footer: true }"
+  >
+    <div class="poster-wrap">
+      <!-- 海报框：始终按海报 2:3 占位，高度从打开到出图都不变 -->
+      <div class="poster-frame">
+        <!-- 占位骨架：按海报真实版式排，压在毛玻璃下只看大意 -->
+        <div v-if="phase !== 'idle'" class="poster-skeleton" aria-hidden="true">
+          <div class="sk-title">
+            <span class="sk-bar sk-bar-title1"></span>
+            <span class="sk-bar sk-bar-title2"></span>
+          </div>
+          <div class="sk-desc">
+            <span class="sk-rail"></span>
+            <div class="sk-desc-lines">
+              <span class="sk-bar"></span>
+              <span class="sk-bar"></span>
+              <span class="sk-bar sk-bar-desc3"></span>
             </div>
           </div>
-
-          <img
-            v-if="posterImage"
-            ref="posterImgEl"
-            :src="posterImage"
-            alt="分享海报"
-            class="poster-img"
-            :class="{ 'is-in': posterShown }"
-            :style="{ '--img-fade': IMG_FADE_MS + 'ms' }"
-          >
-
-          <!-- 毛玻璃 + 进度条：真图就位后整体渐隐揭幕 -->
-          <div
-            v-if="phase !== 'idle'"
-            class="poster-veil"
-            :class="{ 'is-out': phase === 'revealing' }"
-          >
-            <div class="poster-progress">
-              <span class="poster-progress-fill" :style="{ width: progress + '%' }"></span>
+          <div class="sk-foot">
+            <span class="sk-logo"></span>
+            <div class="sk-brand">
+              <span class="sk-bar sk-bar-name"></span>
+              <span class="sk-bar sk-bar-sub"></span>
             </div>
+            <span class="sk-qr"></span>
+          </div>
+        </div>
+
+        <img
+          v-if="posterImage"
+          ref="posterImgEl"
+          :src="posterImage"
+          alt="分享海报"
+          class="poster-img"
+          :class="{ 'is-in': posterShown }"
+          :style="{ '--img-fade': IMG_FADE_MS + 'ms' }"
+        >
+
+        <!-- 毛玻璃 + 进度条：真图就位后整体渐隐揭幕 -->
+        <div
+          v-if="phase !== 'idle'"
+          class="poster-veil"
+          :class="{ 'is-out': phase === 'revealing' }"
+        >
+          <div class="poster-progress">
+            <span class="poster-progress-fill" :style="{ width: progress + '%' }"></span>
           </div>
         </div>
       </div>
+    </div>
 
-      <template #footer>
-        <div class="modal-foot">
-          <button class="foot-btn foot-btn-outline" @click="copyLink">复制链接</button>
-          <button
-            class="foot-btn foot-btn-fill"
-            :disabled="!posterImage"
-            @click="downloadPoster"
-          >保存图片</button>
-        </div>
-      </template>
-    </NModal>
-  </NConfigProvider>
+    <template #footer>
+      <div class="modal-foot">
+        <button class="foot-btn foot-btn-outline" @click="copyLink">复制链接</button>
+        <button
+          class="foot-btn foot-btn-fill"
+          :disabled="!posterImage"
+          @click="downloadPoster"
+        >保存图片</button>
+      </div>
+    </template>
+  </NModal>
 </template>
 
 <style>

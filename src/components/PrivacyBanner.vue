@@ -1,19 +1,16 @@
 <script>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { NIcon, NModal, NCheckbox, NConfigProvider } from 'naive-ui'
-import { darkTheme } from 'naive-ui'
+import { NIcon, NModal, NCheckbox } from 'naive-ui'
 import { WarningShield20Regular, Checkmark24Filled, Settings24Regular, Dismiss24Filled } from '@vicons/fluent'
-import { useTheme } from '../composables/useTheme'
 import { usePrivacyModal } from '../composables/usePrivacyModal'
 
 export default {
   name: 'PrivacyBanner',
-  components: { NIcon, NModal, NCheckbox, NConfigProvider },
+  components: { NIcon, NModal, NCheckbox },
   setup() {
     const STORAGE_KEY = 'privacy_consent'
     const router = useRouter()
-    const { isDark } = useTheme()
     const { showCookieModal } = usePrivacyModal()
 
     // 隐私偏好：[必要(固定1), 分析, 回放]
@@ -213,8 +210,7 @@ export default {
       maxWidth: '540px',
       width: 'calc(100% - 32px)',
       maxHeight: isCompact.value ? 'calc(100vh - 120px)' : undefined,
-      borderRadius: '16px',
-      cornerShape: 'squircle',
+      borderRadius: 'var(--radius-xl)',
     }))
 
     return {
@@ -224,14 +220,7 @@ export default {
       necessaryChecked: ref(true),
       analyticsChecked,
       replayChecked,
-      isDark,
-      darkTheme,
       modalStyle,
-      // 覆盖Naive弹窗背景色为主区域卡片同色（--bg-card: 浅色#FFFFFF, 深色#191919）
-      darkOverrides: {
-        common: { neutralModal: '#191919' },
-        Card: { colorModal: '#191919' },
-      },
       WarningShield20Regular,
       Checkmark24Filled,
       Settings24Regular,
@@ -302,7 +291,6 @@ export default {
   </Transition>
 
   <!-- 隐私偏好弹窗 -->
-  <NConfigProvider :theme="isDark ? darkTheme : null" :theme-overrides="isDark ? darkOverrides : undefined">
   <NModal
     v-model:show="showCookieModal"
     preset="card"
@@ -371,7 +359,6 @@ export default {
       </div>
     </template>
   </NModal>
-  </NConfigProvider>
 </template>
 
 <style scoped>

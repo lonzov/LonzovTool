@@ -1,25 +1,18 @@
 <template>
-  <NConfigProvider
-    :theme="isDark ? darkTheme : null"
-    :theme-overrides="isDark ? darkOverrides : undefined"
-  >
-    <div class="selector-tool">
-      <PageHeader />
-      <Toolbar />
-      <CodeView />
-      <HasitemModal />
-      <HaspermissionModal />
-      <CoordinateCalcModal />
-      <ImportModal />
-    </div>
-  </NConfigProvider>
+  <div class="selector-tool">
+    <PageHeader />
+    <Toolbar />
+    <CodeView />
+    <HasitemModal />
+    <HaspermissionModal />
+    <CoordinateCalcModal />
+    <ImportModal />
+  </div>
 </template>
 
 <script setup>
 defineOptions({ name: 'SelectorEditor' })
-import { computed } from 'vue'
-import { NConfigProvider, darkTheme } from 'naive-ui'
-import { useTheme } from '../../../composables/useTheme.js'
+
 import { useSelectorEditor } from './composables/useSelectorEditor.js'
 import PageHeader from './components/PageHeader.vue'
 import Toolbar from './components/Toolbar.vue'
@@ -33,41 +26,8 @@ defineProps({
   tabPath: { type: String, default: '' },
 })
 
-const { isDark } = useTheme()
 useSelectorEditor()
 
-// ========== NSelect 深色模式覆盖 ==========
-const darkOverridesObj = {
-  Select: {
-    peers: {
-      InternalSelection: {
-        color: '#191919',
-        textColor: '#E8E8E8',
-        border: '1px solid #333333',
-        borderHover: '1px solid #555555',
-        borderFocus: '1px solid #E8E8E8',
-        borderActive: '1px solid #E8E8E8',
-        boxShadowFocus: 'none',
-        boxShadowActive: 'none',
-      },
-      InternalSelectMenu: {
-        color: '#1E1E1E',
-        optionTextColor: '#E8E8E8',
-        optionTextColorActive: '#E8E8E8',
-        optionTextColorPressed: '#E8E8E8',
-        optionCheckColor: '#E8E8E8',
-        optionColorActive: '#2A2A2A',
-        optionColorActivePending: '#2A2A2A',
-        optionColorPending: '#2A2A2A',
-        loadingColor: '#E8E8E8',
-      },
-    },
-  },
-}
-
-const darkOverrides = computed(() => {
-  return isDark.value ? darkOverridesObj : undefined
-})
 </script>
 
 <style scoped>
