@@ -5,8 +5,16 @@ export default {
   // 首屏位
   first: null,
 
-  // 付费位（交替）
-  paid: [],
+  // 付费位（交替）：数组下标即付费位序号，没配的位写 null
+  paid: [
+    null,
+    {
+      id: 2,
+      eventId: 'sampixel',
+      image: 'https://bu.dusays.com/2026/09/24/6ab52b62b7abd.webp',
+      link: 'https://sam.moe5200.com/',
+    },
+  ],
 
   // 免费位
   free: null,
