@@ -12,7 +12,7 @@ export const MODAL_CARD_CHROME_HEIGHT = 191
 </script>
 
 <script setup>
-import { ref, computed, toRef, onMounted, onUnmounted } from 'vue'
+import { ref, computed, toRef } from 'vue'
 import { NModal } from 'naive-ui'
 import { useHeightTransition } from '../../composables/useHeightTransition.js'
 
@@ -58,19 +58,22 @@ const emit = defineEmits(['update:show', 'close', 'esc', 'after-enter', 'after-l
 // 这样调用方仍能传 :z-index / :to 这类没在 props 里列举的 NModal 原生属性。
 defineOptions({ inheritAttrs: false })
 
-const isCompact = ref(false)
-let mq = null
-function onMqChange(e) {
-  isCompact.value = e.matches
+// 紧凑断点全站只有一份：模态框有十几个实例，各建一个 matchMedia 监听没必要
+let compactRef = null
+function getCompactRef() {
+  if (!compactRef) {
+    compactRef = ref(false)
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      const mq = window.matchMedia('(max-width: 640px)')
+      compactRef.value = mq.matches
+      mq.addEventListener('change', (e) => {
+        compactRef.value = e.matches
+      })
+    }
+  }
+  return compactRef
 }
-onMounted(() => {
-  mq = window.matchMedia('(max-width: 640px)')
-  isCompact.value = mq.matches
-  mq.addEventListener('change', onMqChange)
-})
-onUnmounted(() => {
-  if (mq) mq.removeEventListener('change', onMqChange)
-})
+const isCompact = getCompactRef()
 
 // 高度过渡：外层容器的高度由 hook 接管，内层高度自适应。
 // 两层都由本组件持有，调用方只需加 animated 属性。
