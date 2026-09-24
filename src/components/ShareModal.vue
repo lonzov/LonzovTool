@@ -755,13 +755,16 @@ const modalStyle = computed(() => ({
 
 .foot-btn:disabled { opacity: 0.4; cursor: default; }
 
-.foot-btn-outline { border: 1.5px solid currentColor; }
-[data-theme='light'] .foot-btn-outline { background: #fff; color: #1A1A1A; }
-[data-theme='light'] .foot-btn-outline:hover { background: #E8E8E8; }
-[data-theme='dark'] .foot-btn-outline { background: transparent; color: rgba(255,255,255,0.87); }
-[data-theme='dark'] .foot-btn-outline:hover { background: rgba(255,255,255,0.08); }
+.foot-btn-outline {
+  border: 1.5px solid currentColor;
+  background: var(--card);
+  color: var(--foreground);
+}
+.foot-btn-outline:hover { background: var(--muted); }
 
-[data-theme='light'] .foot-btn-fill { background: #1A1A1A; color: #fff !important; }
-[data-theme='dark'] .foot-btn-fill { background: #fff; color: #1A1A1A !important; }
+.foot-btn-fill {
+  background: var(--primary);
+  color: var(--primary-foreground) !important;
+}
 .foot-btn-fill:hover { opacity: 0.85; }
 </style>

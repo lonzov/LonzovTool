@@ -52,34 +52,30 @@ const modalStyle = computed(() => ({
 
 <style scoped>
 .import-hint {
-  font-size: 12px; color: var(--text-secondary);
+  font-size: 12px; color: var(--muted-foreground);
   margin-bottom: 10px; line-height: 1.5;
   transition: color 0.4s ease;
 }
 .import-textarea {
   width: 100%; min-height: 160px;
   padding: 8px 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg-sub);
-  color: var(--text-primary);
+  background: var(--muted);
+  color: var(--foreground);
   font-size: 13px; resize: vertical;
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   outline: none; box-sizing: border-box;
   transition: border-color 0.3s ease, background-color 0.4s ease, color 0.4s ease;
 }
-.import-textarea:focus { border-color: var(--text-secondary); }
+.import-textarea:focus { border-color: var(--muted-foreground); }
 .import-error {
   margin-top: 10px; padding: 8px 12px;
-  background: #f2f2f2; border: 1px solid #ddd;
-  border-radius: 6px; font-size: 12px; color: #555;
+  background: var(--muted); border: 1px solid var(--border);
+  border-radius: 6px; font-size: 12px; color: var(--muted-foreground);
   /* JSON 报错是「诊断 + 位置」两行，靠换行断句 */
   white-space: pre-line; word-break: break-all;
-  transition: background-color 0.4s ease, border-color 0.4s ease;
-}
-[data-theme="dark"] .import-error {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+  transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
 }
 
 /* 页脚操作按钮 (与 UpdateDialog 一致) */
@@ -106,14 +102,9 @@ const modalStyle = computed(() => ({
 }
 
 /* fill - 全填充主按钮 */
-[data-theme="light"] .btn-fill {
-  background: #1A1A1A;
-  color: #fff;
-}
-
-[data-theme="dark"] .btn-fill {
-  background: #fff;
-  color: #1A1A1A;
+.btn-fill {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .btn-fill:hover { opacity: 0.85; }
@@ -123,21 +114,12 @@ const modalStyle = computed(() => ({
   border: 1.5px solid currentColor;
 }
 
-[data-theme="light"] .btn-outline {
-  background: #fff;
-  color: #1A1A1A;
+.btn-outline {
+  background: var(--card);
+  color: var(--foreground);
 }
 
-[data-theme="light"] .btn-outline:hover {
-  background: #E8E8E8;
-}
-
-[data-theme="dark"] .btn-outline {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.87);
-}
-
-[data-theme="dark"] .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.08);
+.btn-outline:hover {
+  background: var(--muted);
 }
 </style>

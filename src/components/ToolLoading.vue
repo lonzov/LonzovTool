@@ -36,21 +36,14 @@ defineProps({
   border-radius: 50%;
   corner-shape: round;
   border: 8px solid;
+  border-color: var(--foreground) transparent;
   animation: tool-loader-spin 1s infinite;
   filter: drop-shadow(0 0 8px rgba(128, 140, 160, 0.4));
 }
 
-[data-theme='dark'] .tool-loader {
-  border-color: #e7e7e7 #ffffff00;
-}
-
-[data-theme='light'] .tool-loader {
-  border-color: #000000 #ffffff00;
-}
-
 .tool-loading--error .tool-loader {
   animation: none;
-  border-color: #E46962 #ffffff00;
+  border-color: var(--destructive) transparent;
 }
 
 @keyframes tool-loader-spin {
@@ -58,7 +51,7 @@ defineProps({
 }
 
 .tool-loading-text {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 1em;
   font-weight: 500;
   letter-spacing: 0.08em;

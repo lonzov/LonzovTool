@@ -153,27 +153,20 @@ onUnmounted(() => {
   border-radius: 50%;
   corner-shape: round;
   border: 8px solid;
+  border-color: var(--foreground) transparent;
   animation: diagnostic-spin 1s infinite;
   filter: drop-shadow(0 0 8px rgba(128, 140, 160, 0.4));
 }
 
-[data-theme='dark'] .diagnostic-loader {
-  border-color: #e7e7e7 #ffffff00;
-}
-
-[data-theme='light'] .diagnostic-loader {
-  border-color: #000000 #ffffff00;
-}
-
 .diagnostic-loader--error {
   animation: none;
-  border-color: #E46962 #ffffff00;
+  border-color: var(--destructive) transparent;
   filter: drop-shadow(0 0 8px rgba(228, 105, 98, 0.4));
 }
 
 .diagnostic-loader--ok {
   animation: none;
-  border-color: #63E469 #ffffff00;
+  border-color: #63E469 transparent;
   filter: drop-shadow(0 0 8px rgba(99, 228, 105, 0.4));
 }
 
@@ -182,7 +175,7 @@ onUnmounted(() => {
 }
 
 .diagnostic-text {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 1em;
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -191,7 +184,7 @@ onUnmounted(() => {
 
 /* 超链接样式（搬自 Markdown 组件） */
 .diagnostic-text .offline-link {
-  color: var(--text-primary);
+  color: var(--foreground);
   text-decoration: none;
   position: relative;
   padding-bottom: 2px;
@@ -210,7 +203,7 @@ onUnmounted(() => {
   bottom: 5px;
   height: 1px;
   background-image: repeating-linear-gradient(to right,
-      color-mix(in srgb, var(--text-primary), transparent 30%) 0 4px,
+      color-mix(in srgb, var(--foreground), transparent 30%) 0 4px,
       transparent 4px 8px);
   background-repeat: repeat-x;
   background-size: 8px 1px;
@@ -228,7 +221,7 @@ onUnmounted(() => {
   right: 0;
   bottom: 5px;
   height: 1px;
-  background-color: var(--text-primary);
+  background-color: var(--foreground);
   opacity: 0;
   transition: opacity 0.3s;
   pointer-events: none;
@@ -265,14 +258,9 @@ onUnmounted(() => {
 }
 
 /* fill - 实心主按钮 */
-[data-theme="light"] .btn-fill {
-  background: #1A1A1A;
-  color: #fff;
-}
-
-[data-theme="dark"] .btn-fill {
-  background: #fff;
-  color: #1A1A1A;
+.btn-fill {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .btn-fill:hover {
@@ -284,21 +272,12 @@ onUnmounted(() => {
   border: 1.5px solid currentColor;
 }
 
-[data-theme="light"] .btn-outline {
-  background: #fff;
-  color: #1A1A1A;
+.btn-outline {
+  background: var(--card);
+  color: var(--foreground);
 }
 
-[data-theme="light"] .btn-outline:hover {
-  background: #E8E8E8;
-}
-
-[data-theme="dark"] .btn-outline {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.87);
-}
-
-[data-theme="dark"] .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.08);
+.btn-outline:hover {
+  background: var(--muted);
 }
 </style>

@@ -87,6 +87,7 @@ const TOKEN_GROUPS = [
   { title: '边框与分割线', keys: ['border', 'border-strong', 'input'] },
   { title: '叠层', keys: ['accent', 'ripple', 'ring'] },
   { title: '滚动条', keys: ['scrollbar', 'scrollbar-hover'] },
+  { title: '毛玻璃（移动端头部与抽屉标题栏）', keys: ['glass-background', 'glass-border'] },
   { title: '反色块', keys: ['primary', 'primary-foreground'] },
   {
     title: '强调色',
@@ -331,6 +332,10 @@ const neutralSwatches = computed(() => Object.entries(neutral))
         <div class="plain-row">
           <span class="col-name">--ease-theme</span>
           <span>{{ staticTokens['ease-theme'] }}</span>
+        </div>
+        <div class="plain-row">
+          <span class="col-name">--mask</span>
+          <span>{{ staticTokens.mask }}（抽屉与弹窗遮罩，两套主题相同）</span>
         </div>
         <div v-for="key in Z_KEYS" :key="key" class="plain-row">
           <span class="col-name">--{{ key }}</span>

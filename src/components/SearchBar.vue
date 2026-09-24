@@ -1,14 +1,14 @@
 <template>
   <div
     :style="{
-      background: 'var(--bg-card)',
+      background: 'var(--card)',
       borderRadius: '8px',
       display: 'flex',
       alignItems: 'center',
       padding: '0',
       marginBottom: '24px',
       height: '44px',
-      border: '1px solid var(--border-color)',
+      border: '1px solid var(--border)',
     }"
   >
     <!-- 搜索方式选择 -->
@@ -29,13 +29,13 @@
           cursor: 'pointer',
         }"
       >
-        <span :style="{ fontSize: '13px', color: 'var(--text-primary)' }">
+        <span :style="{ fontSize: '13px', color: 'var(--foreground)' }">
           {{ selectedEngine?.name || '搜索' }}
         </span>
         <n-icon
           :component="ChevronDown20Filled"
           :size="14"
-          color="var(--text-tertiary)"
+          color="var(--subtle-foreground)"
           :style="{ marginLeft: '4px' }"
         />
       </div>
@@ -46,7 +46,7 @@
       :style="{
         width: '1px',
         height: '56%',
-        background: 'var(--border-color)',
+        background: 'var(--border)',
         margin: '0 8px',
         alignSelf: 'center',
       }"
@@ -64,7 +64,7 @@
           outline: 'none',
           background: 'transparent',
           fontSize: '14px',
-          color: 'var(--text-primary)',
+          color: 'var(--foreground)',
         }"
         @keydown="handleKeydown"
       />
@@ -77,7 +77,7 @@
         display: 'flex',
         alignItems: 'center',
         height: '100%',
-        color: 'var(--text-secondary)',
+        color: 'var(--muted-foreground)',
         cursor: 'pointer',
       }"
       @click="doSearch"
@@ -95,7 +95,7 @@
             alignItems: 'center',
             height: '100%',
             cursor: 'pointer',
-            color: 'var(--text-secondary)',
+            color: 'var(--muted-foreground)',
           }"
           @click="toggleFavorite"
         >

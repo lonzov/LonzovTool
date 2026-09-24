@@ -286,8 +286,8 @@ function handleKeydown(e) {
   margin-bottom: 1px;
   border-radius: 6px;
   padding: 0 8px 0 8px;
-  background: var(--bg-sub);
-  border: 1px solid var(--border-color);
+  background: var(--muted);
+  border: 1px solid var(--border);
   transition:
     background-color 0.4s ease,
     border-color 0.4s ease;
@@ -318,7 +318,7 @@ function handleKeydown(e) {
   cursor: pointer;
   user-select: none;
   font-size: 13px;
-  color: var(--text-primary);
+  color: var(--foreground);
   transition: color 0.4s ease;
 }
 .code-edit-input {
@@ -343,19 +343,19 @@ function handleKeydown(e) {
   max-width: 100%;
 }
 .code-eq {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   margin: 0 0.35em;
   transition: color 0.4s ease;
   flex-shrink: 0;
 }
 .code-quote {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   flex-shrink: 0;
   transition: color 0.4s ease;
 }
 
 .code-value--static {
-  color: var(--text-primary);
+  color: var(--foreground);
   font-size: 13px;
   transition: color 0.4s ease;
   min-width: 0;
@@ -370,9 +370,9 @@ function handleKeydown(e) {
   align-items: center;
   gap: 3px;
   padding: 2px 8px;
-  border: 1px dashed var(--border-color);
+  border: 1px dashed var(--border);
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 11px;
   font-family: inherit;
   border-radius: 5px;
@@ -382,8 +382,8 @@ function handleKeydown(e) {
     color 0.15s ease;
 }
 .code-edit-hasitem-btn:hover {
-  border-color: var(--text-secondary);
-  color: var(--text-primary);
+  border-color: var(--muted-foreground);
+  color: var(--foreground);
 }
 .code-edit-hasitem-btn--inline {
   padding: 1px 5px;
@@ -394,7 +394,7 @@ function handleKeydown(e) {
 }
 
 .code-brace {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   flex-shrink: 0;
   transition: color 0.4s ease;
 }
@@ -412,22 +412,22 @@ function handleKeydown(e) {
   font-weight: 700;
   line-height: 1;
   padding-bottom: 1px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   cursor: pointer;
   user-select: none;
   flex-shrink: 0;
-  border: 1px dashed var(--border-color);
+  border: 1px dashed var(--border);
   transition:
     border-color 0.15s ease,
     color 0.15s ease;
 }
 .not-toggle:hover {
-  border-color: var(--text-secondary);
-  color: var(--text-primary);
+  border-color: var(--muted-foreground);
+  color: var(--foreground);
 }
 .not-active {
-  color: #dc2626 !important;
-  border: 1px solid #dc2626 !important;
+  color: var(--destructive) !important;
+  border: 1px solid var(--destructive) !important;
   background: rgba(220, 38, 38, 0.08) !important;
 }
 
@@ -441,7 +441,7 @@ function handleKeydown(e) {
   border: none;
   background: transparent;
   border-radius: 5px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   cursor: pointer;
   flex-shrink: 0;
   margin-left: 8px;
@@ -450,8 +450,8 @@ function handleKeydown(e) {
     color 0.12s ease;
 }
 .code-edit-confirm-btn:hover {
-  background: var(--bg-sub);
-  color: var(--text-primary);
+  background: var(--muted);
+  color: var(--foreground);
 }
 
 @media (max-width: 640px) {

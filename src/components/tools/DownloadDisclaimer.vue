@@ -169,14 +169,9 @@ const modalStyle = computed(() => ({
 }
 
 /* fill - 全填充主按钮 */
-[data-theme="light"] .btn-fill {
-  background: #1A1A1A;
-  color: #fff !important;
-}
-
-[data-theme="dark"] .btn-fill {
-  background: #fff;
-  color: #1A1A1A !important;
+.btn-fill {
+  background: var(--primary);
+  color: var(--primary-foreground) !important;
 }
 
 .btn-fill:hover {
@@ -188,22 +183,13 @@ const modalStyle = computed(() => ({
   border: 1.5px solid currentColor;
 }
 
-[data-theme="light"] .btn-outline {
-  background: #fff;
-  color: #1A1A1A;
+.btn-outline {
+  background: var(--card);
+  color: var(--foreground);
 }
 
-[data-theme="light"] .btn-outline:hover {
-  background: #E8E8E8;
-}
-
-[data-theme="dark"] .btn-outline {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.87);
-}
-
-[data-theme="dark"] .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.08);
+.btn-outline:hover {
+  background: var(--muted);
 }
 
 /* disabled - 置灰：无描边，文字透明度降低 */
@@ -214,10 +200,6 @@ const modalStyle = computed(() => ({
 }
 
 .btn-disabled:hover {
-  background: transparent !important;
-}
-
-[data-theme="dark"] .btn-disabled:hover {
   background: transparent !important;
 }
 </style>

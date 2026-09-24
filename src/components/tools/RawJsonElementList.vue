@@ -112,16 +112,12 @@ import {
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   width: 24px; height: 24px;
-  background: #555; color: white;
+  background: var(--muted-foreground); color: var(--card);
   border-radius: 50%;
   corner-shape: round;
   display: flex; align-items: center; justify-content: center;
   font-size: 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-[data-theme="dark"] .insert-plus {
-  background: #aaa;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 .node {
   background: var(--bg-card);
@@ -137,18 +133,18 @@ import {
 }
 .node:active { transform: scale(0.995); }
 .node-error {
-  border-color: #555 !important;
-  background: color-mix(in srgb, #333 5%, var(--bg-card)) !important;
+  border-color: var(--subtle-foreground) !important;
+  background: color-mix(in srgb, #333 5%, var(--card)) !important;
 }
 [data-theme="dark"] .node-error {
-  background: color-mix(in srgb, #aaa 8%, #191919) !important;
+  background: color-mix(in srgb, #aaa 8%, var(--card)) !important;
 }
 .node-warning {
-  border-color: #aaa !important;
-  background: color-mix(in srgb, #666 3%, var(--bg-card)) !important;
+  border-color: var(--subtle-foreground) !important;
+  background: color-mix(in srgb, #666 3%, var(--card)) !important;
 }
 [data-theme="dark"] .node-warning {
-  background: color-mix(in srgb, #888 6%, #191919) !important;
+  background: color-mix(in srgb, #888 6%, var(--card)) !important;
 }
 .node-main {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -162,11 +158,8 @@ import {
   padding: 2px 6px; border-radius: 4px;
   flex-shrink: 0; letter-spacing: 0.3px;
 }
-.type-text, .type-sel, .type-scr, .type-trn { background: var(--bg-sub); color: var(--text-secondary); }
-.type-err { background: var(--text-primary); color: #fff; }
-[data-theme="dark"] .type-text, [data-theme="dark"] .type-sel,
-[data-theme="dark"] .type-scr, [data-theme="dark"] .type-trn { background: var(--bg-sub); color: var(--text-secondary); }
-[data-theme="dark"] .type-err { background: #555; color: #1a1a1a; }
+.type-text, .type-sel, .type-scr, .type-trn { background: var(--muted); color: var(--muted-foreground); }
+.type-err { background: var(--primary); color: var(--primary-foreground); }
 .node-text {
   font-size: 12px; color: var(--text-primary);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
@@ -193,38 +186,24 @@ import {
 .act-btn--danger:hover { background: var(--bg-sub); }
 .act-delete-confirmed,
 .act-delete-confirmed:hover {
-  background: #dc2626 !important;
-  color: #fff !important;
-}
-[data-theme="dark"] .act-delete-confirmed,
-[data-theme="dark"] .act-delete-confirmed:hover {
-  background: #dc2626 !important;
-  color: #fff !important;
+  background: var(--destructive) !important;
+  color: var(--destructive-foreground) !important;
 }
 
 .error-box {
   margin-top: 12px;
-  background: #f2f2f2; border: 1px solid #ddd;
+  background: var(--muted); border: 1px solid var(--border);
   border-radius: 6px; padding: 10px 12px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
-[data-theme="dark"] .error-box {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-.error-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #555; margin: 2px 0; transition: color 0.4s ease; }
+.error-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted-foreground); margin: 2px 0; transition: color 0.4s ease; }
 .warning-box {
   margin-top: 8px;
-  background: #f5f5f5; border: 1px solid #ddd;
+  background: var(--muted); border: 1px solid var(--border);
   border-radius: 6px; padding: 10px 12px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
-[data-theme="dark"] .warning-box {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-.warning-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #555; margin: 2px 0; transition: color 0.4s ease; }
-[data-theme="dark"] .warning-item { color: #999; }
+.warning-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted-foreground); margin: 2px 0; transition: color 0.4s ease; }
 
 @media (max-width: 480px) {
   .node-main { flex-direction: column; align-items: stretch; gap: 8px; }

@@ -85,29 +85,25 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
 
 <style scoped>
 .output-card {
-  background: #FFFFFF;
+  background: var(--card);
   border-radius: 12px;
-  border: 1px solid #E0E0E0;
+  border: 1px solid var(--border);
   padding: 16px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
-}
-[data-theme="dark"] .output-card {
-  background: #191919;
-  border-color: #2B2B2B;
 }
 .output-card-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 10px;
 }
 .output-card-title {
-  font-size: 11px; font-weight: 700; color: var(--text-primary);
+  font-size: 11px; font-weight: 700; color: var(--foreground);
   text-transform: uppercase; letter-spacing: 0.5px;
   transition: color 0.4s ease;
 }
 .output-card-badge {
-  font-size: 10px; color: var(--text-tertiary);
+  font-size: 10px; color: var(--subtle-foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
-  background: var(--bg-sub);
+  background: var(--muted);
   padding: 2px 8px; border-radius: 4px;
   transition: color 0.4s ease, background-color 0.4s ease;
 }
@@ -117,10 +113,10 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
   display: inline-flex; align-items: center; justify-content: center;
   width: 24px; height: 24px; padding: 0;
   border: none; border-radius: 6px; background: transparent;
-  color: var(--text-tertiary); cursor: pointer;
+  color: var(--subtle-foreground); cursor: pointer;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
-.preview-icon-btn:hover { background: var(--bg-sub); color: var(--text-primary); }
+.preview-icon-btn:hover { background: var(--muted); color: var(--foreground); }
 
 .preview-box {
   background: #1a1a1a; border-radius: 8px; border: 1px solid #333;
@@ -140,7 +136,7 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
 }
 .preview-footer {
   display: flex; justify-content: space-between; gap: 8px;
-  margin-top: 6px; font-size: 10px; color: var(--text-tertiary);
+  margin-top: 6px; font-size: 10px; color: var(--subtle-foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   transition: color 0.4s ease;
 }
@@ -150,14 +146,14 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
   transition: color 0.4s ease;
 }
 .preview-lang::before { content: '· '; }
-.preview-lang--off { color: var(--text-tertiary); opacity: 0.75; }
+.preview-lang--off { color: var(--subtle-foreground); opacity: 0.75; }
 .json-textarea {
   width: 100%; height: 100px;
   padding: 10px 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg-sub);
-  color: var(--text-primary);
+  background: var(--muted);
+  color: var(--foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   font-size: 12px; line-height: 1.6;
   resize: none; outline: none;
@@ -165,15 +161,15 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
 }
 .cmd-box {
   padding: 10px 12px;
-  background: var(--bg-sub);
-  border: 1px solid var(--border-color);
+  background: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 8px;
   overflow-x: auto;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 .cmd-input {
   width: 100%; background: transparent; border: none;
-  color: var(--text-primary);
+  color: var(--foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   font-size: 12px; outline: none; word-break: break-all;
   transition: color 0.4s ease;
@@ -184,17 +180,15 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
   display: inline-flex; align-items: center; gap: 4px;
   padding: 4px 8px;
   border: none; background: transparent;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 11px; font-weight: 500;
   border-radius: 6px;
   cursor: pointer;
   font-family: inherit;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
-.qh-btn:hover { background: var(--bg-sub); }
+.qh-btn:hover { background: var(--muted); }
 .qh-btn:active { transform: scale(0.97); }
-.qh-btn--active { color: var(--text-primary); }
-.qh-btn--active:hover { background: var(--bg-sub); }
-[data-theme="dark"] .qh-btn--active { color: var(--text-primary); }
-[data-theme="dark"] .qh-btn--active:hover { background: var(--bg-sub); }
+.qh-btn--active { color: var(--foreground); }
+.qh-btn--active:hover { background: var(--muted); }
 </style>

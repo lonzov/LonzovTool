@@ -235,12 +235,8 @@ onUnmounted(() => unsubGlow(handleGlow))
 .dl-modal-desc {
   font-size: 14px;
   line-height: 1.6;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--muted-foreground);
   white-space: nowrap;
-}
-
-[data-theme='dark'] .dl-modal-desc {
-  color: rgba(255, 255, 255, 0.6);
 }
 
 /* ===== 版本级联选择器 ===== */
@@ -285,12 +281,8 @@ onUnmounted(() => unsubGlow(handleGlow))
 .dl-no-links-text {
   font-size: 16px;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--subtle-foreground);
   letter-spacing: 0.5px;
-}
-
-[data-theme='dark'] .dl-no-links-text {
-  color: rgba(255, 255, 255, 0.45);
 }
 
 /* ===== 下载选项 ===== */
@@ -313,8 +305,7 @@ onUnmounted(() => unsubGlow(handleGlow))
   z-index: 0;
 }
 
-[data-theme='light'] .dl-option:hover { background: #F0F2F5; }
-[data-theme='dark'] .dl-option:hover { background: rgba(255,255,255,0.06); }
+.dl-option:hover { background: var(--accent); }
 
 .dl-option:active {
   opacity: 0.7;
@@ -322,11 +313,7 @@ onUnmounted(() => unsubGlow(handleGlow))
 
 .dl-option-icon {
   flex-shrink: 0;
-  color: rgba(0, 0, 0, 0.4);
-}
-
-[data-theme='dark'] .dl-option-icon {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--subtle-foreground);
 }
 
 .dl-option-text {
@@ -339,12 +326,8 @@ onUnmounted(() => unsubGlow(handleGlow))
 .dl-option-arrow {
   flex-shrink: 0;
   margin-left: auto;
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--muted-foreground);
   transition: transform 0.25s ease, filter 0.25s ease;
-}
-
-[data-theme='dark'] .dl-option-arrow {
-  color: rgba(255, 255, 255, 0.7);
 }
 
 .dl-option:hover .dl-option-arrow {
@@ -355,20 +338,12 @@ onUnmounted(() => unsubGlow(handleGlow))
 .dl-option-title {
   font-size: 15px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 1);
-}
-
-[data-theme='dark'] .dl-option-title {
-  color: rgba(255, 255, 255, 1);
+  color: var(--foreground);
 }
 
 .dl-option-desc {
   font-size: 13px;
-  color: rgba(0, 0, 0, 0.6);
-}
-
-[data-theme='dark'] .dl-option-desc {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--muted-foreground);
 }
 </style>
 

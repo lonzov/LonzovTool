@@ -624,12 +624,12 @@ const statCluster = computed(() => ([
   --mono: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   --r: 14px;
   --ease: cubic-bezier(.22, .61, .36, 1);
-  --wm: color-mix(in srgb, var(--text-primary) 4.5%, transparent);
-  --invert-bg: var(--text-primary);
-  --invert-fg: var(--bg-color);
-  --invert-line: var(--border-color);
-  --line-2: var(--border-color);
-  color: var(--text-primary);
+  --wm: color-mix(in srgb, var(--foreground) 4.5%, transparent);
+  --invert-bg: var(--primary);
+  --invert-fg: var(--primary-foreground);
+  --invert-line: var(--border);
+  --line-2: var(--border);
+  color: var(--foreground);
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -671,7 +671,7 @@ const statCluster = computed(() => ([
 }
 
 .sec + .sec {
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border);
 }
 
 /* 水印巨字 */
@@ -704,12 +704,12 @@ const statCluster = computed(() => ([
   font-size: 12px;
   letter-spacing: .18em;
   text-transform: uppercase;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   margin-bottom: clamp(20px, 3vw, 36px);
 }
 
 .eyebrow b {
-  color: var(--text-primary);
+  color: var(--foreground);
   font-weight: 700;
   font-size: 13px;
 }
@@ -717,7 +717,7 @@ const statCluster = computed(() => ([
 .eyebrow .ln {
   flex: 1;
   height: 1px;
-  background: var(--border-color);
+  background: var(--border);
   transform: translateY(-3px);
 }
 
@@ -774,12 +774,12 @@ const statCluster = computed(() => ([
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: .25em;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   display: none;
 }
 
 .hero-rail b {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-weight: 600;
 }
 
@@ -798,8 +798,8 @@ const statCluster = computed(() => ([
   border: 1px solid var(--line-2);
   border-radius: 999px;
   corner-shape: round;
-  color: var(--text-secondary);
-  background: var(--bg-card);
+  color: var(--muted-foreground);
+  background: var(--card);
 }
 
 .hero-tag-logo {
@@ -844,7 +844,7 @@ const statCluster = computed(() => ([
   font-weight: 600;
   font-size: clamp(1.4rem, 4.5vw, 2.6rem);
   letter-spacing: -.01em;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   border-bottom: 2px dashed var(--line-2);
   width: max-content;
   padding-bottom: 4px;
@@ -853,7 +853,7 @@ const statCluster = computed(() => ([
 
 .l-mc small {
   font-size: .5em;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   border: none;
   margin-left: 10px;
   letter-spacing: .1em;
@@ -869,7 +869,7 @@ const statCluster = computed(() => ([
   font-size: clamp(3rem, 12vw, 8.5rem);
   margin-left: clamp(0px, 7vw, 90px);
   color: transparent;
-  -webkit-text-stroke: 1.5px var(--text-primary);
+  -webkit-text-stroke: 1.5px var(--foreground);
   font-family: "HarmonyOS Hollow", "PingFang SC", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
 }
 
@@ -880,9 +880,9 @@ const statCluster = computed(() => ([
 .hero-sub {
   max-width: 42ch;
   margin-top: clamp(22px, 3vw, 34px);
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: clamp(1rem, 1.4vw, 1.15rem);
-  border-left: 2px solid var(--text-primary);
+  border-left: 2px solid var(--foreground);
   padding-left: 18px;
   opacity: 0;
   animation: rise .9s var(--ease) .55s forwards;
@@ -905,9 +905,9 @@ const statCluster = computed(() => ([
   padding: 8px 26px;
   border-radius: 999px;
   corner-shape: round;
-  border: 1px solid var(--text-primary);
+  border: 1px solid var(--foreground);
   text-decoration: none;
-  color: var(--text-primary);
+  color: var(--foreground);
   background: transparent;
   transition: transform .25s var(--ease), box-shadow .25s var(--ease), background .25s, color .25s;
   display: inline-flex;
@@ -915,8 +915,8 @@ const statCluster = computed(() => ([
 }
 
 .btn-solid {
-  background: var(--text-primary);
-  color: var(--bg-color);
+  background: var(--invert-bg);
+  color: var(--invert-fg);
 }
 
 .btn-solid:hover {
@@ -925,8 +925,8 @@ const statCluster = computed(() => ([
 }
 
 .btn-ghost:hover {
-  background: var(--text-primary);
-  color: var(--bg-color);
+  background: var(--invert-bg);
+  color: var(--invert-fg);
 }
 
 /* ===== 2. 数据统计 ===== */
@@ -942,7 +942,7 @@ const statCluster = computed(() => ([
   font-family: var(--mono);
   font-size: 12px;
   letter-spacing: .16em;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   text-transform: uppercase;
 }
 
@@ -961,7 +961,7 @@ const statCluster = computed(() => ([
 .stat-hero .bar {
   width: 64px;
   height: 3px;
-  background: var(--text-primary);
+  background: var(--foreground);
   margin-top: 18px;
 }
 
@@ -973,7 +973,7 @@ const statCluster = computed(() => ([
 }
 
 .stat {
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border);
   padding-top: 12px;
 }
 
@@ -981,7 +981,7 @@ const statCluster = computed(() => ([
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: .12em;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   text-transform: uppercase;
 }
 
@@ -1077,7 +1077,7 @@ const statCluster = computed(() => ([
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: .2em;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   float: right;
   display: none;
 }
@@ -1092,13 +1092,13 @@ const statCluster = computed(() => ([
   display: flex;
   justify-content: space-between;
   gap: 14px;
-  border-bottom: 1px dashed var(--border-color);
+  border-bottom: 1px dashed var(--border);
   padding-bottom: 10px;
   font-family: var(--mono);
 }
 
 .video-meta li .k {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   font-size: 12px;
   letter-spacing: .08em;
 }
@@ -1110,7 +1110,7 @@ const statCluster = computed(() => ([
 
 .video-meta p {
   margin-top: 22px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 14px;
   max-width: 30ch;
 }
@@ -1134,7 +1134,7 @@ const statCluster = computed(() => ([
 .about-body {
   grid-column: span 7;
   font-size: clamp(1rem, 1.3vw, 1.12rem);
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
 }
 
 .about-body p + p {
@@ -1142,7 +1142,7 @@ const statCluster = computed(() => ([
 }
 
 .about-body .hl {
-  color: var(--text-primary);
+  color: var(--foreground);
   font-weight: 600;
 }
 
@@ -1152,8 +1152,8 @@ const statCluster = computed(() => ([
 }
 
 .about-body .inv {
-  background: var(--text-primary);
-  color: var(--bg-color);
+  background: var(--invert-bg);
+  color: var(--invert-fg);
   padding: 1px 7px;
   border-radius: 5px;
   font-family: var(--mono);
@@ -1162,14 +1162,14 @@ const statCluster = computed(() => ([
 
 .about-body .big {
   font-size: 1.18em;
-  color: var(--text-primary);
+  color: var(--foreground);
   font-weight: 600;
 }
 
 .pullquote {
   grid-column: span 5;
   align-self: start;
-  border-left: 3px solid var(--text-primary);
+  border-left: 3px solid var(--foreground);
   padding: 6px 0 6px clamp(18px, 2vw, 28px);
   margin-left: clamp(0px, 3vw, 40px);
 }
@@ -1178,7 +1178,7 @@ const statCluster = computed(() => ([
   font-family: var(--mono);
   font-size: clamp(1.5rem, 2.6vw, 2.2rem);
   line-height: 1;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   display: block;
   margin-bottom: .4em;
   letter-spacing: .05em;
@@ -1190,13 +1190,13 @@ const statCluster = computed(() => ([
   font-weight: 800;
   letter-spacing: -.01em;
   line-height: 1.3;
-  color: var(--text-primary);
+  color: var(--foreground);
   display: block;
 }
 
 .pullquote q::after {
   content: "\00a0*/";
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   font-family: var(--mono);
   font-weight: 500;
   font-size: .6em;
@@ -1215,7 +1215,7 @@ const statCluster = computed(() => ([
   font-family: var(--mono);
   font-size: 12px;
   letter-spacing: .04em;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   border: 1px solid var(--line-2);
   border-radius: 6px;
   padding: 7px 12px;
@@ -1223,7 +1223,7 @@ const statCluster = computed(() => ([
 
 .lic span::before {
   content: "> ";
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
 }
 
 @media (max-width: 820px) {
@@ -1247,12 +1247,12 @@ const statCluster = computed(() => ([
   gap: clamp(16px, 3vw, 40px);
   align-items: baseline;
   padding: clamp(18px, 2.4vw, 30px) clamp(8px, 1.5vw, 20px);
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border);
   transition: background .3s var(--ease), color .3s var(--ease), padding .3s var(--ease);
 }
 
 .feat li:last-child {
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
 }
 
 .feat li:nth-child(even) {
@@ -1264,7 +1264,7 @@ const statCluster = computed(() => ([
   font-weight: 800;
   font-size: clamp(2rem, 5vw, 3.4rem);
   line-height: .8;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   opacity: .5;
   transition: color .3s, opacity .3s;
 }
@@ -1276,19 +1276,19 @@ const statCluster = computed(() => ([
 }
 
 .feat .d {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: clamp(.92rem, 1.2vw, 1.02rem);
   margin-top: 4px;
   max-width: 54ch;
 }
 
 .feat li:hover {
-  background: var(--text-primary);
-  color: var(--bg-color);
+  background: var(--invert-bg);
+  color: var(--invert-fg);
 }
 
 .feat li:hover .n {
-  color: var(--bg-color);
+  color: var(--invert-fg);
   opacity: 1;
 }
 
@@ -1316,7 +1316,7 @@ const statCluster = computed(() => ([
 }
 
 .contrib-head p {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   max-width: 40ch;
   font-size: 15px;
   margin: 0;
@@ -1370,7 +1370,7 @@ const statCluster = computed(() => ([
   overflow: hidden;
   display: block;
   position: relative;
-  background: var(--bg-sub);
+  background: var(--muted);
 }
 
 .av img {
@@ -1388,7 +1388,7 @@ const statCluster = computed(() => ([
   justify-content: center;
   font-size: calc(var(--av-size) * 0.42);
   font-weight: 700;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   user-select: none;
 }
 
@@ -1402,15 +1402,15 @@ const statCluster = computed(() => ([
 }
 
 .cta-eyebrow {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
 }
 
 .cta-eyebrow b {
-  color: var(--text-primary);
+  color: var(--foreground);
 }
 
 .cta-eyebrow .ln {
-  background: var(--border-color);
+  background: var(--border);
 }
 
 .cta-title {
@@ -1420,12 +1420,12 @@ const statCluster = computed(() => ([
   line-height: .95;
   max-width: 14ch;
   margin: 0;
-  color: var(--text-primary);
+  color: var(--foreground);
 }
 
 .cta-title .o {
   color: transparent;
-  -webkit-text-stroke: 1.5px var(--text-primary);
+  -webkit-text-stroke: 1.5px var(--foreground);
   font-family: "HarmonyOS Hollow", "PingFang SC", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
 }
 
@@ -1441,14 +1441,14 @@ const statCluster = computed(() => ([
 .cta-row .cmd {
   font-family: var(--mono);
   font-size: 13px;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   letter-spacing: .05em;
 }
 
 .btn-inv {
-  background: var(--text-primary);
-  color: var(--bg-color);
-  border-color: var(--text-primary);
+  background: var(--invert-bg);
+  color: var(--invert-fg);
+  border-color: var(--invert-bg);
 }
 
 .btn-inv:hover {
@@ -1465,19 +1465,19 @@ const statCluster = computed(() => ([
 .channels {
   margin-top: clamp(28px, 4vw, 48px);
   padding-top: 20px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border);
   font-family: var(--mono);
   font-size: 13px;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   display: flex;
   gap: 18px;
   flex-wrap: wrap;
 }
 
 .channels a {
-  color: var(--text-primary);
+  color: var(--foreground);
   text-decoration: none;
-  border-bottom: 1px dashed var(--border-color);
+  border-bottom: 1px dashed var(--border);
 }
 
 .channels a:hover {
@@ -1494,7 +1494,7 @@ const statCluster = computed(() => ([
 }
 
 .follow-lead {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   max-width: 34ch;
   font-size: 15px;
   margin-bottom: 24px;
@@ -1513,14 +1513,14 @@ const statCluster = computed(() => ([
   place-items: center;
   border: 1px solid var(--line-2);
   border-radius: 10px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   text-decoration: none;
   transition: background .2s var(--ease), color .2s var(--ease), transform .2s var(--ease);
 }
 
 .soc:hover {
-  background: var(--text-primary);
-  color: var(--bg-color);
+  background: var(--invert-bg);
+  color: var(--invert-fg);
   transform: translateY(-2px);
 }
 
@@ -1541,18 +1541,18 @@ const statCluster = computed(() => ([
   grid-template-columns: minmax(150px, auto) 1fr;
   gap: 16px;
   padding: 13px 0;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border);
   font-size: 14px;
   align-items: baseline;
 }
 
 .thanks li:last-child {
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
 }
 
 .thanks .name {
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--foreground);
   text-decoration: none;
   border-bottom: 1.5px dashed var(--line-2);
   width: max-content;
@@ -1564,7 +1564,7 @@ const statCluster = computed(() => ([
 }
 
 .thanks .desc {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   font-family: var(--mono);
   font-size: 12.5px;
   letter-spacing: .02em;

@@ -60,19 +60,6 @@ export default {
     const retryTimer = ref(null)
     const imgKey = ref(0)
 
-    const isDark = ref(typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') === 'dark' : true)
-
-    // 监听主题变化
-    const observeTheme = () => {
-      const observer = new MutationObserver(() => {
-        isDark.value = document.documentElement.getAttribute('data-theme') === 'dark'
-      })
-      observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['data-theme'],
-      })
-    }
-
     // 监听视口状态
     const checkViewport = (callback) => {
       const rect = callback().getBoundingClientRect()
@@ -84,7 +71,6 @@ export default {
     }
 
     onMounted(() => {
-      observeTheme()
       // 初始检查视口
       const check = () => {
         const el = document.getElementById(`logo-container-${Date.now()}`)
@@ -113,7 +99,6 @@ export default {
       isInViewport,
       retryCount,
       imgKey,
-      isDark,
       openTab,
       router,
       subGlow,
@@ -319,10 +304,9 @@ export default {
     const showError = hasLogo && !isIconLogo && this.imageError
     const showSkeleton = hasLogo && !isIconLogo && !this.imageLoaded && !this.imageError
 
-    // 渐变骨架屏
-    const skeletonGradient = this.isDark
-      ? 'linear-gradient(120deg, #232526 0%, #414345 100%)'
-      : 'linear-gradient(120deg, #f0f2f5 0%, #e0e0e0 100%)'
+    // 渐变骨架屏：以 --muted 为底，向 --foreground 方向偏一点，两套主题自动反向
+    const skeletonGradient =
+      'linear-gradient(120deg, var(--muted) 0%, color-mix(in srgb, var(--muted) 88%, var(--foreground)) 100%)'
 
     const isInternal = this.link.startsWith('/') && this.link !== '/'
     // 白名单卡片：始终在浏览器新标签页打开
@@ -332,8 +316,8 @@ export default {
       display: 'flex',
       alignItems: 'flex-start',
       padding: '12px 16px',
-      background: 'var(--bg-card)',
-      border: '1px solid var(--border-color)',
+      background: 'var(--card)',
+      border: '1px solid var(--border)',
       borderRadius: '8px',
       cursor: this.link ? 'pointer' : 'default',
       transition: 'all 0.3s ease',
@@ -414,7 +398,7 @@ export default {
               width: '40px',
               height: '40px',
               borderRadius: 'var(--radius-md)',
-              background: isIconLogo ? '#ffffff' : 'var(--bg-card)',
+              background: isIconLogo ? '#ffffff' : 'var(--card)',
               marginRight: '12px',
               flexShrink: 0,
               overflow: 'hidden',
@@ -512,7 +496,7 @@ export default {
                         style: {
                           width: '20px',
                           height: '20px',
-                          fill: this.isDark ? '#4A4A4A' : '#B0B0B0',
+                          fill: 'var(--subtle-foreground)',
                         },
                       },
                       [
@@ -546,7 +530,7 @@ export default {
                 style: {
                   fontSize: '14px',
                   fontWeight: 'bold',
-                  color: 'var(--text-primary)',
+                  color: 'var(--foreground)',
                   marginBottom: '6px',
                 },
               },
@@ -555,8 +539,8 @@ export default {
                   text: this.title,
                   patterns: this.searchPatterns,
                   highlightStyle: {
-                    backgroundColor: 'var(--highlight-bg, #fadb14)',
-                    color: 'var(--highlight-color, #000)',
+                    backgroundColor: 'var(--highlight)',
+                    color: 'var(--highlight-foreground)',
                     padding: '0 2px',
                     borderRadius: '2px',
                   },
@@ -569,7 +553,7 @@ export default {
               {
                 style: {
                   fontSize: '14px',
-                  color: 'var(--text-secondary)',
+                  color: 'var(--muted-foreground)',
                   lineHeight: '1.4',
                 },
               },
@@ -578,8 +562,8 @@ export default {
                   text: this.description,
                   patterns: this.searchPatterns,
                   highlightStyle: {
-                    backgroundColor: 'var(--highlight-bg, #fadb14)',
-                    color: 'var(--highlight-color, #000)',
+                    backgroundColor: 'var(--highlight)',
+                    color: 'var(--highlight-foreground)',
                     padding: '0 2px',
                     borderRadius: '2px',
                   },
@@ -615,8 +599,8 @@ export default {
 
 /* 卡片悬浮效果 */
 .tool-card:hover {
-  background: var(--bg-sub) !important;
-  border-color: var(--border-color) !important;
+  background: var(--muted) !important;
+  border-color: var(--border) !important;
   transform: translateY(-4px) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
 }

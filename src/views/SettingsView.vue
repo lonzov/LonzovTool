@@ -1012,14 +1012,14 @@ watch(() => cacheClearModal.value.show, (val) => {
 
 .page-title-icon {
   font-size: 26px;
-  color: var(--text-primary);
+  color: var(--foreground);
   flex-shrink: 0;
 }
 
 .settings-h1 {
   font-size: 22px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--foreground);
   margin: 0;
   line-height: 1.3;
 }
@@ -1034,7 +1034,7 @@ watch(() => cacheClearModal.value.show, (val) => {
 
 .settings-subtitle {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   line-height: 1.5;
   margin: 0;
 }
@@ -1046,9 +1046,9 @@ watch(() => cacheClearModal.value.show, (val) => {
   padding: 7px 14px;
   border-radius: 100px;
   corner-shape: round;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 0.825rem;
   font-weight: 500;
   cursor: pointer;
@@ -1057,14 +1057,14 @@ watch(() => cacheClearModal.value.show, (val) => {
 }
 
 .reset-btn:hover {
-  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
-  color: var(--text-primary);
+  background: var(--accent);
+  color: var(--foreground);
 }
 
 /* ========== 卡片容器 ========== */
 .settings-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
   padding-top: 15px;
@@ -1084,7 +1084,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   padding: 14px 20px;
   font-size: 0.92rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--foreground);
   cursor: pointer;
   user-select: none;
   transition: color 0.4s ease, opacity 0.2s;
@@ -1099,7 +1099,7 @@ watch(() => cacheClearModal.value.show, (val) => {
 }
 
 .chevron-icon {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   transition: transform 0.25s ease, color 0.4s ease;
 }
 
@@ -1148,7 +1148,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   left: 20px;
   right: 20px;
   height: 1px;
-  background: var(--border-color);
+  background: var(--border);
   transition: background-color 0.4s ease;
 }
 
@@ -1166,13 +1166,13 @@ watch(() => cacheClearModal.value.show, (val) => {
   display: block;
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--foreground);
   transition: color 0.4s ease;
 }
 
 .setting-desc {
   font-size: 0.8rem;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   line-height: 1.45;
   margin: 3px 0 0;
   transition: color 0.4s ease;
@@ -1200,7 +1200,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   align-items: center;
   width: 102px;
   height: 34px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 100px;
   corner-shape: round;
   box-sizing: border-box;
@@ -1208,7 +1208,7 @@ watch(() => cacheClearModal.value.show, (val) => {
 }
 
 .drag-delay-input-wrap:focus-within {
-  border-color: var(--text-tertiary);
+  border-color: var(--subtle-foreground);
 }
 
 .drag-delay-input {
@@ -1219,7 +1219,7 @@ watch(() => cacheClearModal.value.show, (val) => {
   border-radius: 100px;
   corner-shape: round;
   background: transparent;
-  color: var(--text-primary);
+  color: var(--foreground);
   font-size: 0.85rem;
   font-family: inherit;
   outline: none;
@@ -1228,14 +1228,14 @@ watch(() => cacheClearModal.value.show, (val) => {
 }
 
 .drag-delay-input::placeholder {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
 }
 
 .drag-delay-unit {
   position: absolute;
   right: 11px;
   font-size: 0.8rem;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   pointer-events: none;
   white-space: nowrap;
   transition: color 0.4s ease;
@@ -1246,7 +1246,7 @@ watch(() => cacheClearModal.value.show, (val) => {
 .config-pill {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 100px;
   corner-shape: round;
   overflow: hidden;
@@ -1261,20 +1261,20 @@ watch(() => cacheClearModal.value.show, (val) => {
   height: 34px;
   border: none;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .config-pill-btn:hover {
-  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
-  color: var(--text-primary);
+  background: var(--accent);
+  color: var(--foreground);
 }
 
 .config-pill-divider {
   width: 1px;
   height: 18px;
-  background: var(--border-color);
+  background: var(--border);
   flex-shrink: 0;
   transition: background-color 0.4s ease;
 }
@@ -1288,9 +1288,9 @@ watch(() => cacheClearModal.value.show, (val) => {
   padding: 0 16px;
   border-radius: 100px;
   corner-shape: round;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
@@ -1299,18 +1299,18 @@ watch(() => cacheClearModal.value.show, (val) => {
 }
 
 .cache-btn:hover {
-  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
-  color: var(--text-primary);
+  background: var(--accent);
+  color: var(--foreground);
 }
 
 .cache-btn--danger {
-  color: #E46962;
-  border-color: color-mix(in srgb, #E46962 35%, transparent);
+  color: var(--destructive);
+  border-color: color-mix(in srgb, var(--destructive) 35%, transparent);
 }
 
 .cache-btn--danger:hover {
-  background: color-mix(in srgb, #E46962 10%, transparent);
-  color: #E46962;
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+  color: var(--destructive);
 }
 
 /* ========== 导入模态框 ========== */
@@ -1337,9 +1337,9 @@ watch(() => cacheClearModal.value.show, (val) => {
   border-radius: 8px;
   font-size: 13px;
   line-height: 1.6;
-  color: color-mix(in srgb, var(--text-primary) 65%, transparent);
-  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
-  border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
 }
 
 .import-rejected code {
@@ -1414,14 +1414,9 @@ watch(() => cacheClearModal.value.show, (val) => {
 }
 
 /* fill */
-[data-theme="light"] .import-btn--fill {
-  background: #1A1A1A;
-  color: #fff;
-}
-
-[data-theme="dark"] .import-btn--fill {
-  background: #fff;
-  color: #1A1A1A;
+.import-btn--fill {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .import-btn--fill:hover {
@@ -1431,24 +1426,12 @@ watch(() => cacheClearModal.value.show, (val) => {
 /* outline */
 .import-btn--outline {
   border: 1.5px solid currentColor;
+  background: var(--card);
+  color: var(--foreground);
 }
 
-[data-theme="light"] .import-btn--outline {
-  background: #fff;
-  color: #1A1A1A;
-}
-
-[data-theme="light"] .import-btn--outline:hover {
-  background: #E8E8E8;
-}
-
-[data-theme="dark"] .import-btn--outline {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.68);
-}
-
-[data-theme="dark"] .import-btn--outline:hover {
-  background: rgba(255, 255, 255, 0.08);
+.import-btn--outline:hover {
+  background: var(--muted);
 }
 
 /* 响应式 */
@@ -1512,10 +1495,10 @@ watch(() => cacheClearModal.value.show, (val) => {
 }
 
 .settings-select .n-base-selection {
-  --n-border: 1px solid var(--border-color) !important;
-  --n-border-hover: 1px solid var(--border-color) !important;
-  --n-border-focus: 1px solid var(--border-color) !important;
-  --n-border-active: 1px solid var(--border-color) !important;
+  --n-border: 1px solid var(--border) !important;
+  --n-border-hover: 1px solid var(--border) !important;
+  --n-border-focus: 1px solid var(--border) !important;
+  --n-border-active: 1px solid var(--border) !important;
   --n-box-shadow-focus: none !important;
   --n-box-shadow-active: none !important;
 }

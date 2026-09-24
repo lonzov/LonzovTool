@@ -109,14 +109,9 @@ function onShowChange(show) {
   border: none;
 }
 
-[data-theme="light"] .confirm-btn--fill {
-  background: #1A1A1A;
-  color: #fff;
-}
-
-[data-theme="dark"] .confirm-btn--fill {
-  background: #fff;
-  color: #1A1A1A;
+.confirm-btn--fill {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .confirm-btn--fill:hover {
@@ -125,35 +120,23 @@ function onShowChange(show) {
 
 /* 危险操作：红底白字，与站内其他二次确认删除一致 */
 .confirm-btn--danger {
-  background: #dc2626;
-  color: #fff;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
 }
 
 .confirm-btn--danger:hover {
-  background: #dc2626;
-  color: #fff;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
   opacity: 0.85;
 }
 
 .confirm-btn--outline {
   border: 1.5px solid currentColor;
+  background: var(--card);
+  color: var(--foreground);
 }
 
-[data-theme="light"] .confirm-btn--outline {
-  background: #fff;
-  color: #1A1A1A;
-}
-
-[data-theme="light"] .confirm-btn--outline:hover {
-  background: #E8E8E8;
-}
-
-[data-theme="dark"] .confirm-btn--outline {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.68);
-}
-
-[data-theme="dark"] .confirm-btn--outline:hover {
-  background: rgba(255, 255, 255, 0.08);
+.confirm-btn--outline:hover {
+  background: var(--muted);
 }
 </style>

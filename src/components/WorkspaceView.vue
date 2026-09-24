@@ -106,7 +106,7 @@ function makeTabLogoIcon(tab) {
   if (isIconTabLogo(logo)) {
     const comp = getToolIcon(logo)
     // 用站点主题色变量，随深浅色自动适配
-    return comp ? () => h(NIcon, { component: comp, size: 18, color: 'var(--text-secondary)' }) : undefined
+    return comp ? () => h(NIcon, { component: comp, size: 18, color: 'var(--muted-foreground)' }) : undefined
   }
   // 图片 logo：圆角遮罩裁切
   return () =>
@@ -960,9 +960,9 @@ onMounted(() => {
   align-items: flex-end;
   padding-top: 3px;
   flex-shrink: 0;
-  background: var(--bg-color);
+  background: var(--background);
   width: 100%;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
   overflow: hidden;
   margin-bottom: 24px;
   transition: background-color 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1)),
@@ -985,7 +985,7 @@ onMounted(() => {
   flex-shrink: 0;
   cursor: pointer;
   border-radius: 8px 8px 0 0;
-  color: var(--text-primary);
+  color: var(--foreground);
   user-select: none;
   margin-right: 5px;
 }
@@ -996,7 +996,7 @@ onMounted(() => {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background-color: var(--bg-card);
+  background-color: var(--card);
   transition: background-color 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1)),
     opacity 0.15s ease;
 }
@@ -1023,7 +1023,7 @@ onMounted(() => {
   content: '';
   position: absolute;
   inset: 0;
-  background-color: var(--bg-color);
+  background-color: var(--background);
   transition: background-color 0.3s var(--n-bezier, cubic-bezier(.4, 0, .2, 1));
 }
 
@@ -1075,10 +1075,10 @@ onMounted(() => {
   padding: 10px 16px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   background: transparent;
   border: none;
-  border-color: var(--border-color);
+  border-color: var(--border);
   border-radius: 8px 8px 0 0;
   cursor: pointer;
   white-space: nowrap;
@@ -1102,16 +1102,16 @@ onMounted(() => {
 }
 
 .tab-item:hover {
-  color: var(--text-primary);
-  background: var(--bg-sub);
+  color: var(--foreground);
+  background: var(--muted);
 }
 
 .tab-item--active {
   font-weight: 600;
-  color: var(--text-primary);
-  background: var(--bg-card);
+  color: var(--foreground);
+  background: var(--card);
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-bottom: none;
   /*
     焦点标签的 background-color 跟随主题变化，使用与 NLayout 一致的
@@ -1183,7 +1183,7 @@ onMounted(() => {
   width: 16px;
   height: 16px;
   font-size: 10px;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   border-radius: 4px;
   transition: color 0.15s ease, background-color 0.15s ease;
   line-height: 1;
@@ -1192,8 +1192,8 @@ onMounted(() => {
 }
 
 .tab-close:hover {
-  color: var(--text-primary);
-  background: var(--border-color);
+  color: var(--foreground);
+  background: var(--accent);
 }
 
 /* 内容区域包装器 */
@@ -1232,8 +1232,8 @@ onMounted(() => {
   padding: 10px 16px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-primary);
-  background: var(--bg-sub);
+  color: var(--foreground);
+  background: var(--muted);
   border-radius: 8px 8px 0 0;
   opacity: 0.55;
   pointer-events: none;
@@ -1256,7 +1256,7 @@ onMounted(() => {
   width: 16px;
   height: 16px;
   font-size: 10px;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   border-radius: 4px;
   line-height: 1;
   flex-shrink: 0;

@@ -116,14 +116,14 @@ const modalStyle = computed(() => ({
 
 .sim-hint {
   margin: 0 0 16px; padding: 10px 12px;
-  font-size: 12px; line-height: 1.6; color: var(--text-secondary);
-  background: var(--bg-sub); border-radius: 8px;
+  font-size: 12px; line-height: 1.6; color: var(--muted-foreground);
+  background: var(--muted); border-radius: 8px;
   transition: color 0.4s ease, background-color 0.4s ease;
 }
 .sim-hint code {
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   font-size: 11px; padding: 1px 4px; border-radius: 4px;
-  background: var(--bg-card); color: var(--text-primary);
+  background: var(--card); color: var(--foreground);
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
@@ -132,32 +132,32 @@ const modalStyle = computed(() => ({
 .sim-field:last-child { margin-bottom: 0; }
 .sim-label {
   display: block; margin-bottom: 4px;
-  font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+  font-size: 11px; font-weight: 600; color: var(--subtle-foreground);
   text-transform: uppercase; letter-spacing: 0.5px;
   transition: color 0.4s ease;
 }
 .sim-field-hint {
   display: block; margin-top: 4px;
-  font-size: 10px; line-height: 1.6; color: var(--text-tertiary);
+  font-size: 10px; line-height: 1.6; color: var(--subtle-foreground);
   transition: color 0.4s ease;
 }
 .sim-field-hint code {
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   font-size: 10px; padding: 1px 3px; border-radius: 3px;
-  background: var(--bg-sub); color: var(--text-secondary);
+  background: var(--muted); color: var(--muted-foreground);
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 .sim-input {
   width: 100%; height: 34px; padding: 0 12px;
-  border: 1px solid var(--border-color); border-radius: 8px;
-  background: var(--bg-sub); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--muted); color: var(--foreground);
   font-size: 13px; font-family: inherit; outline: none; box-sizing: border-box;
   transition: border-color 0.3s ease, background-color 0.4s ease, color 0.4s ease;
 }
-.sim-input:focus { border-color: var(--text-secondary); }
+.sim-input:focus { border-color: var(--muted-foreground); }
 
 .sim-score-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
-.sim-empty { font-size: 12px; color: var(--text-tertiary); font-style: italic; transition: color 0.4s ease; }
+.sim-empty { font-size: 12px; color: var(--subtle-foreground); font-style: italic; transition: color 0.4s ease; }
 .sim-score-row { display: flex; gap: 6px; align-items: center; }
 .sim-score-input { flex: 1; }
 .sim-score-value { width: 88px; flex: none; }
@@ -166,31 +166,26 @@ const modalStyle = computed(() => ({
   display: inline-flex; align-items: center; justify-content: center;
   width: 28px; height: 28px; padding: 0; flex: none;
   border: none; border-radius: 6px; background: transparent;
-  color: var(--text-secondary); cursor: pointer;
+  color: var(--muted-foreground); cursor: pointer;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
-.sim-icon-btn:hover { background: var(--bg-sub); color: var(--text-primary); }
+.sim-icon-btn:hover { background: var(--muted); color: var(--foreground); }
 /* 二次点击确认删除（与 .btn-delete-confirmed / .act-delete-confirmed 一致） */
 .sim-icon-btn--danger,
 .sim-icon-btn--danger:hover {
-  background: #dc2626 !important;
-  color: #fff !important;
-}
-[data-theme="dark"] .sim-icon-btn--danger,
-[data-theme="dark"] .sim-icon-btn--danger:hover {
-  background: #dc2626 !important;
-  color: #fff !important;
+  background: var(--destructive) !important;
+  color: var(--destructive-foreground) !important;
 }
 
 .sim-add-btn {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 6px 10px;
-  border: 1px dashed var(--border-color); border-radius: 8px;
+  border: 1px dashed var(--border); border-radius: 8px;
   background: transparent; cursor: pointer;
-  font-size: 12px; font-family: inherit; color: var(--text-secondary);
+  font-size: 12px; font-family: inherit; color: var(--muted-foreground);
   transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
-.sim-add-btn:hover { color: var(--text-primary); border-color: var(--text-secondary); background: var(--bg-sub); }
+.sim-add-btn:hover { color: var(--foreground); border-color: var(--muted-foreground); background: var(--muted); }
 
 /* 页脚操作按钮 (与 UpdateDialog 一致) */
 .modal-actions {
@@ -217,14 +212,9 @@ const modalStyle = computed(() => ({
   border: none;
 }
 
-[data-theme="light"] .btn-fill {
-  background: #1A1A1A;
-  color: #fff;
-}
-
-[data-theme="dark"] .btn-fill {
-  background: #fff;
-  color: #1A1A1A;
+.btn-fill {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .btn-fill:hover { opacity: 0.85; }
@@ -233,21 +223,12 @@ const modalStyle = computed(() => ({
   border: 1.5px solid currentColor;
 }
 
-[data-theme="light"] .btn-outline {
-  background: #fff;
-  color: #1A1A1A;
+.btn-outline {
+  background: var(--card);
+  color: var(--foreground);
 }
 
-[data-theme="light"] .btn-outline:hover {
-  background: #E8E8E8;
-}
-
-[data-theme="dark"] .btn-outline {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.87);
-}
-
-[data-theme="dark"] .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.08);
+.btn-outline:hover {
+  background: var(--muted);
 }
 </style>

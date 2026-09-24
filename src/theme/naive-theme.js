@@ -1,4 +1,4 @@
-import { lightTokens, darkTokens, staticTokens } from './tokens'
+import { lightTokens, darkTokens, staticTokens } from './tokens.js'
 
 /**
  * 语义 token → Naive UI 真实主题变量名的映射。

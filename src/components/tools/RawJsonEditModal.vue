@@ -347,37 +347,37 @@ function getAvailableHeight(el) {
 .edit-field { display: flex; flex-direction: column; gap: 4px; }
 .edit-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .edit-label {
-  font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+  font-size: 11px; font-weight: 600; color: var(--subtle-foreground);
   text-transform: uppercase; letter-spacing: 0.5px;
   transition: color 0.4s ease;
 }
 .edit-input {
   width: 100%; padding: 8px 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg-sub);
-  color: var(--text-primary);
+  background: var(--muted);
+  color: var(--foreground);
   font-size: 13px;
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   outline: none; box-sizing: border-box;
   transition: border-color 0.3s ease, background-color 0.4s ease, color 0.4s ease;
 }
-.edit-input:focus { border-color: var(--text-secondary); }
+.edit-input:focus { border-color: var(--muted-foreground); }
 .edit-textarea {
   width: 100%; padding: 8px 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg-sub);
-  color: var(--text-primary);
+  background: var(--muted);
+  color: var(--foreground);
   font-size: 13px;
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   outline: none; resize: vertical; box-sizing: border-box;
   transition: border-color 0.3s ease, background-color 0.4s ease, color 0.4s ease;
 }
-.edit-textarea:focus { border-color: var(--text-secondary); }
+.edit-textarea:focus { border-color: var(--muted-foreground); }
 
 .with-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
-.with-empty { font-size: 12px; color: var(--text-tertiary); font-style: italic; transition: color 0.4s ease; }
+.with-empty { font-size: 12px; color: var(--subtle-foreground); font-style: italic; transition: color 0.4s ease; }
 .with-row { display: flex; gap: 6px; align-items: center; }
 .with-input { flex: 1; }
 .with-empty-tag {
@@ -385,29 +385,29 @@ function getAvailableHeight(el) {
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 10px; font-weight: 700; line-height: 1.4;
-  color: var(--text-tertiary);
-  background: var(--bg-sub);
-  border: 1px solid var(--border-color);
+  color: var(--subtle-foreground);
+  background: var(--muted);
+  border: 1px solid var(--border);
   transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
 }
 
 .with-el-row {
   display: flex; align-items: center; gap: 8px;
   padding: 6px 10px;
-  background: var(--bg-sub);
-  border: 1px solid var(--border-color);
+  background: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 8px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 .with-el-badge {
   font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
-  background: var(--bg-sub); color: var(--text-secondary);
+  background: var(--muted); color: var(--muted-foreground);
   flex-shrink: 0;
   letter-spacing: 0.5px;
   transition: color 0.4s ease;
 }
 .with-el-preview {
-  flex: 1; font-size: 12px; color: var(--text-primary);
+  flex: 1; font-size: 12px; color: var(--foreground);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   transition: color 0.4s ease;
@@ -440,14 +440,9 @@ function getAvailableHeight(el) {
 }
 
 /* fill - 全填充主按钮 */
-[data-theme="light"] .btn-fill {
-  background: #1A1A1A;
-  color: #fff;
-}
-
-[data-theme="dark"] .btn-fill {
-  background: #fff;
-  color: #1A1A1A;
+.btn-fill {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .btn-fill:hover { opacity: 0.85; }
@@ -457,22 +452,13 @@ function getAvailableHeight(el) {
   border: 1.5px solid currentColor;
 }
 
-[data-theme="light"] .btn-outline {
-  background: #fff;
-  color: #1A1A1A;
+.btn-outline {
+  background: var(--card);
+  color: var(--foreground);
 }
 
-[data-theme="light"] .btn-outline:hover {
-  background: #E8E8E8;
-}
-
-[data-theme="dark"] .btn-outline {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.87);
-}
-
-[data-theme="dark"] .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.08);
+.btn-outline:hover {
+  background: var(--muted);
 }
 
 /* minor - 表单内小按钮 */
@@ -480,7 +466,7 @@ function getAvailableHeight(el) {
   display: inline-flex; align-items: center; justify-content: center;
   padding: 9px 10px;
   border: none; background: transparent;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 12px; font-weight: 500;
   border-radius: 6px;
   cursor: pointer;
@@ -488,16 +474,13 @@ function getAvailableHeight(el) {
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-[data-theme="light"] .btn-minor:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
-
+/* 深色下小按钮取满亮度文字，与浅色的次要灰拉开层级 */
 [data-theme="dark"] .btn-minor {
-  color: rgba(255, 255, 255, 0.87);
+  color: var(--foreground);
 }
 
-[data-theme="dark"] .btn-minor:hover {
-  background: rgba(255, 255, 255, 0.08);
+.btn-minor:hover {
+  background: var(--accent);
 }
 
 .btn-minor:active { transform: scale(0.97); }
@@ -518,36 +501,28 @@ function getAvailableHeight(el) {
   width: 34px;
   padding: 0;
   border: none; background: transparent;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   border-radius: 6px;
   cursor: pointer;
   font-family: inherit;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-[data-theme="light"] .btn-delete:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
-
+/* 深色下删除按钮取满亮度文字，与浅色的次要灰拉开层级 */
 [data-theme="dark"] .btn-delete {
-  color: rgba(255, 255, 255, 0.87);
+  color: var(--foreground);
 }
 
-[data-theme="dark"] .btn-delete:hover {
-  background: rgba(255, 255, 255, 0.08);
+.btn-delete:hover {
+  background: var(--accent);
 }
 
 .btn-delete:active { transform: scale(0.97); }
 
 .btn-delete-confirmed,
 .btn-delete-confirmed:hover {
-  background: #dc2626 !important;
-  color: #fff !important;
-}
-[data-theme="dark"] .btn-delete-confirmed,
-[data-theme="dark"] .btn-delete-confirmed:hover {
-  background: #dc2626 !important;
-  color: #fff !important;
+  background: var(--destructive) !important;
+  color: var(--destructive-foreground) !important;
 }
 
 @media (max-width: 480px) {

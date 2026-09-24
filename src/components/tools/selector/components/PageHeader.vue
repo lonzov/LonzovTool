@@ -24,21 +24,21 @@ import { Mention20Filled } from '@vicons/fluent'
 }
 .page-title-icon {
   font-size: 26px;
-  color: var(--text-primary);
+  color: var(--foreground);
   flex-shrink: 0;
   transition: color 0.4s ease;
 }
 .page-title {
   font-size: 22px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--foreground);
   line-height: 1.3;
   margin: 0;
   transition: color 0.4s ease;
 }
 .page-desc {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   line-height: 1.5;
   margin-top: 6px;
   transition: color 0.4s ease;

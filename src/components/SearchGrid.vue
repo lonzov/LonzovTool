@@ -1,5 +1,5 @@
 <script>
-import { h, ref, watch, nextTick, onMounted } from 'vue'
+import { h, ref, watch, nextTick } from 'vue'
 import { useMessage } from 'naive-ui'
 import toolsData from '../data/tools.json'
 
@@ -15,24 +15,8 @@ export default {
     const lastSearchQuery = ref('')
     const message = useMessage()
 
-    const isDark = ref(typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') === 'dark' : true)
-
-    onMounted(() => {
-      new MutationObserver(() => {
-        isDark.value = document.documentElement.getAttribute('data-theme') === 'dark'
-      }).observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['data-theme'],
-      })
-    })
-
     // 自定义消息渲染函数 - 纯HTML，不用NAlert组件
     const renderMessage = (msgProps) => {
-      const bgColor = isDark.value ? '#2a2a2a' : '#fff'
-      const borderColor = isDark.value ? '#555' : '#e0e0e0'
-      const textColor = isDark.value ? '#e8e8e8' : '#333'
-      const titleColor = isDark.value ? '#fff' : '#333'
-
       return h(
         'div',
         {
@@ -43,8 +27,8 @@ export default {
             padding: '12px 16px',
             maxWidth: 'calc(100vw - 90px)',
             width: '480px',
-            backgroundColor: bgColor,
-            border: `1px solid ${borderColor}`,
+            backgroundColor: 'var(--card)',
+            border: '1px solid var(--border-strong)',
             borderRadius: '3px',
             boxShadow: 'var(--n-box-shadow)',
           },
@@ -56,7 +40,8 @@ export default {
               lineHeight: '1',
               flexShrink: '0',
               marginTop: '2px',
-              color: isDark.value ? '#f0a020' : '#d48806',
+              // 警告琥珀色：全站没有 warning token，保留固定值（在深浅两套底上都可读）
+              color: '#d48806',
             },
             innerHTML: '&#9888;', // 警告图标 ⚠
           }),
@@ -65,7 +50,7 @@ export default {
           }, [
             h('div', {
               style: {
-                color: titleColor,
+                color: 'var(--foreground)',
                 fontWeight: 600,
                 marginBottom: '4px',
                 fontSize: '14px',
@@ -73,7 +58,7 @@ export default {
             }, '搜索无结果'),
             h('div', {
               style: {
-                color: textColor,
+                color: 'var(--foreground)',
                 fontSize: '14px',
                 lineHeight: '1.5',
               },

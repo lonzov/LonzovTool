@@ -55,7 +55,7 @@ const modalStyle = computed(() => ({
 <style scoped>
 .import-hint {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   margin-bottom: 10px;
   line-height: 1.5;
   transition: color 0.4s ease;
@@ -64,10 +64,10 @@ const modalStyle = computed(() => ({
   width: 100%;
   min-height: 120px;
   padding: 10px 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg-sub);
-  color: var(--text-primary);
+  background: var(--muted);
+  color: var(--foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   font-size: 12px;
   line-height: 1.6;
@@ -80,12 +80,12 @@ const modalStyle = computed(() => ({
     color 0.4s ease;
 }
 .import-textarea:focus {
-  border-color: var(--text-secondary);
+  border-color: var(--muted-foreground);
 }
 .import-error {
   margin-top: 8px;
   font-size: 12px;
-  color: #dc2626;
+  color: var(--destructive);
   transition: color 0.4s ease;
 }
 
@@ -113,14 +113,9 @@ const modalStyle = computed(() => ({
 }
 
 /* fill - 全填充主按钮 */
-[data-theme="light"] .btn-fill {
-  background: #1A1A1A;
-  color: #fff;
-}
-
-[data-theme="dark"] .btn-fill {
-  background: #fff;
-  color: #1A1A1A;
+.btn-fill {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .btn-fill:hover { opacity: 0.85; }
@@ -130,21 +125,12 @@ const modalStyle = computed(() => ({
   border: 1.5px solid currentColor;
 }
 
-[data-theme="light"] .btn-outline {
-  background: #fff;
-  color: #1A1A1A;
+.btn-outline {
+  background: var(--card);
+  color: var(--foreground);
 }
 
-[data-theme="light"] .btn-outline:hover {
-  background: #E8E8E8;
-}
-
-[data-theme="dark"] .btn-outline {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.87);
-}
-
-[data-theme="dark"] .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.08);
+.btn-outline:hover {
+  background: var(--muted);
 }
 </style>

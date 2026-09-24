@@ -130,16 +130,11 @@ import { openLangModal, activePackName } from '../../composables/useRawJsonLang.
 
 <style scoped>
 .config-card, .list-card {
-  background: #FFFFFF;
+  background: var(--card);
   border-radius: 12px;
-  border: 1px solid #E0E0E0;
+  border: 1px solid var(--border);
   padding: 16px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
-}
-[data-theme="dark"] .config-card,
-[data-theme="dark"] .list-card {
-  background: #191919;
-  border-color: #2B2B2B;
 }
 .config-grid {
   display: grid;
@@ -153,7 +148,7 @@ import { openLangModal, activePackName } from '../../composables/useRawJsonLang.
   display: block;
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 6px;
@@ -165,22 +160,22 @@ import { openLangModal, activePackName } from '../../composables/useRawJsonLang.
 .target-input {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg-sub);
-  color: var(--text-primary);
+  background: var(--muted);
+  color: var(--foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   font-size: 13px;
   outline: none;
   transition: border-color 0.3s ease, background-color 0.4s ease, color 0.4s ease;
 }
-.target-input:focus { border-color: var(--text-secondary); }
+.target-input:focus { border-color: var(--muted-foreground); }
 .target-show {
   flex: 1;
   padding: 8px 12px;
   border-radius: 8px;
-  background: var(--bg-sub);
-  color: var(--text-secondary);
+  background: var(--muted);
+  color: var(--muted-foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   font-size: 13px;
   transition: background-color 0.4s ease, color 0.4s ease;
@@ -211,14 +206,14 @@ import { openLangModal, activePackName } from '../../composables/useRawJsonLang.
 .toolbar-count {
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--foreground);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   transition: color 0.4s ease;
   white-space: nowrap;
 }
 .toolbar-count strong {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   font-weight: 400;
   margin-left: 4px;
   transition: color 0.4s ease;
@@ -235,21 +230,16 @@ import { openLangModal, activePackName } from '../../composables/useRawJsonLang.
   display: inline-flex; align-items: center; gap: 5px;
   padding: 4px 12px;
   border: none;
-  background: #333;
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-foreground);
   font-size: 12px; font-weight: 500;
   border-radius: 6px;
   cursor: pointer;
   font-family: inherit;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  transition: background-color 0.4s ease, opacity 0.15s ease, transform 0.1s ease;
 }
-.add-btn:hover { background: #444; }
+.add-btn:hover { opacity: 0.85; }
 .add-btn:active { transform: scale(0.97); }
-[data-theme="dark"] .add-btn {
-  background: #ccc;
-  color: #1a1a1a;
-}
-[data-theme="dark"] .add-btn:hover { background: #bbb; }
 
 @media (max-width: 480px) {
   .config-grid { grid-template-columns: 1fr; }

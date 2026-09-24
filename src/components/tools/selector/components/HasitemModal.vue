@@ -324,7 +324,7 @@ function onModalEntered() {
   position: relative;
   display: flex;
   width: 100%;
-  background: var(--bg-sub);
+  background: var(--muted);
   border-radius: 50px;
   corner-shape: round;
   padding: 4px;
@@ -338,7 +338,7 @@ function onModalEntered() {
   position: absolute;
   top: 4px;
   height: calc(100% - 8px);
-  background: var(--bg-card);
+  background: var(--card);
   border-radius: 50px;
   corner-shape: round;
   transition:
@@ -353,10 +353,10 @@ function onModalEntered() {
 }
 
 [data-theme='dark'] .tab-container {
-  background: var(--bg-color);
+  background: var(--background);
 }
 [data-theme='dark'] .tab-indicator {
-  background: var(--bg-sub);
+  background: var(--muted);
 }
 
 .tab-item {
@@ -366,7 +366,7 @@ function onModalEntered() {
   padding: 7px 0;
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   cursor: pointer;
   border: none;
   background: none;
@@ -378,15 +378,15 @@ function onModalEntered() {
 }
 
 .tab-item:hover {
-  color: var(--text-primary);
+  color: var(--foreground);
 }
 
 .tab-item.active {
-  color: var(--text-primary);
+  color: var(--foreground);
 }
 
 .tab-item.active:hover {
-  color: var(--text-primary);
+  color: var(--foreground);
 }
 
 .hasitem-modal-body {
@@ -395,7 +395,7 @@ function onModalEntered() {
 
 .hasitem-empty {
   font-size: 12px;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   font-style: italic;
   padding: 12px 0;
   transition: color 0.4s ease;
@@ -410,9 +410,9 @@ function onModalEntered() {
   align-items: flex-start;
   gap: 10px;
   padding: 10px 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg-sub);
+  background: var(--muted);
   transition:
     background-color 0.4s ease,
     border-color 0.4s ease;
@@ -420,7 +420,7 @@ function onModalEntered() {
 .hasitem-item-label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   min-width: 50px;
   padding-top: 6px;
   transition: color 0.4s ease;
@@ -445,7 +445,7 @@ function onModalEntered() {
 .hi-label {
   font-size: 10px;
   font-weight: 600;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   text-transform: uppercase;
   letter-spacing: 0.3px;
   transition: color 0.4s ease;
@@ -461,18 +461,18 @@ function onModalEntered() {
   border: none;
   background: transparent;
   border-radius: 5px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   cursor: pointer;
   transition:
     background-color 0.12s ease,
     color 0.12s ease;
 }
 .code-act-btn:hover {
-  background: var(--bg-sub);
-  color: var(--text-primary);
+  background: var(--muted);
+  color: var(--foreground);
 }
 .code-act-btn--danger-sm {
-  color: #dc2626;
+  color: var(--destructive);
 }
 .code-act-btn--danger-sm:hover {
   background: rgba(220, 38, 38, 0.1);
@@ -484,9 +484,9 @@ function onModalEntered() {
   gap: 4px;
   padding: 3px 10px;
   margin-top: 12px;
-  border: 1px dashed var(--border-color);
+  border: 1px dashed var(--border);
   background: transparent;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   font-size: 11px;
   font-family: inherit;
   border-radius: 5px;
@@ -497,9 +497,9 @@ function onModalEntered() {
     background-color 0.15s ease;
 }
 .add-hasitem-sub-btn:hover {
-  border-color: var(--text-secondary);
-  color: var(--text-primary);
-  background: var(--bg-sub);
+  border-color: var(--muted-foreground);
+  color: var(--foreground);
+  background: var(--muted);
 }
 
 /* 页脚操作按钮 */
@@ -526,14 +526,9 @@ function onModalEntered() {
 }
 
 /* fill - 全填充主按钮 */
-[data-theme="light"] .btn-fill {
-  background: #1A1A1A;
-  color: #fff;
-}
-
-[data-theme="dark"] .btn-fill {
-  background: #fff;
-  color: #1A1A1A;
+.btn-fill {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .btn-fill:hover { opacity: 0.85; }
@@ -543,21 +538,12 @@ function onModalEntered() {
   border: 1.5px solid currentColor;
 }
 
-[data-theme="light"] .btn-outline {
-  background: #fff;
-  color: #1A1A1A;
+.btn-outline {
+  background: var(--card);
+  color: var(--foreground);
 }
 
-[data-theme="light"] .btn-outline:hover {
-  background: #E8E8E8;
-}
-
-[data-theme="dark"] .btn-outline {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.87);
-}
-
-[data-theme="dark"] .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.08);
+.btn-outline:hover {
+  background: var(--muted);
 }
 </style>

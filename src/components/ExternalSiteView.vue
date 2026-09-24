@@ -199,7 +199,7 @@ onBeforeUnmount(() => {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   text-decoration: none;
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
@@ -207,8 +207,8 @@ onBeforeUnmount(() => {
 
 .ext-nav-btn:hover,
 .ext-open:hover {
-  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
-  color: var(--text-primary);
+  background: var(--accent);
+  color: var(--foreground);
 }
 
 .ext-nav-btn--pressed {
@@ -224,16 +224,16 @@ onBeforeUnmount(() => {
   gap: 2px;
   height: 34px;
   padding: 0 14px 0 3px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 100px;
   corner-shape: round;
-  background: var(--bg-sub);
+  background: var(--muted);
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* 深色模式下网址胶囊背景与页面背景一致 */
 [data-theme='dark'] .ext-urlbar {
-  background: var(--bg-color);
+  background: var(--background);
 }
 
 /* 网址左侧的"新标签页打开"按钮 */
@@ -249,7 +249,7 @@ onBeforeUnmount(() => {
   flex: 1;
   min-width: 0;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -262,10 +262,10 @@ onBeforeUnmount(() => {
   position: relative;
   flex: 1;
   min-height: 0;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
-  background: var(--bg-color);
+  background: var(--background);
   transition: border-color 0.3s ease, background-color 0.3s ease;
 }
 
@@ -278,7 +278,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: var(--bg-color);
+  background: var(--background);
   border-radius: inherit;
   transition: background-color 0.3s ease;
 }

@@ -311,7 +311,7 @@ watch(config, (val) => {
   justify-content: center;
   gap: 16px;
   padding: 8em 0;
-  color: color-mix(in srgb, var(--text-primary) 87%, transparent);
+  color: color-mix(in srgb, var(--foreground) 87%, transparent);
   font-size: 1rem;
 }
 
@@ -321,11 +321,9 @@ watch(config, (val) => {
   border-radius: 50%;
   corner-shape: round;
   border: 4px solid;
+  border-color: var(--foreground) transparent;
   animation: dl-loader-spin 1s infinite;
 }
-
-[data-theme='dark'] .download-loader { border-color: #fff #fff0; }
-[data-theme='light'] .download-loader { border-color: #000 #0000; }
 
 @keyframes dl-loader-spin {
   to { transform: rotate(0.5turn); }
@@ -349,7 +347,7 @@ watch(config, (val) => {
   border-radius: 22px;
   corner-shape: squircle;
   object-fit: cover;
-  background: var(--bg-sub);
+  background: var(--muted);
   display: block;
 }
 
@@ -365,7 +363,7 @@ watch(config, (val) => {
   transform: translateX(-50%);
   top: calc(100% + 6px);
   font-size: 12px;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -380,14 +378,14 @@ watch(config, (val) => {
 .header-name {
   font-size: 24px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--foreground);
   margin: 0;
   line-height: 1.3;
 }
 
 .header-tagline {
   font-size: 14px;
-  color: color-mix(in srgb, var(--text-primary) 87%, transparent);
+  color: color-mix(in srgb, var(--foreground) 87%, transparent);
   margin: 0;
   line-height: 1.5;
 }
@@ -417,7 +415,7 @@ watch(config, (val) => {
   top: 17.5%;
   height: 65%;
   width: 1px;
-  background: var(--border-color);
+  background: var(--border);
 }
 
 .stat-item--clickable {
@@ -431,14 +429,14 @@ watch(config, (val) => {
 
 .stat-label {
   font-size: 14px;
-  color: color-mix(in srgb, var(--text-primary) 50%, transparent);
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
   font-weight: 500;
 }
 
 .stat-value {
   font-size: 27px;
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--foreground);
   line-height: 1.2;
 }
 
@@ -451,18 +449,18 @@ watch(config, (val) => {
 
 .stat-unit {
   font-size: 14px;
-  color: color-mix(in srgb, var(--text-primary) 50%, transparent);
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
 }
 
 .stat-dev-icon {
   font-size: 26px;
   line-height: 1.2;
-  color: var(--text-primary);
+  color: var(--foreground);
 }
 
 .stat-dev-name {
   font-size: 13px;
-  color: var(--text-primary);
+  color: var(--foreground);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -474,7 +472,7 @@ watch(config, (val) => {
   width: 100%;
   height: 45px;
   cursor: pointer;
-  background-color: var(--text-primary);
+  background-color: var(--primary);
   border: none;
   border-radius: 999px;
   corner-shape: round;
@@ -500,7 +498,7 @@ watch(config, (val) => {
 .dl-btn-text {
   font-size: 18px;
   font-weight: 500;
-  color: var(--bg-color);
+  color: var(--primary-foreground);
   opacity: 1;
   letter-spacing: 5px;
   transition: opacity ease-in-out 250ms;
@@ -509,7 +507,7 @@ watch(config, (val) => {
 .dl-btn-icon {
   height: 22px;
   width: 22px;
-  color: var(--bg-color);
+  color: var(--primary-foreground);
   opacity: 0;
   transition: opacity ease-in-out 250ms;
 }
@@ -548,7 +546,7 @@ watch(config, (val) => {
 .download-disclaimer {
   text-align: center;
   font-size: 12px;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   margin: 0;
   line-height: 1.5;
 }
@@ -556,7 +554,7 @@ watch(config, (val) => {
 .disclaimer-divider {
   width: 100%;
   height: 1px;
-  background: var(--border-color);
+  background: var(--border);
 }
 
 /* ===== 响应式 ===== */

@@ -197,22 +197,15 @@ watchEffect(() => {
   border-radius: 50%;
   corner-shape: round;
   border: 8px solid;
+  border-color: var(--foreground) transparent;
   animation: docs-loader-spin 1s infinite;
   filter: drop-shadow(0 0 8px rgba(128, 140, 160, 0.4));
-}
-
-[data-theme='dark'] .docs-loader {
-  border-color: #e7e7e7 #ffffff00;
-}
-
-[data-theme='light'] .docs-loader {
-  border-color: #000000 #ffffff00;
 }
 
 /* 错误状态：停止转动，颜色变红 */
 .docs-loading--error .docs-loader {
   animation: none;
-  border-color: #E46962 #ffffff00;
+  border-color: var(--destructive) transparent;
 }
 
 @keyframes docs-loader-spin {
@@ -220,7 +213,7 @@ watchEffect(() => {
 }
 
 .docs-loading-text {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 1em;
   font-weight: 500;
   letter-spacing: 0.08em;

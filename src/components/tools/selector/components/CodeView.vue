@@ -74,25 +74,21 @@ function handleStartAdd() {
 
 <style scoped>
 .code-card {
-  background: #ffffff;
+  background: var(--card);
   border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border);
   padding: 20px 24px;
   transition:
     background-color 0.4s ease,
     border-color 0.4s ease;
   overflow-x: auto;
 }
-[data-theme='dark'] .code-card {
-  background: #191919;
-  border-color: #2b2b2b;
-}
 
 .code-view {
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   font-size: 14px;
   line-height: 2.2;
-  color: var(--text-primary);
+  color: var(--foreground);
   transition: color 0.4s ease;
 }
 
@@ -118,7 +114,7 @@ function handleStartAdd() {
 }
 
 .code-bracket {
-  color: var(--text-primary);
+  color: var(--foreground);
   font-size: 15px;
   font-weight: 600;
   transition: color 0.4s ease;
@@ -130,9 +126,9 @@ function handleStartAdd() {
   align-items: center;
   gap: 5px;
   padding: 3px 10px;
-  border: 1px dashed var(--border-color);
+  border: 1px dashed var(--border);
   background: transparent;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   font-size: 12px;
   font-family: inherit;
   border-radius: 5px;
@@ -143,9 +139,9 @@ function handleStartAdd() {
     background-color 0.15s ease;
 }
 .add-param-btn:hover {
-  border-color: var(--text-secondary);
-  color: var(--text-primary);
-  background: var(--bg-sub);
+  border-color: var(--muted-foreground);
+  color: var(--foreground);
+  background: var(--muted);
 }
 
 @media (max-width: 640px) {

@@ -345,7 +345,7 @@ export default {
         :style="{ height: headHeight + 'px' }"
       >
         <div ref="icon" class="notice-icon" aria-hidden="true">
-          <NIcon :component="MegaphoneLoud24Filled" :size="16" color="var(--text-secondary)" />
+          <NIcon :component="MegaphoneLoud24Filled" :size="16" color="var(--muted-foreground)" />
         </div>
 
         <!-- 当前公告内容：可点击打开链接（整块文本作为按钮，键盘可聚焦） -->
@@ -364,7 +364,7 @@ export default {
                   v-if="currentNotice.link"
                   :component="Open20Filled"
                   :size="13"
-                  color="var(--text-secondary)"
+                  color="var(--muted-foreground)"
                   class="notice-open-icon"
                 />
               </div>
@@ -418,7 +418,7 @@ export default {
                 v-if="n.link"
                 :component="Open20Filled"
                 :size="12"
-                color="var(--text-tertiary)"
+                color="var(--subtle-foreground)"
                 class="row-open"
                 aria-hidden="true"
               />
@@ -439,8 +439,8 @@ export default {
 .notice-bar {
   display: flex;
   align-items: stretch;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
   transition: background-color 0.4s ease, border-color 0.4s ease;
@@ -465,7 +465,7 @@ export default {
   height: 20px;
   display: flex;
   align-items: center;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   transition: transform 0.3s ease;
 }
 
@@ -482,7 +482,7 @@ export default {
   border: none;
   background: transparent;
   font: inherit;
-  color: var(--text-primary);
+  color: var(--foreground);
   text-align: left;
   cursor: default;
 }
@@ -492,7 +492,7 @@ export default {
 }
 
 .notice-main:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--text-primary) 45%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--foreground) 45%, transparent);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -547,7 +547,7 @@ export default {
 .notice-date {
   flex: none;
   align-self: flex-start;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   font-size: 12px;
   white-space: nowrap;
   line-height: 20px;
@@ -563,21 +563,21 @@ export default {
   align-items: center;
   justify-content: center;
   border: none;
-  border-left: 1px solid var(--border-color);
+  border-left: 1px solid var(--border);
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease, border-color 0.4s ease;
 }
 
 .notice-trigger:hover,
 .notice-bar.open .notice-trigger {
-  background: var(--bg-sub);
-  color: var(--text-primary);
+  background: var(--muted);
+  color: var(--foreground);
 }
 
 .notice-trigger:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--text-primary) 45%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--foreground) 45%, transparent);
   outline-offset: 2px;
 }
 
@@ -599,15 +599,15 @@ export default {
   height: 7px;
   border-radius: 50%;
   corner-shape: round;
-  background: #cc3333;
-  box-shadow: 0 0 0 1px var(--bg-card);
+  background: var(--destructive);
+  box-shadow: 0 0 0 1px var(--card);
   pointer-events: none;
 }
 
 /* ===== 展开卡片：独立元素，高度由 JS 过渡驱动，折叠结束销毁 ===== */
 .notice-panel {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
   margin-top: 8px;
@@ -647,24 +647,24 @@ export default {
   text-align: left;
   font: inherit;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .notice-row:hover {
-  background: var(--bg-sub);
-  color: var(--text-primary);
+  background: var(--muted);
+  color: var(--foreground);
 }
 
 .notice-row:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--text-primary) 45%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--foreground) 45%, transparent);
   outline-offset: -2px;
 }
 
 .notice-row.current {
-  background: var(--bg-sub);
-  color: var(--text-primary);
+  background: var(--muted);
+  color: var(--foreground);
 }
 
 .row-text {
@@ -681,7 +681,7 @@ export default {
 
 .row-date {
   flex: none;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   font-size: 12px;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;

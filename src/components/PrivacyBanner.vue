@@ -252,11 +252,11 @@ export default {
       </div>
       <div class="banner-actions">
         <button class="btn btn-agree" @click="handleAgree">
-          <NIcon :component="Checkmark24Filled" :size="14" color="#1A1A1A" style="margin-right: 4px; vertical-align: -2px;" />
+          <NIcon :component="Checkmark24Filled" :size="14" color="var(--primary)" style="margin-right: 4px; vertical-align: -2px;" />
           接受全部
         </button>
         <button class="btn btn-manage" @click="handleManageCookie">
-          <NIcon :component="Settings24Regular" :size="14" color="rgba(255, 255, 255, 0.87)" style="margin-right: 4px; vertical-align: -2px;" />
+          <NIcon :component="Settings24Regular" :size="14" color="var(--primary-foreground)" style="margin-right: 4px; vertical-align: -2px;" />
           管理偏好
         </button>
       </div>
@@ -279,11 +279,11 @@ export default {
       </div>
       <div class="banner-actions">
         <button class="btn btn-agree" @click="handleAgree">
-          <NIcon :component="Checkmark24Filled" :size="14" color="#1A1A1A" style="margin-right: 4px; vertical-align: -2px;" />
+          <NIcon :component="Checkmark24Filled" :size="14" color="var(--primary)" style="margin-right: 4px; vertical-align: -2px;" />
           接受全部
         </button>
         <button class="btn btn-manage" @click="handleManageCookie">
-          <NIcon :component="Settings24Regular" :size="14" color="rgba(255, 255, 255, 0.87)" style="margin-right: 4px; vertical-align: -2px;" />
+          <NIcon :component="Settings24Regular" :size="14" color="var(--primary-foreground)" style="margin-right: 4px; vertical-align: -2px;" />
           管理偏好
         </button>
       </div>
@@ -363,6 +363,7 @@ export default {
 
 <style scoped>
 .privacy-banner {
+  /* 反色横幅：底走 --primary，文字走 --primary-foreground，随主题整体翻转 */
   position: fixed;
   bottom: 0;
   left: 50%;
@@ -375,7 +376,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  background: rgba(24, 24, 24, 0.95);
+  background: color-mix(in srgb, var(--primary) 95%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.4);
@@ -393,6 +394,7 @@ export default {
 
 .banner-icon {
   flex-shrink: 0;
+  /* 警告琥珀色：全站没有 warning token，保留固定值（在两套主题的反色底上都可读） */
   color: #d48806;
   margin-top: 2px;
 }
@@ -400,11 +402,11 @@ export default {
 .banner-text {
   font-size: 15px;
   line-height: 1.5;
-  color: #e8e8e8;
+  color: var(--primary-foreground);
 }
 
 .banner-text a {
-  color: rgba(232, 232, 232, 0.65);
+  color: color-mix(in srgb, var(--primary-foreground) 65%, transparent);
   text-decoration: underline;
   font-weight: 600;
 }
@@ -431,19 +433,19 @@ export default {
 }
 
 .btn-agree {
-  background: #fff;
-  color: #1A1A1A;
+  background: var(--primary-foreground);
+  color: var(--primary);
   border: none;
 }
 
 .btn-agree:hover {
-  background: #E8E8E8;
+  opacity: 0.85;
 }
 
 .btn-manage {
   background: transparent;
-  color: rgba(255, 255, 255, 0.87);
-  border: 1px solid rgba(255, 255, 255, 0.87);
+  color: var(--primary-foreground);
+  border: 1px solid currentColor;
 }
 
 .btn-manage:hover {
@@ -513,7 +515,7 @@ export default {
   padding-top: 8px;
 }
 
-/* 保存设置按钮 - 浅色黑底深色白底 */
+/* 保存设置按钮 - 实心主按钮（反色块，两套主题由 token 翻转） */
 .btn-save {
   height: 34px;
   padding: 0 20px;
@@ -527,25 +529,15 @@ export default {
   display: inline-flex;
   align-items: center;
   border: none;
-}
-
-/* 浅色模式：黑底白字 */
-[data-theme="light"] .btn-save {
-  background: #1A1A1A;
-  color: #fff !important;
-}
-
-/* 深色模式：白底黑字（默认也是这个，因为弹窗深色时白底更合适） */
-[data-theme="dark"] .btn-save {
-  background: #fff;
-  color: #1A1A1A !important;
+  background: var(--primary);
+  color: var(--primary-foreground) !important;
 }
 
 .btn-save:hover {
   opacity: 0.85;
 }
 
-/* 弹窗内接受全部按钮 - 默认为空心描边 */
+/* 弹窗内接受全部按钮 - 空心描边（底与文字同卡片表面，只留一圈描边） */
 .modal-actions .btn-agree {
   height: 34px;
   padding: 0 20px;
@@ -561,26 +553,12 @@ export default {
   overflow: hidden;
   position: relative;
   border: 1.5px solid currentColor;
+  background: var(--card);
+  color: var(--foreground);
 }
 
-/* 浅色模式：白底黑字 + 黑描边（看起来像空心） */
-[data-theme="light"] .modal-actions .btn-agree {
-  background: #fff;
-  color: #1A1A1A;
-}
-
-[data-theme="light"] .modal-actions .btn-agree:hover {
-  background: #E8E8E8;
-}
-
-/* 深色模式：透明底 + 浅色文字 + 浅色描边（纯空心） */
-[data-theme="dark"] .modal-actions .btn-agree {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.87);
-}
-
-[data-theme="dark"] .modal-actions .btn-agree:hover {
-  background: rgba(255, 255, 255, 0.08);
+.modal-actions .btn-agree:hover {
+  background: var(--muted);
 }
 
 /* 横幅动画 */

@@ -37,7 +37,6 @@ export const highlight = {
 export const destructive = {
   light: '#DC2626',
   dark: '#DC2626',
-  banner: '#CC3333',
 }
 
 /**

@@ -40,7 +40,7 @@ import { copyOutput, clearAll, loadExample } from '../composables/useOutput.js'
   padding: 6px 12px;
   border: none;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   font-size: 12px;
   font-weight: 500;
   border-radius: 7px;
@@ -51,8 +51,8 @@ import { copyOutput, clearAll, loadExample } from '../composables/useOutput.js'
     color 0.15s ease;
 }
 .qh-btn:hover {
-  background: var(--bg-sub);
-  color: var(--text-primary);
+  background: var(--muted);
+  color: var(--foreground);
 }
 .qh-btn:active {
   transform: scale(0.97);

@@ -581,11 +581,10 @@ export default {
           alignItems: 'center',
           padding: '0 16px',
           height: '56px',
-          background: isDark ? 'rgba(24, 24, 24, 0.75)' : 'rgba(255, 255, 255, 0.75)',
+          background: 'var(--glass-background)',
           backdropFilter: 'blur(18px)',
           WebkitBackdropFilter: 'blur(18px)',
-          borderBottom:
-            '1px solid ' + (isDark ? 'rgba(46, 46, 46, 0.5)' : 'rgba(224, 224, 224, 0.5)'),
+          borderBottom: '1px solid var(--glass-border)',
           position: 'sticky',
           top: 0,
           zIndex: 1000,
@@ -667,7 +666,7 @@ export default {
         :width="220"
         :z-index="1900"
         :mask-closable="true"
-        :style="{ background: 'var(--bg-color)', boxShadow: '0 8px 40px rgba(0, 0, 0, 0.5)' }"
+        :style="{ background: 'var(--background)', boxShadow: 'var(--shadow-drawer)' }"
       >
         <NDrawerContent style="height: 100%; display: flex; flex-direction: column; padding: 0">
           <div
@@ -725,11 +724,10 @@ export default {
                 flexShrink: 0,
                 position: 'relative',
                 zIndex: 1,
-                background: isDark ? 'rgba(24, 24, 24, 0.75)' : 'rgba(255, 255, 255, 0.75)',
+                background: 'var(--glass-background)',
                 backdropFilter: 'blur(8px)',
                 WebkitBackdropFilter: 'blur(8px)',
-                borderBottom:
-                  '1px solid ' + (isDark ? 'rgba(46, 46, 46, 0.5)' : 'rgba(224, 224, 224, 0.5)'),
+                borderBottom: '1px solid var(--glass-border)',
               }"
             ></div>
             <AppMenu
@@ -812,22 +810,21 @@ export default {
 <style>
 /* ===== 非官方站点横幅（样式参考 index.html 中的 .loading-timeout-banner）===== */
 .unofficial-domain-banner {
-  background: #CC3333;
-  color: #ffffff;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
   padding: 10px 16px;
   text-align: center;
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.5px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   margin-bottom: 16px;
 }
 
 .unofficial-domain-banner .official-link {
-  color: #ffffff;
+  color: var(--destructive-foreground);
   text-decoration: underline;
-  -webkit-text-decoration-color: rgba(255, 255, 255, 0.75);
-  text-decoration-color: rgba(255, 255, 255, 0.75);
+  text-decoration-color: color-mix(in srgb, currentColor 75%, transparent);
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -835,8 +832,7 @@ export default {
 }
 
 .unofficial-domain-banner .official-link:hover {
-  color: #ffe0e0;
-  text-decoration-color: #ffe0e0;
+  opacity: 0.85;
 }
 .mobile-menu-button {
   position: fixed !important;
@@ -918,7 +914,7 @@ export default {
 .n-drawer-mask {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background-color: rgba(0, 0, 0, 0.4) !important;
+  background-color: var(--mask) !important;
   transition: background-color 0.3s ease;
 }
 

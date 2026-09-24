@@ -283,21 +283,21 @@ onBeforeUnmount(() => {
 
 .page-title-icon {
   font-size: 26px;
-  color: var(--text-primary);
+  color: var(--foreground);
   flex-shrink: 0;
 }
 
 .page-title {
   font-size: 22px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--foreground);
   line-height: 1.3;
   margin: 0;
 }
 
 .page-desc {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   line-height: 1.5;
   margin-top: 6px;
 }
@@ -308,26 +308,21 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  background: #FFFFFF;
+  background: var(--card);
   border-radius: 12px;
-  border: 1px solid #E0E0E0;
+  border: 1px solid var(--border);
   transition: background-color 0.4s ease, border-color 0.4s ease;
-}
-
-[data-theme="dark"] .mode-bar {
-  background: #191919;
-  border-color: #2B2B2B;
 }
 
 .mode-label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
 }
 
 .mode-hint {
   font-size: 12px;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   margin-left: auto;
 }
 
@@ -335,17 +330,12 @@ onBeforeUnmount(() => {
 .verify-card {
   display: flex;
   align-items: stretch;
-  background: #FFFFFF;
+  background: var(--card);
   border-radius: 12px;
-  border: 1px solid #E0E0E0;
+  border: 1px solid var(--border);
   padding: 16px;
   gap: 0;
   transition: background-color 0.4s ease, border-color 0.4s ease;
-}
-
-[data-theme="dark"] .verify-card {
-  background: #191919;
-  border-color: #2B2B2B;
 }
 
 .verify-col {
@@ -359,45 +349,41 @@ onBeforeUnmount(() => {
 .verify-label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
 }
 
 .verify-input {
   width: 100%;
   flex: 1;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 5px;
   padding: 8px 12px;
   font-size: 0.9rem;
   background-color: transparent;
-  color: var(--text-primary);
+  color: var(--foreground);
   font-family: inherit;
   line-height: 1.4;
   transition: border-color 0.4s ease, box-shadow 0.4s ease;
-  caret-color: var(--text-primary);
+  caret-color: var(--foreground);
 }
 
 .verify-input:focus {
   outline: none;
-  border-color: var(--text-secondary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 20%, transparent);
+  border-color: var(--muted-foreground);
+  box-shadow: 0 0 0 2px var(--ring);
 }
 
 .verify-input::placeholder {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
 }
 
 .verify-divider {
   width: 1px;
   align-self: stretch;
-  background: #E0E0E0;
+  background: var(--border);
   margin: 0 16px;
   flex-shrink: 0;
   transition: background-color 0.4s ease;
-}
-
-[data-theme="dark"] .verify-divider {
-  background: #2B2B2B;
 }
 
 .verify-preview {
@@ -405,12 +391,12 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 0;
   flex: 1;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 8px 12px;
   font-size: 0.9rem;
   line-height: 1.4;
-  color: var(--text-primary);
+  color: var(--foreground);
   overflow-x: auto;
   white-space: nowrap;
   transition: border-color 0.4s ease;
@@ -422,12 +408,12 @@ onBeforeUnmount(() => {
 }
 
 .verify-preview::-webkit-scrollbar-thumb {
-  background: var(--text-tertiary);
+  background: var(--scrollbar);
   border-radius: 3px;
 }
 
 .preview-placeholder {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
 }
 
 .preview-text {
@@ -454,7 +440,8 @@ onBeforeUnmount(() => {
   display: inline-block;
   width: 0.2em;
   height: 0.2em;
-  background: #e74c3c;
+  /* 表示 U+0000 的标记点 */
+  background: var(--destructive);
   border-radius: 50%;
   corner-shape: round;
   vertical-align: middle;
@@ -481,18 +468,18 @@ onBeforeUnmount(() => {
 }
 
 .symbol-card:hover {
-  background: var(--bg-sub) !important;
-  border-color: var(--border-color) !important;
+  background: var(--muted) !important;
+  border-color: var(--border) !important;
   transform: translateY(-4px) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* ToolCard 基础样式 */
 .tool-card {
-  background: #FFFFFF;
+  background: var(--card);
   border-radius: 12px;
   corner-shape: squircle;
-  border: 1px solid #E0E0E0;
+  border: 1px solid var(--border);
   transition: all 0.3s ease;
   box-shadow: 0 0 0 transparent;
   position: relative;
@@ -507,11 +494,6 @@ onBeforeUnmount(() => {
   .tool-card.glow-border::before {
     corner-shape: squircle;
   }
-}
-
-[data-theme="dark"] .tool-card {
-  background: #191919;
-  border-color: #2B2B2B;
 }
 
 /* ===== 精灵图图标 ===== */

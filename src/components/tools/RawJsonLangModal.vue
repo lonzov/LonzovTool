@@ -261,111 +261,106 @@ function doDelete(id) {
   margin-bottom: 8px;
 }
 .lang-section-title {
-  font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+  font-size: 11px; font-weight: 600; color: var(--subtle-foreground);
   text-transform: uppercase; letter-spacing: 0.5px;
   transition: color 0.4s ease;
 }
 .lang-section-title--strong {
   font-size: 13px;
-  color: var(--text-primary);
+  color: var(--foreground);
 }
-.lang-section-hint { font-size: 10px; color: var(--text-tertiary); transition: color 0.4s ease; }
+.lang-section-hint { font-size: 10px; color: var(--subtle-foreground); transition: color 0.4s ease; }
 .lang-empty {
   margin: 0; padding: 10px 12px;
-  font-size: 12px; line-height: 1.6; color: var(--text-secondary);
-  background: var(--bg-sub); border-radius: 8px;
+  font-size: 12px; line-height: 1.6; color: var(--muted-foreground);
+  background: var(--muted); border-radius: 8px;
   transition: color 0.4s ease, background-color 0.4s ease;
 }
 .lang-empty code {
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   font-size: 11px; padding: 1px 4px; border-radius: 4px;
-  background: var(--bg-card); color: var(--text-primary);
+  background: var(--card); color: var(--foreground);
 }
-.lang-note { margin: 8px 0 0; font-size: 11px; color: var(--text-tertiary); transition: color 0.4s ease; }
+.lang-note { margin: 8px 0 0; font-size: 11px; color: var(--subtle-foreground); transition: color 0.4s ease; }
 
 .lang-current {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 10px 12px;
-  background: var(--bg-sub); border: 1px solid var(--border-color); border-radius: 8px;
+  background: var(--muted); border: 1px solid var(--border); border-radius: 8px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 .lang-current-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .lang-current-name {
-  font-size: 13px; font-weight: 600; color: var(--text-primary);
+  font-size: 13px; font-weight: 600; color: var(--foreground);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   transition: color 0.4s ease;
 }
-.lang-current-meta { font-size: 10px; color: var(--text-tertiary); transition: color 0.4s ease; }
+.lang-current-meta { font-size: 10px; color: var(--subtle-foreground); transition: color 0.4s ease; }
 
 .lang-list { display: flex; flex-direction: column; gap: 6px; }
 .lang-item {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: 8px 10px;
-  background: var(--bg-sub); border: 1px solid var(--border-color); border-radius: 8px;
+  background: var(--muted); border: 1px solid var(--border); border-radius: 8px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
-.lang-item--active { border-color: var(--text-secondary); }
+.lang-item--active { border-color: var(--muted-foreground); }
 .lang-item-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .lang-item-name {
-  font-size: 13px; color: var(--text-primary);
+  font-size: 13px; color: var(--foreground);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   transition: color 0.4s ease;
 }
-.lang-item-meta { font-size: 10px; color: var(--text-tertiary); transition: color 0.4s ease; }
+.lang-item-meta { font-size: 10px; color: var(--subtle-foreground); transition: color 0.4s ease; }
 .lang-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 
 .lang-badge {
   font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
-  color: var(--text-secondary); background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  color: var(--muted-foreground); background: var(--card);
+  border: 1px solid var(--border);
   transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
 }
 
 .lang-link {
   border: none; background: transparent; cursor: pointer;
   font-size: 11px; font-family: inherit; padding: 2px 4px; border-radius: 4px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   transition: color 0.15s ease, background-color 0.15s ease;
 }
-.lang-link:hover { background: var(--bg-card); color: var(--text-primary); }
+.lang-link:hover { background: var(--card); color: var(--foreground); }
 .lang-link:disabled { opacity: 0.5; cursor: default; }
-.lang-link--strong { color: var(--text-primary); font-weight: 600; }
+.lang-link--strong { color: var(--foreground); font-weight: 600; }
 
 .lang-icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 24px; height: 24px; padding: 0;
   border: none; border-radius: 6px; background: transparent;
-  color: var(--text-secondary); cursor: pointer;
+  color: var(--muted-foreground); cursor: pointer;
   transition: color 0.15s ease, background-color 0.15s ease;
 }
-.lang-icon-btn:hover { background: var(--bg-card); color: var(--text-primary); }
+.lang-icon-btn:hover { background: var(--card); color: var(--foreground); }
 /* 二次点击确认删除（与 .btn-delete-confirmed / .act-delete-confirmed 一致） */
 .lang-icon-btn--danger,
 .lang-icon-btn--danger:hover {
-  background: #dc2626 !important;
-  color: #fff !important;
-}
-[data-theme="dark"] .lang-icon-btn--danger,
-[data-theme="dark"] .lang-icon-btn--danger:hover {
-  background: #dc2626 !important;
-  color: #fff !important;
+  background: var(--destructive) !important;
+  color: var(--destructive-foreground) !important;
 }
 
 .lang-field { margin-bottom: 10px; }
 .lang-label {
   display: block; margin-bottom: 4px;
-  font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+  font-size: 11px; font-weight: 600; color: var(--subtle-foreground);
   text-transform: uppercase; letter-spacing: 0.5px;
   transition: color 0.4s ease;
 }
 .lang-input {
   width: 100%; height: 34px; padding: 0 12px;
-  border: 1px solid var(--border-color); border-radius: 8px;
-  background: var(--bg-sub); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--muted); color: var(--foreground);
   font-size: 13px; font-family: inherit; outline: none; box-sizing: border-box;
   transition: border-color 0.3s ease, background-color 0.4s ease, color 0.4s ease;
 }
-.lang-input:focus { border-color: var(--text-secondary); }
+.lang-input:focus { border-color: var(--muted-foreground); }
 .lang-item .lang-input { flex: 1; }
 
 .lang-source-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -373,46 +368,41 @@ function doDelete(id) {
 .lang-file-chip {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 4px 8px; border-radius: 6px;
-  font-size: 11px; color: var(--text-secondary);
-  background: var(--bg-sub); border: 1px solid var(--border-color);
+  font-size: 11px; color: var(--muted-foreground);
+  background: var(--muted); border: 1px solid var(--border);
   transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
 }
 .lang-file-remove {
   border: none; background: transparent; cursor: pointer;
   font-size: 14px; line-height: 1; padding: 0;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   transition: color 0.15s ease;
 }
-.lang-file-remove:hover { color: var(--text-primary); }
+.lang-file-remove:hover { color: var(--foreground); }
 
 .lang-textarea {
   width: 100%; min-height: 120px;
   padding: 8px 12px;
-  border: 1px solid var(--border-color); border-radius: 8px;
-  background: var(--bg-sub); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--muted); color: var(--foreground);
   font-size: 12px; resize: vertical;
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   outline: none; box-sizing: border-box;
   transition: border-color 0.3s ease, background-color 0.4s ease, color 0.4s ease;
 }
-.lang-textarea:focus { border-color: var(--text-secondary); }
+.lang-textarea:focus { border-color: var(--muted-foreground); }
 .lang-textarea:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .lang-error {
   margin: 0 0 10px; padding: 8px 12px;
-  background: #f2f2f2; border: 1px solid #ddd;
-  border-radius: 6px; font-size: 12px; color: #555;
+  background: var(--muted); border: 1px solid var(--border);
+  border-radius: 6px; font-size: 12px; color: var(--muted-foreground);
   /* JSON 报错是「诊断 + 位置」两行，靠换行断句 */
   white-space: pre-line; word-break: break-all;
-  transition: background-color 0.4s ease, border-color 0.4s ease;
-}
-[data-theme="dark"] .lang-error {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.75);
+  transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
 }
 
-.lang-footer-hint { font-size: 11px; color: var(--text-tertiary); transition: color 0.4s ease; }
+.lang-footer-hint { font-size: 11px; color: var(--subtle-foreground); transition: color 0.4s ease; }
 
 /* 页脚操作按钮 (与 UpdateDialog 一致) */
 .modal-actions {
@@ -442,14 +432,9 @@ function doDelete(id) {
 .btn-sm { height: 30px; padding: 0 14px; font-size: 12px; border-radius: 15px; corner-shape: round; }
 .btn:disabled { opacity: 0.5; cursor: default; }
 
-[data-theme="light"] .btn-fill {
-  background: #1A1A1A;
-  color: #fff;
-}
-
-[data-theme="dark"] .btn-fill {
-  background: #fff;
-  color: #1A1A1A;
+.btn-fill {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .btn-fill:hover:not(:disabled) { opacity: 0.85; }
@@ -458,21 +443,12 @@ function doDelete(id) {
   border: 1.5px solid currentColor;
 }
 
-[data-theme="light"] .btn-outline {
-  background: #fff;
-  color: #1A1A1A;
+.btn-outline {
+  background: var(--card);
+  color: var(--foreground);
 }
 
-[data-theme="light"] .btn-outline:hover {
-  background: #E8E8E8;
-}
-
-[data-theme="dark"] .btn-outline {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.87);
-}
-
-[data-theme="dark"] .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.08);
+.btn-outline:hover {
+  background: var(--muted);
 }
 </style>

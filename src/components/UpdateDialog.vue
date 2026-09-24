@@ -285,15 +285,10 @@ watch(showUpdateModal, (val) => {
   border: none;
 }
 
-/* fill - 全填充主按钮 */
-[data-theme="light"] .btn-fill {
-  background: #1A1A1A;
-  color: #fff !important;
-}
-
-[data-theme="dark"] .btn-fill {
-  background: #fff;
-  color: #1A1A1A !important;
+/* fill - 全填充主按钮（反色块） */
+.btn-fill {
+  background: var(--primary);
+  color: var(--primary-foreground) !important;
 }
 
 .btn-fill:hover {
@@ -312,45 +307,22 @@ watch(showUpdateModal, (val) => {
 /* outline - 描边按钮 */
 .btn-outline {
   border: 1.5px solid currentColor;
+  background: var(--card);
+  color: var(--foreground);
 }
 
-[data-theme="light"] .btn-outline {
-  background: #fff;
-  color: #1A1A1A;
-}
-
-[data-theme="light"] .btn-outline:hover {
-  background: #E8E8E8;
-}
-
-[data-theme="dark"] .btn-outline {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.87);
-}
-
-[data-theme="dark"] .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.08);
+.btn-outline:hover {
+  background: var(--muted);
 }
 
 /* text - 仅文字按钮 */
 .btn-text {
   background: transparent;
+  color: var(--foreground);
 }
 
-[data-theme="light"] .btn-text {
-  color: #1A1A1A;
-}
-
-[data-theme="light"] .btn-text:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
-
-[data-theme="dark"] .btn-text {
-  color: rgba(255, 255, 255, 0.87);
-}
-
-[data-theme="dark"] .btn-text:hover {
-  background: rgba(255, 255, 255, 0.08);
+.btn-text:hover {
+  background: var(--accent);
 }
 </style>
 
@@ -372,17 +344,12 @@ watch(showUpdateModal, (val) => {
   line-height: 1.6;
   white-space: nowrap;
   cursor: pointer;
-  background: #1A1A1A;
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-foreground);
   transition: background-color 0.4s ease, color 0.4s ease, opacity 0.2s ease;
 }
 
 .sw-reload-tip-btn:hover {
   opacity: 0.85;
-}
-
-[data-theme="dark"] .sw-reload-tip-btn {
-  background: #fff;
-  color: #1A1A1A;
 }
 </style>

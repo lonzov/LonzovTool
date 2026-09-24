@@ -1,4 +1,4 @@
-import { neutral, highlight, destructive, alpha } from './palette'
+import { neutral, highlight, destructive, alpha } from './palette.js'
 
 const BLACK = '#000000'
 
@@ -35,6 +35,10 @@ const lightTokens = {
   // 滚动条
   scrollbar: alpha(neutral[850], 0.2),
   'scrollbar-hover': alpha(neutral[850], 0.3),
+
+  // 毛玻璃层：移动端头部与抽屉标题栏
+  'glass-background': alpha(neutral[0], 0.75),
+  'glass-border': alpha(neutral[200], 0.5),
 
   // 反色块
   primary: neutral[850],
@@ -77,6 +81,9 @@ const darkTokens = {
   scrollbar: alpha(neutral[175], 0.22),
   'scrollbar-hover': alpha(neutral[175], 0.29),
 
+  'glass-background': alpha(neutral[850], 0.75),
+  'glass-border': alpha(neutral[700], 0.5),
+
   primary: neutral[175],
   'primary-foreground': neutral[850],
 
@@ -108,6 +115,9 @@ const staticTokens = {
   ...radiusTokens,
   // 胶囊与圆形：半径必然达到短边一半，平滑曲率在此会破形，用法见 main.css 的 .corner-round
   'radius-full': '9999px',
+
+  // 抽屉与弹窗遮罩：两套主题下都应为黑，不随主题变化
+  mask: alpha(BLACK, 0.4),
 
   'duration-theme': '0.4s',
   'ease-theme': 'ease',

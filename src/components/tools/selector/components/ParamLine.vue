@@ -53,26 +53,23 @@ defineEmits(['edit'])
   transition: background-color 0.12s ease;
 }
 .code-line--param:hover {
-  background: rgba(0, 0, 0, 0.03);
-}
-[data-theme='dark'] .code-line--param:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--accent);
 }
 
 .code-key {
-  color: var(--text-primary);
+  color: var(--foreground);
   font-weight: 500;
   transition: color 0.4s ease;
   flex-shrink: 0;
 }
 .code-eq {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   margin: 0 0.35em;
   transition: color 0.4s ease;
   flex-shrink: 0;
 }
 .code-value {
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   transition: color 0.4s ease;
   min-width: 0;
   overflow: hidden;
@@ -80,7 +77,7 @@ defineEmits(['edit'])
   white-space: nowrap;
 }
 .code-comma {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   margin-right: 0.35em;
   transition: color 0.4s ease;
 }
@@ -111,7 +108,7 @@ defineEmits(['edit'])
   border: none;
   background: transparent;
   border-radius: 6px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   cursor: pointer;
   transition:
     background-color 0.12s ease,
@@ -119,16 +116,16 @@ defineEmits(['edit'])
     transform 0.12s ease;
 }
 .code-act-btn:hover {
-  background: var(--bg-sub);
-  color: var(--text-primary);
+  background: var(--muted);
+  color: var(--foreground);
 }
 .code-act-btn:active {
   transform: scale(0.95);
 }
 .code-delete-confirmed,
 .code-delete-confirmed:hover {
-  background: #dc2626 !important;
-  color: #fff !important;
+  background: var(--destructive) !important;
+  color: var(--destructive-foreground) !important;
   opacity: 1 !important;
 }
 

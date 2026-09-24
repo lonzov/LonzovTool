@@ -204,8 +204,8 @@ export default {
   box-sizing: border-box;
   margin-top: 24px;
   position: relative;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 8px;
 
   /* 主题切换过渡动画 */
@@ -276,7 +276,7 @@ export default {
   width: 80%;
   max-width: 960px;
   height: 1px;
-  background: var(--border-color);
+  background: var(--border);
   margin: 64px auto 32px auto;
   transition: background-color 0.4s ease;
 }
@@ -289,7 +289,7 @@ export default {
   left: 0;
   width: 44px;
   height: 1.7px;
-  background: linear-gradient(to right, var(--text-primary), transparent);
+  background: linear-gradient(to right, var(--foreground), transparent);
   border-radius: 2px;
   opacity: 1;
   transition: opacity 0.4s ease;
@@ -317,7 +317,7 @@ export default {
 .footer-third-party,
 .footer-disclaimer {
   font-size: 13px;
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
   line-height: 1.8;
   margin: 0 0 4px 0;
 }
@@ -326,7 +326,7 @@ export default {
 .footer-title {
   font-size: var(--title-size);
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--foreground);
   margin: -5px 0 17px 0;
   position: relative;
 }
@@ -341,7 +341,7 @@ export default {
 
 .footer-list li {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   line-height: 1.6;
   margin-bottom: 8px;
   transition: color 0.3s ease;
@@ -354,7 +354,7 @@ export default {
 }
 
 .footer-list a:hover {
-  color: var(--text-primary);
+  color: var(--foreground);
 }
 
 /* ===== 社交按钮行 ===== */
@@ -372,11 +372,11 @@ export default {
   width: 36px;
   height: 36px;
   padding: 0;
-  background: #FFFFFF;
+  background: var(--card);
   border-radius: 8px;
   corner-shape: squircle;
-  border: 1px solid #E0E0E0;
-  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
   text-decoration: none;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -391,15 +391,10 @@ export default {
   }
 }
 
-[data-theme="dark"] .social-btn {
-  background: #191919;
-  border-color: #2B2B2B;
-}
-
 .social-btn:hover {
-  background: var(--bg-sub) !important;
+  background: var(--muted) !important;
   box-shadow: 0 0 7px rgba(128, 128, 128, 0.3) !important;
-  color: var(--text-primary) !important;
+  color: var(--foreground) !important;
 }
 
 .social-btn-icon {

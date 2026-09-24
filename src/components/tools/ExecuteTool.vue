@@ -540,30 +540,30 @@ function handleClear() {
 
 .page-title-icon {
   font-size: 26px;
-  color: var(--text-primary);
+  color: var(--foreground);
   flex-shrink: 0;
 }
 
 .page-title {
   font-size: 22px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--foreground);
   line-height: 1.3;
   margin: 0;
 }
 
 .page-desc {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--muted-foreground);
   line-height: 1.5;
   margin-top: 6px;
 }
 
 /* ===== 卡片 ===== */
 .tool-card {
-  background: #FFFFFF;
+  background: var(--card);
   border-radius: 12px;
-  border: 1px solid #E0E0E0;
+  border: 1px solid var(--border);
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -571,21 +571,11 @@ function handleClear() {
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
-[data-theme="dark"] .tool-card {
-  background: #191919;
-  border-color: #2B2B2B;
-}
-
 .tool-card:hover {
-  background: #FFFFFF !important;
-  border-color: #E0E0E0 !important;
+  background: var(--card) !important;
+  border-color: var(--border) !important;
   transform: none !important;
   box-shadow: none !important;
-}
-
-[data-theme="dark"] .tool-card:hover {
-  background: #191919 !important;
-  border-color: #2B2B2B !important;
 }
 
 .tool-card--output {
@@ -596,13 +586,13 @@ function handleClear() {
 .text-input {
   width: 100%;
   flex: 1;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 15px;
   font-size: 1rem;
   resize: none;
   background-color: transparent;
-  color: var(--text-primary);
+  color: var(--foreground);
   transition: border-color 0.4s ease, box-shadow 0.4s ease;
   font-family: inherit;
   line-height: 1.6;
@@ -611,12 +601,12 @@ function handleClear() {
 
 .text-input:focus {
   outline: none;
-  border-color: var(--text-secondary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 20%, transparent);
+  border-color: var(--muted-foreground);
+  box-shadow: 0 0 0 2px var(--ring);
 }
 
 .text-input::placeholder {
-  color: var(--text-tertiary);
+  color: var(--subtle-foreground);
 }
 
 /* ===== 按钮行（靠右对齐） ===== */
@@ -633,8 +623,8 @@ function handleClear() {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background-color: var(--text-primary);
-  color: var(--bg-color);
+  background-color: var(--primary);
+  color: var(--primary-foreground);
   border: none;
   padding: 9px 20px;
   font-size: 0.95rem;

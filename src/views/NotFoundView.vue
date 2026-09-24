@@ -103,14 +103,9 @@ onUnmounted(() => {
   transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.4s ease, color 0.4s ease;
 }
 
-[data-theme="light"] .nf-btn {
-  background: #1A1A1A;
-  color: #fff;
-}
-
-[data-theme="dark"] .nf-btn {
-  background: #fff;
-  color: #1A1A1A;
+.nf-btn {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .nf-btn:hover {

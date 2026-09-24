@@ -89,8 +89,8 @@ if (typeof document !== 'undefined') {
 
 <style scoped>
 .donate-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 24px;
   display: flex;
@@ -132,7 +132,7 @@ if (typeof document !== 'undefined') {
   border-radius: var(--radius);
   corner-shape: squircle;
   width: 260px;
-  background: var(--bg-sub);
+  background: var(--muted);
   box-shadow: none;
   transition: background-color 0.4s ease, box-shadow 0.4s ease;
 }
@@ -174,8 +174,8 @@ if (typeof document !== 'undefined') {
   --active-color: #12B7F5;
 }
 
+/* 选中态文字压在品牌色滑块上，固定白色（滑块不随主题变） */
 .donate-tab-switch :checked + .donate-tab-label {
-  --highlight: 1;
   color: #fff;
 }
 
@@ -190,8 +190,7 @@ if (typeof document !== 'undefined') {
   place-items: center;
   font-weight: 600;
   font-size: 14px;
-  /* 非焦点文字颜色（仅浅色模式），深色模式见下方 [data-theme='dark'] 覆盖 */
-  color: hsl(0, 0%, 33%);
+  color: var(--muted-foreground);
   transition: color var(--speed);
   transition-timing-function: var(--ease, ease);
   user-select: none;
@@ -201,8 +200,8 @@ if (typeof document !== 'undefined') {
 }
 
 .donate-tab-input:not(:checked) + .donate-tab-label:hover {
-  --highlight: 0.35;
-  background: hsl(0 0% 100% / 0.08);
+  background: var(--accent);
+  color: var(--foreground);
 }
 
 .donate-tab-switch::after {
@@ -210,7 +209,7 @@ if (typeof document !== 'undefined') {
   content: '';
   width: calc(100% / var(--count));
   height: 100%;
-  background: var(--active-color, #ffffff);
+  background: var(--active-color, var(--primary));
   position: absolute;
   border-radius: calc(var(--radius));
   corner-shape: squircle;
@@ -220,15 +219,7 @@ if (typeof document !== 'undefined') {
   z-index: 0;
 }
 
-/* 深色模式 */
-[data-theme='dark'] .donate-tab-label {
-  color: hsl(0 0% 100% / calc(0.5 + var(--highlight, 0)));
-}
-
-[data-theme='dark'] .donate-tab-switch :checked + .donate-tab-label {
-  color: #fff;
-}
-
+/* 深色模式：内阴影加深 */
 [data-theme='dark'] .donate-tab-switch::before {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
@@ -239,7 +230,7 @@ if (typeof document !== 'undefined') {
   height: 220px;
   border-radius: 8px;
   overflow: hidden;
-  background: var(--bg-sub);
+  background: var(--muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -347,7 +338,7 @@ if (typeof document !== 'undefined') {
 
 /* 深色模式图片加亮边框 */
 .donate-card--dark .donate-qr-wrapper {
-  border: 1px solid #333333;
+  border: 1px solid var(--border);
 }
 
 @supports (corner-shape: squircle) {
