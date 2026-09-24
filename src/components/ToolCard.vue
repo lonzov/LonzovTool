@@ -392,10 +392,12 @@ export default {
           },
           [
             // 图标 logo（白底黑图标，图片 logo 走下方图片逻辑）
+            // 与图片分支共用 tool-card-logo-inner —— hover 的放大效果挂在那个类上
             isIconLogo
               ? h(
                   'div',
                   {
+                    class: 'tool-card-logo-inner',
                     style: {
                       width: '100%',
                       height: '100%',
