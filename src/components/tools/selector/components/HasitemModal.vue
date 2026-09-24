@@ -70,7 +70,7 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
 import { NInput, NIcon } from 'naive-ui'
-import AppModal from '../../../ui/AppModal.vue'
+import AppModal, { MODAL_CARD_CHROME_HEIGHT } from '../../../ui/AppModal.vue'
 import { Add16Filled, Delete24Filled } from '@vicons/fluent'
 import {
   hasitemEditId,
@@ -219,25 +219,11 @@ function animateHeightChange(changeFn, { scrollToBottom = false } = {}) {
   })
 }
 
-/** 计算卡片可用内容区高度 = 卡片总高 − 标题栏 − 按钮栏 − 内容 padding */
+/** 卡片可用内容区高度 = 卡片总高 − 标题栏 − 按钮栏 − 内容 padding */
 function getAvailableHeight(el) {
-  const card = el.closest('.n-card')
+  const card = el.closest('.app-modal')
   if (!card) return Infinity
-
-  const header = card.querySelector(':scope > .n-card-header')
-  const footer = card.querySelector(':scope > .n-card-footer')
-  const headerH = header ? header.getBoundingClientRect().height : 68
-  const footerH = footer ? footer.getBoundingClientRect().height : 83
-
-  const scrollContent = el.closest('.n-scrollbar-content')
-  let padTop = 20, padBottom = 20
-  if (scrollContent) {
-    const cs = getComputedStyle(scrollContent)
-    padTop = parseFloat(cs.paddingTop) || 20
-    padBottom = parseFloat(cs.paddingBottom) || 20
-  }
-
-  return card.clientHeight - headerH - footerH - padTop - padBottom
+  return card.clientHeight - MODAL_CARD_CHROME_HEIGHT
 }
 
 /** 向上查找第一个可滚动的父元素 */
@@ -452,7 +438,7 @@ function onModalEntered() {
   color: var(--destructive);
 }
 .code-act-btn--danger-sm:hover {
-  background: rgba(220, 38, 38, 0.1);
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
 }
 
 .add-hasitem-sub-btn {

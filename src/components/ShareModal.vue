@@ -357,6 +357,11 @@ watch(() => props.show, (val) => {
 </template>
 
 <style>
+
+/* 本块内的硬编码色值全部属于分享海报的独立配色 —— 海报是导出给用户分享的图片，
+   刻意不跟随站点主题（浅色主题下也要能生成深色海报），因此不走语义 token。 */
+/* stylelint-disable declaration-property-value-disallowed-list */
+
 /* ===== 海报 HTML 样式（精确匹配预览页，供 html2canvas 截图） ===== */
 .poster-src {
   font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -519,6 +524,9 @@ watch(() => props.show, (val) => {
 </style>
 
 <style scoped>
+
+/* 本块内的硬编码色值全部属于分享海报的独立配色 —— 海报是导出给用户分享的图片，
+   刻意不跟随站点主题（浅色主题下也要能生成深色海报），因此不走语义 token。 */
 .poster-wrap {
   display: flex;
   align-items: center;

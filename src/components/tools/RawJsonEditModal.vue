@@ -2,7 +2,7 @@
 import { ref, watch, nextTick } from 'vue'
 import { NIcon, NSelect } from 'naive-ui'
 import { Delete24Regular, ArrowUp24Regular, ArrowDown24Regular, Add24Regular, Edit24Filled } from '@vicons/fluent'
-import AppModal from '../ui/AppModal.vue'
+import AppModal, { MODAL_CARD_CHROME_HEIGHT } from '../ui/AppModal.vue'
 import {
   showEditModal, editIdx,
   editType, formText, formSelector, formScoreObj, formScoreName,
@@ -108,26 +108,11 @@ function resetWrapStyle(el) {
   el.style.transition = ''
 }
 
-/** 计算卡片可用内容区高度 = 卡片总高 − 标题栏 − 按钮栏 − 内容 padding */
+/** 卡片可用内容区高度 = 卡片总高 − 标题栏 − 按钮栏 − 内容 padding */
 function getAvailableHeight(el) {
-  const card = el.closest('.n-card')
+  const card = el.closest('.app-modal')
   if (!card) return Infinity
-
-  const header = card.querySelector(':scope > .n-card-header')
-  const footer = card.querySelector(':scope > .n-card-footer')
-  const headerH = header ? header.getBoundingClientRect().height : 68
-  const footerH = footer ? footer.getBoundingClientRect().height : 83
-
-  const scrollContent = el.closest('.n-scrollbar-content')
-  let padTop = 20
-  let padBottom = 20
-  if (scrollContent) {
-    const cs = getComputedStyle(scrollContent)
-    padTop = parseFloat(cs.paddingTop) || 20
-    padBottom = parseFloat(cs.paddingBottom) || 20
-  }
-
-  return card.clientHeight - headerH - footerH - padTop - padBottom
+  return card.clientHeight - MODAL_CARD_CHROME_HEIGHT
 }
 </script>
 
@@ -462,9 +447,3 @@ function getAvailableHeight(el) {
 }
 </style>
 
-<style>
-/* NSelect 下拉菜单描边；颜色、圆角与阴影由 themeOverrides 提供 */
-.n-select-menu {
-  border: 1px solid var(--border) !important;
-}
-</style>

@@ -300,6 +300,8 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 1;
   pointer-events: none;
+  /* stylelint-disable-next-line declaration-property-value-disallowed-list --
+     站外页面遮罩：给第三方页面压黑的滤镜，固定黑是语义 */
   background: rgba(0, 0, 0, 0.6);
   border-radius: inherit;
 }

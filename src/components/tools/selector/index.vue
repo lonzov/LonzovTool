@@ -39,12 +39,6 @@ useSelectorEditor()
 </style>
 
 <style>
-/* 下拉面板描边；颜色、圆角与阴影由 themeOverrides 提供 */
-.n-select-menu,
-.n-dropdown-menu {
-  border: 1px solid var(--border) !important;
-}
-
 .n-dropdown-option-body,
 .n-dropdown-option-body__content,
 .n-dropdown-group-header {

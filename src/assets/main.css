@@ -97,6 +97,83 @@ button {
   corner-shape: round;
 }
 
+/* ===== 通用按钮 =====
+   fill（主操作，反色块）/ outline（次操作）/ text（弱操作）/ danger（危险），
+   外加 --sm 小一号。模态框页脚与页面级按钮共用这一套，避免各写一份。 */
+.app-btn {
+  height: 34px;
+  padding: 0 20px;
+  border-radius: var(--radius-full);
+  corner-shape: round;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  border: none;
+}
+
+.app-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.app-btn--sm {
+  height: 30px;
+  padding: 0 14px;
+  font-size: 12px;
+}
+
+.app-btn--fill {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.app-btn--fill:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.app-btn--outline {
+  border: 1.5px solid currentColor;
+  background: var(--card);
+  color: var(--foreground);
+}
+
+.app-btn--outline:hover:not(:disabled) {
+  background: var(--muted);
+}
+
+.app-btn--text {
+  background: transparent;
+  color: var(--foreground);
+}
+
+.app-btn--text:hover:not(:disabled) {
+  background: var(--accent);
+}
+
+.app-btn--danger {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.app-btn--danger:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+/* ===== Naive 浮层的描边 =====
+   下拉类浮层（Select / Dropdown / Cascader 的菜单）加一道描边以与页面底拉开层次。
+   Naive 没有为菜单边框开放主题变量，只能覆盖内部类；集中在这里一份，
+   避免每个用到下拉的组件各写一遍。 */
+.n-select-menu,
+.n-dropdown-menu,
+.n-cascader-menu {
+  border: 1px solid var(--border) !important;
+}
+
 /* ===== NProgress 页面进度条 ===== */
 #nprogress {
   pointer-events: none;

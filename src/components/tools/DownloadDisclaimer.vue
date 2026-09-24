@@ -86,11 +86,11 @@ onUnmounted(() => {
     <template #footer>
       <div class="modal-actions">
         <button
-          class="app-modal-btn app-modal-btn--outline"
+          class="app-btn app-btn--outline"
           :class="{ 'btn-disabled': !canDismiss }"
           @click="handleDismiss"
         >不再提醒{{ canDismiss ? '' : ' ' + cooldownRemaining }}</button>
-        <button class="app-modal-btn app-modal-btn--fill" @click="handleContinue">继续下载</button>
+        <button class="app-btn app-btn--fill" @click="handleContinue">继续下载</button>
       </div>
     </template>
   </AppModal>

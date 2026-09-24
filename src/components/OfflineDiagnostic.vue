@@ -118,16 +118,16 @@ onUnmounted(() => {
     </div>
     <div v-if="state !== 'diagnosing'" class="diagnostic-actions">
       <template v-if="state === 'server-ok'">
-        <button class="offline-btn btn-fill" @click="goHome">返回首页</button>
-        <button class="offline-btn btn-outline" @click="retryNow">
+        <button class="app-btn app-btn--fill" @click="goHome">返回首页</button>
+        <button class="app-btn app-btn--outline" @click="retryNow">
           重新检测{{ retryCountdown > 0 ? ` (${retryCountdown}s)` : '' }}
         </button>
       </template>
       <template v-else>
-        <button class="offline-btn btn-fill" @click="retryNow">
+        <button class="app-btn app-btn--fill" @click="retryNow">
           重新检测{{ retryCountdown > 0 ? ` (${retryCountdown}s)` : '' }}
         </button>
-        <button class="offline-btn btn-outline" @click="goHome">返回首页</button>
+        <button class="app-btn app-btn--outline" @click="goHome">返回首页</button>
       </template>
     </div>
   </div>
@@ -240,44 +240,5 @@ onUnmounted(() => {
   display: flex;
   gap: 10px;
   margin-top: 0.4em;
-}
-
-.offline-btn {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  border: none;
-}
-
-/* fill - 实心主按钮 */
-.btn-fill {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.btn-fill:hover {
-  opacity: 0.85;
-}
-
-/* outline - 描边按钮 */
-.btn-outline {
-  border: 1.5px solid currentColor;
-}
-
-.btn-outline {
-  background: var(--card);
-  color: var(--foreground);
-}
-
-.btn-outline:hover {
-  background: var(--muted);
 }
 </style>

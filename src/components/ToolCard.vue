@@ -641,6 +641,7 @@ export default {
   right: 0;
   width: 100%;
   height: 100%;
+  /* stylelint-disable-next-line declaration-property-value-disallowed-list -- 收藏角标：装饰性金色徽标，与 --highlight（黑字配色）不同源 */
   background: #f5c842;
   clip-path: polygon(0 0, 100% 0, 100% 100%);
 }

@@ -63,10 +63,10 @@ function handleButtonClick(btn) {
 function getBtnClass(btn) {
   const style = btn.style || 'outline'
   const base = style === 'fill'
-    ? 'app-modal-btn app-modal-btn--fill'
+    ? 'app-btn app-btn--fill'
     : style === 'text'
-      ? 'app-modal-btn app-modal-btn--text'
-      : 'app-modal-btn app-modal-btn--outline'
+      ? 'app-btn app-btn--text'
+      : 'app-btn app-btn--outline'
   // 大版本强制更新：「暂不更新」置灰不可点
   return forceUpdate.value && isDeferBtn(btn) ? `${base} btn-force-disabled` : base
 }
@@ -117,11 +117,11 @@ watch(showUpdateModal, (val) => {
           <template v-else>
             <NTooltip placement="top" :trigger="forceUpdate ? 'click' : 'hover'">
               <template #trigger>
-                <button class="app-modal-btn app-modal-btn--outline" :class="{ 'btn-force-disabled': forceUpdate }" @click="deferUpdate">暂不更新</button>
+                <button class="app-btn app-btn--outline" :class="{ 'btn-force-disabled': forceUpdate }" @click="deferUpdate">暂不更新</button>
               </template>
               {{ deferTip }}
             </NTooltip>
-            <button class="app-modal-btn app-modal-btn--fill" @click="applyUpdate">立即更新</button>
+            <button class="app-btn app-btn--fill" @click="applyUpdate">立即更新</button>
           </template>
         </div>
       </div>

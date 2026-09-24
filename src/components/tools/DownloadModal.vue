@@ -111,13 +111,12 @@ async function handleOriginalLink() {
 // ===== 鼠标跟随边框高光 =====
 const { subscribe: subGlow, unsubscribe: unsubGlow } = useMouseGlow()
 
-const GLOW_SELECTORS = '.dl-version-cascader .n-base-selection, .dl-option'
+// 只选我们自己声明了 glow-border 的元素，不去查 Naive 内部结构
+const GLOW_SELECTORS = '.glow-border'
 
 function handleGlow(mouseX, mouseY) {
   if (!props.show) return
   document.querySelectorAll(GLOW_SELECTORS).forEach((el) => {
-    // .n-base-selection 在 Naive UI 内部，需 JS 补上 glow-border 类
-    el.classList.add('glow-border')
     applyGlow(el, mouseX, mouseY)
   })
 }
@@ -145,7 +144,7 @@ onUnmounted(() => unsubGlow(handleGlow))
         :menu-props="cascaderMenuProps"
         placement="bottom-end"
         size="medium"
-        class="dl-version-cascader"
+        class="dl-version-cascader glow-border"
       />
     </div>
 
@@ -214,18 +213,22 @@ onUnmounted(() => unsubGlow(handleGlow))
   corner-shape: round;
 }
 
-.dl-version-cascader :deep(.n-base-selection) {
+/* 光效画在 NCascader 根元素上（它的尺寸与内部触发器一致），
+   圆角对齐触发器的胶囊形，这样不必去查 Naive 内部的 .n-base-selection */
+.dl-version-cascader.glow-border {
   position: relative;
   z-index: 0;
+  border-radius: var(--radius-full);
+  corner-shape: round;
 }
 
 /* ===== 鼠标跟随边框高光（覆盖公共变量的差异化参数） ===== */
-.dl-version-cascader :deep(.n-base-selection),
+.dl-version-cascader,
 .dl-option {
   --glow-size: 250px;
 }
 
-[data-theme='light'] .dl-version-cascader :deep(.n-base-selection),
+[data-theme='light'] .dl-version-cascader,
 [data-theme='light'] .dl-option {
   --glow-color: 180, 180, 180;
   --glow-size: 300px;
@@ -310,10 +313,9 @@ onUnmounted(() => unsubGlow(handleGlow))
 </style>
 
 <style>
-/* 级联选择器下拉面板：颜色与阴影由 themeOverrides 提供，这里只管列宽与描边 */
+/* 级联选择器下拉面板：颜色、阴影与描边由 themeOverrides / 全局样式提供，这里只管列宽 */
 .n-cascader-menu {
   --n-column-width: 126px !important;
-  border: 1px solid var(--border) !important;
 }
 
 /* 级联选择器 focus 状态不变 */

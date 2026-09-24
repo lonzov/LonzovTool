@@ -118,6 +118,9 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
 }
 .preview-icon-btn:hover { background: var(--muted); color: var(--foreground); }
 
+/* stylelint-disable declaration-property-value-disallowed-list --
+   预览舞台固定深色：它模拟的是游戏内聊天框，预览内容由 vendor/mcfc 按 Minecraft
+   原色渲染、假定深底。改成 --card 会让浅色主题下预览变白底，MC 颜色失去对比。 */
 .preview-box {
   background: #1a1a1a; border-radius: var(--radius-md); border: 1px solid #333;
   padding: 12px 16px; min-height: 60px;
@@ -128,6 +131,7 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
   background: #111;
   border-color: #2b2b2b;
 }
+/* stylelint-enable declaration-property-value-disallowed-list */
 .preview-content {
   display: inline-block;
   font-size: 14px; text-align: left;

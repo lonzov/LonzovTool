@@ -54,7 +54,7 @@ import {
     <template #footer>
       <div class="modal-actions">
         <span class="color-footer-hint">点击颜色项可复制 § 代码</span>
-        <button class="app-modal-btn app-modal-btn--fill" @click="closeColorTable">关闭</button>
+        <button class="app-btn app-btn--fill" @click="closeColorTable">关闭</button>
       </div>
     </template>
   </AppModal>

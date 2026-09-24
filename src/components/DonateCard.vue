@@ -88,7 +88,10 @@ if (typeof document !== 'undefined') {
 </template>
 
 <style scoped>
-.donate-card {
+
+/* 本块的硬编码色值是微信/支付宝/QQ/爱发电的品牌色，以及压在品牌色上的固定白字，
+   品牌色不随站点主题变化，因此不走语义 token。 */
+/* stylelint-disable declaration-property-value-disallowed-list */.donate-card {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);

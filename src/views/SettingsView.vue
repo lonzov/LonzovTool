@@ -897,7 +897,7 @@ const embedCloseActions = [
       <template #footer>
         <div class="app-modal-actions">
           <button
-            class="app-modal-btn app-modal-btn--fill"
+            class="app-btn app-btn--fill"
             :disabled="!embedEnableReady"
             @click="confirmEmbedEnable"
           >
@@ -1385,11 +1385,6 @@ const embedCloseActions = [
   --n-border-active: 1px solid var(--border) !important;
   --n-box-shadow-focus: none !important;
   --n-box-shadow-active: none !important;
-}
-
-/* NSelect 下拉面板，颜色与阴影由 themeOverrides 提供 */
-.n-select-menu {
-  border: 1px solid var(--border) !important;
 }
 
 /* 仅加宽"主题写入 URL 参数"下拉的面板（触发器宽度不变） */

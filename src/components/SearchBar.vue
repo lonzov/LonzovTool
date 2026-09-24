@@ -339,8 +339,4 @@ export default {
   -ms-user-select: none !important;
 }
 
-/* 搜索方式下拉菜单描边（包括二级菜单），圆角与阴影由 themeOverrides 提供 */
-.n-dropdown-menu {
-  border: 1px solid var(--border) !important;
-}
 </style>

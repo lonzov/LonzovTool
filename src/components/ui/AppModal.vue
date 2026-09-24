@@ -1,3 +1,16 @@
+<script>
+/**
+ * Naive Card 装饰部分的固定高度：header 68 + footer 83 + content 上下 padding 40。
+ *
+ * 用于反推「卡片内容区最多能有多高」—— 内容区高度过渡动画需要这个上限，
+ * 否则目标高度会取成内容完整高度，动画就白做了（可见区域被父级裁剪、高度值变化不体现出来）。
+ *
+ * 刻意用常量而不是查询 `.n-card-header` / `.n-card-footer` / `.n-scrollbar-content`：
+ * 那些是 Naive 内部结构，升级或调整就会静默失效；这几个数值是它的固定样式。
+ */
+export const MODAL_CARD_CHROME_HEIGHT = 191
+</script>
+
 <script setup>
 import { ref, computed, toRef, onMounted, onUnmounted } from 'vue'
 import { NModal } from 'naive-ui'
@@ -115,8 +128,8 @@ const modalStyle = computed(() => ({
             v-for="(action, i) in actions"
             :key="i"
             type="button"
-            class="app-modal-btn"
-            :class="`app-modal-btn--${action.variant || 'outline'}`"
+            class="app-btn"
+            :class="`app-btn--${action.variant || 'outline'}`"
             :disabled="action.disabled"
             @click="action.onClick"
           >
@@ -166,70 +179,5 @@ const modalStyle = computed(() => ({
   justify-content: flex-end;
   gap: 10px;
   padding-top: 8px;
-}
-
-.app-modal-btn {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  border: none;
-}
-
-.app-modal-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-/* 小一号，用于模态框正文里的操作按钮 */
-.app-modal-btn--sm {
-  height: 30px;
-  padding: 0 14px;
-  font-size: 12px;
-}
-
-.app-modal-btn--fill {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.app-modal-btn--fill:hover {
-  opacity: 0.85;
-}
-
-.app-modal-btn--outline {
-  border: 1.5px solid currentColor;
-  background: var(--card);
-  color: var(--foreground);
-}
-
-.app-modal-btn--outline:hover {
-  background: var(--muted);
-}
-
-.app-modal-btn--text {
-  background: transparent;
-  color: var(--foreground);
-}
-
-.app-modal-btn--text:hover {
-  background: var(--accent);
-}
-
-.app-modal-btn--danger {
-  background: var(--destructive);
-  color: var(--destructive-foreground);
-}
-
-.app-modal-btn--danger:hover {
-  opacity: 0.85;
 }
 </style>

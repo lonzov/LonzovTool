@@ -428,7 +428,7 @@ function handleKeydown(e) {
 .not-active {
   color: var(--destructive) !important;
   border: 1px solid var(--destructive) !important;
-  background: rgba(220, 38, 38, 0.08) !important;
+  background: color-mix(in srgb, var(--destructive) 8%, transparent) !important;
 }
 
 .code-edit-confirm-btn {

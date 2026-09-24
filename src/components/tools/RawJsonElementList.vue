@@ -132,6 +132,9 @@ import {
   transform: translateY(-1px);
 }
 .node:active { transform: scale(0.995); }
+/* stylelint-disable declaration-property-value-disallowed-list --
+   这两档灰阶是「错误 / 警告」节点相对卡片底色的着色强度，深浅主题各取一档，
+   不是可以从语义 token 取到的层级，属于刻意的固定值。 */
 .node-error {
   border-color: var(--subtle-foreground) !important;
   background: color-mix(in srgb, #333 5%, var(--card)) !important;
@@ -146,6 +149,7 @@ import {
 [data-theme="dark"] .node-warning {
   background: color-mix(in srgb, #888 6%, var(--card)) !important;
 }
+/* stylelint-enable declaration-property-value-disallowed-list */
 .node-main {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }

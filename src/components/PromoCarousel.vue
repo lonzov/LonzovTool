@@ -139,9 +139,10 @@ export default {
       !!window.matchMedia &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    // NCarousel 的滑片容器只有 role="listbox" 没有可访问名称（未开放该属性），直接补在容器上
+    // NCarousel 的滑片容器只有 role="listbox" 没有可访问名称（未开放该属性），直接补在容器上。
+    // 按 ARIA role 定位而不是内部类名 —— role 是规范语义，不会随 Naive 版本变化
     this.$nextTick(() => {
-      const slidesEl = this.$el && this.$el.querySelector('.n-carousel__slides')
+      const slidesEl = this.$el && this.$el.querySelector('[role="listbox"]')
       if (slidesEl) slidesEl.setAttribute('aria-label', '推广位轮播')
     })
 

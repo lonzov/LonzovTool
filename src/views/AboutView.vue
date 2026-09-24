@@ -1028,6 +1028,8 @@ const statCluster = computed(() => ([
   border: 1px solid var(--line-2);
   border-radius: var(--r);
   overflow: hidden;
+  /* stylelint-disable-next-line declaration-property-value-disallowed-list --
+     视频区：固定黑边，视频内容不随主题变 */
   background: #000;
 }
 
@@ -1051,6 +1053,8 @@ const statCluster = computed(() => ([
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: .15em;
+  /* stylelint-disable-next-line declaration-property-value-disallowed-list --
+     视频区：叠加在视频上的标注，配合 mix-blend-mode: difference 必须固定白 */
   color: #fff;
   display: flex;
   align-items: center;
@@ -1063,6 +1067,7 @@ const statCluster = computed(() => ([
   height: 7px;
   border-radius: 50%;
   corner-shape: round;
+  /* stylelint-disable-next-line declaration-property-value-disallowed-list -- 视频区：录制红点，固定色 */
   background: #ff3b30;
   animation: pulse 1.6s infinite;
 }
