@@ -468,10 +468,10 @@ onBeforeUnmount(() => {
 }
 
 .symbol-card:hover {
-  background: var(--muted) !important;
-  border-color: var(--border) !important;
-  transform: translateY(-4px) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+  background: var(--muted);
+  border-color: var(--border);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 /* ToolCard 基础样式 */

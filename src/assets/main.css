@@ -164,6 +164,21 @@ button {
   opacity: 0.85;
 }
 
+/* ===== 二次确认删除的红色态 =====
+   交互是「点一次变红提示、再点才真正执行」。这套样式原先在 4 个文件里各写一份
+   （.act-delete-confirmed / .code-delete-confirmed / .btn-delete-confirmed…），
+   现在统一成这一个类。
+
+   这里的 !important 是必要的：各处的按钮基础样式写在 scoped 块里，编译后会被 Vue
+   加上 [data-v-xxx]，特异性从 (0,2,0) 升到 (0,3,0)，与本类的 :hover 打平；而本文件
+   先于组件样式加载，顺序上也输。想靠堆重复类压到 (0,4,0) 只会更难维护。 */
+.confirm-destructive,
+.confirm-destructive:hover {
+  background: var(--destructive) !important;
+  color: var(--destructive-foreground) !important;
+  opacity: 1 !important;
+}
+
 /* ===== Naive 内部元素的胶囊圆角 =====
    开关的轨道/滑块与轮播指示点，半径是 50% 或 9999px，恰好落在
    「2 × radius == 短边」的临界点上 —— 不加回退，平滑曲率会把形状挤垮。

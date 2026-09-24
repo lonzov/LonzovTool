@@ -320,12 +320,6 @@ function handleClear() {
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
-.tool-card:hover {
-  background: var(--card) !important;
-  border-color: var(--border) !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
 
 .tool-card--output {
   min-height: 160px;

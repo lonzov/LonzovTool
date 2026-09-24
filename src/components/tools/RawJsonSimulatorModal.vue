@@ -134,11 +134,11 @@ import {
   transition: color 0.15s ease, background-color 0.15s ease;
 }
 .sim-icon-btn:hover { background: var(--muted); color: var(--foreground); }
-/* 二次点击确认删除（与 .btn-delete-confirmed / .act-delete-confirmed 一致） */
+/* 二次点击确认删除：红色态由全局 .confirm-destructive 提供 */
 .sim-icon-btn--danger,
 .sim-icon-btn--danger:hover {
-  background: var(--destructive) !important;
-  color: var(--destructive-foreground) !important;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
 }
 
 .sim-add-btn {

@@ -123,7 +123,7 @@
       </button>
       <button
         class="code-edit-delete-btn"
-        :class="{ 'code-delete-confirmed': deleteConfirmId === param.id }"
+        :class="{ 'confirm-destructive': deleteConfirmId === param.id }"
         :title="deleteConfirmId === param.id ? '再次点击确认删除' : '删除参数'"
         @click.stop="deleteParam(param.id)"
       >
@@ -380,12 +380,6 @@ function handleKeydown(e) {
 .code-edit-delete-btn:active {
   transform: scale(0.95);
 }
-.code-delete-confirmed,
-.code-delete-confirmed:hover {
-  background: var(--destructive) !important;
-  color: var(--destructive-foreground) !important;
-  opacity: 1 !important;
-}
 
 /* 反选开关 */
 .not-toggle {
@@ -414,9 +408,9 @@ function handleKeydown(e) {
   color: var(--foreground);
 }
 .not-active {
-  color: var(--destructive) !important;
-  border: 1px solid var(--destructive) !important;
-  background: color-mix(in srgb, var(--destructive) 8%, transparent) !important;
+  color: var(--destructive);
+  border: 1px solid var(--destructive);
+  background: color-mix(in srgb, var(--destructive) 8%, transparent);
 }
 
 @media (max-width: 640px) {
@@ -437,7 +431,7 @@ function handleKeydown(e) {
   .code-edit-select {
     flex: 1;
     min-width: 0;
-    width: auto !important;
+    width: auto;
     max-width: none;
   }
   .code-edit-input--brace {

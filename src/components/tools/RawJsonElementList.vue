@@ -52,7 +52,7 @@ import {
             </button>
             <button
               class="act-btn act-btn--danger"
-              :class="{ 'act-delete-confirmed': deleteConfirmIdx === i }"
+              :class="{ 'confirm-destructive': deleteConfirmIdx === i }"
               :title="deleteConfirmIdx === i ? '再次点击确认删除' : '删除'"
               @click="deleteElement(i)"
             >
@@ -136,18 +136,18 @@ import {
    这两档灰阶是「错误 / 警告」节点相对卡片底色的着色强度，深浅主题各取一档，
    不是可以从语义 token 取到的层级，属于刻意的固定值。 */
 .node-error {
-  border-color: var(--muted-foreground) !important;
-  background: color-mix(in srgb, #333 5%, var(--card)) !important;
+  border-color: var(--muted-foreground);
+  background: color-mix(in srgb, #333 5%, var(--card));
 }
 [data-theme="dark"] .node-error {
-  background: color-mix(in srgb, #aaa 8%, var(--card)) !important;
+  background: color-mix(in srgb, #aaa 8%, var(--card));
 }
 .node-warning {
-  border-color: var(--subtle-foreground) !important;
-  background: color-mix(in srgb, #666 3%, var(--card)) !important;
+  border-color: var(--subtle-foreground);
+  background: color-mix(in srgb, #666 3%, var(--card));
 }
 [data-theme="dark"] .node-warning {
-  background: color-mix(in srgb, #888 6%, var(--card)) !important;
+  background: color-mix(in srgb, #888 6%, var(--card));
 }
 /* stylelint-enable declaration-property-value-disallowed-list */
 .node-main {
@@ -188,11 +188,6 @@ import {
 .act-btn--primary:hover { background: var(--muted); }
 .act-btn--danger { color: var(--muted-foreground); }
 .act-btn--danger:hover { background: var(--muted); }
-.act-delete-confirmed,
-.act-delete-confirmed:hover {
-  background: var(--destructive) !important;
-  color: var(--destructive-foreground) !important;
-}
 
 .error-box {
   margin-top: 12px;

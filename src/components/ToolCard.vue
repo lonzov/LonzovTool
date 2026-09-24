@@ -312,25 +312,9 @@ export default {
     // 白名单卡片：始终在浏览器新标签页打开
     const alwaysNewTab = ALWAYS_NEW_TAB_IDS.includes(this.toolId)
 
+    // 其余静态样式都在 scoped 的 .tool-card 里，这里只留随数据变的部分
     const cardStyle = {
-      display: 'flex',
-      alignItems: 'flex-start',
-      padding: '12px 16px',
-      background: 'var(--card)',
-      border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-lg)',
       cursor: this.link ? 'pointer' : 'default',
-      transition: 'all 0.3s ease',
-      boxShadow: '0 0 0 transparent',
-      transform: 'translateY(-1px)',
-      minHeight: '86px',
-      WebkitTapHighlightColor: 'transparent',
-      WebkitTouchCallout: 'none',
-      userSelect: 'none',
-      WebkitUserSelect: 'none',
-      position: 'relative',
-      textDecoration: 'none',
-      color: 'inherit',
     }
 
     return h(
@@ -594,23 +578,44 @@ export default {
 }
 </script>
 
-<style>
-/* ---- Logo 背景：跟随卡片背景色，纯色保证过渡动画 ---- */
+<style scoped>
+/* 卡片的静态样式集中在这里（原先写在渲染函数的 cardStyle 行内对象里，
+   那样 hover 就只能靠 !important 去压行内 style）。
+   以前这块是非 scoped 的，`.tool-card:hover` 会泄漏到全局 —— 四个工具页
+   也复用了 .tool-card 这个类名，被动继承了这里的抬升效果，只能各自再写
+   !important 把它取消掉。改成 scoped 后这条链就断了。 */
+.tool-card {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 0 transparent;
+  transform: translateY(-1px);
+  min-height: 86px;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+}
 
-/* 卡片悬浮效果 */
 .tool-card:hover {
-  background: var(--muted) !important;
-  border-color: var(--border) !important;
-  transform: translateY(-4px) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+  background: var(--muted);
+  border-color: var(--border);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .tool-card:hover .tool-card-logo-inner {
-  transform: scale(1.13) !important;
+  transform: scale(1.13);
 }
 
 .tool-card-logo {
-  transition: background-color 0.3s ease !important;
+  transition: background-color 0.3s ease;
 }
 
 @keyframes skeleton-scan {

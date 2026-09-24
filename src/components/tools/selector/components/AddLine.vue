@@ -426,9 +426,9 @@ function handleKeydown(e) {
   color: var(--foreground);
 }
 .not-active {
-  color: var(--destructive) !important;
-  border: 1px solid var(--destructive) !important;
-  background: color-mix(in srgb, var(--destructive) 8%, transparent) !important;
+  color: var(--destructive);
+  border: 1px solid var(--destructive);
+  background: color-mix(in srgb, var(--destructive) 8%, transparent);
 }
 
 .code-edit-confirm-btn {
@@ -473,7 +473,7 @@ function handleKeydown(e) {
   .perm-select {
     flex: 1;
     min-width: 0;
-    width: auto !important;
+    width: auto;
     max-width: none;
   }
   .code-edit-input--brace {

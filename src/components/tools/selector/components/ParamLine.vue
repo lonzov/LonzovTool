@@ -10,7 +10,7 @@
     <div class="code-actions">
       <button
         class="code-act-btn"
-        :class="{ 'code-delete-confirmed': deleteConfirmId === param.id }"
+        :class="{ 'confirm-destructive': deleteConfirmId === param.id }"
         :title="deleteConfirmId === param.id ? '再次点击确认删除' : '删除参数'"
         @click.stop="deleteParam(param.id)"
       >
@@ -121,12 +121,6 @@ defineEmits(['edit'])
 }
 .code-act-btn:active {
   transform: scale(0.95);
-}
-.code-delete-confirmed,
-.code-delete-confirmed:hover {
-  background: var(--destructive) !important;
-  color: var(--destructive-foreground) !important;
-  opacity: 1 !important;
 }
 
 @media (max-width: 640px) {

@@ -176,7 +176,7 @@ function resetWrapStyle(el) {
               <div v-for="(_w, wi) in nestedWith" :key="wi" class="with-row">
                 <input v-model="nestedWith[wi]" type="text" class="edit-input with-input" :placeholder="`参数 ${wi + 1}`" />
                 <span v-if="nestedWith[wi] === ''" class="with-empty-tag" title="这一行是空参数，仍会占用一个槽位">空</span>
-                <button class="btn-minor" :class="{ 'btn-delete-confirmed': nestedWithParamConfirmIdx === wi }" :title="nestedWithParamConfirmIdx === wi ? '再次点击确认删除' : '删除'" @click="removeNestedWithParam(wi)">
+                <button class="btn-minor" :class="{ 'confirm-destructive': nestedWithParamConfirmIdx === wi }" :title="nestedWithParamConfirmIdx === wi ? '再次点击确认删除' : '删除'" @click="removeNestedWithParam(wi)">
                   <NIcon :component="Delete24Regular" :size="14" />
                 </button>
               </div>
@@ -252,7 +252,7 @@ function resetWrapStyle(el) {
                   :placeholder="`参数 ${wi + 1}`"
                 />
                 <span v-if="tempWith[wi] === ''" class="with-empty-tag" title="这一行是空参数，仍会占用一个槽位">空</span>
-                <button class="btn-delete" :class="{ 'btn-delete-confirmed': withParamConfirmIdx === wi }" :title="withParamConfirmIdx === wi ? '再次点击确认删除' : '删除'" @click="removeWithParam(wi)">
+                <button class="btn-delete" :class="{ 'confirm-destructive': withParamConfirmIdx === wi }" :title="withParamConfirmIdx === wi ? '再次点击确认删除' : '删除'" @click="removeWithParam(wi)">
                   <NIcon :component="Delete24Regular" :size="14" />
                 </button>
               </div>
@@ -281,7 +281,7 @@ function resetWrapStyle(el) {
                   <button class="btn-minor" @click="startNestedEdit(ei)">
                     <NIcon :component="Edit24Filled" :size="14" />
                   </button>
-                  <button class="btn-minor" :class="{ 'btn-delete-confirmed': withElConfirmIdx === ei }" :title="withElConfirmIdx === ei ? '再次点击确认删除' : '删除'" @click="deleteWithEl(ei)">
+                  <button class="btn-minor" :class="{ 'confirm-destructive': withElConfirmIdx === ei }" :title="withElConfirmIdx === ei ? '再次点击确认删除' : '删除'" @click="deleteWithEl(ei)">
                     <NIcon :component="Delete24Regular" :size="14" />
                   </button>
                 </div>
@@ -432,11 +432,6 @@ function resetWrapStyle(el) {
 
 .btn-delete:active { transform: scale(0.97); }
 
-.btn-delete-confirmed,
-.btn-delete-confirmed:hover {
-  background: var(--destructive) !important;
-  color: var(--destructive-foreground) !important;
-}
 
 @media (max-width: 480px) {
   .edit-field-row { grid-template-columns: 1fr; }
