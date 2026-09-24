@@ -1,5 +1,6 @@
 <template>
   <AppModal
+    :bordered="true"
     v-model:show="showImportModal"
     title="导入选择器"
     :max-width="520"

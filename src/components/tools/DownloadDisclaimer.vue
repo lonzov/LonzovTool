@@ -116,6 +116,8 @@ onUnmounted(() => {
 /* disabled - 置灰：无描边，文字透明度降低 */
 .btn-disabled {
   border: none !important;
+  /* 置灰时不该还带着描边按钮的实底 */
+  background: transparent !important;
   opacity: 0.3;
   cursor: default;
 }

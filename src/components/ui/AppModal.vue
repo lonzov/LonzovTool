@@ -35,7 +35,8 @@ const props = defineProps({
   maxHeightOffset: { type: Number, default: 48 },
   closable: { type: Boolean, default: true },
   maskClosable: { type: Boolean, default: true },
-  autoFocus: { type: Boolean, default: false },
+  /** 默认跟随 NModal（true=打开即聚焦），显式传 false 可关闭 */
+  autoFocus: { type: Boolean, default: true },
   contentScrollable: { type: Boolean, default: false },
   /** 卡片描边。默认关闭（模态框靠阴影区分层级），需要时传 true */
   bordered: { type: Boolean, default: false },
@@ -185,6 +186,7 @@ const modalStyle = computed(() => ({
 
 .app-modal-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
   padding-top: 8px;
