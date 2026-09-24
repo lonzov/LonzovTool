@@ -371,7 +371,7 @@ const baseOverrides = {
   },
 
   Switch: {
-    railColor: 'var(--subtle-foreground)',
+    railColor: 'var(--border)',
     railColorActive: 'var(--primary)',
     loadingColor: 'var(--primary)',
     textColor: 'var(--foreground)',

@@ -112,6 +112,17 @@ function toggleCopyMode(value) {
 }
 
 // 开关轨道颜色：加深灰色面（unchecked），checked 面保持默认（亮色黑/深色黑）
+function switchRailStyle({ focused, checked }) {
+  if (checked) {
+    const style = { background: '#333' }
+    if (focused) style.boxShadow = '0 0 0 2px #33340'
+    return style
+  }
+  const style = { background: '#a0a0a0' }
+  if (focused) style.boxShadow = '0 0 0 2px #a0a0a040'
+  return style
+}
+
 // ===== 复制反馈 =====
 async function handleCardClick(icon) {
 
@@ -223,6 +234,7 @@ onBeforeUnmount(() => {
       <NSwitch
         :value="copyModeCodepoint"
         @update:value="toggleCopyMode"
+        :rail-style="switchRailStyle"
         size="small"
         :checked-value="true"
         :unchecked-value="false"

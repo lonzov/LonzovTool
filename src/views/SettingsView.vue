@@ -160,6 +160,18 @@ function cancelEmbedClose() {
   embedCloseModal.value.show = false
 }
 
+/* ========== 开关轨道颜色（参考特殊符号页） ========== */
+function switchRailStyle({ focused, checked }) {
+  if (checked) {
+    const style = { background: '#333' }
+    if (focused) style.boxShadow = '0 0 0 2px #33340'
+    return style
+  }
+  const style = { background: '#a0a0a0' }
+  if (focused) style.boxShadow = '0 0 0 2px #a0a0a040'
+  return style
+}
+
 /* ========== 标签页拖拽触发时长 ========== */
 const DRAG_DELAY_KEY = 'tab_drag_delay'
 const DRAG_DELAY_DEFAULT = 700
@@ -680,6 +692,7 @@ watch(() => cacheClearModal.value.show, (val) => {
                 <NSwitch
                   :value="glowEnabled"
                   @update:value="onGlowToggle"
+                  :rail-style="switchRailStyle"
                   class="settings-switch"
                 />
               </div>
@@ -734,6 +747,7 @@ watch(() => cacheClearModal.value.show, (val) => {
                 <NSwitch
                   :value="embedEnabled"
                   @update:value="onEmbedToggle"
+                  :rail-style="switchRailStyle"
                   class="settings-switch"
                 />
               </div>
