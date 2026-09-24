@@ -936,8 +936,8 @@ onMounted(() => {
           :percentage="longPressState.ringPercent"
           :show-indicator="false"
           :stroke-width="25"
-          :color="isDark ? '#fff' : '#000'"
-          :rail-color="isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.15)'"
+          color="var(--foreground)"
+          rail-color="var(--ring)"
           :style="{ width: '15px', height: '15px' }"
         />
       </div>

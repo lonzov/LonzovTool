@@ -332,8 +332,10 @@ export default {
 
 .banner-icon {
   flex-shrink: 0;
-  /* 警告琥珀色：全站没有 warning token，保留固定值（在两套主题的反色底上都可读） */
-  color: var(--warning);
+  /* 横幅是反色块：浅色主题下是黑底、深色主题下是白底，
+     直接用 --warning 会在深色那侧变成「亮琥珀压近白底」（约 1.7:1，几乎看不见）。
+     往反色块的前景色里混一半，两边都能拿到足够对比度。 */
+  color: color-mix(in srgb, var(--warning) 55%, var(--primary-foreground));
   margin-top: 2px;
 }
 
@@ -394,7 +396,7 @@ export default {
 .cookie-modal-desc {
   font-size: 14px;
   line-height: 1.6;
-  color: var(--n-text-color-2);
+  color: var(--muted-foreground);
 }
 
 .cookie-sections {
@@ -405,7 +407,7 @@ export default {
 }
 
 .cookie-section {
-  border-bottom: 1px solid var(--n-divider-color);
+  border-bottom: 1px solid var(--border);
   padding-bottom: 16px;
 }
 
@@ -423,7 +425,7 @@ export default {
 .cookie-title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--n-text-color-1);
+  color: var(--foreground);
   line-height: 1.4;
 }
 
@@ -432,14 +434,14 @@ export default {
   padding-left: 28px;
   font-size: 14px;
   line-height: 1.7;
-  color: var(--n-text-color-2);
+  color: var(--muted-foreground);
 }
 
 .cookie-list {
   margin: 8px 0 0;
   padding-left: 20px;
   font-size: 13px;
-  color: var(--n-text-color-2);
+  color: var(--muted-foreground);
 }
 
 .cookie-list li {

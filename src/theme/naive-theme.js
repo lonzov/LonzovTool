@@ -204,7 +204,6 @@ const baseOverrides = {
     borderHoverPrimary: '1px solid transparent',
     borderPressedPrimary: '1px solid transparent',
     borderFocusPrimary: '1px solid transparent',
-    boxShadowFocusPrimary: '0 0 0 2px var(--ring)',
 
     borderRadiusTiny: 'var(--radius-xs)',
     borderRadiusSmall: 'var(--radius-xs)',

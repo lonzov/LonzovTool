@@ -103,7 +103,7 @@ onUnmounted(() => {
   font-size: 15px;
   line-height: 1.75;
   letter-spacing: 0.02em;
-  color: var(--n-text-color-2);
+  color: var(--muted-foreground);
   padding: 4px 2px;
 }
 

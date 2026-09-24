@@ -220,7 +220,7 @@ watch(showUpdateModal, (val) => {
 
 .version-info {
   font-size: 13px;
-  color: var(--n-text-color-3);
+  color: var(--subtle-foreground);
   margin: 0 0 6px 0;
   text-align: right;
 }

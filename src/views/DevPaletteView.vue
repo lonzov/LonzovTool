@@ -102,7 +102,8 @@ const TOKEN_GROUPS = [
       'success-foreground',
     ],
   },
-  { title: '阴影', keys: ['shadow-sm', 'shadow-md', 'shadow-popover', 'shadow-drawer'] },
+  // 阴影不在这里展示：它的值是 box-shadow 文本，按色块渲染会是空白，
+  // 下面有专门的「阴影」区块按 box-shadow 属性画
 ]
 
 // 前景 / 背景组合，用于对比度矩阵

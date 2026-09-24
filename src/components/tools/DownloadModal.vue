@@ -111,8 +111,9 @@ async function handleOriginalLink() {
 // ===== 鼠标跟随边框高光 =====
 const { subscribe: subGlow, unsubscribe: unsubGlow } = useMouseGlow()
 
-// 只选我们自己声明了 glow-border 的元素，不去查 Naive 内部结构
-const GLOW_SELECTORS = '.glow-border'
+// 限定在模态框内：.glow-border 还挂在首页卡片与符号网格上，
+// 全局查会在每次鼠标移动时命中一堆被遮罩挡住的元素
+const GLOW_SELECTORS = '.app-modal .glow-border'
 
 function handleGlow(mouseX, mouseY) {
   if (!props.show) return
@@ -280,7 +281,7 @@ onUnmounted(() => unsubGlow(handleGlow))
 
 .dl-option-icon {
   flex-shrink: 0;
-  color: var(--subtle-foreground);
+  color: var(--muted-foreground);
 }
 
 .dl-option-text {

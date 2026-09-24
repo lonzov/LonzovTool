@@ -115,7 +115,7 @@ function toggleCopyMode(value) {
 function switchRailStyle({ focused, checked }) {
   if (checked) {
     const style = { background: '#333' }
-    if (focused) style.boxShadow = '0 0 0 2px #33340'
+    if (focused) style.boxShadow = '0 0 0 2px #33333340'
     return style
   }
   const style = { background: '#a0a0a0' }

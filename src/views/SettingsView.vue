@@ -145,7 +145,7 @@ function cancelEmbedClose() {
 function switchRailStyle({ focused, checked }) {
   if (checked) {
     const style = { background: '#333' }
-    if (focused) style.boxShadow = '0 0 0 2px #33340'
+    if (focused) style.boxShadow = '0 0 0 2px #33333340'
     return style
   }
   const style = { background: '#a0a0a0' }
@@ -1257,7 +1257,7 @@ const embedCloseActions = [
 .import-modal-body {
   font-size: 15px;
   line-height: 1.75;
-  color: var(--n-text-color-2);
+  color: var(--muted-foreground);
   padding: 4px 2px;
 }
 
@@ -1291,7 +1291,7 @@ const embedCloseActions = [
 .cache-clear-modal-body {
   font-size: 15px;
   line-height: 1.75;
-  color: var(--n-text-color-2);
+  color: var(--muted-foreground);
   padding: 4px 2px;
 }
 
@@ -1300,7 +1300,7 @@ const embedCloseActions = [
 .embed-close-modal-body {
   font-size: 15px;
   line-height: 1.75;
-  color: var(--n-text-color-2);
+  color: var(--muted-foreground);
   padding: 4px 2px;
 }
 
@@ -1321,7 +1321,7 @@ const embedCloseActions = [
 
 .embed-close-hint {
   font-size: 13px;
-  color: var(--n-text-color-3);
+  color: var(--subtle-foreground);
   opacity: 0.8;
 }
 
@@ -1402,7 +1402,7 @@ const embedCloseActions = [
 
 /* 小屏下保持下拉菜单宽度 */
 @media (max-width: 400px) {
-  .n-base-select-menu {
+  .settings-select-menu-wide.n-base-select-menu {
     min-width: 102px !important;
   }
 }

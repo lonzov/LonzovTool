@@ -136,7 +136,7 @@ import {
    这两档灰阶是「错误 / 警告」节点相对卡片底色的着色强度，深浅主题各取一档，
    不是可以从语义 token 取到的层级，属于刻意的固定值。 */
 .node-error {
-  border-color: var(--subtle-foreground) !important;
+  border-color: var(--muted-foreground) !important;
   background: color-mix(in srgb, #333 5%, var(--card)) !important;
 }
 [data-theme="dark"] .node-error {
