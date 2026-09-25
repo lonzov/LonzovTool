@@ -11,7 +11,7 @@ export default {
     {
       id: 2,
       eventId: 'sampixel',
-      image: 'https://bu.dusays.com/2026/09/24/6ab52b62b7abd.webp',
+      image: 'https://bu.dusays.com/2026/09/25/6ab5ca4392ac1.webp',
       link: 'https://sam.moe5200.com/',
     },
   ],
