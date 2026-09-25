@@ -129,6 +129,10 @@ const staticTokens = {
   mask: alpha(BLACK, 0.4),
   'mask-blur': alpha(BLACK, 0.1),
 
+  // 压在「底色不随主题变」的实心块上的文字（如特殊符号页那个轨道色写死的开关）。
+  // 不能借用 --primary-foreground：那个是随主题翻转的，深色下会变成深色。
+  'on-solid': '#FFFFFF',
+
   'duration-theme': '0.4s',
   'ease-theme': 'ease',
 
