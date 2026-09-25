@@ -8,7 +8,6 @@ import {
 
 <template>
   <AppModal
-    :bordered="true"
     v-model:show="showColorModal"
     title="颜色代码参考表"
     :max-width="640"

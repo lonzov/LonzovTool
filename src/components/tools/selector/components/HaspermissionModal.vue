@@ -1,6 +1,5 @@
 <template>
   <AppModal
-    :bordered="true"
     v-model:show="showHaspermissionModal"
     :title="modalTitle"
     :max-width="480"

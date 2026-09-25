@@ -76,7 +76,6 @@ function doDelete(id) {
 
 <template>
   <AppModal
-    :bordered="true"
     v-model:show="showLangModal"
     title="语言包"
     :max-width="640"

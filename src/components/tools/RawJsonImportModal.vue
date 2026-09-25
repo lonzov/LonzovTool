@@ -5,7 +5,6 @@ import { showImportModal, importText, importError, closeImport, parseImport } fr
 
 <template>
   <AppModal
-    :bordered="true"
     v-model:show="showImportModal"
     title="导入指令"
     :max-width="520"

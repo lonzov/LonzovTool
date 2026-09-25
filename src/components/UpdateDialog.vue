@@ -80,7 +80,6 @@ watch(showUpdateModal, (val) => {
 <template>
   <AppModal
     :auto-focus="false"
-    :bordered="true"
     v-model:show="showUpdateModal"
     :title="popupTitle || '发现新版本'"
     :max-width="540"

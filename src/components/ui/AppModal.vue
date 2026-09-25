@@ -25,8 +25,11 @@ const props = defineProps({
   /** 默认跟随 NModal（true=打开即聚焦），显式传 false 可关闭 */
   autoFocus: { type: Boolean, default: true },
   contentScrollable: { type: Boolean, default: false },
-  /** 卡片描边。默认关闭（模态框靠阴影区分层级），需要时传 true */
-  bordered: { type: Boolean, default: false },
+  /**
+   * 卡片描边。默认开启 —— 全站模态框统一带描边，调用方一般不用传。
+   * （NModal 的默认值也是 true，这里保持一致）
+   */
+  bordered: { type: Boolean, default: true },
   blurMask: { type: Boolean, default: false },
   /**
    * 内容高度变化时给模态框做高度过渡（增删条目、展开折叠、报错信息出现等）。

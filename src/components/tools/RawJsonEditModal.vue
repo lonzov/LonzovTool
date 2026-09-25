@@ -113,7 +113,6 @@ function resetWrapStyle(el) {
 
 <template>
   <AppModal
-    :bordered="true"
     v-model:show="showEditModal"
     :title="nestedIdx !== null ? '编辑 With 元素' : (editIdx !== null ? '编辑元素' : '添加元素')"
     :max-width="520"

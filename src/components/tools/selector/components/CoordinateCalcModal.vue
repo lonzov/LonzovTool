@@ -1,6 +1,5 @@
 <template>
   <AppModal
-    :bordered="true"
     v-model:show="showCoordCalcModal"
     title="坐标自动计算"
     :max-width="500"

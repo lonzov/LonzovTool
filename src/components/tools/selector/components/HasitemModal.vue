@@ -1,6 +1,5 @@
 <template>
   <AppModal
-    :bordered="true"
     v-model:show="showHasitemModal"
     :title="modalTitle"
     :max-width="620"
