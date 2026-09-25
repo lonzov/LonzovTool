@@ -134,7 +134,6 @@ onUnmounted(() => unsubGlow(handleGlow))
     title="下载方式"
     :max-width="540"
     closable
-    blur-mask
   >
     <div class="dl-modal-header-row">
       <span class="dl-modal-desc">{{ hasNoLinks ? '暂无可用下载' : hasMultiVersion ? '请选择下载方式和版本' : '选择一个适合你的下载方式' }}</span>

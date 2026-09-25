@@ -30,7 +30,11 @@ const props = defineProps({
    * （NModal 的默认值也是 true，这里保持一致）
    */
   bordered: { type: Boolean, default: true },
-  blurMask: { type: Boolean, default: false },
+  /**
+   * 内容背后的毛玻璃遮罩。默认开启 —— 全站模态框统一带它。
+   * 个别弹窗不需要时显式传 false 关闭。
+   */
+  blurMask: { type: Boolean, default: true },
   /**
    * 内容高度变化时给模态框做高度过渡（增删条目、展开折叠、报错信息出现等）。
    * 内部会自行包一层 overflow:hidden 的动画容器，调用方不用再手写 wrap/inner 两层 DOM。
@@ -171,8 +175,8 @@ const modalStyle = computed(() => ({
   inset: 0;
   z-index: var(--z-blur-mask);
   background: var(--mask-blur);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   pointer-events: none;
 }
 

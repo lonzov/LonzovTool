@@ -298,7 +298,6 @@ watch(() => props.show, (val) => {
     :closable="true"
     :mask-closable="true"
     content-scrollable
-    blur-mask
     :segmented="{ content: true, footer: true }"
     :actions="[
       { text: '复制链接', variant: 'outline', onClick: copyLink },

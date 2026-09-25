@@ -87,7 +87,6 @@ watch(showUpdateModal, (val) => {
     :mask-closable="!forceUpdate"
     :close-on-esc="!forceUpdate"
     content-scrollable
-    blur-mask
     @close="deferUpdate"
   >
     <div class="update-desc">

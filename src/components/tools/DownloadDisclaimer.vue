@@ -80,7 +80,6 @@ onUnmounted(() => {
     :max-width="540"
     :closable="false"
     :mask-closable="false"
-    blur-mask
   >
     <div class="disclaimer-desc">
       本工具由 <strong>{{ developer }}</strong> 开发，小舟工具箱仅提供下载分发服务。感谢使用，请支持原作者！

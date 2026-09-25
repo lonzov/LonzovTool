@@ -35,7 +35,6 @@ const actions = computed(() => {
     :max-width="420"
     :closable="confirmState.showCancel"
     content-scrollable
-    blur-mask
     :actions="actions"
     @update:show="onShowChange"
     @close="onShowChange(false)"

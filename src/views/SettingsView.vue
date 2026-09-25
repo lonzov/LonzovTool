@@ -872,7 +872,6 @@ const embedCloseActions = [
       :max-width="420"
       title="清理资源缓存"
       :closable="true"
-      blur-mask
       :actions="cacheClearActions"
       @close="cancelClearResourceCache"
     >

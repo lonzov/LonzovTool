@@ -241,7 +241,6 @@ export default {
     :max-width="540"
     closable
     content-scrollable
-    blur-mask
     :actions="[
       { text: '保存设置', variant: 'fill', onClick: handleSaveSettings },
       { text: '接受全部', variant: 'outline', onClick: handleAcceptAllInModal },
