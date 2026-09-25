@@ -123,7 +123,7 @@ const PAIRS = [
   ['success-foreground', 'success'],
 ]
 
-const RADIUS_KEYS = ['radius-xs', 'radius-sm', 'radius-md', 'radius-lg', 'radius-xl', 'radius-full']
+const RADIUS_KEYS = ['radius-xs', 'radius-sm', 'radius-md', 'radius-lg', 'radius-xl', 'radius-2xl', 'radius-full']
 
 const Z_KEYS = ['z-mobile-drawer', 'z-mobile-menu', 'z-blur-mask']
 

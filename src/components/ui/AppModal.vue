@@ -91,7 +91,7 @@ const modalStyle = computed(() => ({
   maxWidth: typeof props.maxWidth === 'number' ? `${props.maxWidth}px` : props.maxWidth,
   width: 'calc(100% - 32px)',
   maxHeight: isCompact.value ? 'calc(100vh - 120px)' : `calc(100vh - ${props.maxHeightOffset}px)`,
-  borderRadius: 'var(--radius-xl)',
+  borderRadius: 'var(--radius-2xl)',
 }))
 </script>
 
@@ -154,7 +154,7 @@ const modalStyle = computed(() => ({
 /* 类名落在 NCard 上（NModal 会把 $attrs.class 合并过去），
    半径走 token，平滑曲率下自动放大，不需要各处再写 @supports */
 .app-modal {
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-2xl);
 }
 
 /* 高度过渡容器：外层高度由 useHeightTransition 接管，内层高度自适应 */

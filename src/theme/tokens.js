@@ -113,6 +113,7 @@ const RADIUS_STEPS = {
   md: 8,
   lg: 12,
   xl: 16,
+  '2xl': 24,
 }
 
 export const radiusTokens = Object.fromEntries(
