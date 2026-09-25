@@ -24,7 +24,6 @@
     "localforage": "^1.10.0",
     "markdown-it": "^14.1.1",
     "naive-ui": "^2.44.1",
-    "nprogress": "^0.2.0",
     "qrcode": "^1.5.4",
     "vite-ssg": "^28.3.0",
     "vue": "^3.5.29",

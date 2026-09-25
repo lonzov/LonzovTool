@@ -1,10 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import NProgress from 'nprogress'
-import 'nprogress/nprogress.css'
 
 import HomeView from '../components/HomeView.vue'
 import OfflineDiagnostic from '../components/OfflineDiagnostic.vue'
 import { getDiscreteMessage } from '../utils/discreteMessage'
+import { startLoading, finishLoading } from '../utils/loadingBar'
 
 // 预加载所有下载配置，提取 slug → name 映射用于 SEO 动态标题
 const downloadModules = import.meta.glob('../data/downloads/*.json', { eager: true })
@@ -13,17 +12,6 @@ for (const [path, mod] of Object.entries(downloadModules)) {
   const slug = path.replace('../data/downloads/', '').replace('.json', '')
   const data = mod.default || mod
   DOWNLOAD_NAMES[slug] = data.name || slug
-}
-
-// 配置 NProgress（仅在客户端执行）
-if (typeof window !== 'undefined') {
-  NProgress.configure({
-    showSpinner: false,
-    trickleSpeed: 200,
-    minimum: 0.2,
-    speed: 150,
-    easing: 'ease',
-  })
 }
 
 // ===== 路由导航超时机制 =====
@@ -54,7 +42,7 @@ function clearAllTimers() {
 function goOffline(reason) {
   console.error(`[Router] ${reason}，跳转离线页`)
   clearAllTimers()
-  NProgress.done()
+  finishLoading()
   window.location.href = '/offline'
 }
 
@@ -331,7 +319,7 @@ export { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES }
 export default routes
 
 /**
- * 为给定 router 实例附加导航守卫（NProgress + SEO head）
+ * 为给定 router 实例附加导航守卫（顶部加载条 + SEO head）
  * ViteSSG 回调中调用此函数，客户端/SSR 共用
  */
 export function setupRouterGuards(router) {
@@ -388,13 +376,7 @@ export function setupRouterGuards(router) {
         goOffline('30s 兜底超时')
       }, FALLBACK_TIMEOUT)
 
-      // ---- NProgress ----
-      NProgress.start()
-      setTimeout(() => {
-        const bar = document.querySelector('#nprogress .bar')
-        if (bar) bar.style.zIndex = '9999999'
-        NProgress.set(0.2)
-      }, 30)
+      startLoading()
     }
     next()
   })
@@ -407,7 +389,7 @@ export function setupRouterGuards(router) {
       error?.message?.includes('error loading dynamically imported module')
     ) {
       clearAllTimers()
-      NProgress.done()
+      finishLoading()
         ; (async () => {
           const ok = await pingServer()
           if (!ok) window.location.href = '/offline'
@@ -421,13 +403,7 @@ export function setupRouterGuards(router) {
     try { sessionStorage.removeItem(SESSION_KEY) } catch { /* noop */ }
     console.log(`[Router] 导航完成: ${to.path}`)
 
-    if (typeof window !== 'undefined') {
-      setTimeout(() => {
-        const bar = document.querySelector('#nprogress .bar')
-        if (bar) bar.style.zIndex = '9999999'
-        NProgress.done()
-      }, 100)
-    }
+    setTimeout(finishLoading, 100)
   })
 
   return router

@@ -199,41 +199,6 @@ button {
   border: 1px solid var(--border) !important;
 }
 
-/* ===== NProgress 页面进度条 ===== */
-#nprogress {
-  pointer-events: none;
-}
-
-#nprogress .bar {
-  background: var(--muted-foreground) !important;
-  background-image: none !important;
-  position: fixed;
-  top: 0;
-  left: 200px;
-  width: calc(100% - 200px);
-  height: 2.5px !important;
-  box-shadow: 0 0 12px var(--ring) !important;
-  transition: opacity 0.15s ease !important;
-}
-
-/* 移动端 */
-@media (max-width: 770px) {
-  #nprogress .bar {
-    left: 0 !important;
-    width: 100% !important;
-    top: 56px !important;
-  }
-}
-
-#nprogress .peg {
-  display: none !important;
-  box-shadow: none !important;
-}
-
-#nprogress .spinner {
-  display: none !important;
-}
-
 /* ===== 无障碍：仅屏幕阅读器可见 ===== */
 .sr-only {
   position: absolute;

@@ -98,6 +98,7 @@ src:
     useDownloadIntro.js: 下载页 Markdown 功能介绍加载组合式函数（按需加载原始 md 字符串）
   utils:
     discreteMessage.js: 全局共享的 Naive UI 独立 message 实例（供 NMessageProvider 之外的模块使用）
+    loadingBar.js: 全局共享的 Naive UI 顶部加载条实例（供路由守卫等无组件上下文处使用）
     jsonError.js: JSON 解析前修复字符串内的原始换行 + 语法错误定位与友好化提示
     mcTranslate.js: 基岩版翻译键渲染内核（.lang/JSON 解析、占位符算法、selector/score 求值），纯函数无框架依赖
     scrollToTop.js: 回顶的物理缓动

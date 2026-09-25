@@ -52,7 +52,7 @@ export const createApp = ViteSSG(
     const { collect } = setup(app)
     collectCss = collect
 
-    // ---- 路由守卫 (NProgress + SEO head) ----
+    // ---- 路由守卫 (顶部加载条 + SEO head) ----
     setupRouterGuards(router)
 
     // ===== 浏览器专属代码 =====

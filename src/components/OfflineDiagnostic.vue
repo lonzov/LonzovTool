@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import NProgress from 'nprogress'
+import { finishLoading } from '../utils/loadingBar'
 
 const state = ref('diagnosing') // 'diagnosing' | 'server-ok' | 'server-error' | 'network-error'
 const latency = ref(null)
@@ -90,10 +90,8 @@ function goHome() {
 }
 
 onMounted(() => {
-  // 强制清除 NProgress 进度条（无论从哪个路径进入离线页）
-  NProgress.done()
-  const bar = document.querySelector('#nprogress .bar')
-  if (bar) bar.style.zIndex = '9999999'
+  // 收掉顶部加载条（无论从哪个路径进入离线页，它都可能还停在半途）
+  finishLoading()
   runDiagnostic()
 })
 
