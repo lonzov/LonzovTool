@@ -26,8 +26,15 @@
     font-display: swap;
 }
 
+/* 基岩版特殊符号占私有区码点，unifont 点阵黑没有这部分字形，挂到字体链后面兜底 */
+@font-face {
+    font-family: 'MC Symbols';
+    src: url("/fonts/mc-symbols.woff2") format('woff2');
+    font-display: swap;
+}
+
 .mcfc {
-    font-family: "Minecraft Seven", sans-serif;
+    font-family: "Minecraft Seven", "MC Symbols", sans-serif;
 }
 
 .randomChar {
