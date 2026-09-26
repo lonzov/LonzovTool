@@ -4,7 +4,9 @@ import { NIcon, useMessage, NSwitch } from 'naive-ui'
 import { CurrencyDollarEuro20Regular } from '@vicons/fluent'
 import { useMouseGlow, applyGlow } from '../../composables/useMouseGlow.js'
 import { useToolStorage } from '../../composables/useToolStorage.js'
+import { renderMcText } from '../../utils/mcTextRender.js'
 import data from '../../data/glyph-map.json'
+import '../../vendor/mcfc/mcfc.css'
 
 const { sprite, glyphs } = data
 
@@ -43,14 +45,6 @@ const iconsData = glyphs.map((hex, index) => {
   }
 })
 
-// ===== 字符到图标映射（仅单字符条目，排除 a0a） =====
-const charToIconMap = new Map()
-iconsData.forEach((icon) => {
-  if (icon.codePointHex !== 'a0a') {
-    charToIconMap.set(icon.character, icon)
-  }
-})
-
 function getIconStyle(icon) {
   return {
     backgroundImage: `url(${SPRITE_PATH})`,
@@ -63,44 +57,15 @@ function getIconStyle(icon) {
 // ===== 验证输入 =====
 const verifyInput = ref('')
 
-const previewSegments = computed(() => {
-  const chars = [...verifyInput.value]
-  const segments = []
-  let textBuf = ''
-  for (const char of chars) {
-    const icon = charToIconMap.get(char)
-    if (icon) {
-      if (textBuf) { segments.push({ type: 'text', text: textBuf }); textBuf = '' }
-      segments.push({ type: 'icon', icon })
-    } else if (char.charCodeAt(0) === 0) {
-      if (textBuf) { segments.push({ type: 'text', text: textBuf }); textBuf = '' }
-      segments.push({ type: 'dot' })
-    } else {
-      textBuf += char
-    }
-  }
-  if (textBuf) segments.push({ type: 'text', text: textBuf })
-  return segments
+/** a\0a 里的 NUL 是控制字符，字体渲染不出来，切成两段并在中间标一个红点 */
+const NULL_MARKER = '<span class="preview-dot"></span>'
+
+const previewHtml = computed(() => {
+  const raw = String(verifyInput.value ?? '')
+  if (!raw) return ''
+  // map 会把索引当第二个参数传进去，这里显式包一层，免得落到 renderMcText 的 options 上
+  return raw.split(NULL_CHAR).map(text => renderMcText(text)).join(NULL_MARKER)
 })
-
-function getPreviewSpriteStyle(icon) {
-  return {
-    backgroundImage: `url(${SPRITE_PATH})`,
-    backgroundPositionX: `${icon.bgPositionX}px`,
-    backgroundSize: `auto ${DISPLAY_SIZE}px`,
-    imageRendering: 'pixelated',
-    width: `${DISPLAY_SIZE}px`,
-    height: `${DISPLAY_SIZE}px`,
-  }
-}
-
-function getSegmentMargin(seg, index) {
-  const segments = previewSegments.value
-  const leftType = index > 0 ? segments[index - 1].type : null
-  if (!leftType) return { marginLeft: '0px' }
-  const ml = (seg.type === 'icon' && leftType === 'icon') ? -20 : -8
-  return { marginLeft: ml + 'px' }
-}
 
 // ===== 复制模式 =====
 const copyModeCodepoint = ref(false)
@@ -213,17 +178,8 @@ onBeforeUnmount(() => {
       <div class="verify-col verify-col-right">
         <label class="verify-label">预览结果</label>
         <div class="verify-preview">
-          <template v-for="(seg, i) in previewSegments" :key="i">
-            <div v-if="seg.type === 'icon'" class="preview-sprite-wrap" :style="getSegmentMargin(seg, i)">
-              <div
-                class="preview-sprite"
-                :style="getPreviewSpriteStyle(seg.icon)"
-              ></div>
-            </div>
-            <span v-else-if="seg.type === 'dot'" class="preview-dot" :style="getSegmentMargin(seg, i)"></span>
-            <span v-else class="preview-text" :style="getSegmentMargin(seg, i)">{{ seg.text }}</span>
-          </template>
-          <span v-if="!previewSegments.length" class="preview-placeholder">预览</span>
+          <div v-if="previewHtml" class="preview-content mcfc" v-html="previewHtml" />
+          <span v-else class="preview-placeholder">预览</span>
         </div>
       </div>
     </div>
@@ -386,22 +342,34 @@ onBeforeUnmount(() => {
   transition: background-color 0.4s ease;
 }
 
+/* stylelint-disable declaration-property-value-disallowed-list --
+   预览舞台固定深色：它模拟的是游戏内聊天框，内容由 renderMcText 按 Minecraft 原色渲染、
+   假定深底（默认白字 + 半透明黑描边）。改成 --card 会让浅色主题下白字糊在浅色底上。 */
 .verify-preview {
   display: flex;
   align-items: center;
-  gap: 0;
   flex: 1;
-  border: 1px solid var(--border);
+  background: #1a1a1a;
+  border: 1px solid #333;
   border-radius: var(--radius-sm);
   padding: 8px 12px;
   font-size: 0.9rem;
-  line-height: 1.4;
-  color: var(--foreground);
   overflow-x: auto;
   white-space: nowrap;
-  transition: border-color 0.4s ease;
+  transition: background-color 0.4s ease, border-color 0.4s ease;
   min-height: 36px;
 }
+
+[data-theme="dark"] .verify-preview {
+  background: #111;
+  border-color: #2b2b2b;
+}
+
+.preview-placeholder {
+  color: #888;
+}
+
+/* stylelint-enable declaration-property-value-disallowed-list */
 
 .verify-preview::-webkit-scrollbar {
   height: 3px;
@@ -412,28 +380,12 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-xs);
 }
 
-.preview-placeholder {
-  color: var(--subtle-foreground);
-}
-
-.preview-text {
-  display: inline;
-}
-
-.preview-sprite-wrap {
-  width: 48px;
-  height: 16px;
+.preview-content {
   flex-shrink: 0;
-  position: relative;
-  overflow: visible;
-}
-
-.preview-sprite {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  background-repeat: no-repeat;
+  /* 行高必须写死，与 T显 预览同一套标定值：符号字形高近 2em，靠字体度量自动算行高
+     会把带符号的行撑到 2.9em。0.8px 字距也是同一处标定来的。 */
+  line-height: 1.19;
+  letter-spacing: 0.8px;
 }
 
 .preview-dot {
@@ -445,7 +397,6 @@ onBeforeUnmount(() => {
   border-radius: 50%;
   corner-shape: round;
   vertical-align: middle;
-  flex-shrink: 0;
 }
 
 /* ===== 卡片网格 ===== */
