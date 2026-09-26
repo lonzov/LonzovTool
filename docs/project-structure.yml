@@ -167,3 +167,5 @@ scripts:
   build-glyph-sprites.cjs: 预构建脚本，从 Minecraft 风格字形 PNG 自动检测非空字符并打包为紧凑雪碧图+码点映射 JSON
   build-symbol-font.js: 预构建脚本，调用下面的 .py 生成特殊符号字体，无 Python 时跳过并沿用已有产物
   build-symbol-font.py: 从上面两张字形图生成特殊符号字体 public/fonts/mc-symbols.woff2，供 T显预览做字体回退
+  build-text-font.js: 预构建脚本，调用下面的 .py 改写文本字体步进，无 Python 时跳过并沿用已有产物
+  build-text-font.py: 改写 unifont 点阵黑的步进以对齐游戏内（少数标点与空格单独钉死），全角段字形取自游戏资源包的 glyph_FF.png，就地覆盖同名字体文件

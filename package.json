@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 5177",
-    "build": "node scripts/build-glyph-sprites.cjs && node scripts/build-symbol-font.js && node scripts/fetch-contributor-avatars.js && node scripts/subset-hollow-font.js && vite-ssg build && node scripts/reorder-head.js && node scripts/generate-seo.js && node scripts/minify-sw.js",
+    "build": "node scripts/build-glyph-sprites.cjs && node scripts/build-symbol-font.js && node scripts/build-text-font.js && node scripts/fetch-contributor-avatars.js && node scripts/subset-hollow-font.js && vite-ssg build && node scripts/reorder-head.js && node scripts/generate-seo.js && node scripts/minify-sw.js",
     "preview": "vite preview --host",
     "deploy": "node scripts/deploy.js",
     "b_d": "pnpm build && pnpm deploy",
