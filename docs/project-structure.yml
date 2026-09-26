@@ -101,6 +101,7 @@ src:
     loadingBar.js: 全局共享的 Naive UI 顶部加载条实例（供路由守卫等无组件上下文处使用）
     jsonError.js: JSON 解析前修复字符串内的原始换行 + 语法错误定位与友好化提示
     mcTranslate.js: 基岩版翻译键渲染内核（.lang/JSON 解析、占位符算法、selector/score 求值），纯函数无框架依赖
+    mcTextRender.js: rawtext 元素与 § 格式化文本到 HTML 的渲染内核，语言包与模拟器由调用方传入，无框架依赖但经 mcfc 渲染器依赖 DOM
     scrollToTop.js: 回顶的物理缓动
   config:
     categoryIcons.js: 分类图标配置 + 工具卡片 logo 图标映射（getCategoryIcon / getToolIcon，tools.json 中非路径 logo 按图标名映射）

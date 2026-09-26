@@ -42,7 +42,7 @@ const RE_S_ARGS = /%[ds]/g
 // 参数替换用：%s / %d / %数字
 const RE_ARGS = /%([ds\d])/g
 
-/** 与 useRawJsonEditor.escHtml 保持一致；此处本地定义以免 utils 反向依赖 composables 形成循环引用 */
+/** 此处本地定义并导出，以免 utils 反向依赖 composables 形成循环引用（mcTextRender 用的就是这份） */
 function escapeHtml(str) {
   const d = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
   return String(str).replace(/[&<>"']/g, c => d[c])
