@@ -134,7 +134,9 @@ onBeforeUnmount(() => { stopObfuscateTimer() })
 /* stylelint-enable declaration-property-value-disallowed-list */
 .preview-content {
   display: inline-block;
-  font-size: 14px; text-align: left;
+  /* 行高必须写死：符号字形本身近 3em 高，靠字体度量自动算会把带符号的行撑到 2.9em。
+     游戏内符号是跨行叠着的，1.19 = 游戏内行距 20px ÷ 汉字墨迹 17px × 本字体汉字墨迹 1.01em */
+  font-size: 14px; line-height: 1.19; text-align: left;
   white-space: pre-line; max-width: 100%; overflow-x: auto;
   letter-spacing: 0.8px;
 }
