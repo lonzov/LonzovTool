@@ -1,7 +1,6 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useMessage } from 'naive-ui'
-import { parseMinecraftTextToHtmlWithState } from '../vendor/mcfc/mcfc.js'
-import { renderTranslate, resolveSelector, resolveScore, PLACEHOLDER_GRAY } from '../utils/mcTranslate.js'
+import { renderRawtext } from '../utils/mcTextRender.js'
 import { parseJsonWithHint } from '../utils/jsonError.js'
 import { lookupTranslate, langRevision } from './useRawJsonLang.js'
 import { simulator } from './useRawJsonSimulator.js'
@@ -346,75 +345,14 @@ export function processEscapes(str) {
   return out
 }
 
-// ========== HTML 转义 ==========
-export function escHtml(str) {
-  const d = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
-  return str.replace(/[&<>"']/g, c => d[c])
-}
-
-// ========== § 颜色渲染（基于 minecraft_formatting_code_online） ==========
-export function col(text) {
-  if (!text) return ''
-  // 兼容旧数据：字面量 \n → 真实换行
-  text = text.replace(/\\n/g, '\n')
-  const result = parseMinecraftTextToHtmlWithState(text, '#FFFFFF', null)
-  return result.html
-}
-
 // ========== 预览输出 ==========
 export const previewHtml = computed(() => {
   // 读一次 langRevision 建立响应式依赖：切换/导入/删除语言包时预览自动重算
   void langRevision.value
-  const sim = simulator.value
-  const ctx = {
+  return renderRawtext(data.value, {
     lookup: lookupTranslate,
-    selector: sel => resolveSelector(sel, sim),
-    score: el => resolveScore(el, sim),
-  }
-
-  // 统一预处理：把所有元素拉到一起，用共享状态串联渲染，实现跨元素样式继承
-  let state = null
-  let html = ''
-
-  // 文本与 translate 都产出纯字符串，走完全相同的渲染路径：
-  // 基岩版在替换发生前就把 with 参数压平成字符串，之后是纯拼接，§ 状态线性流动（样式会外溢，同游戏）
-  const pushText = (text) => {
-    const result = parseMinecraftTextToHtmlWithState(text, '#FFFFFF', state)
-    html += result.html
-    state = result.finalState
-  }
-  const pushPlaceholder = (content, title) => {
-    // 非文本元素：继承当前的非颜色样式（§l/§M/§N/§o），使用自身固定颜色，且不推进样式状态
-    const inheritStyles = state ? state.currentStyles : ''
-    html += `<span style="${inheritStyles}color:${PLACEHOLDER_GRAY}" title="${escHtml(title)}">${content}</span>`
-  }
-
-  data.value.forEach(el => {
-    if (!el || typeof el !== 'object') {
-      html += '<span style="color:#666">[错误]</span>'
-    } else if (el.text !== undefined) {
-      pushText(el.text)
-    } else if (el.translate !== undefined) {
-      pushText(renderTranslate(el, ctx))
-    } else if (el.selector !== undefined) {
-      const resolved = ctx.selector(String(el.selector))
-      if (resolved) pushText(resolved)
-      else pushPlaceholder(`[${escHtml(el.selector)}]`, '模拟器中没有匹配的实体')
-    } else if (el.score !== undefined) {
-      const { value, missing } = ctx.score(el)
-      if (missing) {
-        const obj = el.score?.objective || ''
-        const name = el.score?.name || ''
-        pushPlaceholder(escHtml(value), `模拟器中未找到记分板项：${obj} / ${name}`)
-      } else {
-        pushText(value)
-      }
-    } else {
-      html += '<span style="color:#666">[错误]</span>'
-    }
-  })
-
-  return html || '<span style="color:#AAAAAA">预览</span>'
+    simulator: simulator.value,
+  }) || '<span style="color:#AAAAAA">预览</span>'
 })
 
 export const jsonOutput = computed(() => {
@@ -927,7 +865,7 @@ export function useRawJsonEditor() {
     previewHtml, jsonOutput, commandOutput, cmdLength, modeLabel,
     // 函数
     pushUndo, undo, redo, triggerSave,
-    validate, col, escHtml,
+    validate,
     getElType, getElTypeLabel, getElPreviewText, getElTypeClass,
     addElement, editElement, deleteElement, copyElement, moveElement,
     resetEditForm, closeEditModal, saveElement, addWithParam, removeWithParam,
