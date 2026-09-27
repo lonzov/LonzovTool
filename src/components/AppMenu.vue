@@ -2,7 +2,7 @@
 import { h, markRaw, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { NMenu, NIcon, useMessage } from 'naive-ui'
-import { Home48Regular, Person24Regular, AddSquare24Regular, HeartCircle24Regular, CalendarWorkWeek24Regular, DrawerArrowDownload24Regular } from '@vicons/fluent'
+import { Home48Regular, Person24Regular, AddSquare24Regular, HeartCircle24Regular, CalendarWorkWeek24Regular, DrawerArrowDownload24Regular, Settings24Regular, MoreVertical24Regular } from '@vicons/fluent'
 import { getCategoryIcon } from '../config/categoryIcons'
 import { usePWAInstall } from '../composables/usePWAInstall'
 import toolsData from '../data/tools.json'
@@ -10,6 +10,8 @@ import parentMenusData from '../data/parentMenus.json'
 
 // 父级菜单展开状态持久化（桌面端侧边栏与移动端抽屉共用同一份）
 const EXPANDED_KEYS_KEY = 'sidebar_expanded_keys'
+const MORE_KEY = 'more'
+const MORE_SEEDED_KEY = 'sidebar_more_seeded'
 
 function loadExpandedKeys() {
   try {
@@ -31,6 +33,27 @@ function saveExpandedKeys(keys) {
   }
 }
 
+/**
+ * 读取持久化的展开状态。
+ * 「更多」是后加的分组，老记录里没有它，此处补一次默认展开；
+ * 一次性标记保证用户之后主动收起时不会被再次展开。
+ */
+function resolveExpandedKeys(defaults) {
+  const saved = loadExpandedKeys()
+  let seeded = true
+  try {
+    seeded = localStorage.getItem(MORE_SEEDED_KEY) === '1'
+    if (!seeded) localStorage.setItem(MORE_SEEDED_KEY, '1')
+  } catch {
+    // storage unavailable
+  }
+  if (!saved) return [...defaults]
+  if (seeded || saved.includes(MORE_KEY)) return saved
+  const merged = [...saved, MORE_KEY]
+  saveExpandedKeys(merged)
+  return merged
+}
+
 export default {
   props: {
     value: {
@@ -42,7 +65,7 @@ export default {
   setup() {
     // 从配置中计算默认展开的父级菜单
     const defaultExpandedKeys = computed(() => {
-      const keys = []
+      const keys = [MORE_KEY]
       parentMenusData.parentMenus.forEach((parent) => {
         if (!parent.defaultCollapsed) {
           keys.push(`parent-${parent.id}`)
@@ -107,7 +130,7 @@ export default {
   mounted() {
     this.initMenuOptions()
     // 优先恢复上次的展开状态，无记录时取 parentMenus.json 的默认展开配置
-    this.expandedKeys = loadExpandedKeys() || [...this.defaultExpandedKeys]
+    this.expandedKeys = resolveExpandedKeys(this.defaultExpandedKeys)
     this.observeTheme()
   },
   beforeUnmount() {
@@ -154,35 +177,49 @@ export default {
           icon: this.renderIcon(markRaw(Home48Regular)),
         },
         {
+          label: '工作站',
+          key: 'workspace',
+          icon: this.renderIcon(markRaw(CalendarWorkWeek24Regular)),
+        },
+        {
           label: '关于本站',
           key: 'about',
           icon: this.renderIcon(markRaw(Person24Regular)),
         },
         {
-          label: '网址提交',
-          key: 'submit',
-          icon: this.renderIcon(markRaw(AddSquare24Regular)),
+          label: '设置',
+          key: 'settings',
+          icon: this.renderIcon(markRaw(Settings24Regular)),
         },
+      ]
+
+      // 低频入口收进「更多」，展开状态与其他父级菜单共用持久化
+      const moreChildren = [
         {
           label: '打赏支持',
           key: 'donate',
           icon: this.renderIcon(markRaw(HeartCircle24Regular)),
         },
         {
-          label: '工作站',
-          key: 'workspace',
-          icon: this.renderIcon(markRaw(CalendarWorkWeek24Regular)),
+          label: '网址提交',
+          key: 'submit',
+          icon: this.renderIcon(markRaw(AddSquare24Regular)),
         },
       ]
-
       // PWA 安装入口（仅已安装为 PWA 时隐藏，其余情况始终展示）
       if (!this.isInstalled) {
-        staticOptions.push({
+        moreChildren.push({
           label: '安装本站',
           key: 'pwa-install',
           icon: this.renderIcon(markRaw(DrawerArrowDownload24Regular)),
         })
       }
+      staticOptions.push({
+        label: '更多',
+        key: MORE_KEY,
+        icon: this.renderIcon(markRaw(MoreVertical24Regular)),
+        children: moreChildren,
+      })
 
       staticOptions.push({
         type: 'divider',
@@ -254,7 +291,7 @@ export default {
       if (
         item &&
         item.key &&
-        (item.key.startsWith('category-') || item.key === 'about' || item.key === 'home' || item.key === 'submit' || item.key === 'workspace' || item.key === 'donate')
+        (item.key.startsWith('category-') || item.key === 'about' || item.key === 'home' || item.key === 'submit' || item.key === 'workspace' || item.key === 'donate' || item.key === 'settings')
       ) {
         this.$emit('navigate', item.key)
       }

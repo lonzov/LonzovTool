@@ -5,7 +5,7 @@ import { useHead } from '@unhead/vue'
 import { getGlobalHead } from './main.js'
 import { NMessageProvider, NIcon, NTooltip, darkTheme, lightTheme } from 'naive-ui'
 import { lightThemeOverrides, darkThemeOverrides } from './theme'
-import { Settings24Regular, ShareAndroid20Regular, Open16Filled } from '@vicons/fluent'
+import { ShareAndroid20Regular, Open16Filled } from '@vicons/fluent'
 import AppMenu from './components/AppMenu.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import PrivacyBanner from './components/PrivacyBanner.vue'
@@ -250,6 +250,11 @@ export default {
         activeKey.value = 'donate'
         return
       }
+      if (key === 'settings') {
+        goSettings()
+        activeKey.value = 'settings'
+        return
+      }
       if (key === 'workspace') {
         // 检查是否有已打开的标签页，并读取存储的活跃标签路径
         const { hasTabs, activeTab } = useWorkspace()
@@ -351,6 +356,8 @@ export default {
         activeKey.value = 'submit'
       } else if (path.startsWith('/c/') || path.startsWith('/embed/')) {
         activeKey.value = 'workspace'
+      } else if (path.startsWith('/settings')) {
+        activeKey.value = 'settings'
       }
     }
 
@@ -390,7 +397,6 @@ export default {
       handleResize,
       handleMenuNavigate,
       goSettings,
-      SettingsIcon: Settings24Regular,
       ShareIcon: ShareAndroid20Regular,
       OfficialOpenIcon: Open16Filled,
       initSW,
@@ -494,29 +500,6 @@ export default {
               }"
             ></div>
             <div style="display: flex; justify-content: center; align-items: center; gap: 2px">
-              <NTooltip placement="right">
-                <template #trigger>
-                  <button
-                    type="button"
-                    aria-label="设置"
-                    :style="{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '50%',
-                      border: 'none',
-                      background: 'transparent',
-                      cursor: 'pointer',
-                    }"
-                    @click="goSettings"
-                  >
-                    <NIcon :component="SettingsIcon" :size="22" :color="'var(--muted-foreground)'" />
-                  </button>
-                </template>
-                设置
-              </NTooltip>
               <ThemeToggle :mode="themeMode" @click="cycleTheme" />
               <NTooltip placement="right">
                 <template #trigger>
@@ -746,29 +729,6 @@ export default {
                 }"
               ></div>
               <div style="display: flex; justify-content: center; align-items: center; gap: 3px">
-                <NTooltip placement="top">
-                  <template #trigger>
-                    <button
-                      type="button"
-                      aria-label="设置"
-                      :style="{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                      }"
-                      @click="goSettings"
-                    >
-                      <NIcon :component="SettingsIcon" :size="20" :color="'var(--muted-foreground)'" />
-                    </button>
-                  </template>
-                  设置
-                </NTooltip>
                 <ThemeToggle :mode="themeMode" @click="cycleTheme" />
                 <NTooltip placement="top">
                   <template #trigger>
