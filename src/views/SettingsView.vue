@@ -1,15 +1,19 @@
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import { NSelect, NSwitch, NIcon, useMessage } from 'naive-ui'
-import { ArrowDownload16Regular, ArrowExportUp24Filled, Settings24Regular, ChevronUp16Regular, ArrowCounterclockwise24Filled } from '@vicons/fluent'
+import { ArrowDownload16Regular, ArrowExportUp24Filled, Settings24Regular, ChevronUp16Regular, ArrowCounterclockwise24Filled, Open16Filled } from '@vicons/fluent'
 import AppModal from '../components/ui/AppModal.vue'
 import { useTheme } from '../composables/useTheme'
 import { confirmDialog } from '../composables/useConfirm'
+import { usePrivacyModal } from '../composables/usePrivacyModal'
 import { useWorkspaceSettings } from '../composables/useWorkspaceSettings'
 import { useWorkspace } from '../composables/useWorkspace'
 
 const { themeMode, setThemeMode } = useTheme()
 const message = useMessage()
+const router = useRouter()
+const { openModal: openPrivacyModal } = usePrivacyModal()
 
 const themeOptions = [
   { value: 'auto', label: '跟随系统' },
@@ -180,6 +184,15 @@ function onDragDelayBlur() {
   localStorage.setItem(DRAG_DELAY_KEY, String(clamped))
 }
 
+/* ========== 文档条目 ========== */
+const DOC_LINKS = [
+  { label: '常见问题', desc: '使用相关的常见问题与解决方案', path: '/docs/faq/' },
+  { label: '开发文档', desc: '面向第三方开发者的接口与参数说明', path: '/docs/dev/' },
+  { label: '推广合作', path: '/docs/promotion/' },
+  { label: '隐私政策', path: '/docs/privacy/' },
+  { label: '开源软件声明', path: '/docs/third-party/' },
+]
+
 /* ========== 折叠状态（持久化）========== */
 const COLLAPSED_KEY = 'settings-collapsed'
 const savedCollapsed = (() => {
@@ -194,6 +207,7 @@ const collapsedSections = ref({
   workspace: savedCollapsed?.workspace ?? false,
   config: savedCollapsed?.config ?? false,
   cache: savedCollapsed?.cache ?? false,
+  docs: savedCollapsed?.docs ?? false,
 })
 
 function toggleSection(key) {
@@ -745,48 +759,6 @@ const embedCloseActions = [
         </Transition>
       </div>
 
-      <!-- 配置管理 -->
-      <div class="settings-card">
-        <div
-          class="card-header"
-          :class="{ 'card-header--collapsed': collapsedSections.config }"
-          @click="toggleSection('config')"
-        >
-          <span>配置管理</span>
-          <NIcon
-            :component="ChevronUp16Regular"
-            size="16"
-            class="chevron-icon"
-            :class="{ 'chevron-icon--rotated': collapsedSections.config }"
-          />
-        </div>
-        <Transition name="collapse">
-          <div v-show="!collapsedSections.config" class="card-body">
-            <div
-              v-for="(scope, key) in CONFIG_SCOPES"
-              :key="key"
-              class="setting-row"
-            >
-              <div class="setting-info">
-                <span class="setting-title">{{ scope.label }}</span>
-                <p class="setting-desc">{{ scope.desc }}</p>
-              </div>
-              <div class="setting-control">
-                <div class="config-pill">
-                  <button class="config-pill-btn" title="导入" @click="handleImport(key)">
-                    <NIcon :component="ArrowDownload16Regular" size="16" />
-                  </button>
-                  <span class="config-pill-divider"></span>
-                  <button class="config-pill-btn" title="导出" @click="handleExport(key)">
-                    <NIcon :component="ArrowExportUp24Filled" size="16" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </Transition>
-      </div>
-
       <!-- 缓存管理 -->
       <div class="settings-card">
         <div
@@ -832,6 +804,90 @@ const embedCloseActions = [
             </div>
           </div>
         </Transition>
+      </div>
+
+      <!-- 配置管理 -->
+      <div class="settings-card">
+        <div
+          class="card-header"
+          :class="{ 'card-header--collapsed': collapsedSections.config }"
+          @click="toggleSection('config')"
+        >
+          <span>配置管理</span>
+          <NIcon
+            :component="ChevronUp16Regular"
+            size="16"
+            class="chevron-icon"
+            :class="{ 'chevron-icon--rotated': collapsedSections.config }"
+          />
+        </div>
+        <Transition name="collapse">
+          <div v-show="!collapsedSections.config" class="card-body">
+            <div
+              v-for="(scope, key) in CONFIG_SCOPES"
+              :key="key"
+              class="setting-row"
+            >
+              <div class="setting-info">
+                <span class="setting-title">{{ scope.label }}</span>
+                <p class="setting-desc">{{ scope.desc }}</p>
+              </div>
+              <div class="setting-control">
+                <div class="config-pill">
+                  <button class="config-pill-btn" title="导入" @click="handleImport(key)">
+                    <NIcon :component="ArrowDownload16Regular" size="16" />
+                  </button>
+                  <span class="config-pill-divider"></span>
+                  <button class="config-pill-btn" title="导出" @click="handleExport(key)">
+                    <NIcon :component="ArrowExportUp24Filled" size="16" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </div>
+
+      <!-- 文档 -->
+      <div class="settings-card">
+        <div
+          class="card-header"
+          :class="{ 'card-header--collapsed': collapsedSections.docs }"
+          @click="toggleSection('docs')"
+        >
+          <span>文档</span>
+          <NIcon
+            :component="ChevronUp16Regular"
+            size="16"
+            class="chevron-icon"
+            :class="{ 'chevron-icon--rotated': collapsedSections.docs }"
+          />
+        </div>
+        <Transition name="collapse">
+          <div v-show="!collapsedSections.docs" class="card-body">
+            <a
+              v-for="doc in DOC_LINKS"
+              :key="doc.path"
+              class="setting-row setting-row--link setting-row--compact"
+              :href="doc.path"
+              @click.prevent="router.push(doc.path)"
+            >
+              <div class="setting-info">
+                <span class="setting-title">{{ doc.label }}</span>
+                <p v-if="doc.desc" class="setting-desc">{{ doc.desc }}</p>
+              </div>
+              <div class="setting-control">
+                <NIcon :component="Open16Filled" :size="14" class="doc-link-icon" />
+              </div>
+            </a>
+          </div>
+        </Transition>
+      </div>
+
+      <!-- 隐私偏好 -->
+      <div class="settings-bar" @click="openPrivacyModal">
+        <span>隐私偏好</span>
+        <NIcon :component="ChevronUp16Regular" size="16" class="settings-bar-arrow" />
       </div>
     </div>
 
@@ -1014,6 +1070,36 @@ const embedCloseActions = [
   margin-top: 1rem;
 }
 
+/* ========== 独立设置横条 ========== */
+/* 与收起状态的板块同形，但上下内边距更小，用于只承载单个设置项 */
+.settings-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding: 18px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--foreground);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.4s ease, border-color 0.4s ease, opacity 0.2s;
+}
+
+.settings-bar:hover {
+  opacity: 0.85;
+}
+
+/* 横条不折叠，箭头固定朝右表示"打开" */
+.settings-bar-arrow {
+  color: var(--subtle-foreground);
+  transform: rotate(90deg);
+  transition: color 0.4s ease;
+}
+
 /* ========== 卡片头部（可折叠）========== */
 .card-header {
   display: flex;
@@ -1088,6 +1174,28 @@ const embedCloseActions = [
   height: 1px;
   background: var(--border);
   transition: background-color 0.4s ease;
+}
+
+/* 可点击跳转的设置行（文档条目） */
+.setting-row--link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.setting-row--link:hover {
+  background: var(--accent);
+}
+
+/* 只有一行标题、无描述的行，不预留"标题+描述"的高度 */
+.setting-row--compact .setting-info {
+  min-height: 0;
+}
+
+.doc-link-icon {
+  color: var(--subtle-foreground);
+  transition: color 0.4s ease;
 }
 
 .setting-info {
@@ -1340,6 +1448,10 @@ const embedCloseActions = [
 
   .card-header {
     padding: 12px 16px;
+  }
+
+  .settings-bar {
+    padding: 8px 16px;
   }
 
   .setting-row {
