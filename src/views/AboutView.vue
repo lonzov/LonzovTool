@@ -364,7 +364,7 @@ const highlights = [
 ]
 
 const thanks = [
-  { name: '命令模拟器', href: 'https://commandsimulator.great-site.net/', desc: 'execute 语法转换与特殊符号资源参考' },
+  { name: '命令模拟器', href: 'https://commandsimulator.great-site.net/', desc: 'execute 语法升级[MIT]实现与早期版本特殊符号整理' },
   { name: 'Webstack 网址导航', href: 'https://github.com/WebStackPage/WebStackPage.github.io', desc: '首页布局设计参考' },
   { name: 'Mizuki', href: 'https://github.com/LyraVoid/Mizuki', desc: '部分 UI/UX 效果参考' },
   { name: '矩阵方块 - T显编译器', href: 'https://jzfk.indevs.in/', desc: 'T显编辑器功能参考' },
@@ -599,6 +599,10 @@ const statCluster = computed(() => ([
         <div class="thanks" v-reveal="1">
           <div class="eyebrow"><b>06</b> credits / 特别鸣谢 <span class="ln"></span></div>
           <ul>
+            <li>
+              <a class="name" href="/docs/third-party/" @click.prevent="router.push('/docs/third-party/')">第三方组件与许可声明</a>
+              <span class="desc">本站使用的开源组件、字体资源与许可证</span>
+            </li>
             <li v-for="item in thanks" :key="item.name">
               <a class="name" :href="item.href" target="_blank" rel="noopener noreferrer">{{ item.name }}</a>
               <span class="desc">{{ item.desc }}</span>

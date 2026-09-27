@@ -38,6 +38,7 @@ const docMap = {
   donate: '../docs/donate.md',
   faq: '../docs/faq.md',
   dev: '../docs/dev.md',
+  'third-party': '../docs/third-party.md',
 }
 
 // 将组件渲染到 markdown 中的占位符位置

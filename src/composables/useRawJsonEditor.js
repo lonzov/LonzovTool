@@ -1,3 +1,10 @@
+/*
+ * 来源声明：本文件中的颜色数据表，以及校验、导入解析部分的逻辑沿用自
+ * 矩阵方块 T显编译器（https://github.com/mc-str/MC-JZFK，Copyright © 2026 矩阵方块，GPLv3）。
+ * 其余实现为自行编写。本项目已另行取得原作者授权（含再授权权），故本仓库整体按 Apache-2.0 分发。
+ * 详见 /docs/third-party。
+ */
+
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useMessage } from 'naive-ui'
 import { renderRawtext } from '../utils/mcTextRender.js'

@@ -124,6 +124,7 @@ src:
     faq.md: 常见问题文档
     privacy.md: 隐私政策
     promotion.md: 推广合作说明页面
+    third-party.md: 第三方组件与许可声明页
     url-tj.md: 网址提交页面
   vendor:
     mcfc:
@@ -151,12 +152,13 @@ public:
   logos/: 首页工具卡片 Logo 图片
   img/: 图片资源
   sprites/: Minecraft Unicode 精灵图（glyph_E0.png / glyph_E1.png 源图 + glyph-pack.png 构建产物）
-  fonts/: 自定义字体文件（unifontdianzhenhei.woff2 / mc-symbols.woff2 / harmonyos-hollow.woff2）
+  fonts/: 自定义字体文件（unifontdianzhenhei-16.0.04.woff2 / mc-symbols.woff2 / harmonyos-hollow.woff2），文本字体文件名带上游版本号用于绕过 SW 的 CacheFirst 长期缓存
   .well-known/assetlinks.json: Android 数字资产链接验证文件
 docs:
   project-structure.yml: 项目结构描述文件（本文件）
   customize-theme.md: 主题与设计规范，token 三层结构、颜色与圆角规则
 deploy.config.example.json: 部署配置模板，复制为 deploy.config.json 后填写服务器信息（不参与 git）
+LICENSES/: 被译入/内置的第三方代码的许可证全文，按 REUSE 规范以 SPDX 标识符命名；完整 vendored 的库（如 src/vendor/mcfc）许可证随代码放在各自目录内
 scripts:
   route-list.js: 共享模块：从路由配置自动提取所有公开页面路径
   prerender.js: Puppeteer 预渲染脚本，并发爬取路由生成静态 HTML（SEO）

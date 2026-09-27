@@ -1,4 +1,12 @@
 <script setup>
+/*
+ * 来源声明：本文件的旧版 execute 语法升级逻辑（compileOldExecute）翻译自
+ * 命令模拟器（https://github.com/missing244/Command_Simulator）的
+ * expand_pack/transform_core/execute.py，依 MIT 许可使用，Copyright (c) 2023 missing244。
+ * 许可证全文见 LICENSES/MIT.txt。
+ * 分词器与新语法通道化处理为自行实现。
+ */
+
 import { ref } from 'vue'
 import { NIcon, useMessage } from 'naive-ui'
 import { Copy24Regular, Delete24Regular, ArrowTrending20Regular, ConvertRange24Regular } from '@vicons/fluent'

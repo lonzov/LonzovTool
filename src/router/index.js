@@ -119,6 +119,11 @@ const DOCS_META_MAP = {
     description: '小舟工具箱首页推广位合作说明：收录范围、展示尺寸、价格与周期、免费推广资格、素材要求与联系方式。',
     keywords: '小舟工具箱,推广合作,首页推广位,广告合作,Minecraft推广,广告位投放',
   },
+  'third-party': {
+    title: '第三方组件与许可声明 - 小舟工具箱',
+    description: '小舟工具箱使用的第三方组件、字体资源及其许可证与修改情况说明。',
+    keywords: '小舟工具箱,第三方组件,开源声明,开源许可证,字体授权,MIT,Apache',
+  },
 }
 
 /**
@@ -154,6 +159,7 @@ const KNOWN_DOCS = [
   { slug: 'faq', meta: DOCS_META_MAP.faq },
   { slug: 'dev', meta: DOCS_META_MAP.dev },
   { slug: 'promotion', meta: DOCS_META_MAP.promotion },
+  { slug: 'third-party', meta: DOCS_META_MAP['third-party'] },
 ]
 
 // 已知的下载页面路径（具体静态路由，用于 SSG 预渲染）

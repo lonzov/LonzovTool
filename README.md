@@ -8,7 +8,7 @@
 [![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=fff)](https://vitejs.dev/)
 [![pnpm](https://img.shields.io/badge/pnpm-%3E%3D9-F69220?logo=pnpm&logoColor=fff)](https://pnpm.io/)
 [![Node](https://img.shields.io/badge/Node-%3E%3D20.19-339933?logo=nodedotjs&logoColor=fff)](https://nodejs.org/)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue?logo=apache&logoColor=fff)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0_%7C_CC_BY--NC_4.0-blue?logo=apache&logoColor=fff)](LICENSE)
 [![Vibe Coding](https://img.shields.io/badge/Vibe-Coding-7C3AED?colorA=4B6BFB&colorB=7C3AED)](https://x.com/karpathy/status/1886192184808149383)
 
 一个简洁高效的 Minecraft 基岩版命令工具导航网站，聚合各类命令相关工具、文档与社区资源，其中100%的代码由 LLM 生成。

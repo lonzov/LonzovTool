@@ -46,6 +46,7 @@
             <li><a href="/docs/promotion/" @click.prevent="$router.push('/docs/promotion/')">推广合作</a></li>
             <li><a href="https://stats.uptimerobot.com/E0cvH6yiGq" target="_blank" rel="noopener noreferrer">站点监控</a></li>
             <li><a href="/docs/privacy/" @click.prevent="$router.push('/docs/privacy/')">隐私政策</a></li>
+            <li><a href="/docs/third-party/" @click.prevent="$router.push('/docs/third-party/')">开源声明</a></li>
             <li><a href="#" @click.prevent="handleUpdateCookie">隐私偏好</a></li>
           </ul>
         </div>

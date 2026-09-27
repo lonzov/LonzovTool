@@ -19,7 +19,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *
- * 适配修改：导出为 ES module，新增 parseMinecraftTextToHtml 返回 HTML 字符串供 v-html 使用。
+ * 适配修改：导出为 ES module；新增 parseMinecraftTextToHtml 与 parseMinecraftTextToHtmlWithState
+ * 两个返回 HTML 字符串的入口，后者额外带出结尾样式状态（finalState），供跨元素串联 § 样式继承。
  */
 
 // 颜色代码映射

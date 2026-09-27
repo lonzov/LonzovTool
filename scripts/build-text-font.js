@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
 const SCRIPT = resolve(__dirname, 'build-text-font.py')
-const FONT = resolve(ROOT, 'public', 'fonts', 'unifontdianzhenhei.woff2')
+const FONT = resolve(ROOT, 'public', 'fonts', 'unifontdianzhenhei-16.0.04.woff2')
 const CACHE = resolve(ROOT, 'node_modules', '.cache', 'lonzovtool', 'text-font-hash.txt')
 
 let python = null
@@ -33,7 +33,7 @@ for (const candidate of ['python', 'python3']) {
 }
 
 if (!python) {
-  console.warn('[text-font] 未找到可用的 Python + fontTools，跳过改写，沿用仓库里已有的 unifontdianzhenhei.woff2')
+  console.warn('[text-font] 未找到可用的 Python + fontTools，跳过改写，沿用仓库里已有的 unifontdianzhenhei-16.0.04.woff2')
   process.exit(0)
 }
 

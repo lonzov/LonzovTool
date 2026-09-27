@@ -1,5 +1,18 @@
-This project is dual-licensed. The source code and software components are licensed under the Apache License, Version 2.0; the documentation and other non-code content are licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
+本项目采用双授权：源码及软件组件适用 Apache License 2.0；文档及其他非代码内容适用 Creative Commons Attribution-NonCommercial 4.0 International（CC BY-NC 4.0）。
 
-The full text of the Apache License, Version 2.0 is available in the LICENSE-APACHE file at the root of this repository.
+本仓库另含第三方组件与素材，其版权归属、原始许可证与修改情况详见 docs/third-party 页面说明。
 
-The documentation and other creative works in this repository are licensed under CC BY-NC 4.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-nc/4.0/.
+Apache License 2.0 全文见仓库根目录的 LICENSE-APACHE 文件，亦可访问 https://www.apache.org/licenses/LICENSE-2.0 获取。
+
+CC BY-NC 4.0 协议全文见 https://creativecommons.org/licenses/by-nc/4.0/。以下条款用于补充说明该协议的授权范围与边界：
+
+1. 原创内容：本项目的页面设计、文档、下载页介绍及整体数据编排结构由 小舟工具箱 原创，采用 CC BY-NC 4.0 协议授权。
+
+2. Minecraft 素材隔离：本项目展示的 Minecraft 游戏内素材（包括但不限于字体字形、贴图材质、方块/物品图标、命令语法结构等）均为 Mojang Synergies AB / Microsoft Corporation 的知识产权，本项目仅依据 Minecraft Usage Guidelines 在社区工具范围内合理使用。该等素材不包含在上述 CC BY-NC 4.0 授权范围内，任何第三方不得且无法通过引用、转载或镜像本项目内容而获得对 Minecraft 素材的使用许可；第三方对 Minecraft 素材的任何使用须自行取得权利人授权或符合其官方使用规范。
+
+3. 第三方内容：各导航条目中的网站名称、官方简介、Logo、素材资源，以及本项目下载页所提供的第三方工具，版权均归原作者/商标所有者所有。本项目仅基于合理使用原则对各导航条目进行索引与展示，并经授权在下载页提供第三方工具的文件分发；该分发行为不构成对任何第三方的再授权，第三方如需二次分发，须自行取得原作者许可。
+
+4. 汇编数据的使用规范：
+本项目导航条目中单个卡片的标题与简介文案，系基于原站信息为适配展示场景而进行的改写，本项目不对其主张独立权利。单个卡片的客观事实信息（网站名称、URL、Logo 等）亦不受本条款约束。
+本项目对导航数据的选择与编排（即收录哪些网站、如何分类、如何组织卡片之间的组合关系）构成汇编作品，受著作权法保护，适用 CC BY-NC 4.0 协议授权。
+使用本项目的上述汇编成果，须遵守 CC BY-NC 4.0 协议，履行署名义务（Attribution）与非商业使用限制（NonCommercial）。

@@ -1,4 +1,4 @@
-"""改写文本字体 public/fonts/unifontdianzhenhei.woff2，让它按游戏内的方式排版。
+"""改写文本字体 public/fonts/unifontdianzhenhei-16.0.04.woff2，让它按游戏内的方式排版。
 
 做两件事：
 
@@ -21,7 +21,7 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FONT = os.path.join(ROOT, 'public', 'fonts', 'unifontdianzhenhei.woff2')
+FONT = os.path.join(ROOT, 'public', 'fonts', 'unifontdianzhenhei-16.0.04.woff2')
 
 
 # ===== 度量规则（字体单位，upem 1024）=====
