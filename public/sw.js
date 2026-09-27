@@ -28,6 +28,12 @@ const MINOR_CACHE_PATHS = ['/app-icon/', '/assets/']
 // ===== 离线页预缓存 URL（构建时由 minify-sw.js 注入实际文件列表） =====
 const OFFLINE_PRECACHE_URLS = ['__OFFLINE_PRECACHE_URLS__']
 
+// ===== 更新弹窗渲染器 chunk 预缓存 URL（构建时由 minify-sw.js 注入） =====
+// 弹窗弹出时页面仍跑旧版本代码，只会去取旧构建的 chunk 与样式；该 hash 一旦随新部署
+// 从产物中清除，请求即 404，弹窗内容区空白且无法靠超时兜底。故每一版在 install 时
+// 先把自己的渲染器 chunk 钉进本版缓存，旧版本页面靠旧 SW 的缓存命中
+const RENDERER_PRECACHE_URLS = ['__RENDERER_PRECACHE_URLS__']
+
 // ===== 激活时保留的缓存白名单 =====
 const PROTECTED_CACHES = [CACHE_NAME, STATIC_CACHE_NAME, MINOR_CACHE_NAME, FORCE_UPDATE_CACHE]
 
@@ -70,11 +76,13 @@ self.addEventListener('install', (event) => {
     })()
   )
 
-  // 异步预缓存离线页依赖：fire-and-forget，不阻塞 SW 激活
-  // URL 列表由构建脚本从 dist/offline/index.html 提取并注入
-  if (OFFLINE_PRECACHE_URLS[0] !== '__OFFLINE_PRECACHE_URLS__') {
+  // 异步预缓存离线页依赖与更新弹窗渲染器：fire-and-forget，不阻塞 SW 激活
+  // URL 列表由构建脚本注入，未注入时列表内只剩 __ 开头的占位符，过滤掉即可
+  const precacheUrls = [...OFFLINE_PRECACHE_URLS, ...RENDERER_PRECACHE_URLS]
+    .filter((url) => !url.startsWith('__'))
+  if (precacheUrls.length > 0) {
     caches.open(CACHE_NAME).then((cache) => {
-      OFFLINE_PRECACHE_URLS.forEach((url) => {
+      precacheUrls.forEach((url) => {
         fetch(new Request(url))
           .then((res) => { if (res.ok) cache.put(url, res) })
           .catch(() => { })

@@ -1,10 +1,9 @@
 <script setup>
 import { computed, watch, defineAsyncComponent, h } from 'vue'
 import { NTooltip, useMessage } from 'naive-ui'
-import { useSWUpdate } from '../composables/useSWUpdate'
+import { useSWUpdate, loadMarkdown } from '../composables/useSWUpdate'
 import AppModal from './ui/AppModal.vue'
-/* MarkdownRenderer 携带 markdown-it（~47K gz），只在弹窗真正展示更新内容时加载 */
-const loadMarkdown = () => import('./MarkdownRenderer.vue')
+/* chunk 由 useSWUpdate 在弹窗展示前预取，此处复用同一份 loader */
 const MarkdownRenderer = defineAsyncComponent(loadMarkdown)
 
 const { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, forceUpdate, silentUpdated, applyUpdate, deferUpdate } = useSWUpdate()
@@ -70,11 +69,6 @@ function getBtnClass(btn) {
   // 大版本强制更新：「暂不更新」置灰不可点
   return forceUpdate.value && isDeferBtn(btn) ? `${base} btn-force-disabled` : base
 }
-
-// 弹窗打开即预热 Markdown 渲染 chunk，使更新内容加载与弹窗动画重叠
-watch(showUpdateModal, (val) => {
-  if (val) loadMarkdown()
-})
 </script>
 
 <template>

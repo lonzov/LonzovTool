@@ -1,5 +1,20 @@
 import { ref } from 'vue'
 
+/* MarkdownRenderer 携带 markdown-it（~47K gz），仅在确定要弹更新弹窗时才拉取 */
+export const loadMarkdown = () => import('../components/MarkdownRenderer.vue')
+
+/**
+ * 渲染器 chunk（构建产物 ~100KB）预取，5s 内未就绪就先弹窗：
+ * 加载失败会自行 reject，无需靠超时兜底；上限只用于限制「慢而活着」的下载
+ * 推迟弹窗的时长，与 changelog 的超时对齐，使弹窗最晚推迟时间收敛为 5s
+ */
+function preloadMarkdown() {
+  return Promise.race([
+    loadMarkdown().catch(() => {}),
+    new Promise((resolve) => setTimeout(resolve, 5000)),
+  ])
+}
+
 const showUpdateModal = ref(false)
 const popupTitle = ref('')
 const popupContent = ref('')
@@ -52,7 +67,9 @@ function saveCurrentVersion() {
 function fetchPopupData(reg, currentVersion) {
   return new Promise((resolve) => {
     const mc = new MessageChannel()
-    const timer = setTimeout(() => resolve(null), 3000)
+    // 超时兜底：SW 无响应或 changelog 拉取失败时返回 null，弹窗退化为通用文案。
+    // 实测 changelog.md（不缓存、始终走网络）TTFB 可达 1.8s，3s 余量在弱网下不够
+    const timer = setTimeout(() => resolve(null), 5000)
     mc.port1.onmessage = (e) => {
       clearTimeout(timer)
       resolve(e.data.popupData || null)
@@ -75,8 +92,12 @@ async function handleUpdate(reg) {
       pendingSilentUpdate = true
       reg.waiting.postMessage('SKIP_WAITING')
     } else if (type === 'popup' || type === 'force') {
-      // 从 SW 获取弹窗内容
-      const data = await fetchPopupData(reg, curVer)
+      // changelog 内容与渲染器 chunk 并行预取，两者都就绪再弹窗：
+      // 弹窗一旦出现即是完整内容，不会先弹出再空着等资源
+      const [data] = await Promise.all([
+        fetchPopupData(reg, curVer),
+        preloadMarkdown(),
+      ])
       popupTitle.value = data?.title || '发现新版本'
       popupContent.value = data?.content || ''
       popupNewVersion.value = `v${newVer}`
