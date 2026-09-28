@@ -73,7 +73,7 @@ src:
         components:
           PageHeader.vue: 页面标题区
           Toolbar.vue: 工具栏按钮（导入/导出/示例/清空）
-          CodeView.vue: 代码卡片容器，编排参数行渲染与点击提交逻辑
+          CodeView.vue: 代码卡片容器，编排选择器头部与参数行渲染
           ParamLine.vue: 参数显示行（key = value），点击进入编辑
           EditLine.vue: 参数编辑行（所有编辑器类型：文本/反选/游戏模式/计分板/物品/权限/自定义）
           AddLine.vue: 添加参数表单行（NCascader 类型选择 + 各编辑器类型）

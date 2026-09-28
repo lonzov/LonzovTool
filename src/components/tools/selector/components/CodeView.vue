@@ -1,6 +1,6 @@
 <template>
   <div class="code-card">
-    <div class="code-view" @click.self="commitCurrentState">
+    <div class="code-view">
       <!-- 头部行: 选择器 + [ -->
       <div class="code-line code-line--header">
         <NSelect
