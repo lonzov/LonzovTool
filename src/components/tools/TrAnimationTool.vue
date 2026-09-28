@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { NIcon, NSelect, useMessage } from 'naive-ui'
-import { Copy24Regular, Delete24Regular, TextGrammarWand24Regular, ConvertRange24Regular } from '@vicons/fluent'
+import { ArrowSort24Regular, Copy16Regular, Delete24Regular, TextGrammarWand24Regular } from '@vicons/fluent'
 import { useToolStorage } from '../../composables/useToolStorage.js'
 
 defineProps({
@@ -256,11 +256,11 @@ function handleClear() {
 
       <div class="card-footer">
         <button class="control-btn" @click="handleConvert">
-          <NIcon :component="ConvertRange24Regular" />
+          <NIcon :component="ArrowSort24Regular" />
           <span>转换</span>
         </button>
         <button class="control-btn control-btn--ghost" @click="handleCopy">
-          <NIcon :component="Copy24Regular" />
+          <NIcon :component="Copy16Regular" />
           <span>复制</span>
         </button>
         <button class="control-btn control-btn--danger" @click="handleClear">
