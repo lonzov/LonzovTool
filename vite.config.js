@@ -100,6 +100,12 @@ export default defineConfig({
           if (assetInfo.name?.endsWith('.css')) {
             return 'assets/css/[name]-[hash].[ext]'
           }
+          // 推广图（src/assets/ads/）单独走带哈希的目录：素材按档期覆盖、文件名不变，
+          // 不带哈希会与旧图同名，浏览器和 CDN 会一直吃缓存而看不到新图
+          const sources = assetInfo.originalFileNames ?? []
+          if (sources.some((file) => file.replace(/\\/g, '/').includes('/assets/ads/'))) {
+            return 'assets/ads/[name]-[hash].[ext]'
+          }
           return 'assets/[name].[ext]'
         },
       },

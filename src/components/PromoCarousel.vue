@@ -2,7 +2,8 @@
 import { NCarousel, NCarouselItem } from 'naive-ui'
 
 // 滑片数据来自 src/data/homePromo.js（独立模块，构建后为独立 chunk，动态导入），
-// 按首屏位 / 付费位 / 免费位 / 公告位四档拼成轮播顺序，见下方 resolveSlides
+// 按首屏位 / 付费位 / 免费位 / 公告位四档拼成轮播顺序，见下方 resolveSlides；
+// 图址已由该模块解析成可直接使用的 URL，组件只负责按 URL 渲染
 // 配置加载完成前用占位滑片顶位；只放一条，避免首屏闪现多条才有的指示点与切换按钮
 const PLACEHOLDER_SLIDES = [{ id: 1, image: '' }]
 
@@ -122,7 +123,7 @@ export default {
       e.preventDefault()
       if (this.$router) this.$router.push(link)
     },
-    // 图片加载失败（断网/防盗链/404）→ 标记该滑片，改渲染灰底图标占位
+    // 图片加载失败（断网/404/外链被防盗链拦截）→ 标记该滑片，改渲染灰底图标占位
     handleImageError(i) {
       this.failedSlides[i] = true
     },
