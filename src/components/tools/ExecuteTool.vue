@@ -494,27 +494,34 @@ function handleClear() {
       <p class="page-desc">将旧版 execute 指令语法升级为新版格式</p>
     </div>
 
-    <!-- 输入区卡片 -->
+    <!-- 输入卡片，底部收一条贯穿式操作栏 -->
     <div class="tool-card">
-      <textarea
-        v-model="inputText"
-        class="text-input"
-        placeholder="在此输入需要转换的旧版 execute 命令..."
-        spellcheck="false"
-        autocomplete="off"
-        autocapitalize="off"
-      ></textarea>
+      <div class="card-body">
+        <div class="form-field">
+          <label for="execute-input">输入文本</label>
+          <textarea
+            id="execute-input"
+            v-model="inputText"
+            class="text-input"
+            placeholder="在此输入需要转换的旧版 execute 命令..."
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+          ></textarea>
+          <p class="field-hint">支持多行，非 execute 行原样保留</p>
+        </div>
+      </div>
 
-      <div class="btn-row">
+      <div class="card-footer">
         <button class="control-btn" @click="handleConvert">
           <NIcon :component="ConvertRange24Regular" />
           <span>转换</span>
         </button>
-        <button class="control-btn" @click="handleCopy">
+        <button class="control-btn control-btn--ghost" @click="handleCopy">
           <NIcon :component="Copy24Regular" />
           <span>复制</span>
         </button>
-        <button class="control-btn" @click="handleClear">
+        <button class="control-btn control-btn--danger" @click="handleClear">
           <NIcon :component="Delete24Regular" />
           <span>清空</span>
         </button>
@@ -522,14 +529,20 @@ function handleClear() {
     </div>
 
     <!-- 输出区（单独卡片） -->
-    <div class="tool-card tool-card--output">
-      <textarea
-        :value="outputText"
-        class="text-input"
-        placeholder="转换结果将显示在这里..."
-        spellcheck="false"
-        readonly
-      ></textarea>
+    <div class="tool-card">
+      <div class="card-body">
+        <div class="form-field">
+          <label for="execute-output">转换结果</label>
+          <textarea
+            id="execute-output"
+            :value="outputText"
+            class="text-input"
+            placeholder="转换结果将显示在这里..."
+            spellcheck="false"
+            readonly
+          ></textarea>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -573,35 +586,66 @@ function handleClear() {
   margin-top: 6px;
 }
 
-/* ===== 卡片 ===== */
+/* ===== 卡片：内容区与底部操作栏分段，两者之间的分割线贯穿整卡 ===== */
 .tool-card {
   background: var(--card);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
-  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  overflow: hidden;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px;
+}
 
-.tool-card--output {
-  min-height: 160px;
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  background: var(--accent);
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+
+/* ===== 表单字段（标签在上，控件在下） ===== */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.field-hint {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+  margin: 0;
 }
 
 /* ===== 文本域 ===== */
 .text-input {
   width: 100%;
-  flex: 1;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 15px;
   font-size: 1rem;
   resize: none;
-  background-color: transparent;
+  background-color: var(--input-background);
   color: var(--foreground);
-  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, background-color 0.4s ease;
   font-family: inherit;
   line-height: 1.6;
   min-height: 160px;
@@ -617,40 +661,37 @@ function handleClear() {
   color: var(--subtle-foreground);
 }
 
-/* ===== 按钮行（靠右对齐） ===== */
-.btn-row {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
-  padding-top: 4px;
-}
-
+/* ===== 按钮 ===== */
 .control-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  border: none;
-  padding: 9px 20px;
-  font-size: 0.95rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background-color 0.4s ease, color 0.4s ease;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   font-family: inherit;
-  height: 38px;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
   -webkit-tap-highlight-color: transparent;
-  position: relative;
-  overflow: hidden;
 }
 
-.control-btn:active {
-  transform: none;
-  box-shadow: none;
+.control-btn--ghost {
+  background-color: var(--accent);
+  border-color: var(--border-strong);
+  color: var(--foreground);
+}
+
+/* 危险操作只做浅底红字，实心红在这类「清空」动作上过重 */
+.control-btn--danger {
+  background-color: color-mix(in srgb, var(--destructive) 10%, transparent);
+  color: var(--destructive);
 }
 
 .control-btn :deep(.n-icon) {
@@ -659,20 +700,15 @@ function handleClear() {
 
 /* ===== 响应式 ===== */
 @media (max-width: 640px) {
-  .btn-row {
+  .card-body {
+    padding: 12px;
+    gap: 16px;
+  }
+
+  .card-footer {
     justify-content: center;
     flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .control-btn {
-    padding: 8px 16px;
-    font-size: 0.9rem;
-  }
-
-  .tool-card {
     padding: 12px;
-    gap: 12px;
   }
 
   .text-input {

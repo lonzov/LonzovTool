@@ -203,75 +203,89 @@ function handleClear() {
       <p class="page-desc">生成打字机动画效果的rawJSON</p>
     </div>
 
-    <!-- 配置+输入+按钮 合并卡片 -->
+    <!-- 配置+输入卡片，底部收一条贯穿式操作栏 -->
     <div class="tool-card">
-      <div class="form-field">
-        <label for="startScoreInput">初始的分数</label>
-        <input
-          id="startScoreInput"
-          v-model="startScore"
-          type="number"
-          class="field-input"
-          placeholder="不填默认为0"
-          min="0"
-        />
+      <div class="card-body">
+        <div class="form-field">
+          <label for="scoreboardInput">计分板名称</label>
+          <input
+            id="scoreboardInput"
+            v-model="scoreboardName"
+            type="text"
+            class="field-input"
+            placeholder="例如: T显"
+          />
+          <p class="field-hint">动画靠这个计分板的分数推进，分数加1字数加1</p>
+        </div>
+
+        <div class="form-field">
+          <label for="startScoreInput">初始的分数</label>
+          <input
+            id="startScoreInput"
+            v-model="startScore"
+            type="number"
+            class="field-input"
+            placeholder="不填默认为0"
+            min="0"
+          />
+        </div>
+
+        <div class="form-field">
+          <label>是否初始化</label>
+          <NSelect
+            v-model:value="initialize"
+            :options="initOptions"
+            class="field-select"
+          />
+          <p class="field-hint">选「是」时外面会再套一层 /execute 与 titleraw，可直接整条粘贴执行</p>
+        </div>
+
+        <div class="form-field">
+          <label for="tr-input">输入文本</label>
+          <textarea
+            id="tr-input"
+            v-model="inputText"
+            class="text-input"
+            placeholder="请输入需要转换的文本（支持 §颜色码 和 \n 换行）..."
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+          ></textarea>
+        </div>
       </div>
 
-      <div class="form-field">
-        <label for="scoreboardInput">计分板名称</label>
-        <input
-          id="scoreboardInput"
-          v-model="scoreboardName"
-          type="text"
-          class="field-input"
-          placeholder="例如: T显"
-        />
+      <div class="card-footer">
+        <button class="control-btn" @click="handleConvert">
+          <NIcon :component="ConvertRange24Regular" />
+          <span>转换</span>
+        </button>
+        <button class="control-btn control-btn--ghost" @click="handleCopy">
+          <NIcon :component="Copy24Regular" />
+          <span>复制</span>
+        </button>
+        <button class="control-btn control-btn--danger" @click="handleClear">
+          <NIcon :component="Delete24Regular" />
+          <span>清空</span>
+        </button>
       </div>
-
-      <div class="form-field">
-        <label>是否初始化</label>
-        <NSelect
-          v-model:value="initialize"
-          :options="initOptions"
-          class="field-select"
-        />
-      </div>
-
-    <textarea
-      v-model="inputText"
-      class="text-input"
-      placeholder="请输入需要转换的文本（支持 §颜色码 和 \n 换行）..."
-      spellcheck="false"
-      autocomplete="off"
-      autocapitalize="off"
-    ></textarea>
-
-    <div class="btn-row">
-      <button class="control-btn" @click="handleConvert">
-        <NIcon :component="ConvertRange24Regular" />
-        <span>转换</span>
-      </button>
-      <button class="control-btn" @click="handleCopy">
-        <NIcon :component="Copy24Regular" />
-        <span>复制</span>
-      </button>
-      <button class="control-btn" @click="handleClear">
-        <NIcon :component="Delete24Regular" />
-        <span>清空</span>
-      </button>
     </div>
-  </div>
 
-  <!-- 输出区（单独卡片） -->
-  <div class="tool-card tool-card--output">
-    <textarea
-      :value="outputText"
-      class="text-input"
-      placeholder="转换结果将显示在这里..."
-      spellcheck="false"
-      readonly
-    ></textarea>
-  </div>
+    <!-- 输出区（单独卡片） -->
+    <div class="tool-card">
+      <div class="card-body">
+        <div class="form-field">
+          <label for="tr-output">转换结果</label>
+          <textarea
+            id="tr-output"
+            :value="outputText"
+            class="text-input"
+            placeholder="转换结果将显示在这里..."
+            spellcheck="false"
+            readonly
+          ></textarea>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -314,34 +328,53 @@ function handleClear() {
   margin-top: 6px;
 }
 
-/* ===== 卡片 ===== */
+/* ===== 卡片：内容区与底部操作栏分段，两者之间的分割线贯穿整卡 ===== */
 .tool-card {
   background: var(--card);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
-  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  overflow: hidden;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
-
-.tool-card--output {
-  min-height: 160px;
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px;
 }
 
-/* ===== 表单字段（标签在上，控件在下，参考图片布局） ===== */
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  background: var(--accent);
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+
+/* ===== 表单字段（标签在上，控件在下） ===== */
 .form-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .form-field label {
   font-size: 13px;
   font-weight: 600;
+  color: var(--foreground);
+}
+
+.field-hint {
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--muted-foreground);
+  margin: 0;
 }
 
 .field-input {
@@ -350,7 +383,7 @@ function handleClear() {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   font-size: 1rem;
-  background-color: var(--muted);
+  background-color: var(--input-background);
   color: var(--foreground);
   transition: border-color 0.4s ease, box-shadow 0.4s ease, background-color 0.4s ease;
   font-family: inherit;
@@ -384,15 +417,14 @@ function handleClear() {
 /* ===== 文本域 ===== */
 .text-input {
   width: 100%;
-  flex: 1;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 15px;
   font-size: 1rem;
   resize: none;
-  background-color: transparent;
+  background-color: var(--input-background);
   color: var(--foreground);
-  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, background-color 0.4s ease;
   font-family: inherit;
   line-height: 1.6;
   min-height: 160px;
@@ -408,40 +440,37 @@ function handleClear() {
   color: var(--subtle-foreground);
 }
 
-/* ===== 按钮行（靠右对齐） ===== */
-.btn-row {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 10px;
-  padding-top: 4px;
-}
-
+/* ===== 按钮 ===== */
 .control-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  border: none;
-  padding: 9px 20px;
-  font-size: 0.95rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background-color 0.4s ease, color 0.4s ease;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 0.875rem;
   font-weight: 600;
   font-family: inherit;
-  height: 38px;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
   -webkit-tap-highlight-color: transparent;
-  position: relative;
-  overflow: hidden;
 }
 
-.control-btn:active {
-  transform: none;
-  box-shadow: none;
+.control-btn--ghost {
+  background-color: var(--accent);
+  border-color: var(--border-strong);
+  color: var(--foreground);
+}
+
+/* 危险操作只做浅底红字，实心红在这类「清空」动作上过重 */
+.control-btn--danger {
+  background-color: color-mix(in srgb, var(--destructive) 10%, transparent);
+  color: var(--destructive);
 }
 
 .control-btn :deep(.n-icon) {
@@ -450,20 +479,15 @@ function handleClear() {
 
 /* ===== 响应式 ===== */
 @media (max-width: 640px) {
-  .tool-card {
+  .card-body {
     padding: 12px;
-    gap: 12px;
+    gap: 16px;
   }
 
-  .btn-row {
+  .card-footer {
     justify-content: center;
     flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .control-btn {
-    padding: 8px 16px;
-    font-size: 0.9rem;
+    padding: 12px;
   }
 
   .text-input {
