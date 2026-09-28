@@ -126,11 +126,12 @@ async function handleCopy() {
 
 let clearClickCount = 0
 let clearClickTimer = null
+let clearConfirmMsg = null
 
 function handleClear() {
   clearClickCount++
   if (clearClickCount === 1) {
-    message.warning('双击确认清空', { duration: 1800 })
+    clearConfirmMsg = message.warning('双击确认清空', { duration: 1800 })
     clearClickTimer = setTimeout(() => {
       clearClickCount = 0
       clearClickTimer = null
@@ -141,7 +142,12 @@ function handleClear() {
     clearClickCount = 0
     inputText.value = ''
     outputText.value = ''
-    message.info('已清空', { duration: 1800 })
+    // 先销毁确认提示再重发结果提示，独占展示位并保证完整停留时长
+    if (clearConfirmMsg) {
+      clearConfirmMsg.destroy()
+      clearConfirmMsg = null
+    }
+    message.success('已清空', { duration: 1800 })
   }
 }
 </script>
