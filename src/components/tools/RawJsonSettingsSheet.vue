@@ -104,6 +104,7 @@ function openTool(fn) {
     height="80%"
     :style="{
       background: 'var(--background)',
+      border: '1px solid var(--border)',
       boxShadow: 'var(--shadow-drawer)',
       borderTopLeftRadius: 'var(--radius-2xl)',
       borderTopRightRadius: 'var(--radius-2xl)',
