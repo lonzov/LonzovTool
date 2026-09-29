@@ -4,6 +4,7 @@ import { NIcon, NCascader, useMessage } from 'naive-ui'
 import { Link24Filled, ArrowDownload24Filled, ArrowUpRight20Filled } from '@vicons/fluent'
 import { useMouseGlow, applyGlow } from '../../composables/useMouseGlow'
 import AppModal from '../ui/AppModal.vue'
+import { copyText } from '../../utils/clipboard.js'
 
 const props = defineProps({
   show: Boolean,
@@ -82,22 +83,7 @@ async function handleOriginalLink() {
   const pwd = lz?.password
   const slug = props.pageName
   if (pwd && !_copyFailedSlugs.has(slug)) {
-    let copied = false
-    try {
-      await navigator.clipboard.writeText(pwd)
-      copied = true
-    } catch {
-      try {
-        const textarea = document.createElement('textarea')
-        textarea.value = pwd
-        textarea.setAttribute('readonly', '')
-        textarea.style.cssText = 'position:fixed;left:-9999px'
-        document.body.appendChild(textarea)
-        textarea.select()
-        copied = !!document.execCommand('copy')
-        document.body.removeChild(textarea)
-      } catch { /* ignore */ }
-    }
+    const copied = await copyText(pwd)
     if (!copied) {
       _copyFailedSlugs.add(slug)
       message.error(`复制失败，请在记住密码 ${pwd} 后再次点击`, { duration: 6000 })

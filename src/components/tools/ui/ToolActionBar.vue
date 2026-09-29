@@ -2,6 +2,7 @@
 import { onBeforeUnmount } from 'vue'
 import { NIcon, useMessage } from 'naive-ui'
 import { ArrowSort24Regular, Copy16Regular, Delete24Regular } from '@vicons/fluent'
+import { copyText } from '../../../utils/clipboard.js'
 
 const props = defineProps({
   /** 当前转换结果。为空表示还没转换过，复制时给出提示 */
@@ -20,23 +21,9 @@ async function handleCopy() {
     message.warning('请先转换再复制', { duration: 1800 })
     return
   }
-  try {
-    await navigator.clipboard.writeText(props.output)
-    message.success('复制成功！', { duration: 1800 })
-  } catch {
-    // 非安全上下文或用户拒绝剪贴板权限时退回 execCommand
-    try {
-      const textarea = document.createElement('textarea')
-      textarea.value = props.output
-      document.body.appendChild(textarea)
-      textarea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textarea)
-      message.success('复制成功！', { duration: 1800 })
-    } catch {
-      message.error('复制失败', { duration: 1800 })
-    }
-  }
+  const copied = await copyText(props.output)
+  if (copied) message.success('复制成功！', { duration: 1800 })
+  else message.error('复制失败', { duration: 1800 })
 }
 
 // 清空不可撤销，用两次点击代替模态框：窗口期内第二次点击才真正执行

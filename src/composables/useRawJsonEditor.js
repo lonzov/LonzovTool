@@ -9,6 +9,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useMessage } from 'naive-ui'
 import { renderRawtext } from '../utils/mcTextRender.js'
 import { parseJsonWithHint } from '../utils/jsonError.js'
+import { copyText } from '../utils/clipboard.js'
 import { lookupTranslate, langRevision } from './useRawJsonLang.js'
 import { simulator } from './useRawJsonSimulator.js'
 import { confirmDialog } from './useConfirm.js'
@@ -793,34 +794,22 @@ export async function parseImport() {
 export function openColorTable() { showColorModal.value = true }
 export function closeColorTable() { showColorModal.value = false }
 
-export function copyColorCode(code) {
-  const text = '§' + code
-  navigator.clipboard.writeText(text).then(() => {
-    if (_msg) _msg.success(`已复制 §${code}`, { duration: 1200 })
-  }).catch(() => {
-    const input = document.createElement('input')
-    input.value = text
-    document.body.appendChild(input)
-    input.select()
-    document.execCommand('copy')
-    document.body.removeChild(input)
-  })
+export async function copyColorCode(code) {
+  const copied = await copyText('§' + code)
+  if (!_msg) return
+  if (copied) _msg.success(`已复制 §${code}`, { duration: 1200 })
+  else _msg.error('复制失败，请手动选择', { duration: 1800 })
 }
 
 // ========== 工具操作 ==========
 export function formatJson() { jsonFormatted.value = true }
 export function minifyJson() { jsonFormatted.value = false }
 
-export function copyCommand() {
-  const cmd = commandOutput.value
-  navigator.clipboard.writeText(cmd).then(() => {
-    if (_msg) _msg.success('命令已复制', { duration: 1800 })
-  }).catch(() => {
-    const input = document.createElement('input')
-    input.value = cmd; document.body.appendChild(input)
-    input.select(); document.execCommand('copy')
-    document.body.removeChild(input)
-  })
+export async function copyCommand() {
+  const copied = await copyText(commandOutput.value)
+  if (!_msg) return
+  if (copied) _msg.success('命令已复制', { duration: 1800 })
+  else _msg.error('复制失败，请手动选择', { duration: 1800 })
 }
 
 export async function clearAll() {

@@ -3,6 +3,7 @@ import { ref, computed, watch, nextTick, onUnmounted } from 'vue'
 import { useMessage } from 'naive-ui'
 import { useRoute } from 'vue-router'
 import AppModal from './ui/AppModal.vue'
+import { copyText } from '../utils/clipboard.js'
 
 const props = defineProps({ show: Boolean })
 const emit = defineEmits(['update:show'])
@@ -200,26 +201,9 @@ async function generatePoster() {
 // ---- 复制链接 ----
 async function copyLink() {
   trackShare()
-  const url = window.location.href
-  try {
-    await navigator.clipboard.writeText(url)
-    message.success('已复制', { duration: 1000 })
-  } catch {
-    try {
-      const textarea = document.createElement('textarea')
-      textarea.value = url
-      textarea.setAttribute('readonly', '')
-      textarea.style.position = 'absolute'
-      textarea.style.left = '-9999px'
-      document.body.appendChild(textarea)
-      textarea.select()
-      if (!document.execCommand('copy')) throw new Error()
-      document.body.removeChild(textarea)
-      message.success('已复制', { duration: 1000 })
-    } catch {
-      message.error('复制失败，请重试', { duration: 1000 })
-    }
-  }
+  const copied = await copyText(window.location.href)
+  if (copied) message.success('已复制', { duration: 1000 })
+  else message.error('复制失败，请重试', { duration: 1000 })
 }
 
 // ---- 保存图片 ----

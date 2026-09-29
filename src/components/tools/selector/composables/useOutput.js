@@ -4,6 +4,7 @@ import { cancelEdit, cancelAdd } from './useParams.js'
 import { makeParam } from './useParams.js'
 import { getParamKey, getParamEditor } from './useParams.js'
 import { triggerSave } from './usePersistence.js'
+import { copyText } from '../../../../utils/clipboard.js'
 import { confirmDialog } from '../../../../composables/useConfirm.js'
 
 // ========== 字符串转义 ==========
@@ -126,20 +127,11 @@ export const compactOutput = computed(() => {
 
 // ========== 复制（导出） ==========
 
-export function copyOutput() {
-  const text = compactOutput.value
-  navigator.clipboard.writeText(text).then(() => {
-    if (internals.msg) internals.msg.success('选择器已复制到剪贴板', { duration: 1800 })
-  }).catch(() => {
-    const ta = document.createElement('textarea')
-    ta.value = text
-    ta.style.position = 'fixed'
-    ta.style.left = '-9999px'
-    document.body.appendChild(ta)
-    ta.select()
-    document.execCommand('copy')
-    document.body.removeChild(ta)
-  })
+export async function copyOutput() {
+  const copied = await copyText(compactOutput.value)
+  if (!internals.msg) return
+  if (copied) internals.msg.success('选择器已复制到剪贴板', { duration: 1800 })
+  else internals.msg.error('复制失败，请手动选择', { duration: 1800 })
 }
 
 // ========== 清空 ==========

@@ -5,6 +5,7 @@ import { CurrencyDollarEuro20Regular } from '@vicons/fluent'
 import { useMouseGlow, applyGlow } from '../../composables/useMouseGlow.js'
 import { useToolStorage } from '../../composables/useToolStorage.js'
 import { renderMcText } from '../../utils/mcTextRender.js'
+import { copyText } from '../../utils/clipboard.js'
 import data from '../../data/glyph-map.json'
 import '../../vendor/mcfc/mcfc.css'
 
@@ -91,40 +92,24 @@ function switchRailStyle({ focused, checked }) {
 // ===== 复制反馈 =====
 async function handleCardClick(icon) {
 
-  let copyText
+  let text
   if (!copyModeCodepoint.value) {
-    copyText = icon.character
+    text = icon.character
   } else {
     if (icon.codePointHex === 'a0a') {
-      copyText = '\\u0061\\u0000\\u0061'
+      text = '\\u0061\\u0000\\u0061'
     } else {
       const num = parseInt(icon.codePointHex, 16)
       if (isNaN(num)) return
-      copyText = `\\u${num.toString(16).padStart(4, '0').toUpperCase()}`
+      text = `\\u${num.toString(16).padStart(4, '0').toUpperCase()}`
     }
   }
 
-  if (!copyText) return
+  if (!text) return
 
-  try {
-    await navigator.clipboard.writeText(copyText)
-    message.success('已复制', { duration: 1000 })
-  } catch {
-    try {
-      const textarea = document.createElement('textarea')
-      textarea.value = copyText
-      textarea.setAttribute('readonly', '')
-      textarea.style.position = 'absolute'
-      textarea.style.left = '-9999px'
-      document.body.appendChild(textarea)
-      textarea.select()
-      if (!document.execCommand('copy')) throw new Error()
-      document.body.removeChild(textarea)
-      message.success('已复制', { duration: 1000 })
-    } catch {
-      message.error('复制失败，请重试', { duration: 1000 })
-    }
-  }
+  const copied = await copyText(text)
+  if (copied) message.success('已复制', { duration: 1000 })
+  else message.error('复制失败，请重试', { duration: 1000 })
 }
 
 // ===== 鼠标高光跟随 =====
