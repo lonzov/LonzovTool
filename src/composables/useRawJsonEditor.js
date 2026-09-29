@@ -415,11 +415,11 @@ export function getElTypeClass(el) {
 }
 
 // ========== 元素操作 ==========
-export function addElement(idx = null) {
+export function addElement(idx = null, type = 'text') {
   insertIdx.value = idx
   editIdx.value = null
   resetEditForm()
-  editType.value = 'text'
+  editType.value = type
   showEditModal.value = true
 }
 

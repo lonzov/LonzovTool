@@ -434,7 +434,7 @@ export default {
   >
     <NMessageProvider>
     <!-- 桌面端 -->
-    <div v-if="!isMobile" style="height: 100vh; display: flex">
+    <div v-if="!isMobile" class="app-shell app-shell--desktop" style="height: 100vh; display: flex">
       <NLayout has-sider style="flex: 1; height: 100%">
         <NLayoutSider
           :bordered="false"
@@ -557,7 +557,11 @@ export default {
     </div>
 
     <!-- 移动端 -->
-    <div v-else :style="{ minHeight: '100vh', background: 'var(--background)', transition: 'background-color 0.3s cubic-bezier(.4, 0, .2, 1)' }">
+    <div
+      v-else
+      class="app-shell app-shell--mobile"
+      :style="{ minHeight: '100vh', background: 'var(--background)', transition: 'background-color 0.3s cubic-bezier(.4, 0, .2, 1)' }"
+    >
       <NLayoutHeader
         :style="{
           display: 'flex',
@@ -768,6 +772,16 @@ export default {
 </template>
 
 <style>
+/* ===== 外壳可用高度 =====
+   内容区上下留白之外的视口高度，供需要整屏不滚动的页面直接取用，
+   免得各处再按外壳自己的边距算一遍。桌面壳是 12 + 24，移动壳还要多扣顶部 56px 的站点头 */
+.app-shell--desktop {
+  --shell-content-height: calc(100vh - 36px);
+}
+.app-shell--mobile {
+  --shell-content-height: calc(100dvh - 92px);
+}
+
 /* ===== 非官方站点横幅（样式参考 index.html 中的 .loading-timeout-banner）===== */
 .unofficial-domain-banner {
   background: var(--destructive);

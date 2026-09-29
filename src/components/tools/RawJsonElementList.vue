@@ -12,7 +12,7 @@ import {
   <div class="list-body">
     <!-- 空状态 -->
     <div v-if="data.length === 0" class="empty-state">
-      <span>点击「添加元素」开始构建</span>
+      <span>点击上方按钮开始构建</span>
     </div>
 
     <!-- 元素卡片列表 -->

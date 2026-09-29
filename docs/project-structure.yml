@@ -45,10 +45,18 @@ src:
       TrAnimationTool.vue: T显动画编辑器工具页
       ExecuteTool.vue: 语法转换工具页
       FuhaoTool.vue: 特殊符号工具页
-      RawJsonTool.vue: T显可视化编辑器（主组件）
-      RawJsonConfigBar.vue: T显编辑器：配置栏 + 工具栏
+      RawJsonTool.vue: T显可视化编辑器（主组件），按自身可用宽度在桌面双栏与紧凑单栏间切换
+      RawJsonConfigBar.vue: T显编辑器桌面布局左栏：配置 + 工具栏 + 元素列表
+      RawJsonConfigCard.vue: T显编辑器：指令类型/显示位置/目标配置卡
+      RawJsonListCard.vue: T显编辑器：元素列表卡片外壳，紧凑布局下添加入口移到列表末尾
       RawJsonElementList.vue: T显编辑器：元素节点列表
-      RawJsonRightPanel.vue: T显编辑器：预览 + JSON + 命令输出
+      RawJsonPreviewCard.vue: T显编辑器：预览卡，紧凑布局下底部附编辑快捷栏，JSON 模式改渲染 JSON 文本
+      RawJsonPreviewBox.vue: T显编辑器：游戏渲染舞台（深底 + § 颜色代码渲染）
+      RawJsonFormatToggle.vue: T显编辑器：JSON 格式化/压缩二选一按钮组
+      RawJsonCard.vue: T显编辑器：卡片外壳（底色/描边/标题行），预览与输出三类卡共用
+      RawJsonOutputCard.vue: T显编辑器：JSON 输出卡，JSON 模式下换成游戏渲染
+      RawJsonCommandCard.vue: T显编辑器：命令输出卡 + 复制命令
+      RawJsonSettingsSheet.vue: T显编辑器紧凑布局：底部设置面板（配置/导入/语言包/清空/输出）
       RawJsonEditModal.vue: T显编辑器：编辑/添加元素弹窗
       RawJsonImportModal.vue: T显编辑器：导入指令弹窗
       RawJsonColorModal.vue: T显编辑器：颜色参考表弹窗
@@ -94,6 +102,7 @@ src:
     useRawJsonEditor.js: T显编辑器核心状态与逻辑（模块级单例）
     useRawJsonLang.js: T显编辑器语言包状态与 localforage(IndexedDB) 持久化（模块级单例）
     useRawJsonSimulator.js: T显编辑器预览模拟器状态与 localStorage 持久化（模块级单例）
+    useRawJsonRenderMode.js: T显编辑器渲染模式（游戏 / JSON）状态与 localStorage 持久化（模块级单例）
     useSWUpdate.js: Service Worker 更新检测与版本比较组合式函数
     useStats.js: 访问统计状态管理组合式函数（模块级单例，含内存/localsStorage双层缓存）
     useHeightTransition.js: 内容高度变化时的容器高度过渡（ResizeObserver 驱动，弹窗用）
