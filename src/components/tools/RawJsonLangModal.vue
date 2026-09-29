@@ -13,6 +13,12 @@ import {
 
 const message = useMessage()
 
+// 关闭按钮 / 遮罩 / Esc 统一走 closeLangModal，Esc 的展开下拉判断交给 NModal
+function onShowChange(visible) {
+  if (visible) showLangModal.value = true
+  else closeLangModal()
+}
+
 const activePack = computed(() => langPackList.value.find(p => p.id === activePackId.value) || null)
 const sourceLabel = { lang: '.lang', json: 'JSON', paste: '粘贴' }
 
@@ -76,12 +82,13 @@ function doDelete(id) {
 
 <template>
   <AppModal
-    v-model:show="showLangModal"
+    :show="showLangModal"
     title="语言包"
     :max-width="640"
     :max-height-offset="110"
     content-scrollable
     animated
+    @update:show="onShowChange"
   >
     <!-- 当前生效 -->
     <div class="lang-section">

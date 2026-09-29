@@ -1,11 +1,17 @@
 <script setup>
 import AppModal from '../ui/AppModal.vue'
 import { showImportModal, importText, importError, closeImport, parseImport } from '../../composables/useRawJsonEditor.js'
+
+// 关闭按钮 / 遮罩 / Esc 统一走 closeImport，Esc 的展开下拉判断交给 NModal
+function onShowChange(visible) {
+  if (visible) showImportModal.value = true
+  else closeImport()
+}
 </script>
 
 <template>
   <AppModal
-    v-model:show="showImportModal"
+    :show="showImportModal"
     title="导入指令"
     :max-width="520"
     content-scrollable
@@ -13,6 +19,7 @@ import { showImportModal, importText, importError, closeImport, parseImport } fr
       { text: '取消', variant: 'outline', onClick: closeImport },
       { text: '解析', variant: 'fill', onClick: parseImport },
     ]"
+    @update:show="onShowChange"
   >
     <p class="import-hint">粘贴 tellraw 或 titleraw 指令（开头可加 / 或不加），自动解析 JSON 部分</p>
     <textarea

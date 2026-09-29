@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { NIcon, NDrawer, NDrawerContent } from 'naive-ui'
 import { ArrowImport24Regular, LocalLanguage24Regular, Delete24Regular } from '@vicons/fluent'
 import { openImport, clearAll } from '../../composables/useRawJsonEditor.js'
@@ -80,6 +80,14 @@ function onDragEnd() {
   el.style.transform = 'translateY(100%)'
   setTimeout(() => emit('update:show', false), SNAP_BACK_MS)
 }
+
+// 拖拽中布局切回桌面会把整个抽屉卸载，window 上的监听得自己摘干净
+onBeforeUnmount(() => {
+  window.removeEventListener('pointermove', onDragMove)
+  window.removeEventListener('pointerup', onDragEnd)
+  dragging = false
+  drawerEl = null
+})
 
 // 弹窗与面板叠在一起会互相遮挡，先在面板内发起、关掉面板再开弹窗
 function openTool(fn) {

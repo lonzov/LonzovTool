@@ -8,11 +8,16 @@ import {
   closeSimModal, addSimScore, removeSimScore, resetSimulator, triggerSimSave,
 } from '../../composables/useRawJsonSimulator.js'
 
+// 关闭按钮 / 遮罩 / Esc 统一走 closeSimModal（内含落盘），Esc 的展开下拉判断交给 NModal
+function onShowChange(visible) {
+  if (visible) showSimModal.value = true
+  else closeSimModal()
+}
 </script>
 
 <template>
   <AppModal
-    v-model:show="showSimModal"
+    :show="showSimModal"
     title="预览模拟器"
     :max-width="560"
     :max-height-offset="110"
@@ -22,6 +27,7 @@ import {
       { text: '重置', variant: 'outline', onClick: resetSimulator },
       { text: '完成', variant: 'fill', onClick: closeSimModal },
     ]"
+    @update:show="onShowChange"
   >
     <p class="sim-hint">
       预览里的 <code>selector</code> 和 <code>score</code> 元素需要知道「谁在看这条消息」才能求值。

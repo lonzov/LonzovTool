@@ -1,12 +1,9 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { NIcon } from 'naive-ui'
 import { Braces24Filled, Settings24Regular, Add16Filled } from '@vicons/fluent'
 import {
-  useRawJsonEditor,
-  showEditModal, showImportModal, showColorModal, elementCount,
-  closeEditModal, closeImport, closeColorTable,
-  addElement, undo, redo,
+  useRawJsonEditor, elementCount, addElement, undo, redo,
 } from '../../composables/useRawJsonEditor.js'
 import RawJsonConfigBar from './RawJsonConfigBar.vue'
 import RawJsonElementList from './RawJsonElementList.vue'
@@ -20,10 +17,8 @@ import RawJsonImportModal from './RawJsonImportModal.vue'
 import RawJsonColorModal from './RawJsonColorModal.vue'
 import RawJsonLangModal from './RawJsonLangModal.vue'
 import RawJsonSimulatorModal from './RawJsonSimulatorModal.vue'
-import { initLangStore, showLangModal, closeLangModal } from '../../composables/useRawJsonLang.js'
-import {
-  showSimModal, closeSimModal, loadSimFromStorage, disposeSimulator,
-} from '../../composables/useRawJsonSimulator.js'
+import { initLangStore } from '../../composables/useRawJsonLang.js'
+import { loadSimFromStorage, disposeSimulator } from '../../composables/useRawJsonSimulator.js'
 import { loadRenderMode } from '../../composables/useRawJsonRenderMode.js'
 import { startObfuscateTimer, stopObfuscateTimer } from '../../vendor/mcfc/mcfc.js'
 
@@ -57,16 +52,9 @@ useRawJsonEditor()
 loadSimFromStorage()
 loadRenderMode()
 
-// 键盘快捷键
+// 键盘快捷键。Escape 不在这里处理：弹层自己带 closeOnEsc，且会在下拉菜单
+// 已经消费掉 Esc 时跳过关闭，document 级监听做不到这层判断，只会连带误关。
 function handleKeydown(e) {
-  if (e.key === 'Escape') {
-    if (showEditModal.value) closeEditModal()
-    else if (showSettings.value) showSettings.value = false
-    else if (showColorModal.value) closeColorTable()
-    else if (showLangModal.value) closeLangModal()
-    else if (showSimModal.value) closeSimModal()
-    else if (showImportModal.value) closeImport()
-  }
   if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
     e.preventDefault(); undo()
   }
@@ -75,8 +63,15 @@ function handleKeydown(e) {
   }
 }
 
+// 设置面板只在紧凑布局里存在，切回桌面双栏时若还开着会整块盖在上面
+watch(compact, (isCompact) => {
+  if (!isCompact) showSettings.value = false
+})
+
 function syncCompact(width) {
-  compact.value = width > 0 && width < COMPACT_MAX_WIDTH
+  // 宽度为 0 说明元素没参与布局（被隐藏等），保留上一次判定，免得白翻一次结构
+  if (width <= 0) return
+  compact.value = width < COMPACT_MAX_WIDTH
 }
 
 onMounted(() => {

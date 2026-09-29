@@ -43,6 +43,20 @@ function onModalClose() {
   }
 }
 
+/**
+ * 所有关闭途径（关闭按钮 / 遮罩 / Esc）统一走这里。
+ * 不挂 @esc：NModal 的 onEsc 不受 eventEffectNotPerformed 约束，下拉菜单
+ * 吃掉 Esc 时照样回调，会把正在编辑的内容一起关掉；closeOnEsc 那条路才带判断。
+ */
+function onShowChange(visible) {
+  if (visible) {
+    showEditModal.value = true
+    return
+  }
+  if (nestedIdx.value !== null) cancelNestedEdit()
+  else closeEditModal()
+}
+
 // ========== 编辑器内容变化高度动画（类型/模式切换、增删元素等） ==========
 const formWrapRef = ref(null)
 let heightAnimEnd = null
@@ -113,7 +127,7 @@ function resetWrapStyle(el) {
 
 <template>
   <AppModal
-    v-model:show="showEditModal"
+    :show="showEditModal"
     :title="nestedIdx !== null ? '编辑 With 元素' : (editIdx !== null ? '编辑元素' : '添加元素')"
     :max-width="520"
     content-scrollable
@@ -127,8 +141,8 @@ function resetWrapStyle(el) {
         { text: '取消', variant: 'outline', onClick: closeEditModal },
         { text: '保存', variant: 'fill', onClick: saveElement },
       ]"
-    @esc="nestedIdx !== null ? cancelNestedEdit() : closeEditModal()"
     :before-close="onModalClose"
+    @update:show="onShowChange"
   >
     <!-- 高度过渡动画载体：nestedIdx 切换时只替换其内部内容，本层始终存在 -->
     <div ref="formWrapRef" class="edit-form-wrap">
