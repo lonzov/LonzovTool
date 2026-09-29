@@ -38,7 +38,12 @@ const config = {
   ],
 
   // 免费位
-  free: null,
+  free: {
+    id: 1,
+    eventId: 'jzfk',
+    image: 'jzfk.webp',
+    link: 'https://jzfk.indevs.in/',
+  },
 
   // 公告位
   notice: {
