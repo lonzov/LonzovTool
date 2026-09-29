@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5177",
+    "dev": "vite --port 5177 --host",
     "build": "node scripts/build-glyph-sprites.cjs && node scripts/build-symbol-font.js && node scripts/build-text-font.js && node scripts/fetch-contributor-avatars.js && node scripts/subset-hollow-font.js && vite-ssg build && node scripts/reorder-head.js && node scripts/generate-seo.js && node scripts/minify-sw.js",
     "preview": "vite preview --host",
     "deploy": "node scripts/deploy.js",

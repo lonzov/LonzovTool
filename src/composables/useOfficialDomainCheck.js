@@ -25,7 +25,7 @@ export function useOfficialDomainCheck() {
     const host = window.location.hostname
 
     // 排除本地开发环境
-    const isLocal = ['localhost', '127.0.0.1', '::1'].includes(host)
+    const isLocal = ['localhost', '127.0.0.1', '::1', '192.168.0.66'].includes(host)
     if (isLocal) return false
 
     // 官方域名
