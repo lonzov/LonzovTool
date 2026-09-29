@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { NIcon } from 'naive-ui'
-import { Braces24Filled, Settings24Regular, Add16Filled } from '@vicons/fluent'
+import { Braces24Filled, Settings24Regular, Add16Filled, ChevronUp16Regular } from '@vicons/fluent'
 import {
   useRawJsonEditor, elementCount, addElement, undo, redo,
 } from '../../composables/useRawJsonEditor.js'
@@ -44,6 +44,8 @@ const ADD_ENTRIES = [
 const rootEl = ref(null)
 const compact = ref(false)
 const showSettings = ref(false)
+/** 全屏编辑态：预览收起、顶栏让位，元素区吃满一屏，由追加栏最左侧的按钮切换 */
+const focusMode = ref(false)
 let resizeObserver = null
 
 // 初始化编辑器（捕获 message 实例 + localStorage 加载 + 生命周期）
@@ -63,9 +65,11 @@ function handleKeydown(e) {
   }
 }
 
-// 设置面板只在紧凑布局里存在，切回桌面双栏时若还开着会整块盖在上面
+// 设置面板与全屏编辑态都只存在于紧凑布局，切回桌面双栏时一并复位
 watch(compact, (isCompact) => {
-  if (!isCompact) showSettings.value = false
+  if (isCompact) return
+  showSettings.value = false
+  focusMode.value = false
 })
 
 function syncCompact(width) {
@@ -95,10 +99,14 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="rootEl" class="rawjson-tool" :class="{ 'rawjson-tool--compact': compact }">
-    <!-- 紧凑布局：顶栏收纳设置，预览常驻，只有编辑区滚动 -->
+  <div
+    ref="rootEl"
+    class="rawjson-tool"
+    :class="{ 'rawjson-tool--compact': compact, 'rawjson-tool--focus': focusMode }"
+  >
+    <!-- 紧凑布局：顶栏收纳设置，预览占上半屏，元素区在下方自己滚 -->
     <template v-if="compact">
-      <div class="rj-bar">
+      <div v-if="!focusMode" class="rj-bar">
         <NIcon :component="Braces24Filled" class="rj-bar-icon" />
         <span class="rj-bar-title">T显可视化编辑器</span>
         <span class="rj-bar-count">元素 {{ elementCount }}</span>
@@ -108,9 +116,20 @@ onBeforeUnmount(() => {
         </button>
       </div>
 
-      <RawJsonPreviewCard class="rj-preview" compact />
+      <div class="rj-preview">
+        <RawJsonPreviewCard compact :collapsed="focusMode" />
+      </div>
 
       <div class="rj-add-bar">
+        <button
+          class="rj-mode-btn"
+          :class="{ 'rj-mode-btn--focus': focusMode }"
+          :title="focusMode ? '恢复预览' : '全屏编辑'"
+          :aria-label="focusMode ? '恢复预览' : '全屏编辑'"
+          @click="focusMode = !focusMode"
+        >
+          <NIcon :component="ChevronUp16Regular" :size="14" class="rj-mode-icon" />
+        </button>
         <button
           v-for="entry in ADD_ENTRIES"
           :key="entry.type"
@@ -123,7 +142,7 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="rj-scroll">
-        <RawJsonListCard class="rj-list" compact>
+        <RawJsonListCard compact>
           <RawJsonElementList />
         </RawJsonListCard>
       </div>
@@ -190,13 +209,12 @@ onBeforeUnmount(() => {
 .right-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 
 /* ===== 紧凑布局 =====
-   整屏三区：可用高度扣掉外壳留白后由页面自己吃满，页面不再滚动，
-   溢出全部收进 .rj-scroll，避免预览被滚走 */
+   整块吃满一屏：预览占上半屏，元素区在下半屏自己滚，页面本身不滚动。
+   全屏编辑态把预览收成一条细条、顶栏撤掉，元素区改吃整屏 */
 .rawjson-tool--compact {
+  --rj-stage-h: max(var(--shell-content-height, 80vh), 440px);
   gap: 10px;
-  /* 预览区与编辑区对半分。高度低于下限时整体抬到下限、退化成整页滚动，
-     免得矮屏上两区被压到互相挤变形 */
-  height: max(var(--shell-content-height, 80vh), 440px);
+  height: var(--rj-stage-h);
   overflow: hidden;
 }
 .rj-bar {
@@ -235,20 +253,44 @@ onBeforeUnmount(() => {
 .rj-settings-btn:hover { background: var(--muted); }
 .rj-settings-btn:active { transform: scale(0.97); }
 
-/* 预览卡与编辑区等分剩余高度，预览内容由卡片内部再分配 */
-.rj-preview { flex: 1 1 0; min-height: 0; }
+/* 预览固定占上半屏，进出全屏编辑态只走高度，动画即"吸附"的观感来源 */
+.rj-preview {
+  flex: none;
+  height: calc(var(--rj-stage-h) / 2);
+  overflow: hidden;
+  transition: height 0.28s cubic-bezier(0.2, 0, 0, 1);
+}
+.rawjson-tool--focus .rj-preview { height: 0; }
 
 /* 追加栏直接落在背景上，不带卡片外壳。
    两侧内缩，整排比上下两张卡片窄一档，实心块才不至于顶满显得发胀 */
 .rj-add-bar {
-  display: flex; gap: 8px;
-  padding: 0 12px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 10px;
   flex-shrink: 0;
 }
+/* 全屏编辑开关：等边圆形，取追加按钮同一套配色与高度 */
+.rj-mode-btn {
+  flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  corner-shape: round;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.4s ease, color 0.4s ease, opacity 0.15s ease;
+}
+.rj-mode-btn:hover { opacity: 0.85; }
+.rj-mode-btn:active { transform: scale(0.94); }
+/* 只换朝向、不加过渡：按钮自己的 transition 不含 transform，切换是直接翻过去的 */
+.rj-mode-btn--focus .rj-mode-icon { transform: rotate(180deg); }
 .rj-add-btn {
   flex: 1 1 0; min-width: 0;
-  display: inline-flex; align-items: center; justify-content: center; gap: 3px;
-  min-height: 28px; padding: 0 6px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+  min-height: 28px; padding: 0 4px;
   border: none;
   border-radius: var(--radius-full);
   corner-shape: round;
@@ -263,13 +305,11 @@ onBeforeUnmount(() => {
 .rj-add-btn:hover { opacity: 0.85; }
 .rj-add-btn:active { transform: scale(0.97); }
 
+/* 元素区吃掉剩余高度，自己滚；overscroll 收住，避免滚动链到页面 */
 .rj-scroll {
   flex: 1 1 0;
   min-height: 0;
-  display: flex; flex-direction: column;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-/* 元素少时卡片也铺满这半区，与预览卡等高；内容超长才交给外层滚动 */
-.rj-list { flex: 1 0 auto; }
 </style>

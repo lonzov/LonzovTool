@@ -27,11 +27,14 @@ defineProps({
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   padding: 16px;
-  transition: background-color 0.4s ease, border-color 0.4s ease;
+  transition:
+    background-color 0.4s ease,
+    border-color 0.4s ease,
+    padding 0.28s cubic-bezier(0.2, 0, 0, 1);
 }
 .output-card--stretch {
   display: flex; flex-direction: column;
-  min-height: 0;
+  min-height: 0; height: 100%;
 }
 .output-card-header {
   display: flex; align-items: center; justify-content: space-between;

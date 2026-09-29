@@ -22,6 +22,11 @@ const props = defineProps({
    * 并去掉脚注那行状态文本。
    */
   compact: { type: Boolean, default: false },
+  /**
+   * 全屏编辑态：外层容器高度收到 0。卡片同步撤掉内边距与快捷栏，收缩过程才不会
+   * 被快捷栏的最小高度顶住、露出它而不是预览内容。
+   */
+  collapsed: { type: Boolean, default: false },
 })
 
 /** JSON 模式下大区域改渲染 JSON 文本，游戏渲染退到设置面板里的输出卡 */
@@ -31,7 +36,11 @@ const cardTitle = computed(() => (props.compact ? (showJson.value ? 'JSON' : '')
 </script>
 
 <template>
-  <RawJsonCard :title="cardTitle" :stretch="compact">
+  <RawJsonCard
+    :title="cardTitle"
+    :stretch="compact"
+    :class="{ 'output-card--collapsed': collapsed }"
+  >
     <template #actions>
       <div v-if="!compact" class="preview-header-actions">
         <span class="output-card-badge">{{ modeLabel }}</span>
@@ -84,6 +93,15 @@ const cardTitle = computed(() => (props.compact ? (showJson.value ? 'JSON' : '')
 </template>
 
 <style scoped>
+/* 全屏编辑态：外壳只剩一条细条，内边距与快捷栏一起收掉，高度全给预览内容 */
+.output-card--collapsed { padding: 0; }
+.output-card--collapsed .quick-bar {
+  max-height: 0;
+  margin-top: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .output-card-badge {
   font-size: 10px; color: var(--subtle-foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
@@ -137,9 +155,13 @@ const cardTitle = computed(() => (props.compact ? (showJson.value ? 'JSON' : '')
   --qb-h: 24px;
   /* 描边相邻会糊成一条线，留一点比字间距稍大的缝 */
   display: flex; align-items: center; gap: 4px;
+  max-height: 60px; overflow: hidden;
   margin-top: 10px; padding-top: 8px;
   border-top: 1px solid var(--border);
-  transition: border-color 0.4s ease;
+  transition:
+    border-color 0.4s ease,
+    max-height 0.28s cubic-bezier(0.2, 0, 0, 1),
+    opacity 0.18s ease;
 }
 .qb-btn {
   flex: 1 1 0; min-width: 0;
