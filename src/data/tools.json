@@ -48,13 +48,6 @@
           "link": "https://dislink.github.io/"
         },
         {
-          "id": "HOSDLA-toolbox",
-          "title": "HOSDLA工具箱",
-          "description": "MC音乐、指令生成、建筑转换、多媒体处理等",
-          "logo": "/logos/HOSDLA_toolbox.webp",
-          "link": "https://nekolove.top/hosdla/tools/"
-        },
-        {
           "id": "tr",
           "title": "T显动画生成",
           "description": "生成打字机动画效果的rawJSON",
@@ -361,6 +354,13 @@
           "description": "雪球T显生成器、动态菜单生成器等",
           "logo": "/logos/jzfk_wuaze_com.webp",
           "link": "https://jzfk.indevs.in/"
+        },
+        {
+          "id": "HOSDLA-toolbox",
+          "title": "HOSDLA工具箱",
+          "description": "MC音乐、指令生成、建筑转换、多媒体处理等",
+          "logo": "/logos/HOSDLA_toolbox.webp",
+          "link": "/down/HOSDLA-toolbox/"
         },
         {
           "id": "command-simulator",
