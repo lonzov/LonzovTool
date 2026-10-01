@@ -88,6 +88,7 @@ function doDelete(id) {
     :max-height-offset="110"
     content-scrollable
     animated
+    :auto-focus="false"
     @update:show="onShowChange"
   >
     <!-- 当前生效 -->

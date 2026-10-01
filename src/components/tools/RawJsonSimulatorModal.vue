@@ -23,6 +23,7 @@ function onShowChange(visible) {
     :max-height-offset="110"
     content-scrollable
     animated
+    :auto-focus="false"
     :actions="[
       { text: '重置', variant: 'outline', onClick: resetSimulator },
       { text: '完成', variant: 'fill', onClick: closeSimModal },
