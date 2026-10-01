@@ -174,7 +174,9 @@ public:
 docs:
   project-structure.yml: 项目结构描述文件（本文件）
   customize-theme.md: 主题与设计规范，token 三层结构、颜色与圆角规则
+  selector.md: 选择器参数参考，各参数的可选值、示例与编辑器形态要求
 deploy.config.example.json: 部署配置模板，复制为 deploy.config.json 后填写服务器信息（不参与 git）
+AGENTS.md: AI 协作规则（核心原则、开发规范、Git 规范、设计规范），CLAUDE.md 以 @ 导入指向本文件
 LICENSES/: 被译入/内置的第三方代码的许可证全文，按 REUSE 规范以 SPDX 标识符命名；完整 vendored 的库（如 src/vendor/mcfc）许可证随代码放在各自目录内
 scripts:
   route-list.js: 共享模块：从路由配置自动提取所有公开页面路径

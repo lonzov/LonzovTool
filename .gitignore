@@ -44,12 +44,8 @@ __screenshots__/
 v2/
 deploy.config.json
 dist.7z
-docs/*
-!docs/project-structure.yml
-!docs/image/
+docs/tmp/
 public/o/
-CLAUDE.md
-AGENTS.md
 .vite-ssg-temp/*
 src/data/contributors.json
 public/logos/avatars/*
