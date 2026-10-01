@@ -151,6 +151,7 @@ const DocsView = () => import('../views/DocsView.vue')
 const DownView = () => import('../views/DownView.vue')
 const WorkspaceView = () => import('../components/WorkspaceView.vue')
 const SettingsView = () => import('../views/SettingsView.vue')
+const ChangelogView = () => import('../views/ChangelogView.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
 
 // 已知的文档页面路径（具体静态路由，用于 SSG 预渲染）
@@ -280,6 +281,16 @@ export const routes = [
     name: 'external',
     component: WorkspaceView,
     props: true,
+  },
+  {
+    path: '/changelog',
+    name: 'changelog',
+    component: ChangelogView,
+    meta: {
+      title: '更新日志 - 小舟工具箱',
+      description: '小舟工具箱的版本更新记录，按版本倒序列出每个版本的新增、优化与修复内容。',
+      keywords: '小舟工具箱,更新日志,版本记录,更新内容,changelog',
+    },
   },
   {
     path: '/settings',

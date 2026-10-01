@@ -358,6 +358,8 @@ export default {
         activeKey.value = 'workspace'
       } else if (path.startsWith('/settings')) {
         activeKey.value = 'settings'
+      } else if (path.startsWith('/changelog')) {
+        activeKey.value = 'settings'
       }
     }
 

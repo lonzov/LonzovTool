@@ -784,6 +784,19 @@ const embedCloseActions = [
                 <button class="cache-btn" @click="handleCheckUpdate">检查</button>
               </div>
             </div>
+            <a
+              class="setting-row setting-row--link"
+              href="/changelog/"
+              @click.prevent="router.push('/changelog/')"
+            >
+              <div class="setting-info">
+                <span class="setting-title">更新日志</span>
+                <p class="setting-desc">查看每个版本的新增、优化与修复内容</p>
+              </div>
+              <div class="setting-control">
+                <NIcon :component="Open16Filled" :size="14" class="doc-link-icon" />
+              </div>
+            </a>
             <div class="setting-row">
               <div class="setting-info">
                 <span class="setting-title">重置版本缓存</span>
