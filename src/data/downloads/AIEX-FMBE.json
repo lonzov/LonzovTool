@@ -1,7 +1,7 @@
 {
     "icon": "/logos/1AIEX-FMBE.webp",
     "name": "AIEX-FMBE 编辑器",
-    "version": "v1.0.5",
+    "version": "v1.0.39",
     "tagline": "一句话 AI 生成 fmbe 模型",
     "introMd": "AIEX-FMBE.md",
     "intro": "",
@@ -9,11 +9,11 @@
     "developerLink": "https://space.bilibili.com/437778690",
     "lanzou": [
         {
-            "version": "1.0.5",
-            "url": "https://lonzov.lanzouu.com/iwpbP41gr1hc",
-            "password": "c6fb"
+            "version": "1.0.39",
+            "url": "https://lonzov.lanzouu.com/i40Kn4ajj65e",
+            "password": "4so9"
         }
     ],
-    "fileSize": "55.0",
+    "fileSize": "69.8",
     "downloads": 283
 }
