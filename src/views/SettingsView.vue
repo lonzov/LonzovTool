@@ -452,26 +452,56 @@ function fetchCurrentSWVersion() {
   })
 }
 
+/** 检查阶段的递进文案：真实耗时集中在 SW 脚本的网络往返，逐级切换消解长等待的焦虑感 */
+const CHECK_STAGES = [
+  { at: 3000, text: '正在询问服务器有没有新版本…' },
+  { at: 8000, text: '正在联系离你最近的服务器…' },
+  { at: 15000, text: '正在通过海底光缆摸索更新…' },
+  { at: 30000, text: '正在给网络包打气…' },
+  { at: 60000, text: '正在阻止字节中途逃跑…' },
+]
+
+/** 检查超时上限，超过后 update() 的 Promise 基本不会再落地 */
+const CHECK_TIMEOUT = 90000
+
 async function handleCheckUpdate() {
   if (!('serviceWorker' in navigator)) {
     message.warning('当前浏览器不支持此功能', { duration: 2000 })
     return
   }
 
-  const loadingMsg = message.loading('正在检查更新...', { duration: 0 })
+  const checkMsg = message.loading('正在检查更新...', { duration: 0 })
+  // 原地改写 content（Naive 的 message 实例是响应式对象），避免销毁重建造成的堆叠闪烁
+  const stageTimers = CHECK_STAGES.map(({ at, text }) =>
+    setTimeout(() => {
+      checkMsg.content = text
+    }, at)
+  )
 
   // 统一收口销毁，避免重复销毁与"新版本提示盖在加载提示上"
-  let loadingDismissed = false
-  const dismissLoading = () => {
-    if (loadingDismissed) return
-    loadingDismissed = true
-    loadingMsg.destroy()
+  let settled = false
+  let timedOut = false
+  let timeoutTimer = null
+  const settleCheck = () => {
+    if (settled) return
+    settled = true
+    stageTimers.forEach(clearTimeout)
+    clearTimeout(timeoutTimer)
+    checkMsg.destroy()
   }
+
+  // 网络中间设备劫持/弱网时脚本拉取可能长期无响应，update() 永不落地则销毁与提示逻辑都不会执行，
+  // 加载提示会一直挂在屏幕上，故加超时兜底
+  timeoutTimer = setTimeout(() => {
+    timedOut = true
+    settleCheck()
+    message.error('检查更新超时，请检查网络后重试', { duration: 2500 })
+  }, CHECK_TIMEOUT)
 
   try {
     const registration = await navigator.serviceWorker.getRegistration()
     if (!registration) {
-      dismissLoading()
+      settleCheck()
       message.warning('未检测到 Service Worker', { duration: 2000 })
       return
     }
@@ -479,8 +509,17 @@ async function handleCheckUpdate() {
     let updateFound = false
     const onUpdateFound = () => {
       updateFound = true
-      // 发现更新：立刻撤掉加载提示，后续弹窗/刷新提示不再与它叠在一起
-      dismissLoading()
+      // 发现更新：立刻撤掉检查提示，换成下载提示，直到新 worker 进入终态
+      settleCheck()
+      const installing = registration.installing
+      if (!installing) return
+      const downloadMsg = message.loading('发现更新，正在下载…', { duration: 0 })
+      installing.addEventListener('statechange', () => {
+        // installed：下载安装完成，后续交给更新弹窗/刷新提示；redundant：安装失败
+        if (installing.state === 'installed' || installing.state === 'redundant') {
+          downloadMsg.destroy()
+        }
+      })
     }
     registration.addEventListener('updatefound', onUpdateFound, { once: true })
 
@@ -488,7 +527,8 @@ async function handleCheckUpdate() {
 
     // 延迟判断：若 1.5s 内没触发 updatefound 则无更新
     setTimeout(async () => {
-      dismissLoading()
+      if (timedOut) return
+      settleCheck()
       registration.removeEventListener('updatefound', onUpdateFound)
       if (!updateFound) {
         const version = await fetchCurrentSWVersion()
@@ -498,7 +538,8 @@ async function handleCheckUpdate() {
       // 有更新时 useSWUpdate 会自动弹出更新弹窗，此处不做额外处理
     }, 1500)
   } catch (error) {
-    dismissLoading()
+    if (timedOut) return
+    settleCheck()
     console.error('更新检查失败:', error)
     message.error('检查更新失败，请检查网络连接', { duration: 2500 })
   }
