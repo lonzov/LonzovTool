@@ -55,3 +55,4 @@ src/data/contributors.json
 public/logos/avatars/*
 # 字体改写脚本的中间产物
 public/fonts/*.tmp
+.dsh-tmp/*
