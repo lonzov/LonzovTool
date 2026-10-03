@@ -1,7 +1,12 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { NIcon, NCascader, useMessage } from 'naive-ui'
-import { Link24Filled, ArrowDownload24Filled, ArrowUpRight20Filled } from '@vicons/fluent'
+import {
+  Link24Filled,
+  ArrowDownload24Filled,
+  CloudArrowDown24Filled,
+  ArrowUpRight20Filled,
+} from '@vicons/fluent'
 import { useMouseGlow, applyGlow } from '../../composables/useMouseGlow'
 import AppModal from '../ui/AppModal.vue'
 import { copyText } from '../../utils/clipboard.js'
@@ -32,6 +37,7 @@ const lanzouList = computed(() => {
 
 const hasMultiVersion = computed(() => lanzouList.value.length > 1)
 const hasNoLinks = computed(() => lanzouList.value.length === 0)
+const quarkUrl = computed(() => props.config?.quark || '')
 
 const currentLanzou = computed(() => {
   const list = lanzouList.value
@@ -54,24 +60,19 @@ watch(() => props.show, (val) => {
   if (val) selectedVersionIndex.value = 0
 })
 
-function buildApiUrl(apiType) {
-  const lz = currentLanzou.value
-  if (!lz) return ''
-  if (apiType === 1) {
-    return `https://lz.qaiu.top/parser?url=${encodeURIComponent(lz.url)}&pwd=${encodeURIComponent(lz.password)}`
-  }
-  return `https://api.lonzov.top/lanzou/index.php?url=${encodeURIComponent(lz.url)}&pwd=${encodeURIComponent(lz.password)}&type=down`
-}
-
 function handleDirectParse() {
+  const lz = currentLanzou.value
+  if (!lz) return
   emit('download')
-  window.open(buildApiUrl(1), '_blank')
+  const url = `https://lz.qaiu.top/parser?url=${encodeURIComponent(lz.url)}&pwd=${encodeURIComponent(lz.password)}`
+  window.open(url, '_blank')
   showLocal.value = false
 }
 
-function handleBackupParse() {
+function handleQuarkLink() {
+  if (!quarkUrl.value) return
   emit('download')
-  window.open(buildApiUrl(2), '_blank')
+  window.open(quarkUrl.value, '_blank')
   showLocal.value = false
 }
 
@@ -148,19 +149,19 @@ onUnmounted(() => unsubGlow(handleGlow))
         </div>
         <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
       </div>
-      <div class="dl-option glow-border" @click="handleBackupParse">
-        <NIcon :component="Link24Filled" :size="22" class="dl-option-icon" />
-        <div class="dl-option-text">
-          <span class="dl-option-title">备用解析</span>
-          <span class="dl-option-desc">一键下载，不可用时尝试其他通道</span>
-        </div>
-        <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
-      </div>
       <div class="dl-option glow-border" @click="handleOriginalLink">
         <NIcon :component="ArrowDownload24Filled" :size="22" class="dl-option-icon" />
         <div class="dl-option-text">
           <span class="dl-option-title">蓝奏云网盘</span>
           <span class="dl-option-desc">解析失效时使用，密码会自动复制({{ currentLanzou.password }})</span>
+        </div>
+        <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
+      </div>
+      <div v-if="quarkUrl" class="dl-option glow-border" @click="handleQuarkLink">
+        <NIcon :component="CloudArrowDown24Filled" :size="22" class="dl-option-icon" />
+        <div class="dl-option-text">
+          <span class="dl-option-title">夸克网盘</span>
+          <span class="dl-option-desc">解析失效时使用，适合转存长期保存</span>
         </div>
         <NIcon :component="ArrowUpRight20Filled" :size="18" class="dl-option-arrow" />
       </div>
