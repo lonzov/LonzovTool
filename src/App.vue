@@ -16,6 +16,7 @@ import { useWorkspace, isExternalPath, getExternalUrl, getExternalToolMeta } fro
 import { useSWUpdate } from './composables/useSWUpdate'
 import { useOfficialDomainCheck } from './composables/useOfficialDomainCheck'
 import { useHonorGuard } from './composables/useHonorGuard'
+import { useMenuSwipe } from './composables/useMenuSwipe.js'
 import { scrollToTop, cancelScrollToTop } from './utils/scrollToTop.js'
 import { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES } from './router'
 
@@ -140,6 +141,18 @@ export default {
     const showShareModal = ref(false)
     const mobileMenuOpen = ref(false)
     const isMobile = ref(typeof window !== 'undefined' ? window.innerWidth < 771 : false)
+
+    // 触屏右滑开抽屉、左滑关抽屉。生效条件与起手限制都在触发时现取，窗口尺寸变化后无需重新绑定
+    useMenuSwipe({
+      enabled: () => isMobile.value,
+      // 抽屉收起时限定在应用外壳内起手，免得弹层盖着时把抽屉开在它背后；
+      // 展开时整屏已由抽屉遮罩接管，不必再限制
+      canStart: (target) => mobileMenuOpen.value || !!target.closest('#app'),
+      onSwipe: (direction) => {
+        mobileMenuOpen.value = direction > 0
+      },
+    })
+
     const fakeTitleOpacity = ref(0)
     const fakeTitleTransition = ref('opacity 0.15s ease')
     let pendingCategoryIndex = null // 待处理的分类索引

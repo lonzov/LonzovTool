@@ -95,6 +95,7 @@ src:
     useConfirm.js: 全局确认弹窗状态，confirmDialog() 返回 Promise 供任意模块（含 composable）调用
     useFuckHonorAdGuard.js: 荣耀浏览器注入的侧边悬浮广告拦截，隐藏广告容器并向 Umami 上报（按需加载）
     useHonorGuard.js: 荣耀浏览器 UA 判断入口，命中后才动态加载广告拦截与提示模块
+    useMenuSwipe.js: 移动端抽屉的横向滑动手势（右滑开、左滑关），全屏起手 + 方向角度锁，自动避让横向滚动与 JS 手势区
     useMouseGlow.js: 卡片边框高光平滑跟随鼠标效果（lerp 插值）
     useOfficialDomainCheck.js: 非官方站点检测，URL 域名非 tool.lonzov.top（排除本地开发环境）时返回 true，用于注入红色警告横幅
     usePrivacyModal.js: 隐私弹窗状态共享组合式函数
