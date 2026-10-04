@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { NTooltip } from 'naive-ui'
 import { RiBilibiliLine, RiTiktokFill, RiGithubFill, RiQqFill, RiRssFill } from '@remixicon/vue'
 import { useStats } from '../composables/useStats'
+import { useLocalStats } from '../composables/useLocalStats.js'
 import IframeForm from '../components/IframeForm.vue'
 
 const { stats, fetchStats } = useStats()
@@ -388,6 +389,44 @@ const statCluster = computed(() => ([
   { label: '昨日访客', v: stats.value.yesterdayUV },
   { label: '本月访客', v: stats.value.monthUV },
 ]))
+
+/* ===== 本地统计（彩蛋） =====
+   数据来自访客自己的浏览器，只能在挂载后取用：预渲染与首帧渲染保持占位值，
+   避免本地已有统计时水合内容对不上 */
+const { stats: localStatsSource } = useLocalStats()
+const localStats = ref({ firstOpenAt: '', toolOpens: 0, navClicks: 0 })
+
+const firstOpenText = computed(() => {
+  const t = new Date(localStats.value.firstOpenAt).getTime()
+  if (!localStats.value.firstOpenAt || Number.isNaN(t)) return '—'
+  const days = Math.floor((Date.now() - t) / 86400000)
+  return days <= 0 ? 'today' : `${days}d ago`
+})
+
+/* 计数缩写：不足一万保持四位补零，上万起按千分位缩到「三位补零 + k」，
+   百万再升一档，整串最长 5 位 */
+const padCount = (n) => {
+  const v = Number(n) || 0
+  if (v < 10000) return String(v).padStart(4, '0')
+  if (v < 1000000) return String(Math.floor(v / 1000)).padStart(3, '0') + 'k'
+  return String(Math.floor(v / 1000000)).padStart(3, '0') + 'M'
+}
+
+/* 缩写后看不出真实量级，用原生 title 给回完整数字 */
+const localRailTitle = computed(() => {
+  const s = localStats.value
+  const d = new Date(s.firstOpenAt)
+  const p = (n) => String(n).padStart(2, '0')
+  const since = s.firstOpenAt && !Number.isNaN(d.getTime())
+    ? `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+    : '无记录'
+  return `首次打开时间 ${since} · 使用工具次数 ${s.toolOpens} · 点击导航次数 ${s.navClicks}`
+})
+
+onMounted(() => {
+  const s = localStatsSource.value
+  localStats.value = { firstOpenAt: s.firstOpenAt, toolOpens: s.toolOpens, navClicks: s.navClicks }
+})
 </script>
 
 <template>
@@ -416,6 +455,7 @@ const statCluster = computed(() => ([
     <!-- ===== 2. 数据统计 ===== -->
     <section class="sec stats">
       <span class="wm" aria-hidden="true">∑</span>
+      <span class="stats-rail" aria-hidden="true" :title="localRailTitle">SINCE <b>{{ firstOpenText }}</b> · TOOLS <b>{{ padCount(localStats.toolOpens) }}</b> · CLICKS <b>{{ padCount(localStats.navClicks) }}</b></span>
       <div class="grid">
         <div class="stat-hero" v-reveal>
           <div class="k">本年浏览</div>
@@ -1001,6 +1041,35 @@ const statCluster = computed(() => ([
   .stat-cluster {
     grid-column: span 12;
   }
+}
+
+/* ===== 彩蛋：本地统计 =====
+   数据是访客私人的，不做独立区块，只在留白够宽的屏上以竖排小字挂在右侧。
+   横向：内容框固定 1240 居中，故「距边 648」即落在内容框右缘外 28px，不随视口变化；
+   纵向：整串自下往上 1/3 处压在数据统计区与视频区的分割线上（下方的 1/3 探进视频区） */
+.stats-rail {
+  display: none;
+}
+
+@media (min-width: 1400px) {
+  .sec.stats > .stats-rail {
+    display: block;
+    position: absolute;
+    top: 100%;
+    right: max(20px, calc(50% - 648px));
+    transform: translateY(-66.667%);
+    writing-mode: vertical-rl;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .25em;
+    color: var(--subtle-foreground);
+    white-space: nowrap;
+  }
+}
+
+.sec.stats > .stats-rail b {
+  color: var(--muted-foreground);
+  font-weight: 600;
 }
 
 /* ===== 3. 视频 ===== */
