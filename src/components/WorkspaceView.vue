@@ -161,6 +161,8 @@ const tabDropdownOptions = computed(() =>
 function handleTabSelect(key) {
   if (key !== activeTab.value) {
     activeTab.value = key
+    // 下拉菜单切换的目标标签可能不在可视区，需要主动滚入
+    nextTick(() => scrollActiveTabIntoView())
   }
 }
 
