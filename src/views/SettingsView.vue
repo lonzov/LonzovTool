@@ -262,14 +262,15 @@ const CONFIG_SCOPES = {
   },
   all: {
     label: '所有配置',
-    desc: '一键导入导出上方全部配置',
+    desc: '本站在本地留存的全部数据（含上方各项及其他键）',
+    // 全量：直接枚举 localStorage 现有键，不走白名单
+    keysAll: true,
     getKeys() {
       const allKeys = []
-      for (const key of Object.keys(CONFIG_SCOPES)) {
-        if (key === 'all') continue
-        allKeys.push(...getScopeKeys(CONFIG_SCOPES[key]))
+      for (let i = 0; i < localStorage.length; i++) {
+        allKeys.push(localStorage.key(i))
       }
-      return [...new Set(allKeys)]
+      return allKeys
     },
   },
 }
@@ -300,6 +301,7 @@ function getScopeKeys(scope) {
 }
 
 function isKeyInScope(key, scope) {
+  if (scope.keysAll) return true
   if (scope.keys && scope.keys.includes(key)) return true
   if (scope.keysExact && scope.keysExact.includes(key)) return true
   if (scope.keysPrefix && scope.keysPrefix.some((p) => key.startsWith(p))) return true
