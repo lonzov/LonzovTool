@@ -8,6 +8,7 @@ import { useWorkspace, externalTabPath } from '../composables/useWorkspace.js'
 import { useWorkspaceSettings } from '../composables/useWorkspaceSettings.js'
 import { attachThemeParams } from '../composables/useUrlTheme.js'
 import { useMouseGlow, applyGlow } from '../composables/useMouseGlow.js'
+import { useLocalStats } from '../composables/useLocalStats.js'
 
 // 站外嵌入开关（模块级共享 ref，render 的 onClick 闭包可直接读取）
 const { embedEnabled } = useWorkspaceSettings()
@@ -51,6 +52,7 @@ export default {
     const { openTab } = useWorkspace()
     const { subscribe: subGlow, unsubscribe: unsubGlow } = useMouseGlow()
     const message = useMessage()
+    const { countNavClick } = useLocalStats()
 
     const imageError = ref(false)
     const imageLoaded = ref(false)
@@ -104,6 +106,7 @@ export default {
       subGlow,
       unsubGlow,
       message,
+      countNavClick,
     }
   },
   data() {
@@ -338,6 +341,8 @@ export default {
               this.longPressed = false
               return
             }
+            // 本地统计：点击首页卡片计一次导航
+            this.countNavClick()
             // Umami 事件上报
             if (this.toolId && window.umami) {
               window.umami.track(this.toolId)

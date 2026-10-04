@@ -4,6 +4,7 @@ import { NProgress, NDropdown, NIcon, useMessage } from 'naive-ui'
 import { useRouter, useRoute } from 'vue-router'
 import { ChevronDown16Filled } from '@vicons/fluent'
 import { useWorkspace, isExternalPath, getExternalUrl, isExternalUrlAllowed, getLogoFromPath } from '../composables/useWorkspace.js'
+import { useLocalStats } from '../composables/useLocalStats.js'
 import { getToolIcon } from '../config/categoryIcons'
 import ToolLoading from './ToolLoading.vue'
 import NotFoundView from '../views/NotFoundView.vue'
@@ -192,6 +193,20 @@ watch(activeTab, (newPath) => {
   }
 })
 
+// ===== 本地统计：工具使用次数 =====
+const { countToolOpen } = useLocalStats()
+
+// 路由落到工作站内的具体页面就计一次：工作站内切换标签、从首页重新进入都会改路由。
+// /c、/embed 只是工作站外壳、未指向具体页面，不计（随后会被替换成具体页面路径再计）
+function countToolOpenByRoute(path) {
+  if (!isWorkspaceRoutePath(path)) return
+  const normalized = path.replace(/\/+$/, '')
+  if (normalized === '/c' || normalized === '/embed') return
+  countToolOpen()
+}
+
+watch(() => route.path, countToolOpenByRoute)
+
 // ===== 从路由同步到活跃标签（处理路径不在 tabs 中的情况） =====
 function syncFromRoute() {
   const routePath = route.path
@@ -213,6 +228,8 @@ if (isWorkspaceRoutePath(route.path)) {
 
 onMounted(() => {
   if (typeof window === 'undefined' || !isWorkspaceRoutePath(route.path)) return
+
+  countToolOpenByRoute(route.path)
 
   // restoreTabs 是幂等的：tabs 已有数据时直接跳过
   restoreTabs()

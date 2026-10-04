@@ -17,6 +17,7 @@ import {
 
 import App from './App.vue'
 import { routes, setupRouterGuards } from './router'
+import { recordFirstOpen } from './composables/useLocalStats.js'
 
 // 模块级变量：存储 Naive UI CSS 收集器引用，供 onPageRendered 使用
 let collectCss = null
@@ -57,6 +58,9 @@ export const createApp = ViteSSG(
 
     // ===== 浏览器专属代码 =====
     if (isClient) {
+      // 首次打开时间：只记一次，用于本地统计
+      recordFirstOpen()
+
       // 禁用浏览器自动滚动恢复
       if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual'
