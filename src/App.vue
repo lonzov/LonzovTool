@@ -10,6 +10,7 @@ import AppMenu from './components/AppMenu.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import PrivacyBanner from './components/PrivacyBanner.vue'
 import ConfirmDialog from './components/ConfirmDialog.vue'
+import SurveyModal from './components/SurveyModal.vue'
 import { confirmDialog } from './composables/useConfirm'
 import { useTheme } from './composables/useTheme'
 import { useWorkspace, isExternalPath, getExternalUrl, getExternalToolMeta } from './composables/useWorkspace.js'
@@ -27,7 +28,7 @@ const UpdateDialog = defineAsyncComponent(() => import('./components/UpdateDialo
 const ShareModal = defineAsyncComponent(() => import('./components/ShareModal.vue'))
 
 export default {
-  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog, ShareModal, ConfirmDialog, NIcon, NTooltip },
+  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog, ShareModal, ConfirmDialog, SurveyModal, NIcon, NTooltip },
   setup() {
     const router = useRouter()
     const route = useRoute()
@@ -779,6 +780,7 @@ export default {
       </NDrawer>
     </div>
     <PrivacyBanner />
+    <SurveyModal />
     <UpdateDialog />
     <ConfirmDialog />
     <ShareModal v-model:show="showShareModal" />
