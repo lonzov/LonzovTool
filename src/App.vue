@@ -471,7 +471,9 @@ export default {
             overflow: 'hidden',
           }"
         >
-          <div
+          <button
+            type="button"
+            class="app-title-home"
             :style="{
               display: 'flex',
               alignItems: 'center',
@@ -482,10 +484,11 @@ export default {
               color: 'var(--foreground)',
               gap: '8px',
             }"
+            @click="handleMenuNavigate('home')"
           >
             <img src="/favicon.ico" alt="logo" :style="{ width: '20px', height: '20px', filter: isDark ? 'invert(1)' : '' }" />
             <span>小舟工具箱</span>
-          </div>
+          </button>
           <div
             :style="{
               height: '1px',
@@ -594,7 +597,9 @@ export default {
         }"
       >
         <div style="width: 53px; height: 40px; margin-right: 8px; flex-shrink: 0"></div>
-        <span
+        <button
+          type="button"
+          class="app-title-home"
           :style="{
             fontWeight: 'bold',
             fontSize: '18px',
@@ -602,7 +607,8 @@ export default {
             textAlign: 'center',
             color: 'var(--foreground)',
           }"
-          >小舟工具箱</span
+          @click="handleMenuNavigate('home')"
+          >小舟工具箱</button
         >
           <NTooltip placement="bottom">
             <template #trigger>
@@ -825,6 +831,15 @@ export default {
 .unofficial-domain-banner .official-link:hover {
   opacity: 0.85;
 }
+/* ===== 站点标题：桌面侧边栏与移动端顶栏，点击返回首页 ===== */
+.app-title-home {
+  border: none;
+  background: transparent;
+  font: inherit;
+  padding: 0;
+  cursor: pointer;
+}
+
 .mobile-menu-button {
   position: fixed !important;
   top: 12px !important;
