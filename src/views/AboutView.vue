@@ -5,10 +5,11 @@ import { NTooltip } from 'naive-ui'
 import { RiBilibiliLine, RiTiktokFill, RiGithubFill, RiQqFill, RiRssFill } from '@remixicon/vue'
 import { useStats } from '../composables/useStats'
 import { useLocalStats } from '../composables/useLocalStats.js'
-import IframeForm from '../components/IframeForm.vue'
+import { useFeedbackDrawer } from '../composables/useFeedbackDrawer.js'
 
 const { stats, fetchStats } = useStats()
 const router = useRouter()
+const { openFeedbackDrawer } = useFeedbackDrawer()
 
 /* ===== 贡献者数据（异步 import，参考打赏记录） ===== */
 const contributors = ref([])
@@ -597,15 +598,8 @@ onMounted(() => {
         <div class="eyebrow cta-eyebrow" v-reveal><b>04</b> feedback / 建议 &amp; 反馈 <span class="ln"></span></div>
         <h2 class="cta-title" v-reveal>有 Bug？<br>有 <span class="o">新想法？</span></h2>
         <div class="cta-row" v-reveal="1">
-          <span class="cmd">$ 通过下方表单告诉我们 →</span>
-          <span class="btn btn-inv trigger-feedback">在线反馈</span>
-        </div>
-        <div class="md-content cta-form-wrap">
-          <IframeForm
-            src="https://pcnk2disyt2p.feishu.cn/share/base/form/shrcnSkK8TS3y8eR4bnHkI1wmlc"
-            :height="600"
-            id="feedback"
-          />
+          <span class="cmd">$ 填写反馈表单，告诉我们你的想法 →</span>
+          <button class="btn btn-inv" @click="openFeedbackDrawer">在线反馈</button>
         </div>
         <div class="channels" v-reveal="2">
           <span>其它方式:</span>
@@ -1532,12 +1526,6 @@ onMounted(() => {
 .btn-inv:hover {
   transform: translate(-3px, -3px);
   box-shadow: 5px 5px 0 var(--line-2);
-}
-
-.cta-form-wrap {
-  max-width: 1240px;
-  margin: 0 auto;
-  padding-inline: clamp(0px, 5vw, 0px);
 }
 
 .channels {

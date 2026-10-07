@@ -18,6 +18,7 @@ src:
     DonateRecords.vue: 打赏记录表格，异步加载 JSON 动态渲染
     DarkFilterIcon.vue: 深色滤镜状态图标（月亮 + 可生长/回缩的描边斜杠），用 stroke-dashoffset 动画实现斜杠生长
     ExternalSiteView.vue: 站外站点 iframe 嵌入视图（工作站标签页内显示站外卡片内容）
+    FeedbackDrawer.vue: 建议反馈抽屉，右侧滑出内嵌飞书反馈表单（首次打开才加载 iframe）
     Footer.vue: 页脚组件，包含版权信息、运行时间、隐私政策入口
     HomeView.vue: 首页视图容器，集成搜索栏、工具网格、页脚
     IframeForm.vue: iframe 表单封装组件
@@ -94,6 +95,7 @@ src:
   composables:
     honorBrowserNotice.js: 荣耀浏览器提示，建议用户更换标准浏览器（按需加载）
     useConfirm.js: 全局确认弹窗状态，confirmDialog() 返回 Promise 供任意模块（含 composable）调用
+    useFeedbackDrawer.js: 建议反馈抽屉的开关状态共享，供侧边栏菜单与关于页 CTA 唤起
     useFuckHonorAdGuard.js: 荣耀浏览器注入的侧边悬浮广告拦截，隐藏广告容器并向 Umami 上报（按需加载）
     useHonorGuard.js: 荣耀浏览器 UA 判断入口，命中后才动态加载广告拦截与提示模块
     useLocalStats.js: 本地使用统计（首次打开时间、工具使用次数、导航次数）

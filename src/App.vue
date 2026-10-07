@@ -11,7 +11,9 @@ import ThemeToggle from './components/ThemeToggle.vue'
 import PrivacyBanner from './components/PrivacyBanner.vue'
 import ConfirmDialog from './components/ConfirmDialog.vue'
 import SurveyModal from './components/SurveyModal.vue'
+import FeedbackDrawer from './components/FeedbackDrawer.vue'
 import { confirmDialog } from './composables/useConfirm'
+import { useFeedbackDrawer } from './composables/useFeedbackDrawer.js'
 import { useTheme } from './composables/useTheme'
 import { useWorkspace, isExternalPath, getExternalUrl, getExternalToolMeta } from './composables/useWorkspace.js'
 import { useSWUpdate } from './composables/useSWUpdate'
@@ -28,7 +30,7 @@ const UpdateDialog = defineAsyncComponent(() => import('./components/UpdateDialo
 const ShareModal = defineAsyncComponent(() => import('./components/ShareModal.vue'))
 
 export default {
-  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog, ShareModal, ConfirmDialog, SurveyModal, NIcon, NTooltip },
+  components: { AppMenu, ThemeToggle, NMessageProvider, PrivacyBanner, UpdateDialog, ShareModal, ConfirmDialog, SurveyModal, FeedbackDrawer, NIcon, NTooltip },
   setup() {
     const router = useRouter()
     const route = useRoute()
@@ -345,6 +347,16 @@ export default {
       }
     }
 
+    const { openFeedbackDrawer } = useFeedbackDrawer()
+
+    // 反馈抽屉盖在移动端菜单抽屉之上，先把菜单收起，免得它留在抽屉背后
+    function handleMenuFeedback() {
+      openFeedbackDrawer()
+      if (mobileMenuOpen.value) {
+        mobileMenuOpen.value = false
+      }
+    }
+
     function handleRouteChange() {
       const path = router.currentRoute.value.path
       // 等新页面 DOM 更新完再回顶：立即滚会让用户看到"旧页面一边滚动一边被换掉"
@@ -412,6 +424,7 @@ export default {
       isUnofficial,
       handleResize,
       handleMenuNavigate,
+      handleMenuFeedback,
       goSettings,
       ShareIcon: ShareAndroid20Regular,
       OfficialOpenIcon: Open16Filled,
@@ -501,6 +514,7 @@ export default {
             <AppMenu
               v-model:value="activeKey"
               @navigate="handleMenuNavigate"
+              @feedback="handleMenuFeedback"
             />
           </NScrollbar>
           <div
@@ -743,6 +757,7 @@ export default {
               v-model:value="activeKey"
               @update:value="mobileMenuOpen = false"
               @navigate="handleMenuNavigate"
+              @feedback="handleMenuFeedback"
               style="flex: 1; overflow-y: auto"
             />
             <div :style="{ padding: '0 14px 16px 14px', background: 'var(--background)' }">
@@ -786,6 +801,7 @@ export default {
       </NDrawer>
     </div>
     <PrivacyBanner />
+    <FeedbackDrawer :is-mobile="isMobile" />
     <SurveyModal />
     <UpdateDialog />
     <ConfirmDialog />

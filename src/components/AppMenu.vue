@@ -2,7 +2,7 @@
 import { h, markRaw, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { NMenu, NIcon, useMessage } from 'naive-ui'
-import { Home48Regular, Person24Regular, AddSquare24Regular, HeartCircle24Regular, CalendarWorkWeek24Regular, DrawerArrowDownload24Regular, Settings24Regular, MoreVertical24Regular } from '@vicons/fluent'
+import { Home48Regular, Person24Regular, AddSquare24Regular, HeartCircle24Regular, PersonFeedback24Regular, CalendarWorkWeek24Regular, DrawerArrowDownload24Regular, Settings24Regular, MoreVertical24Regular } from '@vicons/fluent'
 import { getCategoryIcon } from '../config/categoryIcons'
 import { usePWAInstall } from '../composables/usePWAInstall'
 import toolsData from '../data/tools.json'
@@ -61,7 +61,7 @@ export default {
       default: 'home',
     },
   },
-  emits: ['update:value', 'navigate'],
+  emits: ['update:value', 'navigate', 'feedback'],
   setup() {
     // 从配置中计算默认展开的父级菜单
     const defaultExpandedKeys = computed(() => {
@@ -196,6 +196,11 @@ export default {
       // 低频入口收进「更多」，展开状态与其他父级菜单共用持久化
       const moreChildren = [
         {
+          label: '建议反馈',
+          key: 'feedback',
+          icon: this.renderIcon(markRaw(PersonFeedback24Regular)),
+        },
+        {
           label: '打赏支持',
           key: 'donate',
           icon: this.renderIcon(markRaw(HeartCircle24Regular)),
@@ -283,6 +288,12 @@ export default {
       if (key === 'pwa-install') {
         this.$emit('update:value', key)
         this.handlePWAInstall()
+        return
+      }
+
+      // 建议反馈：在当前页弹抽屉，路由与选中态都不变，故不派发 update:value
+      if (key === 'feedback') {
+        this.$emit('feedback')
         return
       }
 
