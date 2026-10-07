@@ -40,13 +40,50 @@ useToolStorage('lonzovtool-tranimation', { inputText, startScore, scoreboardName
 
 // ===== 核心转换逻辑 (来自 v2/c/tr/script.js) =====
 
+// §颜色代码与 \n 没有可见字形，单独成词会让该词什么都不显示：
+// 代码后还有普通字符就并入该字符，位于句末则向前并入上一词；连续多个代码同理
+function splitTokens(text) {
+  const tokens = []
+  let i = 0
+  while (i < text.length) {
+    let currentText = ''
+    while (i < text.length) {
+      if (text[i] === '§') {
+        const codeLength = i + 1 < text.length ? 2 : 1
+        currentText += text.substr(i, codeLength)
+        i += codeLength
+        continue
+      }
+      if (text[i] === '\\' && i + 1 < text.length && text[i + 1] === 'n') {
+        currentText += '\n'
+        i += 2
+        continue
+      }
+      if (text[i] === '\n') {
+        currentText += '\n'
+        i++
+        continue
+      }
+      break
+    }
+    if (i < text.length) {
+      tokens.push(currentText + text[i])
+      i++
+    } else if (tokens.length) {
+      tokens[tokens.length - 1] += currentText
+    } else {
+      tokens.push(currentText)
+    }
+  }
+  return tokens
+}
+
 function transformText(text, scoreboard, startScoreVal, init) {
   if (!text || !text.toString().trim()) {
     return { error: '请输入需要转换的文本' }
   }
   try {
     const commands = []
-    let i = 0
     let initialScoreValue = parseInt(startScoreVal, 10)
     if (isNaN(initialScoreValue)) {
       initialScoreValue = 0
@@ -59,61 +96,18 @@ function transformText(text, scoreboard, startScoreVal, init) {
     }
     const trimmedScoreboard = scoreboard.trim()
 
-    while (i < text.length) {
-      let currentText = ''
-      // 递归收集所有连续的§*和\n
-      while (i < text.length) {
-        // 处理§格式
-        if (text[i] === '§' && i + 1 < text.length) {
-          currentText += text.substr(i, 2)
-          i += 2
-          continue
-        }
-        // 处理\n字符串
-        else if (text[i] === '\\' && i + 1 < text.length && text[i + 1] === 'n') {
-          currentText += '\n'
-          i += 2
-          continue
-        }
-        // 处理实际换行符
-        else if (text[i] === '\n') {
-          currentText += '\n'
-          i++
-          continue
-        }
-        break
+    for (const token of splitTokens(text)) {
+      const commandData = {
+        translate: '%%2',
+        with: {
+          rawtext: [
+            { selector: `@s[scores={${trimmedScoreboard}=${score}..}]` },
+            { text: token },
+          ],
+        },
       }
-      // 收集后续一个普通字符
-      if (i < text.length && currentText) {
-        currentText += text[i]
-        i++
-      }
-      if (currentText) {
-        const commandData = {
-          translate: '%%2',
-          with: {
-            rawtext: [
-              { selector: `@s[scores={${trimmedScoreboard}=${score}..}]` },
-              { text: currentText },
-            ],
-          },
-        }
-        commands.push(JSON.stringify(commandData))
-        score++
-      } else if (i < text.length) {
-        const commandData = {
-          translate: '%%2',
-          with: {
-            rawtext: [
-              { selector: `@s[scores={${trimmedScoreboard}=${score}..}]` },
-              { text: text[i] },
-            ],
-          },
-        }
-        commands.push(JSON.stringify(commandData))
-        i++
-        score++
-      }
+      commands.push(JSON.stringify(commandData))
+      score++
     }
 
     let result = '[' + commands.join(',') + ']'
