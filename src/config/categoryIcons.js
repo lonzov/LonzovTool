@@ -12,6 +12,7 @@ import {
   Edit24Filled,
   Box24Regular,
   Cube24Regular,
+  MusicNote216Filled,
 } from '@vicons/fluent'
 
 // 图标映射表
@@ -27,6 +28,7 @@ export const categoryIconMap = {
   Edit24Filled: Edit24Filled,
   Box24Regular: Box24Regular,
   Cube24Regular: Cube24Regular,
+  MusicNote216Filled: MusicNote216Filled,
 }
 
 export function getCategoryIcon(iconName, defaultIcon = Apps24Regular) {

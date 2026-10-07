@@ -328,13 +328,6 @@
           "link": "https://ca.nycx.top"
         },
         {
-          "id": "zhiling-yinfuhe",
-          "title": "指令音符盒",
-          "description": "mid转指令,并半自动填入命令方块",
-          "logo": "/logos/command_plus.webp",
-          "link": "/down/zhiling-yinfuhe/"
-        },
-        {
           "id": "command-cube",
           "title": "命令魔方",
           "description": "强大的命令辅助应用",
@@ -400,6 +393,26 @@
       ]
     },
     {
+      "name": "指令音乐",
+      "icon": "MusicNote216Filled",
+      "tools": [
+        {
+          "id": "zhiling-yinfuhe",
+          "title": "指令音符盒",
+          "description": "mid转指令,并半自动填入命令方块",
+          "logo": "/logos/command_plus.webp",
+          "link": "/down/zhiling-yinfuhe/"
+        },
+        {
+          "id": "mc-note",
+          "title": "MC指令音乐站",
+          "description": "基岩版指令音乐文件下载",
+          "logo": "/logos/jzfk_wuaze_com.webp",
+          "link": "https://mcnote.cc.cd/"
+        }
+      ]
+    },
+    {
       "name": "资源素材",
       "icon": "Edit24Filled",
       "tools": [
@@ -437,13 +450,6 @@
           "description": "轻松生成个性化Minecraft头像",
           "logo": "/logos/mccag.webp",
           "link": "https://mccag.cn/"
-        },
-        {
-          "id": "mc-note",
-          "title": "MC指令音乐站",
-          "description": "基岩版指令音乐文件下载",
-          "logo": "/logos/jzfk_wuaze_com.webp",
-          "link": "https://mcnote.cc.cd/"
         },
         {
           "id": "mc-apks",
