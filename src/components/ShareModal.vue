@@ -529,6 +529,11 @@ watch(() => props.show, (val) => {
   overflow: hidden;
   /* 海报本体永远是白底，骨架与真图都铺在这上面，不随主题变 */
   background: #FFFFFF;
+  /* 真图带 opacity 过渡，会被提升为独立合成层；部分引擎对新建合成层不施加祖先的
+     overflow 圆角裁剪，占位换成真图的瞬间会露出方角。叠一层全不透明 mask（本身不改变
+     画面），把整棵子树送进蒙版渲染路径，圆角改由这一层统一裁。 */
+  -webkit-mask-image: linear-gradient(#000, #000);
+  mask-image: linear-gradient(#000, #000);
 }
 
 /* ===== 占位骨架（尺寸对应海报 360×540 的版式，宽度用 % 跟随缩放） ===== */
