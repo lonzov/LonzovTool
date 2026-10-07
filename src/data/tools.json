@@ -404,6 +404,13 @@
           "link": "/down/zhiling-yinfuhe/"
         },
         {
+          "id": "mcbe-cbnoteblock",
+          "title": "MC音乐命令方块",
+          "description": "MIDI/NBS一键转MC音乐命令方块指令",
+          "logo": "/logos/zero-raltal_github_io.webp",
+          "link": "https://zero-raltal.github.io/MCBE-CBNoteBlock/"
+        },
+        {
           "id": "mc-note",
           "title": "MC指令音乐站",
           "description": "基岩版指令音乐文件下载",
