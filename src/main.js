@@ -36,6 +36,9 @@ export const createApp = ViteSSG(
   ({ app, router, isClient, head }) => {
     // 捕获 head 实例供 App.vue 客户端侧使用
     if (head) globalHead = head
+    // vite-ssg 内部无参 createHead()，unhead 服务端默认注入 htmlAttrs.lang="en"，
+    // 预渲染时会把模板的 zh-CN 覆盖掉，这里显式声明语言以压回默认值
+    head?.push({ htmlAttrs: { lang: 'zh-CN' } })
     // ---- Naive UI 全局组件注册 ----
     app.component('NConfigProvider', NConfigProvider)
     app.component('NLayout', NLayout)
