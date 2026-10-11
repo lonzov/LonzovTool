@@ -9,6 +9,8 @@ import { confirmDialog } from '../composables/useConfirm'
 import { usePrivacyModal } from '../composables/usePrivacyModal'
 import { useWorkspaceSettings } from '../composables/useWorkspaceSettings'
 import { useWorkspace } from '../composables/useWorkspace'
+import { useMouseGlow } from '../composables/useMouseGlow'
+import { useMotion } from '../composables/useMotion'
 
 const { themeMode, setThemeMode } = useTheme()
 const message = useMessage()
@@ -39,20 +41,22 @@ const urlThemeValue = computed({
 })
 
 /* ========== 卡片高光效果开关 ========== */
-const GLOW_KEY = 'mouse_glow_enabled'
-const glowEnabled = ref(
-  (() => {
-    try {
-      const v = localStorage.getItem(GLOW_KEY)
-      return v === null ? true : v === 'true'
-    } catch { return true }
-  })(),
-)
+const { glowEnabled, setGlowEnabled } = useMouseGlow()
 
 function onGlowToggle(val) {
-  glowEnabled.value = val
-  localStorage.setItem(GLOW_KEY, String(val))
-  message.info('刷新页面后生效', { duration: 1800 })
+  setGlowEnabled(val)
+}
+
+/* ========== 减少动态效果 ========== */
+const { reduceMotion, setReduceMotion } = useMotion()
+
+// 联动是单向的：打开减少动态时顺手关掉高光；关掉减少动态时不还原，
+// 高光要不要重新打开由用户自己决定
+function onReduceMotionToggle(val) {
+  setReduceMotion(val)
+  if (val && glowEnabled.value) {
+    setGlowEnabled(false)
+  }
 }
 
 /* ========== 站外嵌入工作站（模块级共享状态）========== */
@@ -258,7 +262,14 @@ const CONFIG_SCOPES = {
   personalization: {
     label: '个性化设置',
     desc: '例如深浅主题、搜索偏好',
-    keys: ['theme_mode', 'search_engine_selected', 'tab_drag_delay', 'url_theme_param'],
+    keys: [
+      'theme_mode',
+      'search_engine_selected',
+      'tab_drag_delay',
+      'url_theme_param',
+      'reduce_motion',
+      'mouse_glow_enabled',
+    ],
   },
   all: {
     label: '所有配置',
@@ -723,6 +734,20 @@ const embedCloseActions = [
                 <NSwitch
                   :value="glowEnabled"
                   @update:value="onGlowToggle"
+                  :rail-style="switchRailStyle"
+                  class="settings-switch"
+                />
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">减少动态效果</span>
+                <p class="setting-desc">砍掉切页、弹窗出入场等大面积动效，提升性能</p>
+              </div>
+              <div class="setting-control">
+                <NSwitch
+                  :value="reduceMotion"
+                  @update:value="onReduceMotionToggle"
                   :rail-style="switchRailStyle"
                   class="settings-switch"
                 />
@@ -1197,6 +1222,12 @@ const embedCloseActions = [
 .collapse-leave-active {
   transition: max-height 0.3s ease, opacity 0.25s ease;
   overflow: hidden;
+}
+
+/* 减少动态效果：分区展开收起直接到位 */
+html[data-motion='reduced'] .collapse-enter-active,
+html[data-motion='reduced'] .collapse-leave-active {
+  transition: none !important;
 }
 
 .collapse-enter-from,

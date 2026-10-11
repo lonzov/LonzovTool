@@ -163,6 +163,12 @@ const cardTitle = computed(() => (props.compact ? (showJson.value ? 'JSON' : '')
     max-height 0.28s cubic-bezier(0.2, 0, 0, 1),
     opacity 0.18s ease;
 }
+
+/* 减少动态效果：快捷栏展开收起直接到位。只摘掉 max-height，
+   描边与透明度的过渡保留 —— 整条 transition 换掉会让它在主题切换时跳变 */
+html[data-motion='reduced'] .quick-bar {
+  transition: border-color 0.4s ease, opacity 0.18s ease;
+}
 .qb-btn {
   flex: 1 1 0; min-width: 0;
   display: inline-flex; align-items: center; justify-content: center; gap: 3px;

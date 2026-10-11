@@ -15,6 +15,7 @@ import FeedbackDrawer from './components/FeedbackDrawer.vue'
 import { confirmDialog } from './composables/useConfirm'
 import { useFeedbackDrawer } from './composables/useFeedbackDrawer.js'
 import { useTheme } from './composables/useTheme'
+import { useMotion } from './composables/useMotion'
 import { useWorkspace, isExternalPath, getExternalUrl, getExternalToolMeta } from './composables/useWorkspace.js'
 import { useSWUpdate } from './composables/useSWUpdate'
 import { useOfficialDomainCheck } from './composables/useOfficialDomainCheck'
@@ -35,6 +36,7 @@ export default {
     const router = useRouter()
     const route = useRoute()
     const { themeMode, cycleTheme, isDark } = useTheme()
+    const { reduceMotion } = useMotion()
     const { initSW } = useSWUpdate()
     const { isUnofficial } = useOfficialDomainCheck()
     useHonorGuard()
@@ -314,30 +316,38 @@ export default {
     function scrollToCategory(index) {
       // 若回顶动画还没结束，先掐掉，避免两段滚动互相覆盖
       cancelScrollToTop()
-      setTimeout(() => {
-        const categoryElements = document.querySelectorAll('.tool-category')
-        const target = categoryElements[index]
-        if (target) {
-          const scrollMarginTop = isMobile.value ? '80px' : '24px'
-          target.style.scrollMarginTop = scrollMarginTop
-          // 移动端 Chrome 的 scrollIntoView({ behavior: 'smooth' }) 存在 Bug：
-          // 第一次调用后浏览器内部会标记元素"已滚动到"，后续对同一/相邻元素的滚动会被忽略。
-          // 通过临时赋予 tabindex 并 focus({ preventScroll: true }) 重置 Chrome 的滚动状态机。
-          if (isMobile.value) {
-            const prevTabIndex = target.getAttribute('tabindex')
-            target.setAttribute('tabindex', '-1')
-            target.focus({ preventScroll: true })
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            if (prevTabIndex === null) {
-              target.removeAttribute('tabindex')
-            } else {
-              target.setAttribute('tabindex', prevTabIndex)
-            }
-          } else {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          }
+
+      // 目标分类的 DOM 不保证此刻已就位：跨页跳转时新页要等换页挂载完才出现，
+      // 而减少动态效果下外层延时是 0，写死一个固定时长会在慢机器上滚到空处。
+      // 所以等元素真的出现再滚，最多重试约 1 秒。
+      let retries = 20
+      const scrollWhenReady = () => {
+        const target = document.querySelectorAll('.tool-category')[index]
+        if (!target) {
+          if (retries-- > 0) setTimeout(scrollWhenReady, 50)
+          return
         }
-      }, 100)
+        const scrollMarginTop = isMobile.value ? '80px' : '24px'
+        target.style.scrollMarginTop = scrollMarginTop
+        const behavior = reduceMotion.value ? 'auto' : 'smooth'
+        // 移动端 Chrome 的 scrollIntoView({ behavior: 'smooth' }) 存在 Bug：
+        // 第一次调用后浏览器内部会标记元素"已滚动到"，后续对同一/相邻元素的滚动会被忽略。
+        // 通过临时赋予 tabindex 并 focus({ preventScroll: true }) 重置 Chrome 的滚动状态机。
+        if (isMobile.value) {
+          const prevTabIndex = target.getAttribute('tabindex')
+          target.setAttribute('tabindex', '-1')
+          target.focus({ preventScroll: true })
+          target.scrollIntoView({ behavior, block: 'start' })
+          if (prevTabIndex === null) {
+            target.removeAttribute('tabindex')
+          } else {
+            target.setAttribute('tabindex', prevTabIndex)
+          }
+        } else {
+          target.scrollIntoView({ behavior, block: 'start' })
+        }
+      }
+      setTimeout(scrollWhenReady, 100)
     }
 
     function goSettings() {
@@ -368,11 +378,12 @@ export default {
         if (pendingCategoryIndex !== null) {
           const index = pendingCategoryIndex
           pendingCategoryIndex = null
-          // 等回顶动画走完再滚向目标分类，否则两段滚动互相打架
+          // 等回顶动画走完再滚向目标分类，否则两段滚动互相打架。
+          // 减少动态效果下回顶是瞬间到位的，不必再等
           setTimeout(() => {
             triggerCategoryDimEffect(index)
             scrollToCategory(index)
-          }, 450)
+          }, reduceMotion.value ? 0 : 450)
         }
       } else if (path.startsWith('/docs')) {
         activeKey.value = 'about'
@@ -400,8 +411,11 @@ export default {
     router.afterEach((to) => {
       _prevIsWorkspace = to.path.startsWith('/c/') || to.path.startsWith('/embed/')
     })
-    // 仅工作站→工作站内部切换时跳过动画，其他情况（首页→工作站、文档→工作站等）保留动画
-    const skipPageTransition = computed(() => _prevIsWorkspace && isWorkspaceRoute.value)
+    // 跳过切页动画：工作站内部切换本来就跳（省一次整屏位移），
+    // 开了减少动态效果则一律跳
+    const skipPageTransition = computed(
+      () => reduceMotion.value || (_prevIsWorkspace && isWorkspaceRoute.value),
+    )
 
     return {
       themeMode,

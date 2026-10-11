@@ -126,6 +126,10 @@
           localStorage.setItem('theme_mode', urlTheme);
         }
         document.documentElement.setAttribute('data-theme', 'dark');
+        // 减少动态效果：这一笔必须先于 CSS 生效，否则刷新瞬间会先跑一遍切页与入场动画
+        if (localStorage.getItem('reduce_motion') === 'true') {
+          document.documentElement.setAttribute('data-motion', 'reduced');
+        }
       })();
     } else {
       document.documentElement.setAttribute('data-theme', 'dark');

@@ -5,6 +5,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { ChevronDown16Filled } from '@vicons/fluent'
 import { useWorkspace, isExternalPath, getExternalUrl, isExternalUrlAllowed, getLogoFromPath } from '../composables/useWorkspace.js'
 import { useLocalStats } from '../composables/useLocalStats.js'
+import { reduceMotion } from '../composables/useMotion.js'
 import { getToolIcon } from '../config/categoryIcons'
 import ToolLoading from './ToolLoading.vue'
 import NotFoundView from '../views/NotFoundView.vue'
@@ -286,7 +287,10 @@ function scrollActiveTabIntoView() {
   const preferred = elRect.left - listRect.left + list.scrollLeft
   const max = Math.max(0, list.scrollWidth - list.clientWidth)
 
-  list.scrollTo({ left: Math.max(0, preferred <= max ? preferred : max), behavior: 'smooth' })
+  list.scrollTo({
+    left: Math.max(0, preferred <= max ? preferred : max),
+    behavior: reduceMotion.value ? 'auto' : 'smooth',
+  })
   updateScrollFades()
 }
 

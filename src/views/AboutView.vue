@@ -6,6 +6,7 @@ import { RiBilibiliLine, RiTiktokFill, RiGithubFill, RiQqFill, RiRssFill } from 
 import { useStats } from '../composables/useStats'
 import { useLocalStats } from '../composables/useLocalStats.js'
 import { useFeedbackDrawer } from '../composables/useFeedbackDrawer.js'
+import { reduceMotion } from '../composables/useMotion.js'
 
 const { stats, fetchStats } = useStats()
 const router = useRouter()
@@ -156,15 +157,8 @@ function startCrawl(el) {
   requestAnimationFrame(tick)
 }
 
-/* 加速冲到目标值 */
+/* 加速冲到目标值。数字滚动属于"持续运动才有意义"的一类，减少动态效果下照常滚动 */
 function rushToTarget(el, target) {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    el._current = target
-    el.innerHTML = el._formatter(target)
-    el._state = 'done'
-    fitNumber(el)
-    return
-  }
   el._state = 'rushing'
 
   /* 预先用目标值（最大宽度）测量并设置缩放，避免动画中每帧强制重排 */
@@ -337,7 +331,7 @@ const vReveal = {
 /* ===== 滚动到反馈区 ===== */
 function scrollToFeedback() {
   const el = document.getElementById('feedback')
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  if (el) el.scrollIntoView({ behavior: reduceMotion.value ? 'auto' : 'smooth', block: 'start' })
 }
 
 /* ===== 数字格式化：< 1w 显示千分位逗号，>= 1w 显示 x.xw ===== */
@@ -777,12 +771,21 @@ onMounted(() => {
 .reveal[data-d="4"] { transition-delay: .32s; }
 .reveal[data-d="5"] { transition-delay: .40s; }
 
-@media (prefers-reduced-motion: reduce) {
-  .reveal {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-  }
+/* 减少动态效果：滚动揭示与首屏那几个带延迟的入场属于大面积、一次性动效，直接让内容就位。
+   前者是过渡驱动，后者是动画驱动，得分开关；两者的基态都压在 opacity: 0 上，只掐时长的
+   话元素会停在原处。 */
+html[data-motion='reduced'] .reveal {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+html[data-motion='reduced'] .hero h1 .w,
+html[data-motion='reduced'] .hero-sub,
+html[data-motion='reduced'] .hero-cta {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
 }
 
 /* ===== 1. HERO ===== */

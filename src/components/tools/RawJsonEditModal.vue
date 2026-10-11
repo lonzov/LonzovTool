@@ -314,6 +314,9 @@ function resetWrapStyle(el) {
 
 <style scoped>
 .edit-form-wrap { transition: height 0.3s cubic-bezier(0.2, 0, 0, 1); }
+
+/* 减少动态效果：切换元素类型时表单区伸缩直接到位 */
+html[data-motion='reduced'] .edit-form-wrap { transition: none !important; }
 .edit-form { display: flex; flex-direction: column; gap: 14px; }
 .edit-field { display: flex; flex-direction: column; gap: 4px; }
 .edit-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

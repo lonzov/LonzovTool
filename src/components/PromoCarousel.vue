@@ -85,7 +85,6 @@ export default {
   },
   data() {
     return {
-      reduceMotion: false,
       // 异步加载的分档配置拼成的滑片数组，加载完成前为空
       loadedSlides: [],
       // 加载失败的滑片，键为滑片位置（不用配置里的 id：id 手写，重复会误伤其他滑片）
@@ -96,8 +95,9 @@ export default {
     items() {
       return this.loadedSlides.length ? this.loadedSlides : PLACEHOLDER_SLIDES
     },
+    // 轮播属于"持续运动才有意义"的一类，减少动态效果下照常自动播放
     canAutoplay() {
-      return !this.reduceMotion && this.items.length > 1
+      return this.items.length > 1
     },
   },
   methods: {
@@ -135,11 +135,6 @@ export default {
     },
   },
   mounted() {
-    this.reduceMotion =
-      typeof window !== 'undefined' &&
-      !!window.matchMedia &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
     // NCarousel 的滑片容器只有 role="listbox" 没有可访问名称（未开放该属性），直接补在容器上。
     // 按 ARIA role 定位而不是内部类名 —— role 是规范语义，不会随 Naive 版本变化
     this.$nextTick(() => {

@@ -260,6 +260,11 @@ onBeforeUnmount(() => {
   overflow: hidden;
   transition: height 0.28s cubic-bezier(0.2, 0, 0, 1);
 }
+
+/* 减少动态效果：进出全屏编辑态时预览区直接到位 */
+html[data-motion='reduced'] .rj-preview {
+  transition: none !important;
+}
 .rawjson-tool--focus .rj-preview { height: 0; }
 
 /* 追加栏直接落在背景上，不带卡片外壳。

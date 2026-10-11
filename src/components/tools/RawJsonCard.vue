@@ -32,6 +32,12 @@ defineProps({
     border-color 0.4s ease,
     padding 0.28s cubic-bezier(0.2, 0, 0, 1);
 }
+
+/* 减少动态效果：折叠时内边距直接到位。只摘掉 padding，
+   底色与描边的主题过渡保留，否则这张卡会在主题切换时跳变 */
+html[data-motion='reduced'] .output-card {
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
 .output-card--stretch {
   display: flex; flex-direction: column;
   min-height: 0; height: 100%;

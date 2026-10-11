@@ -1,3 +1,5 @@
+import { reduceMotion } from '../composables/useMotion.js'
+
 /**
  * 回顶的物理缓动，移植自 @swup/scroll-plugin 依赖的 scrl。
  * 每帧 velocity += delta * acceleration; velocity *= (1 - friction); position += velocity，
@@ -21,13 +23,6 @@ export function cancelScrollToTop() {
   }
 }
 
-function prefersReducedMotion() {
-  return (
-    typeof window !== 'undefined' &&
-    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
-  )
-}
-
 // 动画期间用户滚动即以用户为准：不取消的话每帧覆盖滚动位置，近 1 秒内滚不动
 function listenInterrupt(node) {
   const onInterrupt = () => cancelScrollToTop()
@@ -49,7 +44,7 @@ export function scrollToTop(target) {
   const start = target.getTop()
   if (start <= 0) return
 
-  if (prefersReducedMotion()) {
+  if (reduceMotion.value) {
     target.setTop(0)
     return
   }

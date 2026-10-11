@@ -207,6 +207,14 @@ function openTool(fn) {
 }
 .rj-settings-drawer .sheet-handle:active { cursor: grabbing; }
 .rj-settings-drawer .sheet-handle:active::before { background: var(--muted-foreground); }
+
+/* 减少动态效果：抽屉进出场直接到位。
+   .rj-settings-drawer 的落点可能是面板本身，也可能是它的外层容器，两处都覆盖；
+   拖拽回弹写的是行内 transition，同样被这条 !important 盖掉，一并瞬间完成 */
+html[data-motion='reduced'] .rj-settings-drawer,
+html[data-motion='reduced'] .rj-settings-drawer .n-drawer {
+  transition: none !important;
+}
 </style>
 
 <style scoped>

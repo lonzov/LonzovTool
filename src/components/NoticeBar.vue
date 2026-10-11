@@ -3,6 +3,7 @@ import { nextTick } from 'vue'
 import { NIcon, NTooltip } from 'naive-ui'
 import { MegaphoneLoud24Filled, ChevronDown20Filled, Open20Filled } from '@vicons/fluent'
 import noticesData from '../data/notices.json'
+import { reduceMotion } from '../composables/useMotion.js'
 
 // 已读标记：存"已读到的最新公告 id"，出现更大 id 的新公告时红点重新点亮
 const READ_KEY = 'notice_last_read_id'
@@ -13,9 +14,10 @@ const PANEL_DURATION = 300 // 展开/收起高度动画时长(ms)
 export default {
   name: 'NoticeBar',
   components: { NIcon, NTooltip },
-  // 把图标组件暴露给 Options API 模板（模块级 import 不在实例作用域内）
+  // 把图标组件与共享的减少动态效果开关暴露给 Options API
+  // （模块级 import 不在实例作用域内；setup 返回的 ref 经实例代理会自动解包）
   setup() {
-    return { MegaphoneLoud24Filled, ChevronDown20Filled, Open20Filled }
+    return { MegaphoneLoud24Filled, ChevronDown20Filled, Open20Filled, reduceMotion }
   },
   data() {
     return {
@@ -27,7 +29,6 @@ export default {
       expanded: false,
       isVisible: true,
       isMeasuring: false,
-      reduceMotion: false,
       readMaxId: 0, // localStorage 已读记录
       triggerWidth: 38, // 触发器宽度 = 公告栏单行高度，mounted 后测量校准
     }
@@ -63,11 +64,6 @@ export default {
     },
   },
   mounted() {
-    this.reduceMotion =
-      typeof window !== 'undefined' &&
-      !!window.matchMedia &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
     // 读取已读记录
     try {
       this.readMaxId = parseInt(localStorage.getItem(READ_KEY) || '0', 10) || 0
@@ -120,9 +116,10 @@ export default {
       this.timer = null
     },
     reschedule() {
-      // 展开/悬停不再暂停轮播，仅离开视口或减少动效时停止
+      // 展开/悬停不再暂停轮播，仅离开视口时停止。
+      // 轮播属于"持续运动才有意义"的一类，减少动态效果下照常轮播
       this.clearSchedulers()
-      if (!this.hasMore || !this.isVisible || this.reduceMotion) return
+      if (!this.hasMore || !this.isVisible) return
       this.timer = setInterval(() => this.advance(), 4000)
     },
     advance() {
@@ -687,17 +684,4 @@ export default {
   font-variant-numeric: tabular-nums;
 }
 
-/* 减少动效 */
-@media (prefers-reduced-motion: reduce) {
-  .notice-head,
-  .chevron,
-  .notice-icon {
-    transition: none !important;
-  }
-
-  .notice-slide-enter-active,
-  .notice-slide-leave-active {
-    transition: none !important;
-  }
-}
 </style>

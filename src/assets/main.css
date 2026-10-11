@@ -62,6 +62,53 @@ li {
     stroke var(--duration-theme) var(--ease-theme);
 }
 
+/* ===== 减少动态效果 =====
+   设置页开关把 data-motion="reduced" 落在 <html> 上。定位是省性能和提升效率，而不是抹平动效 ——
+   悬停、聚焦、边框、阴影这类小面积过渡按原时长保留，只处理下面这几类。
+
+   拿掉的：
+     · 切页的整屏位移                  App.vue 的 skipPageTransition
+     · 回顶物理缓动、四处平滑滚动       JS 短路（scrollToTop.js / WorkspaceView / HasitemModal）
+     · 滚动揭示与首屏入场              AboutView 里关掉 animation 与 transition
+     · 鼠标跟随高光                    设置页联动关闭（useMouseGlow）
+     · 浮层与菜单的展开收起            Popover / Select / Dropdown / Cascader 的菜单
+                                        （气泡例外，见下）
+     · 消息与开关的过渡                Message 与 Switch
+     · 项目自己的折叠面板              设置页卡片在 SettingsView 内，公告栏面板在 NoticeBar 内
+
+   保留的：
+     · 侧边栏（移动端抽屉）的展开收起   不给它写规则即恢复原样
+     · 气泡（Tooltip）的出现消失        Tooltip 内部用 Popover 渲染，靠 :not(.n-tooltip) 排除；
+                                        Tooltip 会给气泡追加一个 'tooltip' 类，故可与普通浮层区分
+     · 模态框的打开关闭                 保留，但加速到 0.08s（Naive 默认 0.2s），
+                                        并隐掉 AppModal 自绘的那层全屏毛玻璃
+
+   Naive 的 cssr 用 `&` 声明过渡，过渡就挂在带过渡类的那个元素自己身上，
+   所以按元素类名把 transition 掐掉即可，不必依赖它内部的过渡类名（那些类名与模态框共用，
+   按类名匹配会误伤模态框）。 */
+html[data-motion='reduced'] .n-popover:not(.n-tooltip),
+html[data-motion='reduced'] .n-base-select-menu,
+html[data-motion='reduced'] .n-select-menu,
+html[data-motion='reduced'] .n-dropdown-menu,
+html[data-motion='reduced'] .n-cascader-menu,
+html[data-motion='reduced'] .n-message,
+html[data-motion='reduced'] .n-message-wrapper,
+html[data-motion='reduced'] .n-switch__rail,
+html[data-motion='reduced'] .n-switch__button {
+  transition: none !important;
+}
+
+/* 模态框：过渡加速 */
+html[data-motion='reduced'] .n-modal,
+html[data-motion='reduced'] .n-modal-mask {
+  transition-duration: 0.05s !important;
+}
+
+/* 模态框的毛玻璃层整个隐掉 */
+html[data-motion='reduced'] .app-modal-blur {
+  display: none !important;
+}
+
 /* ===== 页面动画的过渡类（仅用于覆盖全局 transition） ===== */
 .page-enter-active,
 .page-leave-active {
@@ -224,19 +271,17 @@ button {
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: radial-gradient(
-    var(--glow-size) circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(var(--glow-color), 1)     0%,
-    rgba(var(--glow-color), 0.55) 5%,
-    rgba(var(--glow-color), 0.31) 10%,
-    rgba(var(--glow-color), 0.18) 15%,
-    rgba(var(--glow-color), 0.12) 20%,
-    rgba(var(--glow-color), 0.07) 30%,
-    rgba(var(--glow-color), 0.04) 40%,
-    rgba(var(--glow-color), 0.02) 55%,
-    rgba(var(--glow-color), 0.01) 70%,
-    transparent                 100%
-  );
+  background: radial-gradient(var(--glow-size) circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(var(--glow-color), 1) 0%,
+      rgba(var(--glow-color), 0.55) 5%,
+      rgba(var(--glow-color), 0.31) 10%,
+      rgba(var(--glow-color), 0.18) 15%,
+      rgba(var(--glow-color), 0.12) 20%,
+      rgba(var(--glow-color), 0.07) 30%,
+      rgba(var(--glow-color), 0.04) 40%,
+      rgba(var(--glow-color), 0.02) 55%,
+      rgba(var(--glow-color), 0.01) 70%,
+      transparent 100%);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;

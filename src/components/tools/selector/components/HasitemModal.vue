@@ -89,6 +89,7 @@ import {
   cleanupHasitemModal,
 } from '../composables/useParams.js'
 import { useModalContent } from '../composables/useModalContent.js'
+import { reduceMotion } from '../../../../composables/useMotion.js'
 
 const { contentVisible, onAfterLeave } = useModalContent(hasitemEditId, cleanupHasitemModal)
 
@@ -190,7 +191,10 @@ function animateHeightChange(changeFn, { scrollToBottom = false } = {}) {
         el.style.overflow = ''
         el.style.transition = ''
         if (scrollToBottom && scrollEl) {
-          scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' })
+          scrollEl.scrollTo({
+            top: scrollEl.scrollHeight,
+            behavior: reduceMotion.value ? 'auto' : 'smooth',
+          })
         }
         return
       }
@@ -211,7 +215,10 @@ function animateHeightChange(changeFn, { scrollToBottom = false } = {}) {
         el.style.transition = ''
         restoreScroll(savedTop)
         if (scrollToBottom && scrollEl) {
-          scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' })
+          scrollEl.scrollTo({
+            top: scrollEl.scrollHeight,
+            behavior: reduceMotion.value ? 'auto' : 'smooth',
+          })
         }
         el.removeEventListener('transitionend', onEnd)
       }

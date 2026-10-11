@@ -1,4 +1,8 @@
 // 全局单例：仅 1 个 document mousemove 监听器 + RAF 平滑广播（lerp 差值跟随）
+import { ref } from 'vue'
+
+const GLOW_KEY = 'mouse_glow_enabled'
+
 let targetX = 0
 let targetY = 0
 let currentX = 0
@@ -6,6 +10,9 @@ let currentY = 0
 let rafId = null
 const subscribers = new Set()
 let listenerCount = 0
+// 监听器是否已挂上。放模块级而不是 useMouseGlow() 的闭包里：本模块有三个调用方，
+// 各记一份时，后订阅的那个实例自己没挂过监听器，取消订阅会提前 return，计数永远回不到 0
+let listenersAttached = false
 
 // 平滑系数：越小越丝滑但越迟钝，越大越跟手但越生硬
 const LERP_FACTOR = 0.15
@@ -14,6 +21,34 @@ const LERP_FACTOR = 0.15
 let touchActive = false
 let touchJustEnded = false
 let touchEndTimer = null
+
+function readStoredGlow() {
+  if (import.meta.env.SSR) return true
+  try {
+    const v = localStorage.getItem(GLOW_KEY)
+    return v === null ? true : v === 'true'
+  } catch { return true }
+}
+
+/** 高光开关。设置页与监听器共用同一份状态，改动即时生效 */
+const glowEnabled = ref(readStoredGlow())
+
+/**
+ * 开关高光并持久化。关闭时立刻摘掉监听器、并给一次清除信号收起已亮起的边框。
+ * 不能拖到下次订阅才生效：减少动态效果会联动关它，而那份设置是即时的。
+ */
+export function setGlowEnabled(value) {
+  if (glowEnabled.value === value) return
+  glowEnabled.value = value
+  try {
+    localStorage.setItem(GLOW_KEY, String(value))
+  } catch { /* 隐私模式下写不进去，本次会话仍然生效 */ }
+  syncListeners()
+  // RAF 停掉后 tick 不再广播，得手动通知一次 (-1, -1) 让订阅方收起高光
+  if (!value) {
+    for (const cb of subscribers) cb(-1, -1)
+  }
+}
 
 function tick() {
   const dx = targetX - currentX
@@ -86,6 +121,35 @@ function onTouchEnd() {
   touchEndTimer = setTimeout(() => { touchJustEnded = false }, 500)
 }
 
+function attachListeners() {
+  if (listenersAttached) return
+  listenersAttached = true
+  document.addEventListener('mousemove', onMouseMove, { passive: true })
+  document.addEventListener('touchstart', onTouchStart, { passive: true })
+  document.addEventListener('touchmove', onTouchMove, { passive: true })
+  document.addEventListener('touchend', onTouchEnd, { passive: true })
+}
+
+function detachListeners() {
+  if (!listenersAttached) return
+  listenersAttached = false
+  document.removeEventListener('mousemove', onMouseMove)
+  document.removeEventListener('touchstart', onTouchStart)
+  document.removeEventListener('touchmove', onTouchMove)
+  document.removeEventListener('touchend', onTouchEnd)
+  clearTimeout(touchEndTimer)
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
+}
+
+// 开关与订阅数任一决定监听器去留，两者都可能单独变化
+function syncListeners() {
+  if (glowEnabled.value && listenerCount > 0) attachListeners()
+  else detachListeners()
+}
+
 /**
  * 对单个元素应用鼠标跟随边框高光
  * @param {HTMLElement} el - 目标元素（需 position: relative，并挂载 .glow-border 类）
@@ -119,55 +183,24 @@ export function applyGlow(el, mouseX, mouseY, options = {}) {
   }
 }
 
-// 是否启用高光效果（localStorage 开关，默认开）
-function isGlowEnabled() {
-  try {
-    const v = localStorage.getItem('mouse_glow_enabled')
-    return v === null ? true : v === 'true'
-  } catch { return true }
-}
-
 export function useMouseGlow() {
-  if (typeof window === 'undefined') {
-    return {
-      subscribe: () => {},
-      unsubscribe: () => {},
-    }
+  if (import.meta.env.SSR) {
+    return { glowEnabled, setGlowEnabled, subscribe: () => {}, unsubscribe: () => {} }
   }
-
-  let listenersActive = false
 
   function subscribe(callback) {
     if (subscribers.has(callback)) return
     subscribers.add(callback)
-    if (!isGlowEnabled()) return
     listenerCount++
-    if (listenerCount === 1) {
-      listenersActive = true
-      document.addEventListener('mousemove', onMouseMove, { passive: true })
-      document.addEventListener('touchstart', onTouchStart, { passive: true })
-      document.addEventListener('touchmove', onTouchMove, { passive: true })
-      document.addEventListener('touchend', onTouchEnd, { passive: true })
-    }
+    syncListeners()
   }
 
   function unsubscribe(callback) {
     if (!subscribers.has(callback)) return
     subscribers.delete(callback)
-    if (!listenersActive) return
     listenerCount--
-    if (listenerCount === 0) {
-      document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('touchstart', onTouchStart)
-      document.removeEventListener('touchmove', onTouchMove)
-      document.removeEventListener('touchend', onTouchEnd)
-      clearTimeout(touchEndTimer)
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId)
-        rafId = null
-      }
-    }
+    syncListeners()
   }
 
-  return { subscribe, unsubscribe }
+  return { glowEnabled, setGlowEnabled, subscribe, unsubscribe }
 }
