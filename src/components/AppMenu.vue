@@ -336,18 +336,20 @@ export default {
 
       return categoryOptions
     },
-    // 页面模块交出的分类栏内容（文档目录 / 工作站标签页等）
+    // 页面模块交出的分类栏内容（文档目录 / 工作站标签页 / 控制台目录等）
     buildSectionOptions(section) {
       return section.items.map((item) => {
         const option = {
           key: item.key,
           label: this.renderSectionLabel(item),
         }
-        // 工作站标签页带卡片 logo；章节类由页面给出图标（如设置页各板块），页面交出的图标
-        // 随响应式数据传递会被包成代理，需取回原始组件定义再渲染，没给图标的统一用章节图标
-        const icon = item.logo
-          ? makeLogoIcon(item.logo, 18)
-          : this.renderIcon(markRaw(toRaw(item.icon || NumberSymbol24Filled)))
+        // 图标优先级：页面模块自带（控制台目录 / 章节图标）> 工具卡片 logo（工作站标签页）> 章节图标。
+        // 页面交出的图标随响应式数据传递会被包成代理，渲染前取回原始组件定义
+        const icon = item.icon
+          ? this.renderIcon(markRaw(toRaw(item.icon)))
+          : item.logo
+            ? makeLogoIcon(item.logo, 18)
+            : this.renderIcon(markRaw(NumberSymbol24Filled))
         if (icon) option.icon = icon
         return option
       })

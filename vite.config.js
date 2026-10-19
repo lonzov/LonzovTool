@@ -76,6 +76,13 @@ export default defineConfig({
   },
   ssgOptions: {
     dirStyle: 'nested',
+    // 控制台不参与预渲染：它是登录后才用的管理界面，静态 HTML 没有意义，也不该被收录
+    // （robots.txt 另见 scripts/generate-seo.js 的 DISALLOW_PATHS）。
+    // 入参是路径字符串数组，且本回调会覆盖 vite-ssg 的默认过滤，故须自行剔除动态路径。
+    includedRoutes: (paths) =>
+      paths.filter(
+        (path) => !path.includes(':') && !path.includes('*') && !path.startsWith('/console'),
+      ),
     /**
      * 把 Naive UI 的 CSS-in-JS 样式内联进产物，避免首屏无样式闪烁。
      * collect() 返回的是若干 <style cssr-id> 片段而非纯 CSS，必须整体当标记插入 ——

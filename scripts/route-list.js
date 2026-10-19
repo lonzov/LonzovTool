@@ -32,7 +32,8 @@ function extractStaticRoutes(content) {
   let m
   while ((m = pathRe.exec(afterRoutes))) {
     const p = m[1]
-    if (!p.includes(':') && !p.includes('*')) {
+    // 空 path 是嵌套路由的索引子路由，不是独立页面
+    if (p && !p.includes(':') && !p.includes('*')) {
       paths.push(p)
     }
   }

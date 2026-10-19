@@ -8,9 +8,10 @@ import { useRoute } from 'vue-router'
  * 模块在挂载期接管，未接管时回落为首页工具分类。分类栏的结构约定：
  *
  *   {
- *     items: [{ key, label, logo?, level? }],  // level 用于文档目录的层级缩进
- *     selectedKey,                             // 高亮项，null 表示无
- *     onSelect(key),                           // 点选回调
+ *     items: [{ key, label, icon?, logo?, level? }],  // icon 为图标组件，logo 为卡片 logo，level 用于层级缩进
+ *     selectedKey,                                    // 高亮项，null 表示无
+ *     onSelect(key),                                  // 点选回调
+ *     key?,                                           // 该项来源的标识，变化时分类栏走切页动画
  *   }
  *
  * 新增页面（如控制台）只需在自己的模块里调用 useSidebarSectionProvider 交出上述对象，
