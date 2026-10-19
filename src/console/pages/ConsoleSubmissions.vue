@@ -1,7 +1,7 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NIcon, NModal, useMessage } from 'naive-ui'
+import { NIcon, useMessage } from 'naive-ui'
 import {
   ArrowClockwise24Regular,
   CheckmarkCircle24Regular,
@@ -9,6 +9,7 @@ import {
   DismissCircle24Regular,
   Open24Regular,
 } from '@vicons/fluent'
+import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
@@ -264,17 +265,16 @@ onMounted(async () => {
       </div>
     </ConsolePanel>
 
-    <NModal
+    <AppModal
       v-model:show="detailModal.show"
-      preset="card"
-      class="detail-modal"
       :title="detailModal.title"
-      :bordered="false"
-      style="max-width: 560px; width: calc(100vw - 32px)"
+      :max-width="560"
+      :actions="[{ text: '关闭', variant: 'outline', onClick: () => (detailModal.show = false) }]"
+      content-scrollable
     >
       <!-- 纯文本渲染：内容来自访客，按 HTML 解释等于开 XSS 口子 -->
       <p class="detail-body">{{ detailModal.body || '—' }}</p>
-    </NModal>
+    </AppModal>
   </div>
 </template>
 
@@ -496,10 +496,9 @@ onMounted(async () => {
   font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
 }
 
+/* 滚动交给 AppModal 的 content-scrollable 统一处理，这里只负责排版 */
 .detail-body {
   margin: 0;
-  max-height: 60vh;
-  overflow-y: auto;
   color: var(--muted-foreground);
   font-size: 0.84rem;
   line-height: 1.7;

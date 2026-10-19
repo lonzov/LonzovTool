@@ -1,6 +1,6 @@
 src:
   App.vue: 根组件，包含桌面/移动端双布局、主题配置、NScrollbar 滚动容器
-  main.js: 应用入口，全局注册组件、@vueuse/head 插件注册、scrollRestoration 禁用
+  main.js: 应用入口，全局注册组件、@vueuse/head 插件注册、scrollRestoration 禁用、预渲染路由过滤（控制台不预渲染）
   assets:
     main.css: 全局基础样式、全站过渡动画、NProgress 与通用工具类
     ads/: 首页推广位图片素材库，文件名即 homePromo.js 中 image 的取值，构建时输出为带哈希的同源地址
@@ -13,7 +13,7 @@ src:
     ui:
       AppModal.vue: 全站统一的模态框外壳（宽度/紧凑高度/毛玻璃遮罩/页脚按钮），事件一律透传
     PromoCarousel.vue: 首页推广位轮播组件，滑片数据取自 homePromo.js，滑片支持站内外链接
-    AppMenu.vue: 侧边栏导航菜单，支持分类折叠与 PWA 安装入口
+    AppMenu.vue: 侧边栏导航菜单，分固定栏与分类栏两段，分类栏内容由页面模块接管（未接管时回落首页工具分类）、换源时交叉淡入淡出，含 PWA 安装入口
     DonateCard.vue: 打赏收款码卡片，含三平台切换 + 爱发电按钮
     DonateRecords.vue: 打赏记录表格，异步加载 JSON 动态渲染
     DarkFilterIcon.vue: 深色滤镜状态图标（月亮 + 可生长/回缩的描边斜杠），用 stroke-dashoffset 动画实现斜杠生长
@@ -22,7 +22,7 @@ src:
     Footer.vue: 页脚组件，包含版权信息、运行时间、隐私政策入口
     HomeView.vue: 首页视图容器，集成搜索栏、工具网格、页脚
     IframeForm.vue: iframe 表单封装组件
-    MarkdownRenderer.vue: 共享 Markdown 渲染组件，封装 markdown-it、链接拦截、统一内容样式
+    MarkdownRenderer.vue: 共享 Markdown 渲染组件，封装 markdown-it（含标题锚点 id）、链接拦截、统一内容样式
     OfflineDiagnostic.vue: 离线诊断页，ping 检测区分服务端异常/网络断开
     NoticeBar.vue: 公告通知栏，多公告自动轮播（悬停/离屏/展开时暂停）与高度自适应，右端方形按钮触发器展开查看全部列表（行点链接新开/无链接切换，未读红点按已读记录隐藏）
     PrivacyBanner.vue: 隐私横幅与隐私偏好弹窗，管理必要服务/数据统计/回放统计的同意选项
@@ -36,7 +36,7 @@ src:
     UpdateDialog.vue: SW 更新确认弹窗，照搬 Cookie 弹窗样式
     SurveyModal.vue: 调研问卷邀请弹窗
     ShareModal.vue: 分享海报模态框，Canvas 渲染海报含标题/简介/Logo/二维码，支持复制链接与保存图片
-    WorkspaceView.vue: 工作站视图容器，管理多标签页，含站外 iframe 标签（/embed/ 目录，域名白名单校验）
+    WorkspaceView.vue: 工作站视图容器，管理多标签页，含站外 iframe 标签（/embed/ 目录，域名白名单校验），标签页同步为侧边栏分类栏
     StatsInfoBar.vue: 访问统计信息栏，显示统计起始日、更新时间与数据来源
     tools:
       ArtTextTool.vue: 艺术字转换工具页
@@ -92,9 +92,21 @@ src:
           ImportModal.vue: 选择器字符串导入弹窗
           HaspermissionModal.vue: haspermission 编辑器弹窗
           CoordinateCalcModal.vue: 坐标自动计算弹窗，输入起终点坐标自动生成 x,y,z,dx,dy,dz 参数
+  console:
+    ConsoleLayout.vue: 控制台外壳，页面标题取自 consoleNav，并把控制台目录挂到侧边栏分类栏，右上角为账号与退出
+    consoleAuth.js: 控制台会话状态（账号名与角色），登录、退出与会话校验，凭证为后端下发的 HttpOnly Cookie
+    consoleRequest.js: 控制台请求与错误映射（服务端信封 → 状态码 → 网络/超时），写操作回填 CSRF 头，不依赖 Vue
+    consoleNav.js: 控制台目录配置，侧边栏分类栏与控制台页面标题的唯一来源
+    components/ConsolePageHeader.vue: 控制台页面标题区（图标 + 标题 + 说明 + 右侧附加区）
+    components/ConsolePanel.vue: 控制台面板卡外壳（图标 + 标题 + 说明 + 内容区）
+    components/StatCard.vue: 控制台指标卡（图标 + 标签 + 数值 + 说明）
+    pages/ConsoleLogin.vue: 控制台登录页，仅管理员可登录
+    pages/ConsoleOverview.vue: 控制台概览页，待办事项、站点指标、访问统计、提交预览、Uptime 与管理日志，前两类仍为占位数据
+    pages/ConsoleSubmissions.vue: 网址提交审核页，待审队列与通过/拒绝，支持 ?id= 定位并高亮指定提交
   composables:
     honorBrowserNotice.js: 荣耀浏览器提示，建议用户更换标准浏览器（按需加载）
     useConfirm.js: 全局确认弹窗状态，confirmDialog() 返回 Promise 供任意模块（含 composable）调用
+    usePageOutline.js: 页面章节大纲，采集页面内的章节标题（文档标题 / 设置分区等）发布给侧边栏并跟随滚动高亮
     useFeedbackDrawer.js: 建议反馈抽屉的开关状态共享，供侧边栏菜单与关于页 CTA 唤起
     useFuckHonorAdGuard.js: 荣耀浏览器注入的侧边悬浮广告拦截，隐藏广告容器并向 Umami 上报（按需加载）
     useHonorGuard.js: 荣耀浏览器 UA 判断入口，命中后才动态加载广告拦截与提示模块
@@ -109,6 +121,8 @@ src:
     useRawJsonLang.js: T显编辑器语言包状态与 localforage(IndexedDB) 持久化（模块级单例）
     useRawJsonSimulator.js: T显编辑器预览模拟器状态与 localStorage 持久化（模块级单例）
     useRawJsonRenderMode.js: T显编辑器渲染模式（游戏 / JSON）状态与 localStorage 持久化（模块级单例）
+    useSiteData.js: 站点动态数据的唯一入口，构建期快照 ref、卡片反查/域名白名单派生函数与运行时低频同步
+    useSidebarSection.js: 侧边栏分类栏的动态内容注册表，页面模块挂载期接管分类栏，未接管时回落首页分类
     useSWUpdate.js: Service Worker 更新检测与版本比较组合式函数
     useStats.js: 访问统计状态管理组合式函数（模块级单例，含内存/localsStorage双层缓存）
     useHeightTransition.js: 内容高度变化时的容器高度过渡（ResizeObserver 驱动，弹窗用）
@@ -122,12 +136,18 @@ src:
     discreteMessage.js: 全局共享的 Naive UI 独立 message 实例（供 NMessageProvider 之外的模块使用）
     loadingBar.js: 全局共享的 Naive UI 顶部加载条实例（供路由守卫等无组件上下文处使用）
     jsonError.js: JSON 解析前修复字符串内的原始换行 + 语法错误定位与友好化提示
+    iconUpload.js: 网址提交的图标前端预检（扩展名与 1 MB 上限），仅省一次失败往返，判据在服务端
+    headingSlug.js: Markdown 标题锚点 id 生成，同一文档内重名标题追加序号
     mcTranslate.js: 基岩版翻译键渲染内核（.lang/JSON 解析、占位符算法、selector/score 求值），纯函数无框架依赖
     mcTextRender.js: rawtext 元素与 § 格式化文本到 HTML 的渲染内核，语言包与模拟器由调用方传入，无框架依赖但经 mcfc 渲染器依赖 DOM
     scrollToTop.js: 回顶的物理缓动
+    scrollToElement.js: 元素滚动定位到顶部对齐位置（带顶部留白与移动端 Chrome 重复滚动失效的规避）
     clipboard.js: 写剪贴板，非安全上下文下退回 execCommand，全站复制入口共用
+    toolLogo.js: 工具卡片 logo 渲染，图标名与图片两种来源，标签栏下拉菜单与侧边栏共用
   config:
     categoryIcons.js: 分类图标配置 + 工具卡片 logo 图标映射（getCategoryIcon / getToolIcon，tools.json 中非路径 logo 按图标名映射）
+  constants:
+    geetest.js: 极验 gt4 的公开配置（captcha_id 与脚本地址），captcha_key 只在服务端，绝不进前端
   data:
     downloads:
       index.js: 模块映射与动态导入配置
@@ -157,11 +177,12 @@ src:
   router:
     index.js: Vue Router 路由配置，包含 NProgress 集成、SEO meta 映射与 @vueuse/head 动态更新
   views:
-    AboutView.vue: 关于页面，展示项目信息与统计数据
+    AboutView.vue: 关于页面，展示项目信息与统计数据，各章节作为侧边栏章节
     ChangelogView.vue: 更新日志页面，运行时拉取 changelog.md 交 MarkdownRenderer 渲染
-    DocsView.vue: 文档页面，动态加载 Markdown 文档（预处理组件占位符后交 MarkdownRenderer 渲染）
+    DocsView.vue: 文档页面，动态加载 Markdown 文档（预处理组件占位符后交 MarkdownRenderer 渲染），并把 h1~h3 目录发布给侧边栏
     DownView.vue: 下载页面，展示工具下载信息与下载选项
-    SettingsView.vue: 设置页面，全局偏好设置（主题模式等）
+    SettingsView.vue: 设置页面，全局偏好设置（主题模式等），各分区作为侧边栏章节
+    SubmitView.vue: 网址提交页，卡片式表单 + 极验人机验证，规则清单置于卡片下方
     NotFoundView.vue: 404 页面，注入 noindex meta 防止爬虫收录无效 URL
     DevPaletteView.vue: 设计规范调色板页（仅开发环境注册），展示色阶、语义 token、对比度与 Naive 组件渲染
     DevMarkdownView.vue: Markdown 排版预览页（仅开发环境注册），留存排版基线供后续重构对照
@@ -182,8 +203,9 @@ docs:
   project-structure.yml: 项目结构描述文件（本文件）
   customize-theme.md: 主题与设计规范，token 三层结构、颜色与圆角规则
   selector.md: 选择器参数参考，各参数的可选值、示例与编辑器形态要求
+  api-integration.md: 前端侧接口集成约束、开发环境矩阵与管理能力边界
 deploy.config.example.json: 部署配置模板，复制为 deploy.config.json 后填写服务器信息（不参与 git）
-AGENTS.md: AI 协作规则（核心原则、开发规范、Git 规范、设计规范），CLAUDE.md 以 @ 导入指向本文件
+AGENTS.md: AI 协作规则（核心原则、开发规范、Git 规范、设计规范、接口集成规范），CLAUDE.md 以 @ 导入指向本文件
 LICENSES/: 被译入/内置的第三方代码的许可证全文，按 REUSE 规范以 SPDX 标识符命名；完整 vendored 的库（如 src/vendor/mcfc）许可证随代码放在各自目录内
 scripts:
   route-list.js: 共享模块：从路由配置自动提取所有公开页面路径
@@ -191,6 +213,7 @@ scripts:
   generate-seo.js: SEO 文件生成脚本，输出 sitemap.xml 和 robots.txt
   minify-sw.js: Service Worker 压缩脚本，构建流程中使用
   fetch-contributor-avatars.js: 预构建脚本，为配置了 qq 字段的贡献者拉取 QQ 头像，哈希命名存入 public/logos/avatars/，更新 contributors.json 的 avatar 字段
+  fetch-snapshot.js: 预构建脚本，从接口拉取站点动态数据覆盖 src/data/ 下的快照文件；接口不可达时沿用已有快照，始终不阻断构建
   subset-hollow-font.js: 预构建脚本，从系统 HarmonyOS_Sans_SC_Bold.ttf 提取描边文字字形，子集化为 woff2 到 public/fonts/
   deploy.js: 部署脚本，SSH 上传构建产物到服务器并原子替换站点目录（pnpm deploy）
   build-glyph-sprites.cjs: 预构建脚本，从 Minecraft 风格字形 PNG 自动检测非空字符并打包为紧凑雪碧图+码点映射 JSON

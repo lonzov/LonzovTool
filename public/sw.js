@@ -12,7 +12,7 @@ let _forceUpdateChecked = false
 
 // ===== 静态资源长期缓存：不随版本更新删除 =====
 const STATIC_CACHE_NAME = 'lt-static'
-const STATIC_CACHE_PATHS = ['/logos/', '/fonts/', '/img/', '/sprites/']
+const STATIC_CACHE_PATHS = ['/logos/', '/uploads/logos/', '/fonts/', '/img/', '/sprites/']
 
 // ===== 广告素材目录：始终走网络，不缓存 =====
 // 广告图需随素材更换即时生效，而 /img/ 落在 STATIC_CACHE_PATHS（lt-static 永不清理），
@@ -25,6 +25,9 @@ const PROMO_PATH = '/promo/'
 // 必须拦在 navigate 分支之前：这些前缀一旦被当成导航请求，会被 SPA shell 的缓存逻辑接管。
 const API_PATH = '/api/'
 const UPLOAD_PATH = '/uploads/'
+// 卡片图标是构建期从后端同步进仓库的静态资源（文件名带内容哈希，换图即换 URL），
+// 按 /uploads/ 整体 bypass 会让它们在离线时消失；其余上传内容（访客图标等）仍不缓存
+const LOGO_UPLOAD_PATH = '/uploads/logos/'
 
 // ===== 二级版本缓存：仅在 minor 版本变更时清除（如 3.3.x → 3.4.x） =====
 // 含带 hash 的 JS/CSS（/assets/）：hash 不变即内容不变，跨补丁版本复用可省掉重复下载
@@ -135,7 +138,13 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return
 
   // 后端接口与上传目录: 不拦截，直接交给浏览器走网络
-  if (url.pathname.startsWith(API_PATH) || url.pathname.startsWith(UPLOAD_PATH)) return
+  // （/uploads/logos/ 例外：它是构建期同步进仓库的静态图标，走下面的 staticCacheFirst）
+  if (
+    url.pathname.startsWith(API_PATH) ||
+    (url.pathname.startsWith(UPLOAD_PATH) && !url.pathname.startsWith(LOGO_UPLOAD_PATH))
+  ) {
+    return
+  }
 
   // 导航请求: 强制更新遮罩 > StaleWhileRevalidate > 离线兜底
   if (request.mode === 'navigate') {

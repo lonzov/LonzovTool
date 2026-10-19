@@ -1,4 +1,4 @@
-import { DataPie24Regular, Send24Regular } from '@vicons/fluent'
+import { Apps24Regular, DataPie24Regular, Send24Regular } from '@vicons/fluent'
 
 /**
  * 控制台目录，同时是侧边栏分类栏与控制台页面标题的唯一来源。
@@ -11,6 +11,13 @@ export const CONSOLE_NAV = [
     icon: DataPie24Regular,
     title: '概览',
     description: '站点内容的规模与分布，管理能力的总入口',
+  },
+  {
+    key: '/console/cards',
+    label: '卡片管理',
+    icon: Apps24Regular,
+    title: '卡片管理',
+    description: '站点卡片的增删改与隐藏，隐藏后公开接口不再返回',
   },
   {
     key: '/console/submissions',

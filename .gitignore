@@ -51,4 +51,6 @@ src/data/contributors.json
 public/logos/avatars/*
 # 字体改写脚本的中间产物
 public/fonts/*.tmp
+# 访客提交的图标由后端提供，不进前端仓库
+public/uploads/submissions/
 .dsh-tmp/*
