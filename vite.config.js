@@ -76,6 +76,16 @@ export default defineConfig({
   },
   ssgOptions: {
     dirStyle: 'nested',
+    /**
+     * 把 Naive UI 的 CSS-in-JS 样式内联进产物，避免首屏无样式闪烁。
+     * collect() 返回的是若干 <style cssr-id> 片段而非纯 CSS，必须整体当标记插入 ——
+     * 再套一层 <style> 会形成 style 嵌 style，浏览器在第一个 </style> 就把外层截断。
+     */
+    onPageRendered(_route, html, context) {
+      const collect = globalThis.__ssrCssCollectors?.get(context?.app)
+      const css = collect?.()
+      return css ? html.replace('</head>', `${css}</head>`) : html
+    },
   },
   optimizeDeps: {
     // @unhead/vue 与 @unhead/vue/client 共享内部 headSymbol，必须排除预构建

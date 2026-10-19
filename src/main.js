@@ -19,9 +19,6 @@ import App from './App.vue'
 import { routes, setupRouterGuards } from './router'
 import { recordFirstOpen } from './composables/useLocalStats.js'
 
-// 模块级变量：存储 Naive UI CSS 收集器引用，供 onPageRendered 使用
-let collectCss = null
-
 // 模块级变量：存储 vite-ssg 创建的 head 实例，供 App.vue 客户端侧绕过
 // inject(headSymbol) 直接调用 head.push()（避免 Vite Dev 模式下 @unhead/vue
 // 与 @unhead/vue/client 内部 headSymbol 因分包导致符号不一致）
@@ -29,6 +26,14 @@ let globalHead = null
 export function getGlobalHead() {
   return globalHead
 }
+
+/**
+ * Naive UI 的 CSS-in-JS 由 @css-render 收集，收集器与 app 实例一一对应。
+ * vite-ssg 只从 vite.config.js 的 ssgOptions 读 onPageRendered（写在入口第四个参数里不生效），
+ * 入口与配置之间无法直接传值，故在此按 app 登记收集器，由 ssgOptions 取出注入 HTML。
+ * 用 WeakMap 而非单个变量：预渲染并发渲染多个路由，共用一份会串页。
+ */
+globalThis.__ssrCssCollectors = new WeakMap()
 
 export const createApp = ViteSSG(
   App,
@@ -52,9 +57,9 @@ export const createApp = ViteSSG(
     app.component('NMenu', NMenu)
     app.component('NScrollbar', NScrollbar)
 
-    // ---- Naive UI CSS-in-JS SSR 样式收集 ----
-    const { collect } = setup(app)
-    collectCss = collect
+    // ---- Naive UI CSS-in-JS 样式收集 ----
+    // 只登记收集器，注入由 vite.config.js 的 ssgOptions.onPageRendered 完成
+    globalThis.__ssrCssCollectors.set(app, setup(app).collect)
 
     // ---- 路由守卫 (顶部加载条 + SEO head) ----
     setupRouterGuards(router)
@@ -83,18 +88,5 @@ export const createApp = ViteSSG(
         }
       })
     }
-  },
-  {
-    headEnabled: true,
-    // 预渲染完成后注入 Naive UI SSR 样式
-    async onPageRendered(_route, html, _isClient) {
-      if (collectCss) {
-        const css = collectCss()
-        if (css) {
-          return html.replace('</head>', `<style data-ssr-css>${css}</style></head>`)
-        }
-      }
-      return html
-    },
   },
 )
