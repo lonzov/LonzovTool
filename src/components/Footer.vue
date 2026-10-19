@@ -7,13 +7,13 @@
           <p class="footer-copyright">© 浪小舟 2025~{{ currentYear }} 保留所有权利.</p>
           <p class="footer-disclaimer">"Minecraft" 以及 "我的世界" 为 Mojang Synergies AB 的商标.</p>
           <p class="footer-third-party">第三方网站内容由其运营者负责，请自行判断，与本站无关.</p>
-          <p class="footer-uptime">
+          <p class="footer-uptime" @click="handleUptimeClick">
             本站已运行 {{ uptime.years }}年 {{ uptime.months }}月 {{ uptime.days }}天
             <span
               v-if="swVersionShort"
               class="sw-version"
               :class="{ 'sw-version--expandable': swVersionExtra }"
-              @click="toggleVersion"
+              @click.stop="toggleVersion"
             >| {{ swVersionShort }}<span v-if="showFull && swVersionExtra" class="sw-version-extra">{{ swVersionExtra }}</span></span>
           </p>
 
@@ -65,7 +65,9 @@
 
 <script>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import { usePrivacyModal } from '../composables/usePrivacyModal'
+import { getDiscreteMessage } from '../utils/discreteMessage.js'
 import { RiBilibiliLine, RiTiktokFill, RiQqFill, RiRssFill } from '@remixicon/vue'
 
 const START_DATE = new Date(2025, 3, 15) // 2025-04-15
@@ -73,6 +75,7 @@ const START_DATE = new Date(2025, 3, 15) // 2025-04-15
 export default {
   name: 'AppFooter',
   setup() {
+    const router = useRouter()
     const screenWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
 
     function handleResize() {
@@ -179,6 +182,31 @@ export default {
       openModal()
     }
 
+    /* ===== 开发者选项入口 =====
+       在运行时间上连点 5 次进入。入口刻意不做任何视觉提示（无手型光标、无 hover 效果），
+       同时把「两次点击间隔过长」当作重新计数，避免平时零散点到 5 次被误触发。 */
+    const DEV_CLICKS_REQUIRED = 5
+    const DEV_CLICK_WINDOW = 1200
+    let devClicks = 0
+    let devLastClickAt = 0
+
+    function handleUptimeClick() {
+      const now = Date.now()
+      devClicks = now - devLastClickAt > DEV_CLICK_WINDOW ? 1 : devClicks + 1
+      devLastClickAt = now
+
+      if (devClicks >= DEV_CLICKS_REQUIRED) {
+        devClicks = 0
+        getDiscreteMessage()?.success('已进入开发者模式')
+        router.push('/dev/options')
+        return
+      }
+      // 从倒数第 3 次开始提示还差几次，前两次点了没反应，免得误触时弹一堆提示
+      if (devClicks >= 3) {
+        getDiscreteMessage()?.info(`再点击 ${DEV_CLICKS_REQUIRED - devClicks} 次进入开发者模式`)
+      }
+    }
+
     // 社交链接配置
     const socialLinks = [
       { name: 'bilibili', label: 'Bilibili', icon: RiBilibiliLine, href: 'https://space.bilibili.com/3494378672753456', title: '关注我们的 B 站频道' },
@@ -187,7 +215,7 @@ export default {
       { name: 'blog', label: '博客', icon: RiRssFill, href: 'https://blog.lonzov.top/', title: '博客' },
     ]
 
-    return { breakpoint, currentYear, uptime, handleUpdateCookie, socialLinks, swVersionShort, swVersionExtra, showFull, toggleVersion }
+    return { breakpoint, currentYear, uptime, handleUpdateCookie, handleUptimeClick, socialLinks, swVersionShort, swVersionExtra, showFull, toggleVersion }
   },
 }
 </script>

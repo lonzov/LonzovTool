@@ -186,6 +186,7 @@ src:
     SettingsView.vue: 设置页面，全局偏好设置（主题模式等），各分区作为侧边栏章节
     SubmitView.vue: 网址提交页，卡片式表单 + 极验人机验证，规则清单置于卡片下方
     NotFoundView.vue: 404 页面，注入 noindex meta 防止爬虫收录无效 URL
+    DevOptionsView.vue: 开发者选项页（生产也注册，不进预渲染与收录），含运行环境与版本、服务器连通性三连测、常用入口与本地数据清理
     DevPaletteView.vue: 设计规范调色板页（仅开发环境注册），展示色阶、语义 token、对比度与 Naive 组件渲染
     DevMarkdownView.vue: Markdown 排版预览页（仅开发环境注册），留存排版基线供后续重构对照
 public:

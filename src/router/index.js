@@ -161,6 +161,7 @@ const ConsoleCards = () => import('../console/pages/ConsoleCards.vue')
 const ConsoleNotices = () => import('../console/pages/ConsoleNotices.vue')
 const ConsoleSubmissions = () => import('../console/pages/ConsoleSubmissions.vue')
 const ConsoleLogin = () => import('../console/pages/ConsoleLogin.vue')
+const DevOptionsView = () => import('../views/DevOptionsView.vue')
 
 // 已知的文档页面路径（具体静态路由，用于 SSG 预渲染）
 const KNOWN_DOCS = [
@@ -364,6 +365,16 @@ export const routes = [
     component: OfflineDiagnostic,
     meta: {
       title: '连接失败 - 小舟工具箱',
+    },
+  },
+  // 开发者选项：入口是页脚「本站已运行」连点 5 次。生产环境也注册，方便线上排障，
+  // 因此必须排除预渲染与收录（见 vite.config 的 includedRoutes、scripts/generate-seo.js 的 DISALLOW_PATHS）。
+  {
+    path: '/dev/options',
+    name: 'dev-options',
+    component: DevOptionsView,
+    meta: {
+      title: '开发者选项 - 小舟工具箱',
     },
   },
   // 开发专用预览页：仅 dev 注册，不进生产产物、不进 sitemap（见 scripts/route-list.js 的过滤）
