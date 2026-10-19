@@ -3,6 +3,7 @@
     v-model:show="showHaspermissionModal"
     :title="modalTitle"
     :max-width="480"
+    :auto-focus="false"
     content-scrollable
     :mask-closable="false"
     :actions="[

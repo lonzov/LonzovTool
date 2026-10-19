@@ -130,6 +130,7 @@ function resetWrapStyle(el) {
     :show="showEditModal"
     :title="nestedIdx !== null ? '编辑 With 元素' : (editIdx !== null ? '编辑元素' : '添加元素')"
     :max-width="520"
+    :auto-focus="false"
     content-scrollable
     :mask-closable="false"
     :actions="nestedIdx !== null

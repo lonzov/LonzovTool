@@ -3,6 +3,7 @@
     v-model:show="showHasitemModal"
     :title="modalTitle"
     :max-width="620"
+    :auto-focus="false"
     content-scrollable
     :mask-closable="false"
     :actions="[

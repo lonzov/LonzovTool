@@ -3,6 +3,7 @@
     v-model:show="showCoordCalcModal"
     title="坐标自动计算"
     :max-width="500"
+    :auto-focus="false"
     content-scrollable
     :mask-closable="false"
     :actions="[

@@ -500,6 +500,7 @@ async function remove(card) {
       v-model:show="editor.show"
       :title="editor.editing ? '编辑卡片' : '新建卡片'"
       :max-width="560"
+      :auto-focus="false"
       :actions="[
         { text: '取消', variant: 'outline', onClick: () => (editor.show = false) },
         { text: editorSaving ? '保存中…' : '保存', variant: 'fill', disabled: editorSaving, onClick: save },
