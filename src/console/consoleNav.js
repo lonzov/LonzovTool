@@ -1,4 +1,4 @@
-import { DataPie24Regular } from '@vicons/fluent'
+import { DataPie24Regular, Send24Regular } from '@vicons/fluent'
 
 /**
  * 控制台目录，同时是侧边栏分类栏与控制台页面标题的唯一来源。
@@ -11,6 +11,13 @@ export const CONSOLE_NAV = [
     icon: DataPie24Regular,
     title: '概览',
     description: '站点内容的规模与分布，管理能力的总入口',
+  },
+  {
+    key: '/console/submissions',
+    label: '网址提交',
+    icon: Send24Regular,
+    title: '网址提交审核',
+    description: '访客投递的网址卡片，审核通过后再整理进内容表',
   },
 ]
 

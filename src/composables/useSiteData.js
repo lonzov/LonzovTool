@@ -6,7 +6,7 @@ import noticesSnapshot from '../data/notices.json'
 /**
  * 站点动态数据的唯一入口。
  *
- * 构建期内联的快照作为初始值；接入后端后由接口数据整体替换（契约见 docs/api.md）。
+ * 构建期内联的快照作为初始值；接入后端后由接口数据整体替换（契约见后端仓库 docs/api.md）。
  * 消费方一律从这里取数，不得直接 import 数据文件——运行时替换只覆盖这里，
  * 直接 import 的消费方会继续读到过期快照。
  *
@@ -112,42 +112,51 @@ export function isExternalUrlAllowed(url) {
 }
 
 // ===== 运行时同步 =====
-// 轮询版本戳，变了才拉全量。间隔 10 分钟：/api/ 不参与 SW 缓存，每次都是真实请求，
-// 而站点侧 fail2ban 的 CC 阈值是单 IP 300 秒内 30 次，不能轮询过密。
-const SITE_DATA_URL = '/api/v1/site-data'
-const VERSION_URL = '/api/v1/site-data/version'
+// 轮询各资源的版本戳，只有变化的资源才重拉。间隔 10 分钟：/api/ 不参与 SW 缓存，
+// 每次都是真实请求，而站点侧 fail2ban 的 CC 阈值是单 IP 300 秒内 30 次，不能轮询过密。
+const VERSIONS_URL = '/api/v1/versions'
 const VERSION_POLL_MS = 10 * 60 * 1000
+// 资源键 → 接口路径 + 落地方式（形状见后端仓库 docs/api.md 的「站点数据（按资源拆分）」）
+const RESOURCES = {
+  cards: { url: '/api/v1/cards', apply: (data) => (cardsData.value = data) },
+  menus: { url: '/api/v1/parent-menus', apply: (data) => (parentMenusData.value = data) },
+  notices: { url: '/api/v1/notices', apply: (data) => (noticesData.value = data) },
+  donations: { url: '/api/v1/donations', apply: (data) => (donateRecordsData.value = data) },
+  contributors: { url: '/api/v1/contributors', apply: (data) => (contributorsData.value = data) },
+}
 
-let syncedVersion = null
+let syncedVersions = null
 let pollTimer = null
 let inflight = null
 
-/** 只替换载荷中出现的键；缺席的键保持快照值（契约见 docs/api.md） */
-function applyPayload(payload) {
-  if (!payload || typeof payload !== 'object') return
-  if (payload.cards) cardsData.value = payload.cards
-  if (payload.parent_menus) parentMenusData.value = payload.parent_menus
-  if (payload.notices) noticesData.value = payload.notices
-  if (payload.donate_records) donateRecordsData.value = payload.donate_records
-  if (payload.contributors) contributorsData.value = payload.contributors
-  if (payload.version !== undefined) syncedVersion = String(payload.version)
-}
-
-async function pullFull() {
-  const res = await fetch(SITE_DATA_URL, { headers: { Accept: 'application/json' } })
+async function pullResource(key) {
+  const resource = RESOURCES[key]
+  if (!resource) return
+  const res = await fetch(resource.url, { headers: { Accept: 'application/json' } })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  applyPayload(await res.json())
+  resource.apply(await res.json())
 }
 
-async function pullVersion() {
-  // 首次没有可比对的版本，直接拉全量，省掉一次往返
-  if (syncedVersion !== null) {
-    const res = await fetch(VERSION_URL, { headers: { Accept: 'application/json' } })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const { version } = await res.json()
-    if (String(version) === syncedVersion) return
+/** 首次没有可比对的版本，直接拉全量，省掉一次往返 */
+async function pullAll() {
+  await Promise.all(Object.keys(RESOURCES).map((key) => pullResource(key)))
+}
+
+async function pullVersions() {
+  const res = await fetch(VERSIONS_URL, { headers: { Accept: 'application/json' } })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const versions = await res.json()
+
+  if (syncedVersions === null) {
+    await pullAll()
+  } else {
+    // 只有版本戳变了的资源才重拉：改一条公告不该顺带下载全部卡片
+    const changed = Object.keys(RESOURCES).filter(
+      (key) => String(versions?.[key]) !== String(syncedVersions?.[key]),
+    )
+    await Promise.all(changed.map((key) => pullResource(key)))
   }
-  await pullFull()
+  syncedVersions = versions
 }
 
 /**
@@ -161,7 +170,7 @@ export function startSiteDataSync() {
   if (pollTimer) return
   const tick = () => {
     if (inflight) return
-    inflight = pullVersion()
+    inflight = pullVersions()
       .catch(() => {})
       .finally(() => (inflight = null))
   }

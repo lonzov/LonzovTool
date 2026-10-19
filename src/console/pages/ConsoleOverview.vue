@@ -1,13 +1,17 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { NIcon } from 'naive-ui'
 import {
   Alert24Regular,
   Apps24Regular,
   ArrowDownload24Regular,
-  Code24Regular,
   DataTrending24Regular,
+  FullScreenMaximize24Regular,
+  FullScreenMinimize24Regular,
   Globe24Regular,
   Heart24Regular,
+  History24Regular,
   Send24Regular,
   TopSpeed24Regular,
 } from '@vicons/fluent'
@@ -19,6 +23,7 @@ import {
 import { useStats } from '../../composables/useStats.js'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import StatCard from '../components/StatCard.vue'
+import { consoleFetch } from '../consoleRequest.js'
 
 /* ===========================================================================
    占位数据：以下常量覆盖控制台里尚无后端支撑的部分，接口就绪后逐个替换，
@@ -33,18 +38,9 @@ const TODO_ITEMS = [
 
 const SUBMISSION_STATUS = {
   pending: { label: '待审核', tone: 'warning' },
-  reviewing: { label: '审核中', tone: 'muted' },
   approved: { label: '已通过', tone: 'success' },
   rejected: { label: '已拒绝', tone: 'destructive' },
 }
-
-const SUBMISSIONS = [
-  { title: '官方首页 - 站点建设与服务', url: 'https://www.example.com', time: '2026-05-24 14:32', status: 'pending' },
-  { title: '全新产品发布页面', url: 'https://product.example.com', time: '2026-05-23 16:20', status: 'reviewing' },
-  { title: '关于我们 - 公司介绍', url: 'https://about.example.com', time: '2026-05-22 11:08', status: 'approved' },
-  { title: '合作伙伴 - 生态合作', url: 'https://partner.example.com', time: '2026-05-20 09:45', status: 'rejected' },
-  { title: '博客 - 行业资讯', url: 'https://blog.example.com', time: '2026-05-19 15:12', status: 'approved' },
-]
 
 const UPTIME_ROWS = [
   { host: 'www.example.com', up: true, ms: '112 ms', checked: '2026-05-24 14:32' },
@@ -53,16 +49,6 @@ const UPTIME_ROWS = [
   { host: 'www.google.com', up: true, ms: '142 ms', checked: '2026-05-24 14:25' },
   { host: 'partner.example.com', up: false, ms: '523 ms', checked: '2026-05-24 14:23' },
   { host: 'static.example.com', up: true, ms: '96 ms', checked: '2026-05-24 14:20' },
-]
-
-const TERMINAL_LOGS = [
-  { time: '2026-05-24 14:32:10', level: 'INFO', ip: '192.168.1.10', text: '用户 admin 登录成功' },
-  { time: '2026-05-24 14:29:45', level: 'WARN', ip: '10.10.1.45', text: '检测到可疑请求：尝试访问未授权路径 /admin' },
-  { time: '2026-05-24 14:23:17', level: 'INFO', ip: '192.168.1.10', text: '审核网址提交：https://partner.example.com 状态：待审核' },
-  { time: '2026-05-24 14:17:03', level: 'INFO', ip: '10.10.1.32', text: '更新配置：站点防护策略' },
-  { time: '2026-05-24 14:12:56', level: 'INFO', ip: '192.168.1.10', text: '删除域名 old.example.com' },
-  { time: '2026-05-24 14:08:21', level: 'ERROR', ip: '10.10.1.45', text: '外部网站检测失败：www.partner.com 超时（523ms）' },
-  { time: '2026-05-24 14:02:17', level: 'INFO', ip: '10.10.1.32', text: '访问控制台：查看监控数据' },
 ]
 
 /* ===== 站点数据（构建期快照 + 接口刷新，见 useSiteData） ===== */
@@ -162,6 +148,133 @@ const statsNote = computed(() => {
 })
 
 const todoTitle = computed(() => `待办事项 (${pendingCount.value}/${TODO_ITEMS.length})`)
+
+/* ===== 网址提交预览 =====
+   这里只读最新 5 条待审核（接口按 id 倒序，即时间从新到旧）；
+   真正的审核动作在独立页面，查看按钮带 id 跳过去定位。 */
+const submissionPreview = ref([])
+
+function formatSubmissionTime(timestamp) {
+  const date = new Date(timestamp * 1000)
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+function openSubmission(id) {
+  router.push({ path: '/console/submissions', query: { id: String(id) } })
+}
+
+async function loadSubmissionPreview() {
+  try {
+    const payload = await consoleFetch('/api/v1/console/submissions?status=pending&limit=5')
+    submissionPreview.value = payload?.items || []
+  } catch (e) {
+    if (e?.code === 'unauthorized') {
+      router.replace({ path: '/console/login', query: { redirect: '/console' } })
+    }
+  }
+}
+
+onMounted(loadSubmissionPreview)
+
+/* ===== 管理日志 =====
+   读后端 console_audit_log（GET /api/v1/console/logs）：登录、内容增删改等操作。
+   用 after=last_id 增量拉取，只把新行追加到尾部；其余筛选在前端做，省一次往返。 */
+const router = useRouter()
+
+const LEVEL_FILTERS = [
+  { value: 'all', label: '全部' },
+  { value: 'info', label: '信息' },
+  { value: 'warn', label: '警告' },
+  { value: 'error', label: '错误' },
+]
+const LEVEL_LABELS = { info: 'INFO', warn: 'WARN', error: 'ERROR' }
+
+const LOG_POLL_MS = 5000
+const LOG_PAGE_SIZE = 100
+const LOG_MAX_ROWS = 300
+
+const logRows = ref([])
+const logLevel = ref('all')
+const logError = ref('')
+const autoScroll = ref(true)
+const fullscreen = ref(false)
+const logBox = ref(null)
+let logTimer = null
+
+const visibleRows = computed(() =>
+  logLevel.value === 'all'
+    ? logRows.value
+    : logRows.value.filter((row) => row.level === logLevel.value),
+)
+
+function formatLogTime(timestamp) {
+  const date = new Date(timestamp * 1000)
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
+
+function levelLabel(level) {
+  return LEVEL_LABELS[level] || level
+}
+
+function scrollLogToBottom() {
+  nextTick(() => {
+    if (logBox.value) logBox.value.scrollTop = logBox.value.scrollHeight
+  })
+}
+
+async function fetchLogs({ initial = false } = {}) {
+  try {
+    const last = logRows.value[logRows.value.length - 1]
+    const params = new URLSearchParams({ limit: String(LOG_PAGE_SIZE) })
+    if (!initial && last) params.set('after', String(last.id))
+
+    const payload = await consoleFetch(`/api/v1/console/logs?${params.toString()}`)
+    logError.value = ''
+
+    const incoming = payload?.items || []
+    if (!incoming.length) return
+
+    const merged = initial ? incoming : [...logRows.value, ...incoming]
+    logRows.value = merged.slice(-LOG_MAX_ROWS)
+    if (autoScroll.value) scrollLogToBottom()
+  } catch (e) {
+    // 会话失效回登录页；其余错误只落在面板里，不能让整页变成错误态
+    if (e?.code === 'unauthorized') {
+      router.replace({ path: '/console/login', query: { redirect: '/console' } })
+      return
+    }
+    logError.value = e?.message || '日志读取失败，请稍后重试'
+  }
+}
+
+function toggleAutoScroll() {
+  autoScroll.value = !autoScroll.value
+  if (autoScroll.value) scrollLogToBottom()
+}
+
+function onLogScroll() {
+  const box = logBox.value
+  if (!box) return
+  // 往上翻即暂停自动滚动，回到底部再恢复
+  autoScroll.value = box.scrollHeight - box.scrollTop - box.clientHeight < 24
+}
+
+function onKeydown(event) {
+  if (event.key === 'Escape' && fullscreen.value) fullscreen.value = false
+}
+
+onMounted(() => {
+  fetchLogs({ initial: true })
+  logTimer = setInterval(() => fetchLogs(), LOG_POLL_MS)
+  window.addEventListener('keydown', onKeydown)
+})
+
+onBeforeUnmount(() => {
+  if (logTimer) clearInterval(logTimer)
+  window.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <template>
@@ -218,7 +331,7 @@ const todoTitle = computed(() => `待办事项 (${pendingCount.value}/${TODO_ITE
     <div class="panel-columns">
       <ConsolePanel :icon="Send24Regular" title="网址提交">
         <template #extra>
-          <span class="sample-tag">示例数据</span>
+          <span class="panel-note">最新 5 条待审核</span>
         </template>
         <div class="data-table submission-table">
           <div class="data-row data-row--head">
@@ -227,19 +340,20 @@ const todoTitle = computed(() => `待办事项 (${pendingCount.value}/${TODO_ITE
             <span>状态</span>
             <span>操作</span>
           </div>
-          <div v-for="item in SUBMISSIONS" :key="item.url" class="data-row">
+          <p v-if="!submissionPreview.length" class="inline-empty">暂无待审核提交</p>
+          <div v-for="item in submissionPreview" :key="item.id" class="data-row">
             <span class="cell-main">
               <span class="cell-title">{{ item.title }}</span>
-              <span class="cell-sub">{{ item.url }}</span>
+              <span class="cell-sub">{{ item.link }}</span>
             </span>
-            <span class="cell-meta">{{ item.time }}</span>
+            <span class="cell-meta">{{ formatSubmissionTime(item.created_at) }}</span>
             <span>
               <span class="status-pill" :class="`status-pill--${SUBMISSION_STATUS[item.status].tone}`">
                 {{ SUBMISSION_STATUS[item.status].label }}
               </span>
             </span>
             <span>
-              <button class="cell-btn" type="button" disabled>查看</button>
+              <button class="cell-btn" type="button" @click="openSubmission(item.id)">查看</button>
             </span>
           </div>
         </div>
@@ -269,22 +383,57 @@ const todoTitle = computed(() => `待办事项 (${pendingCount.value}/${TODO_ITE
     </div>
 
     <ConsolePanel
-      class="terminal-panel"
-      :icon="Code24Regular"
-      title="终端日志"
-      description="系统运行与安全事件的实时记录"
+      class="log-panel"
+      :class="{ 'log-panel--full': fullscreen }"
+      :icon="History24Regular"
+      title="管理日志"
+      description="登录、内容增删改等管理操作，按时间正序"
     >
       <template #extra>
-        <span class="sample-tag">示例数据</span>
+        <div class="log-toolbar">
+          <button
+            v-for="option in LEVEL_FILTERS"
+            :key="option.value"
+            class="log-pill"
+            :class="{ 'log-pill--on': logLevel === option.value }"
+            type="button"
+            @click="logLevel = option.value"
+          >
+            {{ option.label }}
+          </button>
+          <button
+            class="log-pill"
+            :class="{ 'log-pill--on': autoScroll }"
+            type="button"
+            :title="autoScroll ? '暂停自动滚动' : '恢复自动滚动'"
+            @click="toggleAutoScroll"
+          >
+            自动滚动
+          </button>
+          <button
+            class="log-icon-btn"
+            type="button"
+            :title="fullscreen ? '退出全屏（Esc）' : '全屏查看'"
+            @click="fullscreen = !fullscreen"
+          >
+            <NIcon
+              :component="fullscreen ? FullScreenMinimize24Regular : FullScreenMaximize24Regular"
+              :size="14"
+            />
+          </button>
+        </div>
       </template>
-      <div class="terminal">
-        <div v-for="line in TERMINAL_LOGS" :key="line.time + line.text" class="terminal-line">
-          <span class="terminal-time">{{ line.time }}</span>
-          <span class="terminal-level" :class="`terminal-level--${line.level.toLowerCase()}`">
-            [{{ line.level }}]
-          </span>
-          <span class="terminal-ip">{{ line.ip }}</span>
-          <span class="terminal-text">{{ line.text }}</span>
+
+      <div ref="logBox" class="log-box" @scroll="onLogScroll">
+        <p v-if="logError" class="log-hint">{{ logError }}</p>
+        <p v-else-if="!visibleRows.length" class="log-hint">暂无记录</p>
+        <div v-for="row in visibleRows" :key="row.id" class="log-row">
+          <span class="log-time">{{ formatLogTime(row.created_at) }}</span>
+          <span class="log-level" :class="`log-level--${row.level}`">{{ levelLabel(row.level) }}</span>
+          <span class="log-actor">{{ row.actor || '—' }}</span>
+          <span class="log-ip">{{ row.ip || '—' }}</span>
+          <span class="log-action">{{ row.action }}</span>
+          <span class="log-detail">{{ row.detail || row.target }}</span>
         </div>
       </div>
     </ConsolePanel>
@@ -329,7 +478,7 @@ const todoTitle = computed(() => `待办事项 (${pendingCount.value}/${TODO_ITE
   max-height: var(--console-panel-max-height, 420px);
 }
 
-.terminal-panel {
+.log-panel {
   margin-top: 16px;
 }
 
@@ -494,6 +643,15 @@ const todoTitle = computed(() => `待办事项 (${pendingCount.value}/${TODO_ITE
   transition: color 0.4s ease;
 }
 
+.inline-empty {
+  margin: 0;
+  padding: 10px 0;
+  color: var(--subtle-foreground);
+  font-size: 0.78rem;
+  text-align: center;
+  transition: color 0.4s ease;
+}
+
 /* 状态胶囊：底色由语义色按透明度派生 */
 .status-pill {
   display: inline-flex;
@@ -576,53 +734,145 @@ const todoTitle = computed(() => `待办事项 (${pendingCount.value}/${TODO_ITE
   color: var(--destructive);
 }
 
-/* ===== 终端日志 ===== */
-.terminal {
+/* ===== 管理日志 ===== */
+/* 全屏：整张卡浮起来，标题与工具栏跟着走，读长流水时不被页面其他内容挤着 */
+.log-panel--full {
+  position: fixed;
+  inset: 16px;
+  z-index: 1500;
+  margin: 0;
+  max-height: none;
+  box-shadow: var(--shadow-popover);
+}
+
+.log-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.log-pill {
+  padding: 2px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  corner-shape: round;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-family: inherit;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.log-pill:hover {
+  color: var(--foreground);
+}
+
+.log-pill--on {
+  color: var(--foreground);
+  border-color: var(--border-strong);
+  background: var(--accent);
+}
+
+.log-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.log-icon-btn:hover {
+  color: var(--foreground);
+}
+
+.log-box {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding: 12px 14px;
+  gap: 2px;
+  max-height: 260px;
+  padding: 10px 12px;
   border-radius: var(--radius-lg);
   background: var(--muted);
   font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-  font-size: 0.76rem;
-  line-height: 1.6;
-  overflow-x: auto;
+  font-size: 0.74rem;
+  line-height: 1.7;
+  overflow: auto;
   transition: background-color 0.4s ease;
 }
 
-.terminal-line {
+.log-panel--full .log-box {
+  flex: 1;
+  max-height: none;
+}
+
+.log-row {
   display: flex;
-  gap: 10px;
-  white-space: nowrap;
+  gap: 8px;
+  min-width: 0;
 }
 
-.terminal-time,
-.terminal-ip {
+.log-time,
+.log-actor {
+  flex-shrink: 0;
   color: var(--subtle-foreground);
-  flex-shrink: 0;
   transition: color 0.4s ease;
 }
 
-.terminal-level {
+.log-ip {
   flex-shrink: 0;
+  min-width: 88px;
+  color: var(--subtle-foreground);
   transition: color 0.4s ease;
 }
 
-.terminal-level--info {
+.log-level {
+  flex-shrink: 0;
+  width: 38px;
+  transition: color 0.4s ease;
+}
+
+.log-level--info {
   color: var(--muted-foreground);
 }
 
-.terminal-level--warn {
+.log-level--warn {
   color: var(--warning);
 }
 
-.terminal-level--error {
+.log-level--error {
   color: var(--destructive);
 }
 
-.terminal-text {
+.log-action {
+  flex-shrink: 0;
+  color: var(--foreground);
+  transition: color 0.4s ease;
+}
+
+.log-detail {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--muted-foreground);
+  transition: color 0.4s ease;
+}
+
+.log-hint {
+  margin: 0;
+  padding: 2px 0;
+  color: var(--subtle-foreground);
+  font-family: inherit;
   transition: color 0.4s ease;
 }
 

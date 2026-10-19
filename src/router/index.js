@@ -149,6 +149,7 @@ function resolveToolMeta(path) {
 
 // 懒加载组件引用（复用实例避免重复 import）
 const DocsView = () => import('../views/DocsView.vue')
+const SubmitView = () => import('../views/SubmitView.vue')
 const DownView = () => import('../views/DownView.vue')
 const WorkspaceView = () => import('../components/WorkspaceView.vue')
 const SettingsView = () => import('../views/SettingsView.vue')
@@ -156,6 +157,7 @@ const ChangelogView = () => import('../views/ChangelogView.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
 const ConsoleLayout = () => import('../console/ConsoleLayout.vue')
 const ConsoleOverview = () => import('../console/pages/ConsoleOverview.vue')
+const ConsoleSubmissions = () => import('../console/pages/ConsoleSubmissions.vue')
 const ConsoleLogin = () => import('../console/pages/ConsoleLogin.vue')
 
 // 已知的文档页面路径（具体静态路由，用于 SSG 预渲染）
@@ -230,8 +232,7 @@ export const routes = [
   {
     path: '/submit',
     name: 'submit',
-    component: DocsView,
-    props: { docName: 'url-tj' },
+    component: SubmitView,
     meta: {
       title: '网址提交 - 小舟工具箱',
       description: '向小舟工具箱提交您推荐的 Minecraft 相关工具或资源网址。',
@@ -327,6 +328,14 @@ export const routes = [
         component: ConsoleOverview,
         meta: {
           title: '概览 - 控制台 - 小舟工具箱',
+        },
+      },
+      {
+        path: 'submissions',
+        name: 'console-submissions',
+        component: ConsoleSubmissions,
+        meta: {
+          title: '网址提交审核 - 控制台 - 小舟工具箱',
         },
       },
     ],

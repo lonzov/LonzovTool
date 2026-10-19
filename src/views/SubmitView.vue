@@ -1,0 +1,799 @@
+<script setup>
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { NForm, NFormItem, NIcon, NInput, NRadio, NRadioGroup, NSelect, NSwitch, useMessage } from 'naive-ui'
+import { ArrowUpload24Regular, Send16Regular } from '@vicons/fluent'
+import ToolCard from '../components/ToolCard.vue'
+import { cardsData } from '../composables/useSiteData.js'
+import { confirmDialog } from '../composables/useConfirm.js'
+import { GEETEST_CAPTCHA_ID, GEETEST_SCRIPT_URL } from '../constants/geetest.js'
+import { prepareIcon } from '../utils/iconUpload.js'
+
+const SUBMIT_URL = '/api/v1/submissions'
+/* 未选图标时预览用站点自身的图标，避免出现空白卡或通用图标 */
+const DEFAULT_ICON = '/app-icon/ios/180.png'
+
+/* 草稿只存在本地：刷新或误关页面不该让填了一半的表单白填。
+   不含蜜罐字段与已选文件——前者恢复出非空会把正常提交当脚本丢掉，
+   后者是浏览器不允许跨会话保留的对象，重新选择即可。 */
+const DRAFT_KEY = 'lt_submit_draft_v1'
+const DRAFT_FIELDS = [
+  'title',
+  'link',
+  'summary',
+  'category',
+  'detail',
+  'contact',
+  'isCoreDeveloper',
+  'iconMode',
+  'iconUrl',
+]
+const DRAFT_DELAY_MS = 400
+
+const message = useMessage()
+
+const formRef = ref(null)
+const fileInput = ref(null)
+const iconFile = ref(null)
+const iconFilePreview = ref('')
+const iconCompressing = ref(false)
+
+const form = reactive({
+  title: '',
+  link: '',
+  summary: '',
+  category: null,
+  detail: '',
+  contact: '',
+  isCoreDeveloper: false,
+  iconMode: 'url',
+  iconUrl: '',
+  fax: '',
+})
+
+const submitting = ref(false)
+const formError = ref('')
+/* 验证组件的生命周期状态：showCaptcha 在未 ready 时调用不会有任何反应，
+   所以必须自己跟踪，否则用户点了按钮看起来像"没响应" */
+const captchaState = ref('loading')
+
+let captchaInstance = null
+let validateResult = null
+/* 用户确认覆盖后要替换的记录 id；验证通过前先存在这里 */
+let pendingReplaceId = 0
+
+/* 分类复用首页卡片数据源：投稿只能落到既有分类，避免脏分类进审核队列。
+   必须按名称去重——同名分类可能出现在多个父级菜单下，
+   NSelect 以 value 作 key，重复 value 会让下拉项重复渲染。 */
+const categoryOptions = computed(() => {
+  const seen = new Set()
+  const options = []
+  for (const category of cardsData.value.categories || []) {
+    if (seen.has(category.name)) continue
+    seen.add(category.name)
+    options.push({ label: category.name, value: category.name })
+  }
+  return options
+})
+
+const previewLogo = computed(() => {
+  if (form.iconMode === 'file') return iconFilePreview.value || DEFAULT_ICON
+  return form.iconUrl.trim() || DEFAULT_ICON
+})
+
+const rules = {
+  title: { required: true, message: '请填写标题', trigger: ['input', 'blur'] },
+  link: {
+    required: true,
+    message: '请填写完整网址（含 https://）',
+    trigger: ['input', 'blur'],
+  },
+  summary: { required: true, message: '请填写卡片介绍', trigger: ['input', 'blur'] },
+  category: { required: true, message: '请选择分类', trigger: ['change', 'blur'] },
+  contact: { required: true, message: '请填写联系方式', trigger: ['input', 'blur'] },
+  iconUrl: {
+    validator(_rule, value) {
+      if (form.iconMode !== 'url') return true
+      if (!value.trim()) return new Error('请填写图床链接，或改为上传文件')
+      if (!/^https?:\/\//i.test(value.trim())) return new Error('图床链接需以 http:// 或 https:// 开头')
+      return true
+    },
+    trigger: ['input', 'blur'],
+  },
+}
+
+/* ===== 极验 =====
+   页面加载即初始化：验证会读取用户在页面上的行为轨迹，等到点提交才加载会让判定失效。 */
+function loadScript(url) {
+  return new Promise((resolve, reject) => {
+    if (window.initGeetest4) {
+      resolve()
+      return
+    }
+    const existing = document.querySelector('script[data-geetest="gt4"]')
+    if (existing) {
+      existing.addEventListener('load', () => resolve())
+      existing.addEventListener('error', () => reject(new Error('load failed')))
+      return
+    }
+    const script = document.createElement('script')
+    script.src = url
+    script.async = true
+    script.dataset.geetest = 'gt4'
+    script.addEventListener('load', () => resolve())
+    script.addEventListener('error', () => reject(new Error('load failed')))
+    document.head.appendChild(script)
+  })
+}
+
+async function setupCaptcha() {
+  try {
+    await loadScript(GEETEST_SCRIPT_URL)
+  } catch (error) {
+    captchaState.value = 'failed'
+    console.warn('[geetest] 验证组件脚本加载失败', error)
+    return
+  }
+  if (!window.initGeetest4) {
+    captchaState.value = 'failed'
+    console.warn('[geetest] 脚本已加载但没有 initGeetest4')
+    return
+  }
+
+  // product 必须是 bind：我们要用自己的提交按钮先跑表单校验，再触发验证。
+  // popup / float 会把极验自己的按钮插进页面，与"提交按钮始终可见"冲突。
+  window.initGeetest4(
+    { captchaId: GEETEST_CAPTCHA_ID, product: 'bind', language: 'zho' },
+    (captcha) => {
+      captchaInstance = captcha
+      captcha
+        .onReady(() => {
+          captchaState.value = 'ready'
+        })
+        .onSuccess(() => {
+          // getValidate() 在非成功态会返回 false（官方行为），直接提交必然 403
+          validateResult = captcha.getValidate() || null
+          performSubmit(pendingReplaceId)
+        })
+        .onClose(() => {
+          validateResult = null
+          formError.value = '需要完成验证才能提交'
+        })
+        .onError((error) => {
+          captchaState.value = 'failed'
+          console.warn('[geetest] 验证出错', error)
+          formError.value = '人机验证出错了，请刷新页面重试'
+        })
+    },
+  )
+}
+
+function openCaptcha() {
+  const captcha = captchaInstance
+  if (!captcha || captchaState.value !== 'ready') return captchaState.value
+  if (typeof captcha.showCaptcha !== 'function') {
+    console.warn('[geetest] 实例上没有 showCaptcha，无法唤起验证')
+    return 'failed'
+  }
+  captcha.showCaptcha()
+  return 'ready'
+}
+
+/* ===== 草稿 ===== */
+
+let draftTimer = null
+
+function saveDraft() {
+  if (draftTimer) {
+    clearTimeout(draftTimer)
+    draftTimer = null
+  }
+  const draft = {}
+  for (const key of DRAFT_FIELDS) draft[key] = form[key]
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
+  } catch {
+    // 隐私模式或配额用尽时静默放弃：草稿不该阻断填写
+  }
+}
+
+function clearDraft() {
+  if (draftTimer) {
+    clearTimeout(draftTimer)
+    draftTimer = null
+  }
+  try {
+    localStorage.removeItem(DRAFT_KEY)
+  } catch {
+    /* 同上 */
+  }
+}
+
+function scheduleSave() {
+  if (draftTimer) clearTimeout(draftTimer)
+  draftTimer = setTimeout(saveDraft, DRAFT_DELAY_MS)
+}
+
+function restoreDraft() {
+  let draft
+  try {
+    draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null')
+  } catch {
+    return
+  }
+  if (!draft || typeof draft !== 'object') return
+
+  for (const key of DRAFT_FIELDS) {
+    const value = draft[key]
+    if (value === undefined || value === null) continue
+    if (typeof form[key] === 'boolean') {
+      form[key] = Boolean(value)
+    } else if (typeof value === 'string') {
+      form[key] = value
+    }
+  }
+
+  // 分类可能在草稿保存后被删掉，恢复时校验一次，避免留下无效取值
+  if (form.category && !categoryOptions.value.some((item) => item.value === form.category)) {
+    form.category = null
+  }
+  if (form.iconMode !== 'file') form.iconMode = 'url'
+}
+
+watch(form, scheduleSave, { deep: true })
+
+/* ===== 提交 ===== */
+
+function onIconModeChange() {
+  formRef.value?.restoreValidation()
+}
+
+function pickFile() {
+  fileInput.value?.click()
+}
+
+function setPreviewUrl(url) {
+  if (iconFilePreview.value) URL.revokeObjectURL(iconFilePreview.value)
+  iconFilePreview.value = url
+}
+
+async function onIconFileChange(event) {
+  const [file] = event.target.files || []
+  formError.value = ''
+  if (!file) return
+
+  // 先在本机压成规范 WebP（省流量、预览即时）；服务端还会再压一次作为规范与兜底
+  iconCompressing.value = true
+  const { file: prepared, error } = await prepareIcon(file)
+  iconCompressing.value = false
+
+  if (error || !prepared) {
+    formError.value = error
+    event.target.value = ''
+    iconFile.value = null
+    setPreviewUrl('')
+    return
+  }
+
+  iconFile.value = prepared
+  setPreviewUrl(URL.createObjectURL(prepared))
+  formRef.value?.restoreValidation()
+}
+
+function buildPayload(replaceId = 0) {
+  const data = new FormData()
+  if (replaceId) data.append('replace_id', String(replaceId))
+  data.append('title', form.title.trim())
+  data.append('link', form.link.trim())
+  data.append('summary', form.summary.trim())
+  data.append('category', form.category || '')
+  data.append('detail', form.detail.trim())
+  data.append('contact', form.contact.trim())
+  data.append('is_core_developer', form.isCoreDeveloper ? 'true' : 'false')
+  data.append('fax', form.fax)
+  if (form.iconMode === 'url') {
+    data.append('icon_url', form.iconUrl.trim())
+  } else if (iconFile.value) {
+    data.append('icon_file', iconFile.value)
+  }
+  if (validateResult) {
+    data.append('lot_number', validateResult.lot_number || '')
+    data.append('captcha_output', validateResult.captcha_output || '')
+    data.append('pass_token', validateResult.pass_token || '')
+    data.append('gen_time', validateResult.gen_time || '')
+  }
+  return data
+}
+
+async function handleSubmit() {
+  formError.value = ''
+  try {
+    await formRef.value?.validate()
+  } catch (errors) {
+    // Naive 只把字段标红、不会滚动，用户从底部点提交时看不到哪里错了，
+    // 于是表现为"点了没反应"。这里补上文案与滚动定位。
+    formError.value = errors?.[0]?.[0]?.message || '请检查表单中标红的必填项'
+    await nextTick()
+    document
+      .querySelector('.n-form-item-feedback--error')
+      ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    return
+  }
+
+  if (form.iconMode === 'file' && !iconFile.value) {
+    formError.value = '请选择图标文件'
+    return
+  }
+
+  const state = openCaptcha()
+  if (state === 'loading') {
+    formError.value = '验证组件正在加载，请稍后再点一次'
+    return
+  }
+  if (state === 'failed') {
+    formError.value = '验证组件未能加载，请刷新页面重试'
+  }
+}
+
+async function performSubmit(replaceId = 0) {
+  if (submitting.value) return
+  if (!validateResult) {
+    // 没拿到验证结果就发请求，后端只会回 403；在这里拦住并说明原因
+    formError.value = '请先完成人机验证再提交'
+    return
+  }
+  submitting.value = true
+  formError.value = ''
+
+  try {
+    const response = await fetch(SUBMIT_URL, { method: 'POST', body: buildPayload(replaceId) })
+    const payload = await response.json().catch(() => null)
+
+    if (!response.ok) {
+      const error = payload?.error
+
+      // 同一网址 + 同一联系方式：先问清楚要不要覆盖，取消则保留表单内容
+      if (error?.code === 'duplicate_confirm') {
+        submitting.value = false
+        const confirmed = await confirmDialog({
+          title: '该网址你已提交过',
+          message: '是否用本次填写的内容覆盖上一次提交？\n取消将放弃本次提交，已填内容会保留。',
+          confirmText: '覆盖',
+          cancelText: '取消',
+          danger: true,
+        })
+        if (!confirmed) {
+          formError.value = '已取消，表单内容已保留'
+          return
+        }
+        // 409 发生在验证码校验之前，客户端手里的验证结果仍然有效，直接重发即可；
+        // 只有结果缺失（例如已过期）才重新唤起验证
+        pendingReplaceId = error.meta?.existing_id || 0
+        if (validateResult) {
+          await performSubmit(pendingReplaceId)
+          return
+        }
+        if (openCaptcha() !== 'ready') {
+          formError.value = '验证组件未能重新唤起，请刷新页面后重试'
+        }
+        return
+      }
+
+      formError.value = error?.message || '提交失败，请稍后重试'
+      if (error?.code === 'rate_limited') {
+        // 提示里承诺"草稿已保存"，就得当场落盘，不能等防抖那一拍
+        saveDraft()
+      }
+      if (error?.code === 'captcha_failed') {
+        validateResult = null
+        captchaInstance?.reset?.()
+      }
+      return
+    }
+
+    validateResult = null
+    pendingReplaceId = 0
+    clearFields()
+    message.success('提交成功，审核后会通过你留下的联系方式通知你', { duration: 6000 })
+  } catch {
+    formError.value = '网络异常，请检查网络后重试'
+  } finally {
+    submitting.value = false
+  }
+}
+
+function clearFields() {
+  Object.assign(form, {
+    title: '',
+    link: '',
+    summary: '',
+    category: null,
+    detail: '',
+    contact: '',
+    isCoreDeveloper: false,
+    iconMode: 'url',
+    iconUrl: '',
+    fax: '',
+  })
+  iconFile.value = null
+  setPreviewUrl('')
+  if (fileInput.value) fileInput.value.value = ''
+  clearDraft()
+  formRef.value?.restoreValidation()
+  formError.value = ''
+  validateResult = null
+}
+
+onMounted(() => {
+  restoreDraft()
+  setupCaptcha()
+})
+
+onBeforeUnmount(() => {
+  // 防抖未触发的最后一次输入也要落盘，否则离开页面的瞬间会丢
+  saveDraft()
+  captchaInstance?.destroy?.()
+  captchaInstance = null
+  setPreviewUrl('')
+})
+</script>
+
+<template>
+  <div class="submit-view">
+    <header class="submit-header">
+      <h1 class="submit-title">网址提交</h1>
+    </header>
+
+    <section class="submit-card">
+      <p class="card-hint">
+        推荐一个 Minecraft 相关的工具或资源站。提交后由人工审核，通过后会整理进首页卡片。
+      </p>
+
+      <NForm
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-placement="top"
+        require-mark-placement="right-hanging"
+        :disabled="submitting"
+      >
+        <div class="form-grid">
+          <NFormItem label="标题" path="title">
+            <NInput v-model:value="form.title" maxlength="10" show-count placeholder="卡片上显示的名称" />
+          </NFormItem>
+
+          <NFormItem label="网址" path="link">
+            <NInput v-model:value="form.link" maxlength="500" placeholder="https://example.com" />
+          </NFormItem>
+
+          <NFormItem class="field--wide" label="卡片介绍" path="summary">
+            <NInput
+              v-model:value="form.summary"
+              maxlength="30"
+              show-count
+              placeholder="一句话说明它是什么、解决什么问题"
+            />
+          </NFormItem>
+
+          <NFormItem label="分类" path="category">
+            <NSelect
+              v-model:value="form.category"
+              :options="categoryOptions"
+              placeholder="选择首页已有的分类"
+            />
+          </NFormItem>
+
+          <NFormItem label="联系方式" path="contact">
+            <NInput
+              v-model:value="form.contact"
+              maxlength="120"
+              placeholder="建议留邮箱，用于审核通知"
+            />
+          </NFormItem>
+
+          <NFormItem class="field--wide" label="图标" path="iconUrl">
+            <div class="icon-field">
+              <NRadioGroup v-model:value="form.iconMode" name="icon-mode" @update:value="onIconModeChange">
+                <NRadio value="url">图床链接</NRadio>
+                <NRadio value="file">上传文件</NRadio>
+              </NRadioGroup>
+
+              <div class="icon-input-row">
+                <NInput
+                  v-if="form.iconMode === 'url'"
+                  v-model:value="form.iconUrl"
+                  maxlength="500"
+                  size="small"
+                  placeholder="https://cdn.example.com/icon.png"
+                />
+                <template v-else>
+                  <button class="app-btn app-btn--fill app-btn--sm file-btn" type="button" @click="pickFile">
+                    <NIcon :component="ArrowUpload24Regular" :size="14" />
+                    选择文件
+                  </button>
+                  <span class="file-name">
+                    {{ iconCompressing ? '压缩中…' : iconFile ? iconFile.name : '未选择文件' }}
+                  </span>
+                  <input
+                    ref="fileInput"
+                    class="file-input-hidden"
+                    type="file"
+                    accept=".png,.jpg,.jpeg,.webp,.ico"
+                    @change="onIconFileChange"
+                  />
+                </template>
+              </div>
+              <span class="field-hint">
+                {{
+                  form.iconMode === 'url'
+                    ? '直链需允许外链访问（勿开防盗链），跨域放行后才能正常显示；不限大小与格式'
+                    : '1 MB 以内，支持 PNG / JPG / WebP / ICO；提交时会自动压成 WebP（高 128、宽等比）'
+                }}
+              </span>
+            </div>
+          </NFormItem>
+
+          <NFormItem class="field--wide">
+            <div class="switch-row">
+              <div class="switch-text">
+                <span class="switch-title">我是该项目的核心开发者</span>
+                <span class="switch-desc">如实填写，用于个别项目的身份确认；大多数情况不需要填。</span>
+              </div>
+              <NSwitch v-model:value="form.isCoreDeveloper" />
+            </div>
+          </NFormItem>
+
+          <NFormItem class="field--wide" label="详细介绍（选填 · 仅站长可见）">
+            <NInput
+              v-model:value="form.detail"
+              type="textarea"
+              :autosize="{ minRows: 3, maxRows: 6 }"
+              maxlength="300"
+              show-count
+              placeholder="想补充的说明、来源、授权情况等，不会公开展示"
+            />
+          </NFormItem>
+        </div>
+
+        <input
+          v-model="form.fax"
+          class="honeypot"
+          type="text"
+          tabindex="-1"
+          autocomplete="off"
+          aria-hidden="true"
+        />
+
+        <p v-if="formError" class="form-error">{{ formError }}</p>
+        <p v-else-if="captchaState === 'failed'" class="form-error">
+          人机验证组件加载失败，请检查网络后刷新重试
+        </p>
+
+        <div class="form-footer">
+          <button class="app-btn app-btn--fill" type="button" :disabled="submitting" @click="handleSubmit">
+            <NIcon :component="Send16Regular" :size="16" />
+            {{ submitting ? '提交中…' : '提交' }}
+          </button>
+        </div>
+      </NForm>
+    </section>
+
+    <section class="preview">
+      <h2 class="section-title">卡片预览</h2>
+      <p class="section-hint">与首页卡片同一组件渲染，最终样式以上架时为准。</p>
+      <div class="preview-frame">
+        <ToolCard
+          :title="form.title || '标题'"
+          :description="form.summary || '卡片介绍会显示在这里'"
+          :logo="previewLogo"
+          :link="form.link"
+        />
+      </div>
+    </section>
+
+    <section class="rules">
+      <h2 class="section-title">提交须知</h2>
+      <ul class="rules-list">
+        <li>只收与 Minecraft 相关的工具或资源站，需可公开访问，不接受强制注册墙。</li>
+        <li>社区论坛类必须先加本站友链后再申请，否则不会通过。</li>
+        <li>一条提交只放一个网址；同为工具集的请分开投稿。</li>
+        <li>图标 1 MB 以内的 PNG / JPG / WebP / ICO，或直接填图床直链；SVG 请用链接。</li>
+        <li>审核为人工进行，不一定逐条回复；联系方式建议留邮箱。</li>
+        <li>不接受侵权、破解、含推广返利或与站点定位无关的网址。</li>
+      </ul>
+    </section>
+  </div>
+</template>
+
+<style scoped>
+/* 页面本身不再加内边距：外层容器已有，叠加会明显压掉移动端的横向空间 */
+.submit-view {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.submit-header {
+  margin-bottom: 12px;
+}
+
+.submit-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.submit-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--card);
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+
+.card-hint {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+}
+
+.form-grid :deep(.n-form-item) {
+  margin-bottom: 4px;
+}
+
+.field--wide {
+  grid-column: 1 / -1;
+}
+
+.icon-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+/* 输入框与上传按钮同高：切换来源时布局不能跳动 */
+.icon-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+}
+
+.icon-input-row :deep(.n-input) {
+  height: 30px;
+}
+
+.file-btn {
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.file-name {
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 0.74rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.4s ease;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.field-hint {
+  color: var(--subtle-foreground);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+/* 单选项的指示器必须是正圆：主题的通用圆角会把 14px 的圆点压成圆角方块 */
+.icon-field :deep(.n-radio__dot) {
+  border-radius: 50%;
+  corner-shape: round;
+}
+
+/* 可选的声明类开关按设置行处理：左侧说明、右侧开关，独占一行不与输入项抢列宽 */
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.switch-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.switch-title {
+  color: var(--foreground);
+  font-size: 0.84rem;
+  transition: color 0.4s ease;
+}
+
+.switch-desc {
+  color: var(--subtle-foreground);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.form-error {
+  margin: 0;
+  color: var(--destructive);
+  font-size: 0.8rem;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.form-footer .app-btn {
+  gap: 6px;
+}
+
+.preview,
+.rules {
+  margin-top: 24px;
+}
+
+.section-title {
+  margin: 0 0 6px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.section-hint {
+  margin: 0 0 10px;
+  color: var(--subtle-foreground);
+  font-size: 0.76rem;
+}
+
+/* 预览只做渲染对照，不响应点击，避免误跳转 */
+.preview-frame {
+  max-width: 240px;
+  pointer-events: none;
+}
+
+.rules-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+  line-height: 1.65;
+}
+
+@media (width <= 640px) {
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+</style>

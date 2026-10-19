@@ -297,8 +297,12 @@ export default {
     },
   },
   render() {
-    // logo 以 / 或 http 开头视为图片路径，否则视为图标名（图标统一白底黑 logo）
-    const isIconLogo = !!this.logo && !this.logo.startsWith('/') && !/^https?:/i.test(this.logo)
+    // logo 以 / 、http 、blob: 或 data: 开头视为图片来源，否则视为图标名（图标统一白底黑 logo）。
+    // blob: / data: 是本地预览用的临时地址，同样属于图片，不能落进图标名分支。
+    const isIconLogo =
+      !!this.logo &&
+      !this.logo.startsWith('/') &&
+      !/^(https?:|blob:|data:)/i.test(this.logo)
     // 外链 logo：不携带 Referer，且不带 crossorigin（避免触发 CORS 校验导致加载失败）
     const isExternalLogo = /^https?:/i.test(this.logo)
     const iconComp = isIconLogo ? this.getIconComponent(this.logo) : null
