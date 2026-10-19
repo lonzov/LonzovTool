@@ -1021,12 +1021,22 @@ async function remove(card) {
 }
 
 @media (width <= 720px) {
-  .card-row {
-    grid-template-columns: minmax(0, 1fr) 88px;
+  /* 表头在窄屏没有意义：每行自带状态与操作，两列排不下时标签会自己错行 */
+  .card-row--head {
+    display: none;
   }
 
-  .card-row > .cell-meta,
-  .card-row--head > span:nth-child(2) {
+  .card-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 6px;
+  }
+
+  /* 卡片信息独占一行，状态与操作落到下一行，操作贴右 */
+  .card-row > .cell-main {
+    grid-column: 1 / -1;
+  }
+
+  .card-row > .cell-meta {
     display: none;
   }
 }

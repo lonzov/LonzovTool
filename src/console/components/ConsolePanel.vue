@@ -48,15 +48,19 @@ defineProps({
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
+/* 标题区与右上角操作区在窄屏改为上下两行：操作区不参与收缩（按钮不能压扁），
+   若不给它换行的机会，标题与说明会被挤成每行一个字的竖条 */
 .panel-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 12px;
 }
 
 .panel-head-main {
+  flex: 1 1 auto;
   min-width: 0;
 }
 

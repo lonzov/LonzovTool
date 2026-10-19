@@ -748,6 +748,7 @@ onBeforeUnmount(() => {
 .log-toolbar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
@@ -917,6 +918,25 @@ onBeforeUnmount(() => {
   .uptime-table .data-row > *:nth-child(3),
   .uptime-table .data-row > *:nth-child(4) {
     display: none;
+  }
+
+  /* 日志行在窄屏折行：原来一行排不下就横向滚动，等于把动作与详情推到屏幕外，
+     而这两列恰是看日志时唯一非看不可的内容 */
+  .log-row {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+
+  /* 窄屏不再为对齐留 88px，IP 按自身长度占位，把宽度让给右侧 */
+  .log-ip {
+    min-width: 0;
+  }
+
+  /* 详情独占一行并允许折行，不再用省略号截断 */
+  .log-detail {
+    flex: 1 1 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
 </style>
