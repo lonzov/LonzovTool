@@ -21,7 +21,9 @@ import { useSWUpdate } from './composables/useSWUpdate'
 import { useOfficialDomainCheck } from './composables/useOfficialDomainCheck'
 import { useHonorGuard } from './composables/useHonorGuard'
 import { useMenuSwipe } from './composables/useMenuSwipe.js'
+import { markSidebarPageMounted } from './composables/useSidebarSection.js'
 import { scrollToTop, cancelScrollToTop } from './utils/scrollToTop.js'
+import { scrollToElement } from './utils/scrollToElement.js'
 import { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES } from './router'
 
 /* 懒加载：UpdateDialog → markdown-it、ShareModal → html2canvas 体积大且极少打开，
@@ -327,25 +329,14 @@ export default {
           if (retries-- > 0) setTimeout(scrollWhenReady, 50)
           return
         }
-        const scrollMarginTop = isMobile.value ? '80px' : '24px'
-        target.style.scrollMarginTop = scrollMarginTop
-        const behavior = reduceMotion.value ? 'auto' : 'smooth'
         // 移动端 Chrome 的 scrollIntoView({ behavior: 'smooth' }) 存在 Bug：
         // 第一次调用后浏览器内部会标记元素"已滚动到"，后续对同一/相邻元素的滚动会被忽略。
-        // 通过临时赋予 tabindex 并 focus({ preventScroll: true }) 重置 Chrome 的滚动状态机。
-        if (isMobile.value) {
-          const prevTabIndex = target.getAttribute('tabindex')
-          target.setAttribute('tabindex', '-1')
-          target.focus({ preventScroll: true })
-          target.scrollIntoView({ behavior, block: 'start' })
-          if (prevTabIndex === null) {
-            target.removeAttribute('tabindex')
-          } else {
-            target.setAttribute('tabindex', prevTabIndex)
-          }
-        } else {
-          target.scrollIntoView({ behavior, block: 'start' })
-        }
+        // scrollToElement 内部以临时 tabindex + focus({ preventScroll: true }) 重置该状态机
+        scrollToElement(target, {
+          marginTop: isMobile.value ? 80 : 24,
+          behavior: reduceMotion.value ? 'auto' : 'smooth',
+          focusReset: isMobile.value,
+        })
       }
       setTimeout(scrollWhenReady, 100)
     }
@@ -365,6 +356,18 @@ export default {
       if (mobileMenuOpen.value) {
         mobileMenuOpen.value = false
       }
+    }
+
+    // 分类栏选中项（文档目录、工作站标签页等）由页面自己处理，此处只收起移动端抽屉
+    function handleMenuSection() {
+      if (mobileMenuOpen.value) {
+        mobileMenuOpen.value = false
+      }
+    }
+
+    // 页面挂载完成即换页过渡结束，侧边栏据此决定是否可以换掉沿用的分类栏（见 useSidebarSection）
+    function handlePageMounted() {
+      markSidebarPageMounted(router.currentRoute.value.path)
     }
 
     function handleRouteChange() {
@@ -439,6 +442,8 @@ export default {
       handleResize,
       handleMenuNavigate,
       handleMenuFeedback,
+      handleMenuSection,
+      handlePageMounted,
       goSettings,
       ShareIcon: ShareAndroid20Regular,
       OfficialOpenIcon: Open16Filled,
@@ -529,6 +534,7 @@ export default {
               v-model:value="activeKey"
               @navigate="handleMenuNavigate"
               @feedback="handleMenuFeedback"
+              @section="handleMenuSection"
             />
           </NScrollbar>
           <div
@@ -592,6 +598,7 @@ export default {
                       <component
                         :is="Component"
                         :key="isWorkspaceRoute ? 'workspace' : route.fullPath"
+                        @vue:mounted="handlePageMounted"
                       />
                     </KeepAlive>
                   </Transition>
@@ -691,6 +698,7 @@ export default {
               <component
                 :is="Component"
                 :key="isWorkspaceRoute ? 'workspace' : route.fullPath"
+                @vue:mounted="handlePageMounted"
               />
             </KeepAlive>
           </Transition>
@@ -772,6 +780,7 @@ export default {
               @update:value="mobileMenuOpen = false"
               @navigate="handleMenuNavigate"
               @feedback="handleMenuFeedback"
+              @section="handleMenuSection"
               style="flex: 1; overflow-y: auto"
             />
             <div :style="{ padding: '0 14px 16px 14px', background: 'var(--background)' }">

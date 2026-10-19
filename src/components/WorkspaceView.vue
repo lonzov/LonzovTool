@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch, onMounted, onBeforeUnmount, ref, nextTick, h, defineAsyncComponent } from 'vue'
+import { computed, watch, onMounted, onBeforeUnmount, ref, nextTick, defineAsyncComponent } from 'vue'
 import { NProgress, NDropdown, NIcon, useMessage } from 'naive-ui'
 import { useRouter, useRoute } from 'vue-router'
 import { ChevronDown16Filled } from '@vicons/fluent'
@@ -7,6 +7,8 @@ import { useWorkspace, isExternalPath, getExternalUrl, isExternalUrlAllowed, get
 import { useLocalStats } from '../composables/useLocalStats.js'
 import { reduceMotion } from '../composables/useMotion.js'
 import { getToolIcon } from '../config/categoryIcons'
+import { isIconLogo, logoReferrerPolicy, makeLogoIcon } from '../utils/toolLogo.js'
+import { useSidebarSectionProvider } from '../composables/useSidebarSection.js'
 import ToolLoading from './ToolLoading.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 
@@ -90,31 +92,9 @@ const tabLogos = computed(() => {
   return map
 })
 
-function isIconTabLogo(logo) {
-  return !!logo && !logo.startsWith('/') && !/^https?:/i.test(logo)
-}
-
-// 外链 logo 不携带 Referer，避免图床/防盗链服务因来源校验拒绝加载
-function tabLogoPolicy(logo) {
-  return /^https?:/i.test(logo || '') ? 'no-referrer' : undefined
-}
-
 // 生成下拉菜单选项的 logo 渲染（naive dropdown option.icon，图片/图标两种）
 function makeTabLogoIcon(tab) {
-  const logo = getLogoFromPath(tab.path)
-  if (!logo) return undefined
-  if (isIconTabLogo(logo)) {
-    const comp = getToolIcon(logo)
-    // 用站点主题色变量，随深浅色自动适配
-    return comp ? () => h(NIcon, { component: comp, size: 18, color: 'var(--muted-foreground)' }) : undefined
-  }
-  // 图片 logo：圆角遮罩裁切
-  return () =>
-    h(
-      'span',
-      { style: 'width:18px;height:18px;border-radius:var(--radius-xs);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center' },
-      [h('img', { src: logo, alt: '', referrerpolicy: tabLogoPolicy(logo), style: 'width:100%;height:100%;object-fit:contain;display:block' })],
-    )
+  return makeLogoIcon(getLogoFromPath(tab.path), 18)
 }
 
 // 已知工具页或通过白名单的站外标签 → 需持久化为正式标签；其余视为无效页面
@@ -167,6 +147,25 @@ function handleTabSelect(key) {
     nextTick(() => scrollActiveTabIntoView())
   }
 }
+
+// 侧边栏分类栏在工作站页镜像标签页，logo 与上方下拉菜单同源（均为卡片 logo）
+useSidebarSectionProvider('workspace', () =>
+  tabs.value.length > 0
+    ? {
+        items: tabs.value.map((tab) => ({
+          key: tab.path,
+          label: tab.title,
+          logo: getLogoFromPath(tab.path),
+        })),
+        selectedKey: activeTab.value,
+        onSelect: (path) => {
+          if (path === activeTab.value) return
+          activeTab.value = path
+          nextTick(() => scrollActiveTabIntoView())
+        },
+      }
+    : null,
+)
 
 // 监听标签变化，全部关闭时回首页
 watch(tabs, (val) => {
@@ -885,7 +884,7 @@ onMounted(() => {
         >
           <span v-if="tabLogos[tab.path]" class="tab-logo">
             <NIcon
-              v-if="isIconTabLogo(tabLogos[tab.path])"
+              v-if="isIconLogo(tabLogos[tab.path])"
               :component="getToolIcon(tabLogos[tab.path])"
               :size="13"
             />
@@ -893,7 +892,7 @@ onMounted(() => {
               v-else
               :src="tabLogos[tab.path]"
               alt=""
-              :referrerpolicy="tabLogoPolicy(tabLogos[tab.path])"
+              :referrerpolicy="logoReferrerPolicy(tabLogos[tab.path])"
               class="tab-logo-img"
             />
           </span>

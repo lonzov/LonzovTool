@@ -2,8 +2,24 @@
 import { ref, shallowRef, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MarkdownIt from 'markdown-it'
+import { createHeadingSlugger } from '../utils/headingSlug.js'
 
 const router = useRouter()
+
+/**
+ * 给标题生成锚点 id。文档目录按 id 定位，分享链接也可带锚点直达章节。
+ * 走 core 规则而非渲染器钩子，SSR 与客户端产出同一份 HTML。
+ */
+function anchorPlugin(md) {
+  md.core.ruler.push('heading_anchors', (state) => {
+    const slug = createHeadingSlugger()
+    state.tokens.forEach((token, index) => {
+      if (token.type !== 'heading_open') return
+      const inline = state.tokens[index + 1]
+      token.attrSet('id', slug(inline ? inline.content : ''))
+    })
+  })
+}
 
 const props = defineProps({
   raw: { type: String, default: '' },
@@ -17,7 +33,7 @@ const md = shallowRef(new MarkdownIt({
   highlight(str, lang) {
     return `<pre><code class="hljs language-${lang || ''}">${md.value.utils.escapeHtml(str)}</code></pre>`
   },
-}))
+}).use(anchorPlugin))
 
 const html = ref('')
 

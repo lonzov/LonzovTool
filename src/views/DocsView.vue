@@ -8,6 +8,7 @@ import IframeForm from '../components/IframeForm.vue'
 import DonateCard from '../components/DonateCard.vue'
 import DonateRecords from '../components/DonateRecords.vue'
 import StatsInfoBar from '../components/StatsInfoBar.vue'
+import { usePageOutline } from '../composables/usePageOutline.js'
 
 const props = defineProps({
   docName: {
@@ -15,6 +16,21 @@ const props = defineProps({
     default: '',
   },
 })
+
+const rootEl = ref(null)
+// 目录项即 Markdown 渲染出的 h1~h3，故在每次渲染完成后重新采集
+const { refresh: refreshOutline } = usePageOutline(
+  rootEl,
+  () =>
+    Array.from(rootEl.value?.querySelectorAll('.md-content :is(h1, h2, h3)') || [])
+      .filter((el) => el.id)
+      .map((el) => ({
+        key: el.id,
+        label: el.textContent.trim(),
+        level: Number(el.tagName.slice(1)),
+      })),
+  { id: 'docs' },
+)
 
 const processedRaw = ref('')
 const loading = ref(true)
@@ -87,6 +103,12 @@ function mountComponentsToPlaceholders() {
       componentApps.push(app)
     })
   })
+}
+
+// Markdown 渲染完成后：挂载占位组件，并把 h1~h3 目录交给侧边栏分类栏
+function handleRendered() {
+  mountComponentsToPlaceholders()
+  refreshOutline()
 }
 
 async function loadDoc(name) {
@@ -163,7 +185,7 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div class="docs-view">
+  <div class="docs-view" ref="rootEl">
     <AboutView v-if="!docName || docName === '' || docName === '/'" />
 
     <NotFoundView v-if="docNotFound" />
@@ -173,7 +195,7 @@ watchEffect(() => {
       </div>
       <div class="docs-loading-text">{{ error ? ('加载失败：' + error) : '加载中...' }}</div>
     </div>
-    <MarkdownRenderer v-else :raw="processedRaw" @rendered="mountComponentsToPlaceholders" />
+    <MarkdownRenderer v-else :raw="processedRaw" @rendered="handleRendered" />
   </div>
 </template>
 

@@ -1,17 +1,30 @@
 <script>
-import { h, markRaw, computed } from 'vue'
+import { h, markRaw, computed, Transition } from 'vue'
 import { useRouter } from 'vue-router'
 import { NMenu, NIcon, useMessage } from 'naive-ui'
-import { Home48Regular, Person24Regular, AddSquare24Regular, HeartCircle24Regular, PersonFeedback24Regular, CalendarWorkWeek24Regular, DrawerArrowDownload24Regular, Settings24Regular, MoreVertical24Regular } from '@vicons/fluent'
+import { Home48Regular, Person24Regular, AddSquare24Regular, HeartCircle24Regular, PersonFeedback24Regular, CalendarWorkWeek24Regular, DrawerArrowDownload24Regular, Settings24Regular, MoreVertical24Regular, NumberSymbol24Filled } from '@vicons/fluent'
 import { getCategoryIcon } from '../config/categoryIcons'
+import { makeLogoIcon } from '../utils/toolLogo.js'
 import { usePWAInstall } from '../composables/usePWAInstall'
 import toolsData from '../data/tools.json'
 import parentMenusData from '../data/parentMenus.json'
+import { useSidebarSection } from '../composables/useSidebarSection.js'
 
 // 父级菜单展开状态持久化（桌面端侧边栏与移动端抽屉共用同一份）
 const EXPANDED_KEYS_KEY = 'sidebar_expanded_keys'
 const MORE_KEY = 'more'
 const MORE_SEEDED_KEY = 'sidebar_more_seeded'
+
+// 文档目录的层级缩进步长
+const SECTION_LEVEL_INDENT = 14
+
+const MENU_STYLE = {
+  marginTop: '8px',
+  '--n-bezier': 'cubic-bezier(0.4, 0, 0.2, 1)',
+  '--n-bezier-ease-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
+  '--n-bezier-ease-in': 'cubic-bezier(0.4, 0, 0.2, 1)',
+  '--n-bezier-ease-in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
+}
 
 function loadExpandedKeys() {
   try {
@@ -61,8 +74,11 @@ export default {
       default: 'home',
     },
   },
-  emits: ['update:value', 'navigate', 'feedback'],
+  emits: ['update:value', 'navigate', 'feedback', 'section'],
   setup() {
+    // 固定栏与分类栏是两个菜单实例，分类栏的内容来自当前页面模块（见 useSidebarSection）
+    const { activeSection } = useSidebarSection()
+
     // 从配置中计算默认展开的父级菜单
     const defaultExpandedKeys = computed(() => {
       const keys = [MORE_KEY]
@@ -115,6 +131,7 @@ export default {
     }
 
     return {
+      activeSection,
       defaultExpandedKeys,
       isInstalled,
       handlePWAInstall,
@@ -122,16 +139,43 @@ export default {
   },
   data() {
     return {
-      menuOptions: [],
+      fixedOptions: [],
+      sectionOptions: [],
       expandedKeys: [],
       isDark: typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') === 'dark' : true,
     }
+  },
+  computed: {
+    // 展开状态存在同一个数组里（沿用原持久化 key），两个菜单各管自己那部分
+    fixedExpandedKeys() {
+      return this.expandedKeys.filter((key) => key === MORE_KEY)
+    },
+    sectionExpandedKeys() {
+      return this.expandedKeys.filter((key) => key !== MORE_KEY)
+    },
+    // 分类栏选中态：由页面模块给出；回落首页分类时沿用外部的固定栏选中项
+    sectionValue() {
+      if (!this.activeSection) return this.value
+      return this.activeSection.selectedKey ?? null
+    },
+    // 分类栏来源标识：切换来源时换 key，触发分类栏的切页动画
+    sectionKey() {
+      if (!this.activeSection) return 'categories'
+      return this.activeSection.key || this.activeSection.id
+    },
   },
   mounted() {
     this.initMenuOptions()
     // 优先恢复上次的展开状态，无记录时取 parentMenus.json 的默认展开配置
     this.expandedKeys = resolveExpandedKeys(this.defaultExpandedKeys)
     this.observeTheme()
+
+    // 选项是挂载时构建的副本，而页面模块可能中途接管分类栏，需要跟着重建。
+    // 展开状态保持不动：那是用户当下的操作结果，不该被重建覆盖。
+    this.$watch(
+      () => this.activeSection,
+      () => this.initMenuOptions(),
+    )
   },
   beforeUnmount() {
     if (this.observer) {
@@ -169,8 +213,14 @@ export default {
       return getCategoryIcon(name)
     },
     initMenuOptions() {
+      this.fixedOptions = this.buildFixedOptions()
+      this.sectionOptions = this.activeSection
+        ? this.buildSectionOptions(this.activeSection)
+        : this.buildCategoryOptions()
+    },
+    buildFixedOptions() {
       // 固定菜单项
-      const staticOptions = [
+      const fixedOptions = [
         {
           label: '首页',
           key: 'home',
@@ -219,18 +269,22 @@ export default {
           icon: this.renderIcon(markRaw(DrawerArrowDownload24Regular)),
         })
       }
-      staticOptions.push({
+      fixedOptions.push({
         label: '更多',
         key: MORE_KEY,
         icon: this.renderIcon(markRaw(MoreVertical24Regular)),
         children: moreChildren,
       })
 
-      staticOptions.push({
+      fixedOptions.push({
         type: 'divider',
         key: 'divider-categories',
       })
 
+      return fixedOptions
+    },
+    // 没有页面模块接管分类栏时的默认内容：首页工具分类
+    buildCategoryOptions() {
       // 构建父级菜单映射 (id -> parent配置)
       const parentMenuMap = new Map()
       parentMenusData.parentMenus.forEach((parent) => {
@@ -281,7 +335,34 @@ export default {
         categoryOptions.push(catItem)
       })
 
-      this.menuOptions = [...staticOptions, ...categoryOptions]
+      return categoryOptions
+    },
+    // 页面模块交出的分类栏内容（文档目录 / 工作站标签页等）
+    buildSectionOptions(section) {
+      return section.items.map((item) => {
+        const option = {
+          key: item.key,
+          label: this.renderSectionLabel(item),
+        }
+        // 工作站标签页带卡片 logo，章节类（文档目录、设置分区等）统一用章节图标
+        const icon = item.logo
+          ? makeLogoIcon(item.logo, 18)
+          : this.renderIcon(markRaw(NumberSymbol24Filled))
+        if (icon) option.icon = icon
+        return option
+      })
+    },
+    renderSectionLabel(item) {
+      const indent = item.level > 1 ? (item.level - 1) * SECTION_LEVEL_INDENT : 0
+      return () =>
+        h(
+          'span',
+          {
+            title: item.label,
+            style: `display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${indent ? `padding-left:${indent}px;` : ''}`,
+          },
+          item.label,
+        )
     },
     handleUpdateValue(key, item) {
       // PWA 安装：不导航，触发安装流程
@@ -298,36 +379,113 @@ export default {
       }
 
       this.$emit('update:value', key)
-      // 首页、关于、分类、网址提交都触发导航
+      // 首页、关于、网址提交都触发导航
       if (
         item &&
         item.key &&
-        (item.key.startsWith('category-') || item.key === 'about' || item.key === 'home' || item.key === 'submit' || item.key === 'workspace' || item.key === 'donate' || item.key === 'settings')
+        (item.key === 'about' || item.key === 'home' || item.key === 'submit' || item.key === 'workspace' || item.key === 'donate' || item.key === 'settings')
       ) {
         this.$emit('navigate', item.key)
       }
     },
-    handleUpdateExpandedKeys(keys) {
-      this.expandedKeys = keys
-      saveExpandedKeys(keys)
+    handleSectionUpdateValue(key, item) {
+      if (this.activeSection) {
+        if (typeof this.activeSection.onSelect === 'function') {
+          this.activeSection.onSelect(key)
+        }
+        // 移动端抽屉由外层关闭：分类栏的选中项不占用固定栏的选中态
+        this.$emit('section', key)
+        return
+      }
+
+      // 回落首页分类：与固定栏共享选中态与导航逻辑
+      this.$emit('update:value', key)
+      if (item && item.key && item.key.startsWith('category-')) {
+        this.$emit('navigate', item.key)
+      }
+    },
+    updateExpandedKeys(keys) {
+      this.expandedKeys = [...new Set(keys)]
+      saveExpandedKeys(this.expandedKeys)
+    },
+    handleFixedExpandedKeys(keys) {
+      this.updateExpandedKeys([...keys, ...this.sectionExpandedKeys])
+    },
+    handleSectionExpandedKeys(keys) {
+      this.updateExpandedKeys([...this.fixedExpandedKeys, ...keys])
     },
   },
   render() {
-    return h(NMenu, {
-      value: this.value,
-      'onUpdate:value': this.handleUpdateValue,
-      expandedKeys: this.expandedKeys,
-      'onUpdate:expandedKeys': this.handleUpdateExpandedKeys,
-      options: this.menuOptions,
-      mode: 'vertical',
-      style: {
-        marginTop: '8px',
-        '--n-bezier': 'cubic-bezier(0.4, 0, 0.2, 1)',
-        '--n-bezier-ease-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
-        '--n-bezier-ease-in': 'cubic-bezier(0.4, 0, 0.2, 1)',
-        '--n-bezier-ease-in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
-      },
-    })
+    return h('div', { class: 'app-menu' }, [
+      h(NMenu, {
+        value: this.value,
+        'onUpdate:value': this.handleUpdateValue,
+        expandedKeys: this.fixedExpandedKeys,
+        'onUpdate:expandedKeys': this.handleFixedExpandedKeys,
+        options: this.fixedOptions,
+        mode: 'vertical',
+        style: MENU_STYLE,
+      }),
+      // 分类栏的来源随页面变化，换源时整块交叉淡入淡出（离开的那份绝对定位叠在下方，
+      // 高度立刻让给新内容，避免 out-in 留下的空档）
+      h(
+        'div',
+        { class: 'app-menu-section' },
+        h(
+          Transition,
+          { name: 'menu-section' },
+          {
+            default: () =>
+              h(NMenu, {
+                key: this.sectionKey,
+                value: this.sectionValue,
+                'onUpdate:value': this.handleSectionUpdateValue,
+                expandedKeys: this.sectionExpandedKeys,
+                'onUpdate:expandedKeys': this.handleSectionExpandedKeys,
+                options: this.sectionOptions,
+                mode: 'vertical',
+                style: { ...MENU_STYLE, marginTop: '0' },
+              }),
+          },
+        ),
+      ),
+    ])
   },
 }
 </script>
+
+<style>
+.app-menu-section {
+  position: relative;
+}
+
+.menu-section-enter-active,
+.menu-section-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  transform-origin: top center;
+}
+
+.menu-section-enter-from {
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+}
+
+.menu-section-leave-to {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+}
+
+/* 离开的那份脱离文档流，交叉过渡期间不占高度 */
+.menu-section-leave-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+html[data-motion='reduced'] .menu-section-enter-active,
+html[data-motion='reduced'] .menu-section-leave-active {
+  transition: none !important;
+}
+</style>

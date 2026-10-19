@@ -11,6 +11,7 @@ import { useWorkspaceSettings } from '../composables/useWorkspaceSettings'
 import { useWorkspace } from '../composables/useWorkspace'
 import { useMouseGlow } from '../composables/useMouseGlow'
 import { useMotion } from '../composables/useMotion'
+import { usePageOutline } from '../composables/usePageOutline.js'
 
 const { themeMode, setThemeMode } = useTheme()
 const message = useMessage()
@@ -219,6 +220,37 @@ function toggleSection(key) {
   collapsedSections.value[key] = newVal
   localStorage.setItem(COLLAPSED_KEY, JSON.stringify(collapsedSections.value))
 }
+
+/* ========== 侧边栏章节（key 即下方各卡片的 id）========== */
+// 折叠过渡时长，与 .collapse-enter-active 的 transition 一致
+const COLLAPSE_DURATION = 320
+
+const SETTING_SECTIONS = [
+  { key: 'setting-personalization', label: '个性化', collapseKey: 'personalization' },
+  { key: 'setting-workspace', label: '工作站', collapseKey: 'workspace' },
+  { key: 'setting-cache', label: '缓存管理', collapseKey: 'cache' },
+  { key: 'setting-config', label: '配置管理', collapseKey: 'config' },
+  { key: 'setting-docs', label: '文档', collapseKey: 'docs' },
+  { key: 'setting-privacy', label: '隐私偏好' },
+]
+
+const rootEl = ref(null)
+
+// 从侧边栏跳到折叠状态的板块时先展开：否则定位到的只是一行标题
+async function expandBeforeScroll(key) {
+  const section = SETTING_SECTIONS.find((item) => item.key === key)
+  if (!section?.collapseKey || !collapsedSections.value[section.collapseKey]) return
+  toggleSection(section.collapseKey)
+  if (!reduceMotion.value) {
+    // 等高度过渡走完再交给滚动，否则目标元素还在被撑开
+    await new Promise((resolve) => setTimeout(resolve, COLLAPSE_DURATION))
+  }
+}
+
+usePageOutline(rootEl, () => SETTING_SECTIONS.map(({ key, label }) => ({ key, label })), {
+  id: 'settings',
+  beforeScroll: expandBeforeScroll,
+})
 
 /* ========== 重置所有设置 ========== */
 async function handleReset() {
@@ -660,7 +692,7 @@ const embedCloseActions = [
 </script>
 
 <template>
-  <div>
+  <div ref="rootEl">
     <div class="settings-container">
       <!-- 页面头部 -->
       <div class="settings-page-header">
@@ -678,7 +710,7 @@ const embedCloseActions = [
       </div>
 
       <!-- 外观 -->
-      <div class="settings-card">
+      <div class="settings-card" id="setting-personalization">
         <div
           class="card-header"
           :class="{ 'card-header--collapsed': collapsedSections.personalization }"
@@ -758,7 +790,7 @@ const embedCloseActions = [
       </div>
 
       <!-- 工作站 -->
-      <div class="settings-card">
+      <div class="settings-card" id="setting-workspace">
         <div
           class="card-header"
           :class="{ 'card-header--collapsed': collapsedSections.workspace }"
@@ -828,7 +860,7 @@ const embedCloseActions = [
       </div>
 
       <!-- 缓存管理 -->
-      <div class="settings-card">
+      <div class="settings-card" id="setting-cache">
         <div
           class="card-header"
           :class="{ 'card-header--collapsed': collapsedSections.cache }"
@@ -888,7 +920,7 @@ const embedCloseActions = [
       </div>
 
       <!-- 配置管理 -->
-      <div class="settings-card">
+      <div class="settings-card" id="setting-config">
         <div
           class="card-header"
           :class="{ 'card-header--collapsed': collapsedSections.config }"
@@ -930,7 +962,7 @@ const embedCloseActions = [
       </div>
 
       <!-- 文档 -->
-      <div class="settings-card">
+      <div class="settings-card" id="setting-docs">
         <div
           class="card-header"
           :class="{ 'card-header--collapsed': collapsedSections.docs }"
@@ -966,7 +998,7 @@ const embedCloseActions = [
       </div>
 
       <!-- 隐私偏好 -->
-      <div class="settings-bar" @click="openPrivacyModal">
+      <div class="settings-bar" id="setting-privacy" @click="openPrivacyModal">
         <span>隐私偏好</span>
         <NIcon :component="ChevronUp16Regular" size="16" class="settings-bar-arrow" />
       </div>

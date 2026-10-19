@@ -7,10 +7,25 @@ import { useStats } from '../composables/useStats'
 import { useLocalStats } from '../composables/useLocalStats.js'
 import { useFeedbackDrawer } from '../composables/useFeedbackDrawer.js'
 import { reduceMotion } from '../composables/useMotion.js'
+import { usePageOutline } from '../composables/usePageOutline.js'
 
 const { stats, fetchStats } = useStats()
 const router = useRouter()
 const { openFeedbackDrawer } = useFeedbackDrawer()
+
+/* ===== 侧边栏章节（key 即下方各 section 的 id） ===== */
+const rootEl = ref(null)
+const ABOUT_SECTIONS = [
+  { key: 'hero', label: '概览' },
+  { key: 'stats', label: '数据统计' },
+  { key: 'video', label: '演示视频' },
+  { key: 'about', label: '关于项目' },
+  { key: 'features', label: '功能亮点' },
+  { key: 'contributors', label: '贡献者' },
+  { key: 'feedback', label: '建议与反馈' },
+  { key: 'credits', label: '关注与鸣谢' },
+]
+usePageOutline(rootEl, () => ABOUT_SECTIONS, { id: 'about' })
 
 /* ===== 贡献者数据（异步 import，参考打赏记录） ===== */
 const contributors = ref([])
@@ -425,9 +440,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="about-page">
+  <div class="about-page" ref="rootEl">
     <!-- ===== 1. HERO ===== -->
-    <header class="hero">
+    <header class="hero" id="hero">
       <span class="wm wm--slash" aria-hidden="true">/</span>
       <span class="hero-rail" aria-hidden="true"><b>01</b> about · <b>02</b> features · <b>03</b> contributors</span>
 
@@ -448,7 +463,7 @@ onMounted(() => {
     </header>
 
     <!-- ===== 2. 数据统计 ===== -->
-    <section class="sec stats">
+    <section class="sec stats" id="stats">
       <span class="wm" aria-hidden="true">∑</span>
       <span class="stats-rail" aria-hidden="true" :title="localRailTitle">SINCE <b>{{ firstOpenText }}</b> · TOOLS <b>{{ padCount(localStats.toolOpens) }}</b> · CLICKS <b>{{ padCount(localStats.navClicks) }}</b></span>
       <div class="grid">
@@ -476,7 +491,7 @@ onMounted(() => {
     </section>
 
     <!-- ===== 3. 视频 ===== -->
-    <section class="sec video">
+    <section class="sec video" id="video">
       <span class="wm" aria-hidden="true">▶</span>
       <div class="grid">
         <div class="video-stage" v-reveal>
