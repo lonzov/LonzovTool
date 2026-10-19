@@ -19,6 +19,13 @@ const STATIC_CACHE_PATHS = ['/logos/', '/fonts/', '/img/', '/sprites/']
 // 同名换图会永远命中旧缓存，故广告素材单独放 /promo/ 并在此拦截
 const PROMO_PATH = '/promo/'
 
+// ===== 反代到后端的路径：不参与 SW 缓存 =====
+// 接口读响应需即时性，写操作结果更不允许被缓存覆盖；/uploads/ 已按内容哈希换名兜缓存，
+// 再叠一层 CacheFirst 只会让换图长期不生效。
+// 必须拦在 navigate 分支之前：这些前缀一旦被当成导航请求，会被 SPA shell 的缓存逻辑接管。
+const API_PATH = '/api/'
+const UPLOAD_PATH = '/uploads/'
+
 // ===== 二级版本缓存：仅在 minor 版本变更时清除（如 3.3.x → 3.4.x） =====
 // 含带 hash 的 JS/CSS（/assets/）：hash 不变即内容不变，跨补丁版本复用可省掉重复下载
 const MINOR_VERSION = CACHE_VERSION.split('.').slice(0, 2).join('.')
@@ -126,6 +133,9 @@ self.addEventListener('fetch', (event) => {
 
   // 仅处理同源请求
   if (url.origin !== self.location.origin) return
+
+  // 后端接口与上传目录: 不拦截，直接交给浏览器走网络
+  if (url.pathname.startsWith(API_PATH) || url.pathname.startsWith(UPLOAD_PATH)) return
 
   // 导航请求: 强制更新遮罩 > StaleWhileRevalidate > 离线兜底
   if (request.mode === 'navigate') {

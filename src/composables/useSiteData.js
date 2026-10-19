@@ -1,0 +1,170 @@
+import { ref } from 'vue'
+import toolsSnapshot from '../data/tools.json'
+import parentMenusSnapshot from '../data/parentMenus.json'
+import noticesSnapshot from '../data/notices.json'
+
+/**
+ * 站点动态数据的唯一入口。
+ *
+ * 构建期内联的快照作为初始值；接入后端后由接口数据整体替换（契约见 docs/api.md）。
+ * 消费方一律从这里取数，不得直接 import 数据文件——运行时替换只覆盖这里，
+ * 直接 import 的消费方会继续读到过期快照。
+ *
+ * 因此所有派生结果都必须在调用时计算。冻结在模块加载时的常量
+ * （典型是站外域名白名单）会让运行时新收录的卡片被判为非法，且不会有任何报错。
+ */
+export const cardsData = ref(toolsSnapshot)
+export const parentMenusData = ref(parentMenusSnapshot)
+export const noticesData = ref(noticesSnapshot)
+
+// 打赏记录与共建者只在个别页面用到，快照仍按需加载：初值为 null，首次访问才动态 import。
+// 接口一旦给出对应键就以接口数据为准，不再碰快照，因此加载前先看 ref。
+export const donateRecordsData = ref(null)
+export const contributorsData = ref(null)
+
+let donateRecordsSnapshot = null
+
+export async function loadDonateRecords() {
+  if (donateRecordsData.value) return donateRecordsData.value
+  if (!donateRecordsSnapshot) {
+    donateRecordsSnapshot = import('../data/donateRecords.json')
+      .then((m) => m.default || m)
+      .catch(() => [])
+  }
+  return donateRecordsData.value || (await donateRecordsSnapshot)
+}
+
+let contributorsSnapshot = null
+
+export async function loadContributors() {
+  if (contributorsData.value) return contributorsData.value
+  if (!contributorsSnapshot) {
+    contributorsSnapshot = import('../data/contributors.json')
+      .then((m) => m.default || m)
+      .catch(() => [])
+  }
+  return contributorsData.value || (await contributorsSnapshot)
+}
+
+/** 遍历卡片，命中即返回 visit 的返回值 */
+function eachTool(visit) {
+  for (const category of cardsData.value.categories) {
+    for (const tool of category.tools) {
+      const hit = visit(tool)
+      if (hit) return hit
+    }
+  }
+  return null
+}
+
+/** 仅站外链接参与域名比较，站内路径与非法 URL 一律返回 null */
+function parseExternal(value) {
+  if (!value || !/^https?:/i.test(value)) return null
+  try {
+    return new URL(value)
+  } catch {
+    return null
+  }
+}
+
+function stripTrailingSlash(value) {
+  return value.replace(/\/+$/, '')
+}
+
+/** 按 id 反查卡片（站外嵌入标签靠 id 反查原始 URL） */
+export function findToolById(id) {
+  if (!id) return null
+  return eachTool((tool) => (tool.id === id ? tool : null))
+}
+
+/** 按站外链接反查卡片，忽略末尾斜杠 */
+export function findToolByExternalLink(url) {
+  const target = stripTrailingSlash(url || '')
+  if (!parseExternal(target)) return null
+  return eachTool((tool) => {
+    const link = parseExternal(tool.link)
+    return link && stripTrailingSlash(tool.link) === target ? tool : null
+  })
+}
+
+/** 按站内路径反查卡片，忽略末尾斜杠 */
+export function findToolByPath(path) {
+  const target = stripTrailingSlash(path || '')
+  if (!target || /^https?:/i.test(target)) return null
+  return eachTool((tool) => {
+    if (/^https?:/i.test(tool.link)) return null
+    return stripTrailingSlash(tool.link) === target ? tool : null
+  })
+}
+
+/**
+ * 站外域名白名单校验，决定 /embed/ 标签是否允许渲染，不在白名单内的转交 404。
+ * 必须由当前数据派生而非模块级常量：数据运行时会被整体替换，
+ * 冻结在构建时的白名单会让新批准的站外卡片其嵌入页直接 404。
+ */
+export function isExternalUrlAllowed(url) {
+  const target = parseExternal(url)
+  if (!target) return false
+  return !!eachTool((tool) => {
+    const link = parseExternal(tool.link)
+    return link && link.hostname === target.hostname ? true : null
+  })
+}
+
+// ===== 运行时同步 =====
+// 轮询版本戳，变了才拉全量。间隔 10 分钟：/api/ 不参与 SW 缓存，每次都是真实请求，
+// 而站点侧 fail2ban 的 CC 阈值是单 IP 300 秒内 30 次，不能轮询过密。
+const SITE_DATA_URL = '/api/v1/site-data'
+const VERSION_URL = '/api/v1/site-data/version'
+const VERSION_POLL_MS = 10 * 60 * 1000
+
+let syncedVersion = null
+let pollTimer = null
+let inflight = null
+
+/** 只替换载荷中出现的键；缺席的键保持快照值（契约见 docs/api.md） */
+function applyPayload(payload) {
+  if (!payload || typeof payload !== 'object') return
+  if (payload.cards) cardsData.value = payload.cards
+  if (payload.parent_menus) parentMenusData.value = payload.parent_menus
+  if (payload.notices) noticesData.value = payload.notices
+  if (payload.donate_records) donateRecordsData.value = payload.donate_records
+  if (payload.contributors) contributorsData.value = payload.contributors
+  if (payload.version !== undefined) syncedVersion = String(payload.version)
+}
+
+async function pullFull() {
+  const res = await fetch(SITE_DATA_URL, { headers: { Accept: 'application/json' } })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  applyPayload(await res.json())
+}
+
+async function pullVersion() {
+  // 首次没有可比对的版本，直接拉全量，省掉一次往返
+  if (syncedVersion !== null) {
+    const res = await fetch(VERSION_URL, { headers: { Accept: 'application/json' } })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const { version } = await res.json()
+    if (String(version) === syncedVersion) return
+  }
+  await pullFull()
+}
+
+/**
+ * 启动运行时同步。**必须由组件在 onMounted 里调用**：
+ * vite-ssg 的预渲染会执行 setup，在 setup 顶层或模块加载时发请求会真打后端、
+ * 甚至挂住预渲染，而这在 dev 下完全看不见。重复调用无副作用。
+ *
+ * 任何失败都静默：接口取不到就继续用构建期快照，站点必须保持完整可用。
+ */
+export function startSiteDataSync() {
+  if (pollTimer) return
+  const tick = () => {
+    if (inflight) return
+    inflight = pullVersion()
+      .catch(() => {})
+      .finally(() => (inflight = null))
+  }
+  tick()
+  pollTimer = setInterval(tick, VERSION_POLL_MS)
+}

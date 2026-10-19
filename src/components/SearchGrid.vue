@@ -1,7 +1,7 @@
 <script>
 import { h, ref, watch, nextTick } from 'vue'
 import { useMessage } from 'naive-ui'
-import toolsData from '../data/tools.json'
+import { cardsData } from '../composables/useSiteData.js'
 
 export default {
   name: 'SearchGrid',
@@ -74,7 +74,7 @@ export default {
         const query = (newQuery || '').replace(/\s/g, '') // 去除所有空格
         if (query && query !== lastSearchQuery.value) {
           nextTick(() => {
-            const filtered = toolsData.categories
+            const filtered = cardsData.value.categories
               .map((category) =>
                 category.tools.filter(
                   (tool) =>

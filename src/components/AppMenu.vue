@@ -6,8 +6,7 @@ import { Home48Regular, Person24Regular, AddSquare24Regular, HeartCircle24Regula
 import { getCategoryIcon } from '../config/categoryIcons'
 import { makeLogoIcon } from '../utils/toolLogo.js'
 import { usePWAInstall } from '../composables/usePWAInstall'
-import toolsData from '../data/tools.json'
-import parentMenusData from '../data/parentMenus.json'
+import { cardsData, parentMenusData } from '../composables/useSiteData.js'
 import { useSidebarSection } from '../composables/useSidebarSection.js'
 
 // 父级菜单展开状态持久化（桌面端侧边栏与移动端抽屉共用同一份）
@@ -82,7 +81,7 @@ export default {
     // 从配置中计算默认展开的父级菜单
     const defaultExpandedKeys = computed(() => {
       const keys = [MORE_KEY]
-      parentMenusData.parentMenus.forEach((parent) => {
+      parentMenusData.value.parentMenus.forEach((parent) => {
         if (!parent.defaultCollapsed) {
           keys.push(`parent-${parent.id}`)
         }
@@ -170,10 +169,10 @@ export default {
     this.expandedKeys = resolveExpandedKeys(this.defaultExpandedKeys)
     this.observeTheme()
 
-    // 选项是挂载时构建的副本，而页面模块可能中途接管分类栏，需要跟着重建。
-    // 展开状态保持不动：那是用户当下的操作结果，不该被重建覆盖。
+    // 选项是挂载时构建的副本，而接口刷新会整体替换快照、页面模块也可能中途接管分类栏，需要跟着重建。
+    // 展开状态保持不动：那是用户当下的操作结果，不该被数据刷新覆盖。
     this.$watch(
-      () => this.activeSection,
+      () => [cardsData.value, parentMenusData.value, this.activeSection],
       () => this.initMenuOptions(),
     )
   },
@@ -287,7 +286,7 @@ export default {
     buildCategoryOptions() {
       // 构建父级菜单映射 (id -> parent配置)
       const parentMenuMap = new Map()
-      parentMenusData.parentMenus.forEach((parent) => {
+      parentMenusData.value.parentMenus.forEach((parent) => {
         parentMenuMap.set(parent.id, parent)
       })
 
@@ -295,7 +294,7 @@ export default {
       const parentGroups = new Map() // parentId -> [categoryItem]
       const standaloneCategories = []
 
-      toolsData.categories.forEach((cat, index) => {
+      cardsData.value.categories.forEach((cat, index) => {
         const categoryItem = {
           label: cat.name,
           key: `category-${index}`,
@@ -318,7 +317,7 @@ export default {
       const categoryOptions = []
 
       // 添加父级菜单（包含子分类）
-      parentMenusData.parentMenus.forEach((parent) => {
+      parentMenusData.value.parentMenus.forEach((parent) => {
         const children = parentGroups.get(parent.id)
         if (children && children.length > 0) {
           categoryOptions.push({

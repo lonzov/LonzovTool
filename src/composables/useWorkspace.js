@@ -1,5 +1,10 @@
 import { ref, watch } from 'vue'
-import toolsData from '../data/tools.json'
+import {
+  findToolById,
+  findToolByExternalLink,
+  findToolByPath,
+  isExternalUrlAllowed,
+} from './useSiteData.js'
 
 const TABS_KEY = 'workspace-tabs'
 const ACTIVE_KEY = 'workspace-active-tab'
@@ -25,35 +30,10 @@ function saveToStorage(key, value) {
 
 // ===== 站外链接标签（iframe 嵌入工作站）=====
 // 站外链接统一挂载到独立的 /embed/ 目录（不使用 /c/，并在 robots.txt 中屏蔽不参与收录）
-// 路径段使用 tools.json 中的工具 id（如 /embed/mcbe-id-table），URL 通过 id 反查
+// 路径段使用卡片 id（如 /embed/mcbe-id-table），URL 通过 id 反查
 const EXTERNAL_PATH_PREFIX = '/embed/'
 
-// 按 id 查 tools.json 工具
-function findToolById(id) {
-  if (!id) return null
-  for (const category of toolsData.categories) {
-    for (const tool of category.tools) {
-      if (tool.id === id) return tool
-    }
-  }
-  return null
-}
-
-// 域名白名单：tools.json 中所有站外链接的域名，不在白名单内的站外链接直接转交 404
-const EXTERNAL_HOSTS = new Set()
-for (const category of toolsData.categories) {
-  for (const tool of category.tools) {
-    if (/^https?:/i.test(tool.link)) {
-      try {
-        EXTERNAL_HOSTS.add(new URL(tool.link).hostname)
-      } catch {
-        // ignore invalid urls
-      }
-    }
-  }
-}
-
-// 站外标签 path：/embed/ + tools.json 工具 id
+// 站外标签 path：/embed/ + 卡片 id
 function externalTabPath(toolId) {
   if (!toolId) return ''
   return EXTERNAL_PATH_PREFIX + toolId
@@ -73,58 +53,22 @@ function getExternalUrl(path) {
   return tool && /^https?:/i.test(tool.link) ? tool.link : null
 }
 
-// 域名白名单校验：返回 true 才允许嵌入渲染，否则转交 404
-function isExternalUrlAllowed(url) {
-  if (!url) return false
-  try {
-    return EXTERNAL_HOSTS.has(new URL(url).hostname)
-  } catch {
-    return false
-  }
-}
-
-// 根据站外 URL 从 tools.json 匹配卡片 logo（与标题同源，供嵌入条复用卡片图标）
+// 根据站外 URL 匹配卡片 logo（与标题同源，供嵌入条复用卡片图标）
 function getExternalLogo(url) {
-  if (!url) return ''
-  const normalized = url.replace(/\/+$/, '')
-  for (const category of toolsData.categories) {
-    for (const tool of category.tools) {
-      if (/^https?:/i.test(tool.link) && tool.link.replace(/\/+$/, '') === normalized) {
-        return tool.logo || ''
-      }
-    }
-  }
-  return ''
+  return findToolByExternalLink(url)?.logo || ''
 }
 
-// 根据站外 URL 从 tools.json 获取嵌入页的 SEO meta（标题/简介），供 meta 与分享模态框使用
+// 根据站外 URL 获取嵌入页的 SEO meta（标题/简介），供 meta 与分享模态框使用
 function getExternalToolMeta(url) {
-  if (!url) return null
-  const normalized = url.replace(/\/+$/, '')
-  for (const category of toolsData.categories) {
-    for (const tool of category.tools) {
-      if (/^https?:/i.test(tool.link) && tool.link.replace(/\/+$/, '') === normalized) {
-        return {
-          title: tool.title,
-          description: tool.description || '',
-        }
-      }
-    }
-  }
-  return null
+  const tool = findToolByExternalLink(url)
+  return tool ? { title: tool.title, description: tool.description || '' } : null
 }
 
-// 根据站外 URL 从 tools.json 匹配工具标题，兜底使用域名
+// 根据站外 URL 匹配卡片标题，兜底使用域名
 function getTitleFromExternalUrl(url) {
   if (!url) return ''
-  const normalized = url.replace(/\/+$/, '')
-  for (const category of toolsData.categories) {
-    for (const tool of category.tools) {
-      if (/^https?:/i.test(tool.link) && tool.link.replace(/\/+$/, '') === normalized) {
-        return tool.title
-      }
-    }
-  }
+  const tool = findToolByExternalLink(url)
+  if (tool) return tool.title
   try {
     return new URL(url).hostname
   } catch {
@@ -132,43 +76,25 @@ function getTitleFromExternalUrl(url) {
   }
 }
 
-// 从 tools.json 获取标题
+// 从卡片数据获取标题
 function getTitleFromPath(path) {
   if (isExternalPath(path)) {
-    // tools.json 中 id 已被移除时反查不到标题，兜底用 id 本身，避免标签栏空白
+    // 卡片 id 已被移除时反查不到标题，兜底用 id 本身，避免标签栏空白
     return (
       getTitleFromExternalUrl(getExternalUrl(path)) ||
       path.slice(EXTERNAL_PATH_PREFIX.length).replace(/\/+$/, '')
     )
   }
-  for (const category of toolsData.categories) {
-    for (const tool of category.tools) {
-      const linkPath = tool.link.replace(/^https?:\/\/[^/]+/, '').replace(/\/+$/, '')
-      const normalizedPath = path.replace(/\/+$/, '')
-      if (linkPath === normalizedPath) {
-        return tool.title
-      }
-    }
-  }
-  return ''
+  return findToolByPath(path)?.title || ''
 }
 
 // 按标签 path 解析 logo（标签栏/下拉菜单复用卡片图标）：
-// 站外 = tools.json 匹配的图片路径或图标名；站内 = 按其 /c/ link 匹配的图标名或图片
+// 站外 = 匹配的图片路径或图标名；站内 = 按其 /c/ link 匹配的图标名或图片
 function getLogoFromPath(path) {
   if (isExternalPath(path)) {
     return getExternalLogo(getExternalUrl(path))
   }
-  for (const category of toolsData.categories) {
-    for (const tool of category.tools) {
-      const linkPath = tool.link.replace(/^https?:\/\/[^/]+/, '').replace(/\/+$/, '')
-      const normalizedPath = path.replace(/\/+$/, '')
-      if (linkPath === normalizedPath) {
-        return tool.logo || ''
-      }
-    }
-  }
-  return ''
+  return findToolByPath(path)?.logo || ''
 }
 
 let tabsRef = null

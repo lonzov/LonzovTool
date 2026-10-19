@@ -13,9 +13,6 @@ import { useLocalStats } from '../composables/useLocalStats.js'
 // 站外嵌入开关（模块级共享 ref，render 的 onClick 闭包可直接读取）
 const { embedEnabled } = useWorkspaceSettings()
 
-// 始终在新标签页打开的卡片 ID 白名单
-const ALWAYS_NEW_TAB_IDS = ['rainyun', 'mcnav', 'honghe', 'mc-wiki-zh', 'ms-creator-docs', 'minebbs']
-
 export default {
   components: {
     NHighlight,
@@ -41,6 +38,10 @@ export default {
     toolId: {
       type: String,
       default: '',
+    },
+    openInNewTab: {
+      type: Boolean,
+      default: false,
     },
     searchPatterns: {
       type: Array,
@@ -312,8 +313,8 @@ export default {
       'linear-gradient(120deg, var(--muted) 0%, color-mix(in srgb, var(--muted) 88%, var(--foreground)) 100%)'
 
     const isInternal = this.link.startsWith('/') && this.link !== '/'
-    // 白名单卡片：始终在浏览器新标签页打开
-    const alwaysNewTab = ALWAYS_NEW_TAB_IDS.includes(this.toolId)
+    // 由卡片数据标记为始终在浏览器新标签页打开
+    const alwaysNewTab = this.openInNewTab
 
     // 其余静态样式都在 scoped 的 .tool-card 里，这里只留随数据变的部分
     const cardStyle = {
@@ -347,7 +348,7 @@ export default {
             if (this.toolId && window.umami) {
               window.umami.track(this.toolId)
             }
-            // 白名单：始终新标签页打开，不拦截
+            // 标记为始终新标签页打开的卡片：不拦截
             if (alwaysNewTab) return
             // 站内链接：拦截默认行为，走 SPA 路由（预渲染时 JS 未执行则正常跳转 <a>）
             if (isInternal) {

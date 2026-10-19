@@ -3,7 +3,7 @@ import { h, ref, watch, nextTick, markRaw, onMounted, onUnmounted, computed } fr
 import { NIcon } from 'naive-ui'
 import { getCategoryIcon } from '../config/categoryIcons'
 import ToolCard from './ToolCard.vue'
-import toolsData from '../data/tools.json'
+import { cardsData } from '../composables/useSiteData.js'
 
 export default {
   components: {
@@ -86,7 +86,7 @@ export default {
       const scrollPosition = window.scrollY + 150
       let currentIndex = null
 
-      toolsData.categories.forEach((_, index) => {
+      cardsData.value.categories.forEach((_, index) => {
         const element = document.getElementById(`category-${index}`)
         if (element) {
           const offsetTop = element.offsetTop
@@ -153,9 +153,9 @@ export default {
         }
       }
 
-      if (!hasSearch && !hasFavFilter) return toolsData.categories
+      if (!hasSearch && !hasFavFilter) return cardsData.value.categories
 
-      return toolsData.categories
+      return cardsData.value.categories
         .map((category) => {
           let filteredTools = category.tools
 
@@ -255,6 +255,7 @@ export default {
                 logo: tool.logo || '',
                 link: tool.link || '',
                 toolId: tool.id || '',
+                openInNewTab: tool.openInNewTab === true,
                 searchPatterns: searchPatterns,
               }),
             ),

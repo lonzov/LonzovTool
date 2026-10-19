@@ -65,6 +65,15 @@ export default defineConfig({
     vueDevTools(),
     stripContributorQQ(),
   ],
+  // 后端反代：前端在所有环境统一使用 /api、/uploads 相对路径，从而不必引入
+  // VITE_API_BASE 之类的环境分支，也不存在跨域与 Cookie 域问题。
+  // preview 的 host/port/proxy 默认继承 server，配这一处即可同时覆盖 pnpm dev 与 pnpm preview。
+  server: {
+    proxy: {
+      '/api': { target: 'http://127.0.0.1:8010', changeOrigin: true },
+      '/uploads': { target: 'http://127.0.0.1:8010', changeOrigin: true },
+    },
+  },
   ssgOptions: {
     dirStyle: 'nested',
   },

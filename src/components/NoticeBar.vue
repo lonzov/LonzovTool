@@ -2,7 +2,7 @@
 import { nextTick } from 'vue'
 import { NIcon, NTooltip } from 'naive-ui'
 import { MegaphoneLoud24Filled, ChevronDown20Filled, Open20Filled } from '@vicons/fluent'
-import noticesData from '../data/notices.json'
+import { noticesData } from '../composables/useSiteData.js'
 import { reduceMotion } from '../composables/useMotion.js'
 
 // 已读标记：存"已读到的最新公告 id"，出现更大 id 的新公告时红点重新点亮
@@ -21,7 +21,7 @@ export default {
   },
   data() {
     return {
-      notices: [...noticesData].sort((a, b) => a.priority - b.priority),
+      notices: [...noticesData.value].sort((a, b) => a.priority - b.priority),
       currentIndex: 0,
       timer: null,
       isAnimating: false,
@@ -79,6 +79,12 @@ export default {
     })
     if (this.hasMore) this.reschedule()
 
+    // 接口刷新会整体替换快照 ref，而 data() 里那次拷贝不会跟着变，需要显式重算
+    this.$watch(
+      () => noticesData.value,
+      (list) => this.applyNotices(list),
+    )
+
     window.addEventListener('resize', this.onResize)
 
     // 视口可见性：离开视口暂停轮播，回到视口恢复
@@ -110,6 +116,14 @@ export default {
     if (this.onKeydown) document.removeEventListener('keydown', this.onKeydown)
   },
   methods: {
+    // ---------- 数据更新 ----------
+    applyNotices(list) {
+      if (!Array.isArray(list)) return
+      this.notices = [...list].sort((a, b) => a.priority - b.priority)
+      if (this.currentIndex >= this.notices.length) this.currentIndex = 0
+      this.reschedule()
+    },
+
     // ---------- 轮播调度 ----------
     clearSchedulers() {
       if (this.timer) clearInterval(this.timer)

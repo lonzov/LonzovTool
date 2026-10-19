@@ -1,5 +1,5 @@
 <script>
-import { computed, ref, provide, watch, nextTick, onBeforeUnmount, defineAsyncComponent } from 'vue'
+import { computed, ref, provide, watch, nextTick, onMounted, onBeforeUnmount, defineAsyncComponent } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
 import { getGlobalHead } from './main.js'
@@ -17,6 +17,7 @@ import { useFeedbackDrawer } from './composables/useFeedbackDrawer.js'
 import { useTheme } from './composables/useTheme'
 import { useMotion } from './composables/useMotion'
 import { useWorkspace, isExternalPath, getExternalUrl, getExternalToolMeta } from './composables/useWorkspace.js'
+import { startSiteDataSync } from './composables/useSiteData.js'
 import { useSWUpdate } from './composables/useSWUpdate'
 import { useOfficialDomainCheck } from './composables/useOfficialDomainCheck'
 import { useHonorGuard } from './composables/useHonorGuard'
@@ -405,6 +406,8 @@ export default {
 
     router.afterEach(handleRouteChange)
     onBeforeUnmount(cancelScrollToTop)
+    // 站点动态数据的运行时刷新。必须挂载后发起，不能在 setup 顶层（见 useSiteData 的说明）
+    onMounted(startSiteDataSync)
 
     const isHome = computed(() => router.currentRoute.value.path === '/')
     const isWorkspaceRoute = computed(() =>

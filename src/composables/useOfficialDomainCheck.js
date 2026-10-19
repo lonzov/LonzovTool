@@ -24,7 +24,9 @@ export function useOfficialDomainCheck() {
 
     const host = window.location.hostname
 
-    // 排除本地开发环境
+    // 排除本地开发地址：192.168.0.66 是固定的局域网开发地址，明文 http 下非安全上下文，
+    // Service Worker 不会注册，适合在无 SW 缓存干扰的情况下调试移动端；
+    // localhost 则保留给需要 SW 生效的场景。
     const isLocal = ['localhost', '127.0.0.1', '::1', '192.168.0.66'].includes(host)
     if (isLocal) return false
 

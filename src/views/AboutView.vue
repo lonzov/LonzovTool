@@ -7,6 +7,7 @@ import { useStats } from '../composables/useStats'
 import { useLocalStats } from '../composables/useLocalStats.js'
 import { useFeedbackDrawer } from '../composables/useFeedbackDrawer.js'
 import { reduceMotion } from '../composables/useMotion.js'
+import { contributorsData, loadContributors } from '../composables/useSiteData.js'
 import { usePageOutline } from '../composables/usePageOutline.js'
 
 const { stats, fetchStats } = useStats()
@@ -27,7 +28,7 @@ const ABOUT_SECTIONS = [
 ]
 usePageOutline(rootEl, () => ABOUT_SECTIONS, { id: 'about' })
 
-/* ===== 贡献者数据（异步 import，参考打赏记录） ===== */
+/* ===== 贡献者数据（快照按需加载，接口给出数据时以接口为准） ===== */
 const contributors = ref([])
 /* 跑马灯每份最少头像数，拆分两行后每行只有一半，需翻倍 */
 const MIN_PER_SET = 24
@@ -61,11 +62,15 @@ onMounted(() => {
 
 onMounted(async () => {
   try {
-    const data = await import('../data/contributors.json')
-    contributors.value = data.default || data
+    contributors.value = await loadContributors()
   } catch {
     contributors.value = []
   }
+})
+
+// 接口刷新晚于首次加载时，上面那次已经拿到旧数据，需要跟着换
+watch(contributorsData, (list) => {
+  if (list) contributors.value = list
 })
 
 /* 头像加载失败：用 name 首字兜底 */

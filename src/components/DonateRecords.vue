@@ -1,20 +1,27 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
+import { donateRecordsData, loadDonateRecords } from '../composables/useSiteData.js'
 
 const records = ref(null)
 const loading = ref(true)
 
+function apply(list) {
+  records.value = [...(list || [])].sort((a, b) => new Date(b.time) - new Date(a.time))
+}
+
 onMounted(async () => {
   try {
-    const data = await import('../data/donateRecords.json')
-    const arr = data.default || data
-    arr.sort((a, b) => new Date(b.time) - new Date(a.time))
-    records.value = arr
+    apply(await loadDonateRecords())
   } catch {
-    records.value = []
+    apply([])
   } finally {
     loading.value = false
   }
+})
+
+// 接口刷新晚于首次加载时，上面那次已经拿到旧数据，需要跟着换
+watch(donateRecordsData, (list) => {
+  if (list) apply(list)
 })
 </script>
 

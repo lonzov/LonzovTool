@@ -213,7 +213,8 @@
           "title": "MCNav",
           "description": "MC综合导航站",
           "logo": "/logos/www_mcnav_net.webp",
-          "link": "https://www.mcnav.net/"
+          "link": "https://www.mcnav.net/",
+          "openInNewTab": true
         },
         {
           "id": "bluesky-studio",
@@ -234,7 +235,8 @@
           "title": "中文MC wiki",
           "description": "在这里可以找到和mc有关的大部分信息",
           "logo": "/logos/zh_minecraft_wiki.webp",
-          "link": "https://zh.minecraft.wiki/"
+          "link": "https://zh.minecraft.wiki/",
+          "openInNewTab": true
         },
         {
           "id": "bwiki",
@@ -248,7 +250,8 @@
           "title": "基岩版官方创作者文档",
           "description": "微软官方基岩版创作者文档",
           "logo": "/logos/learn_microsoft_com.webp",
-          "link": "https://learn.microsoft.com/zh-cn/minecraft/creator/"
+          "link": "https://learn.microsoft.com/zh-cn/minecraft/creator/",
+          "openInNewTab": true
         },
         {
           "id": "bedrock-wiki",
@@ -311,7 +314,8 @@
           "title": "MineBBS",
           "description": "简洁好用的交流讨论和资源分享平台",
           "logo": "/logos/www_minebbs_com.webp",
-          "link": "https://www.minebbs.com/"
+          "link": "https://www.minebbs.com/",
+          "openInNewTab": true
         }
       ]
     },
@@ -435,7 +439,8 @@
           "title": "红河资源站",
           "description": "针对Minecraft视频创作的资源站",
           "logo": "/logos/1honghemc_cn.webp",
-          "link": "https://honghemc.cn/"
+          "link": "https://honghemc.cn/",
+          "openInNewTab": true
         },
         {
           "id": "mcsounds",
@@ -483,7 +488,8 @@
           "title": "雨云",
           "description": "本站云计算支持，提供一键部署MC服等云服务",
           "logo": "/logos/rainyun.webp",
-          "link": "https://www.rainyun.com/lonzov_?s=tool_card"
+          "link": "https://www.rainyun.com/lonzov_?s=tool_card",
+          "openInNewTab": true
         },
         {
           "id": "aura-music",
