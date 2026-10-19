@@ -1,4 +1,4 @@
-import { Apps24Regular, DataPie24Regular, MegaphoneLoud24Regular, Send24Regular } from '@vicons/fluent'
+import { Apps24Regular, DataPie24Regular, MegaphoneLoud24Regular, Send24Regular, Speaker224Regular } from '@vicons/fluent'
 
 /**
  * 控制台目录，同时是侧边栏分类栏与控制台页面标题的唯一来源。
@@ -25,6 +25,13 @@ export const CONSOLE_NAV = [
     icon: MegaphoneLoud24Regular,
     title: '公告管理',
     description: '首页公告栏的条目，按优先级升序轮播，改动即时推送到站上',
+  },
+  {
+    key: '/console/promo',
+    label: '推广位',
+    icon: Speaker224Regular,
+    title: '推广位',
+    description: '首页四个推广位；到期自动下架，改一个未来的到期时间即可恢复',
   },
   {
     key: '/console/submissions',

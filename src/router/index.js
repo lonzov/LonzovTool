@@ -159,6 +159,7 @@ const ConsoleLayout = () => import('../console/ConsoleLayout.vue')
 const ConsoleOverview = () => import('../console/pages/ConsoleOverview.vue')
 const ConsoleCards = () => import('../console/pages/ConsoleCards.vue')
 const ConsoleNotices = () => import('../console/pages/ConsoleNotices.vue')
+const ConsolePromo = () => import('../console/pages/ConsolePromo.vue')
 const ConsoleSubmissions = () => import('../console/pages/ConsoleSubmissions.vue')
 const ConsoleLogin = () => import('../console/pages/ConsoleLogin.vue')
 const DevOptionsView = () => import('../views/DevOptionsView.vue')
@@ -347,6 +348,14 @@ export const routes = [
         component: ConsoleNotices,
         meta: {
           title: '公告管理 - 控制台 - 小舟工具箱',
+        },
+      },
+      {
+        path: 'promo',
+        name: 'console-promo',
+        component: ConsolePromo,
+        meta: {
+          title: '推广位 - 控制台 - 小舟工具箱',
         },
       },
       {

@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import toolsSnapshot from '../data/tools.json'
 import parentMenusSnapshot from '../data/parentMenus.json'
 import noticesSnapshot from '../data/notices.json'
+import promoSnapshot from '../data/homePromo.json'
 
 /**
  * 站点动态数据的唯一入口。
@@ -16,6 +17,8 @@ import noticesSnapshot from '../data/notices.json'
 export const cardsData = ref(toolsSnapshot)
 export const parentMenusData = ref(parentMenusSnapshot)
 export const noticesData = ref(noticesSnapshot)
+// 推广位：四档结构 { first, paid[], free, notice }；过期与隐藏由接口过滤，前端不再自己判断时间
+export const promoData = ref(promoSnapshot)
 
 // 打赏记录与共建者只在个别页面用到，快照仍按需加载：初值为 null，首次访问才动态 import。
 // 接口一旦给出对应键就以接口数据为准，不再碰快照，因此加载前先看 ref。
@@ -123,6 +126,7 @@ const RESOURCES = {
   notices: { url: '/api/v1/notices', apply: (data) => (noticesData.value = data) },
   donations: { url: '/api/v1/donations', apply: (data) => (donateRecordsData.value = data) },
   contributors: { url: '/api/v1/contributors', apply: (data) => (contributorsData.value = data) },
+  promo: { url: '/api/v1/promo', apply: (data) => (promoData.value = data) },
 }
 
 let syncedVersions = null

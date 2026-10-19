@@ -13,34 +13,51 @@ export const LOGO_HEIGHT = 128
 export const LOGO_MAX_WIDTH = 256
 export const LOGO_QUALITY = 0.82
 
+/* 推广图是 1200×400 的横幅，与后端 SUBMISSION_PROMO_* 对齐；
+   只按宽度封顶、高度等比，避免把 3:1 的图压变形。 */
+export const PROMO_MAX_WIDTH = 1200
+export const PROMO_MAX_HEIGHT = 600
+export const PROMO_QUALITY = 0.82
+
 /**
- * 前端侧的图标预检：只为省一次失败往返，判据仍在服务端。
+ * 前端侧的图片预检：只为省一次失败往返，判据仍在服务端。
  * 服务端会用图片解码核对真实格式，这里不做内容嗅探。
  * @returns {string} 错误文案，空串表示通过
  */
-export function checkIconFile(file) {
+export function checkImageFile(file, label = '图标') {
   if (!file) return ''
 
   const extension = (file.name.split('.').pop() || '').toLowerCase()
   if (!ALLOWED_EXTENSIONS.includes(extension)) {
-    return `图标仅支持 ${ALLOWED_EXTENSIONS.map((item) => item.toUpperCase()).join('、')} 格式；SVG 请改用图床链接`
+    return `${label}仅支持 ${ALLOWED_EXTENSIONS.map((item) => item.toUpperCase()).join('、')} 格式；SVG 请改用图床链接`
   }
   if (file.size > MAX_SOURCE_BYTES) {
-    return '图标文件过大（超过 10 MB），请换一张'
+    return `${label}文件过大（超过 10 MB），请换一张`
   }
   return ''
 }
 
+/** 兼容旧调用点：图标预检 */
+export function checkIconFile(file) {
+  return checkImageFile(file, '图标')
+}
+
 /**
- * 在浏览器里把图标压成规范 WebP。
+ * 在浏览器里把图片压成规范 WebP。
  * 任何一步失败都退回原文件——压缩只是优化，不能让用户因此传不上去。
+ * @param {File} file 原图
+ * @param {{maxWidth: number, maxHeight: number, quality: number}} bounds 尺寸与质量上限
  */
-export async function compressIcon(file) {
+export async function compressImage(file, bounds) {
   if (!file || typeof createImageBitmap !== 'function') return file
 
   try {
     const bitmap = await createImageBitmap(file)
-    const scale = Math.min(1, LOGO_HEIGHT / bitmap.height, LOGO_MAX_WIDTH / bitmap.width)
+    const scale = Math.min(
+      1,
+      bounds.maxHeight / bitmap.height,
+      bounds.maxWidth / bitmap.width,
+    )
     const width = Math.max(1, Math.round(bitmap.width * scale))
     const height = Math.max(1, Math.round(bitmap.height * scale))
 
@@ -52,7 +69,7 @@ export async function compressIcon(file) {
     context.drawImage(bitmap, 0, 0, width, height)
     bitmap.close?.()
 
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', LOGO_QUALITY))
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', bounds.quality))
     if (!blob) return file
 
     const baseName = file.name.replace(/\.[^.]+$/, '')
@@ -62,22 +79,44 @@ export async function compressIcon(file) {
   }
 }
 
+/** 图标压缩：高 ≤128、宽 ≤256 */
+export async function compressIcon(file) {
+  return compressImage(file, {
+    maxWidth: LOGO_MAX_WIDTH,
+    maxHeight: LOGO_HEIGHT,
+    quality: LOGO_QUALITY,
+  })
+}
+
+const LOGO_BOUNDS = { maxWidth: LOGO_MAX_WIDTH, maxHeight: LOGO_HEIGHT, quality: LOGO_QUALITY }
+const PROMO_BOUNDS = { maxWidth: PROMO_MAX_WIDTH, maxHeight: PROMO_MAX_HEIGHT, quality: PROMO_QUALITY }
+
 /**
- * 一次拿到"可上传的图标"或一句可读的错误。
+ * 一次拿到"可上传的图片"或一句可读的错误。
  * 先压再判体积：压完还超 1 MB 说明本机压缩没生效（老浏览器），此时才拦。
  */
-export async function prepareIcon(file) {
-  const formatError = checkIconFile(file)
+export async function prepareImage(file, bounds, label = '图片') {
+  const formatError = checkImageFile(file, label)
   if (formatError) return { file: null, error: formatError }
 
-  const prepared = await compressIcon(file)
+  const prepared = await compressImage(file, bounds)
   if (prepared.size > MAX_BYTES) {
     return {
       file: null,
-      error: '浏览器无法在本机压缩这张图片，请上传 1 MB 以内的图标，或改用图床链接',
+      error: `浏览器无法在本机压缩这张图片，请上传 1 MB 以内的${label}，或改用图床链接`,
     }
   }
   return { file: prepared, error: '' }
+}
+
+/** 图标：256×128 内的 WebP */
+export async function prepareIcon(file) {
+  return prepareImage(file, LOGO_BOUNDS, '图标')
+}
+
+/** 推广图：宽 ≤1200 的横幅 WebP */
+export async function preparePromoImage(file) {
+  return prepareImage(file, PROMO_BOUNDS, '推广图')
 }
 
 export { ALLOWED_EXTENSIONS }

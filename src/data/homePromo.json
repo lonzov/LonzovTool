@@ -1,0 +1,23 @@
+{
+  "first": null,
+  "paid": [
+    {
+      "id": 1,
+      "image": "/uploads/promo/paid-195ab0ec.webp",
+      "link": "https://sam.moe5200.com/",
+      "eventId": "sampixel"
+    }
+  ],
+  "free": {
+    "id": 2,
+    "image": "/uploads/promo/free-9133d902.webp",
+    "link": "https://jzfk.indevs.in/",
+    "eventId": "jzfk"
+  },
+  "notice": {
+    "id": 3,
+    "image": "/uploads/promo/notice-5bd74b60.webp",
+    "link": "/docs/promotion",
+    "eventId": "notice"
+  }
+}

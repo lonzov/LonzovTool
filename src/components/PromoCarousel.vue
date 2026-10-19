@@ -1,29 +1,15 @@
 <script>
 import { NCarousel, NCarouselItem } from 'naive-ui'
+import { promoData } from '../composables/useSiteData.js'
 
-// 滑片数据来自 src/data/homePromo.js（独立模块，构建后为独立 chunk，动态导入），
+// 滑片数据来自 promoData（构建期快照初始化，运行时由接口按版本戳整体替换），
 // 按首屏位 / 付费位 / 免费位 / 公告位四档拼成轮播顺序，见下方 resolveSlides；
-// 图址已由该模块解析成可直接使用的 URL，组件只负责按 URL 渲染
-// 配置加载完成前用占位滑片顶位；只放一条，避免首屏闪现多条才有的指示点与切换按钮
+// image 已经是可直接使用的 URL（/uploads/promo/ 下的服务端图片或完整外链）
+// 配置为空时用占位滑片顶位；只放一条，避免首屏闪现多条才有的指示点与切换按钮
 const PLACEHOLDER_SLIDES = [{ id: 1, image: '' }]
 
 // 付费位先后顺序的跨访问记录（'1' 表示本次反转）
 const PAID_ORDER_KEY = 'ad_paid_order_reversed'
-
-// 缓存加载 Promise，避免重复请求该 chunk
-let homePromoSlidesPromise = null
-function loadHomePromoConfig() {
-  if (!homePromoSlidesPromise) {
-    homePromoSlidesPromise = import('../data/homePromo.js')
-      .then((mod) =>
-        mod.default && typeof mod.default === 'object' && !Array.isArray(mod.default)
-          ? mod.default
-          : null,
-      )
-      .catch(() => null)
-  }
-  return homePromoSlidesPromise
-}
 
 // 读取上次的付费位顺序。存储不可用（无痕模式等）时按首次处理
 function readPaidReversed() {
@@ -51,17 +37,17 @@ function isConfigured(item) {
  * 分档配置 → 本次轮播顺序：首屏位 → 付费位 → 免费位 → 公告位（固定压尾）
  * 没配的档位/条目忽略，后面的顺位顶上；付费位价格相同，配满 2 个时来回换先后
  * （本次 2,3 则下次 3,2），换完把记录翻转给下次；只配 1 个时不交替、也不翻转记录
- * @param {object} config homePromo.js 的四档配置
+ * @param {object} config 四档推广位数据
  * @returns {Array|null} 轮播滑片数组，配置非法时返回 null
  */
-function resolveSlides(config) {
+function resolveSlides(config, { alternate = true } = {}) {
   if (!config || typeof config !== 'object' || Array.isArray(config)) return null
 
   const list = []
   if (isConfigured(config.first)) list.push(config.first)
 
   const paid = (Array.isArray(config.paid) ? config.paid : []).filter(isConfigured)
-  if (paid.length > 1) {
+  if (alternate && paid.length > 1) {
     const reversed = readPaidReversed()
     if (reversed) paid.reverse()
     writePaidReversed(!reversed)
@@ -85,10 +71,12 @@ export default {
   },
   data() {
     return {
-      // 异步加载的分档配置拼成的滑片数组，加载完成前为空
+      // 由四档配置拼成的滑片数组
       loadedSlides: [],
       // 加载失败的滑片，键为滑片位置（不用配置里的 id：id 手写，重复会误伤其他滑片）
       failedSlides: {},
+      // 是否已经按当前数据拼过一次：决定付费位还要不要做本次的先后交替
+      rebuiltOnce: false,
     }
   },
   computed: {
@@ -99,6 +87,19 @@ export default {
     canAutoplay() {
       return this.items.length > 1
     },
+  },
+  created() {
+    // 接口刷新会整体替换 promoData，轮播顺序要跟着重建；付费位交替只在首次拼装时决定，
+    // 否则每次刷新都会翻转一次，反而看不出交替效果
+    this.$watch(
+      () => promoData.value,
+      (value) => {
+        const list = resolveSlides(value, { alternate: !this.rebuiltOnce })
+        if (Array.isArray(list)) this.loadedSlides = list
+        this.rebuiltOnce = true
+      },
+      { immediate: true },
+    )
   },
   methods: {
     // 站内路由判定：以 "/" 开头（排除 "//" 协议相对地址）视为站内，走 SPA
@@ -140,12 +141,6 @@ export default {
     this.$nextTick(() => {
       const slidesEl = this.$el && this.$el.querySelector('[role="listbox"]')
       if (slidesEl) slidesEl.setAttribute('aria-label', '推广位轮播')
-    })
-
-    // 异步导入分档配置并拼成本次轮播顺序
-    loadHomePromoConfig().then((config) => {
-      const list = resolveSlides(config)
-      if (Array.isArray(list) && list.length) this.loadedSlides = list
     })
   },
 }
