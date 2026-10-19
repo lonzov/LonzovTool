@@ -4,6 +4,7 @@ import HomeView from '../components/HomeView.vue'
 import OfflineDiagnostic from '../components/OfflineDiagnostic.vue'
 import { getDiscreteMessage } from '../utils/discreteMessage'
 import { startLoading, finishLoading } from '../utils/loadingBar'
+import { useConsoleAuth } from '../console/consoleAuth.js'
 
 // 预加载所有下载配置，提取 slug → name 映射用于 SEO 动态标题
 const downloadModules = import.meta.glob('../data/downloads/*.json', { eager: true })
@@ -155,6 +156,7 @@ const ChangelogView = () => import('../views/ChangelogView.vue')
 const NotFoundView = () => import('../views/NotFoundView.vue')
 const ConsoleLayout = () => import('../console/ConsoleLayout.vue')
 const ConsoleOverview = () => import('../console/pages/ConsoleOverview.vue')
+const ConsoleLogin = () => import('../console/pages/ConsoleLogin.vue')
 
 // 已知的文档页面路径（具体静态路由，用于 SSG 预渲染）
 const KNOWN_DOCS = [
@@ -304,8 +306,17 @@ export const routes = [
       keywords: '小舟工具箱,设置,主题模式,偏好设置',
     },
   },
-  // 控制台：仅客户端使用，不参与预渲染（includedRoutes 在 main.js）也不进 sitemap
-  // （见 scripts/generate-seo.js 的 DISALLOW_PATHS）。子页面在此 children 下登记。
+  // 控制台：仅客户端使用，不参与预渲染（includedRoutes 在 vite.config.js）也不进 sitemap
+  // （见 scripts/generate-seo.js 的 DISALLOW_PATHS）。子页面在 ConsoleLayout 的 children 下登记。
+  // 登录页与控制台布局同级：未登录时不该注册控制台目录，登录后由守卫送回 /console。
+  {
+    path: '/console/login',
+    name: 'console-login',
+    component: ConsoleLogin,
+    meta: {
+      title: '控制台登录 - 小舟工具箱',
+    },
+  },
   {
     path: '/console',
     component: ConsoleLayout,
@@ -358,6 +369,26 @@ export default routes
  * ViteSSG 回调中调用此函数，客户端/SSR 共用
  */
 export function setupRouterGuards(router) {
+  // 控制台访问控制：没有本地账号痕迹时直接去登录页。
+  // 这里判断的只是本地痕迹（非凭证），伪造它也进不了数据 —— 控制台外壳挂载时会向
+  // GET /api/v1/console/me 确认会话，服务端不认就送回登录页。
+  router.beforeEach((to, from, next) => {
+    if (!to.path.startsWith('/console')) { next(); return }
+
+    const { isAuthenticated } = useConsoleAuth()
+    const isLoginRoute = to.path === '/console/login'
+
+    if (!isAuthenticated.value && !isLoginRoute) {
+      next({ path: '/console/login', query: { redirect: to.fullPath } })
+      return
+    }
+    if (isAuthenticated.value && isLoginRoute) {
+      next({ path: '/console' })
+      return
+    }
+    next()
+  })
+
   // 路由前置守卫：进度条 + 超时 / ping / 刷新 / 兜底（仅客户端）
   router.beforeEach((to, from, next) => {
     if (typeof window === 'undefined') { next(); return }
