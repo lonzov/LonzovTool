@@ -1,5 +1,5 @@
 <script>
-import { h, markRaw, computed, Transition } from 'vue'
+import { h, markRaw, toRaw, computed, Transition } from 'vue'
 import { useRouter } from 'vue-router'
 import { NMenu, NIcon, useMessage } from 'naive-ui'
 import { Home48Regular, Person24Regular, AddSquare24Regular, HeartCircle24Regular, PersonFeedback24Regular, CalendarWorkWeek24Regular, DrawerArrowDownload24Regular, Settings24Regular, MoreVertical24Regular, NumberSymbol24Filled } from '@vicons/fluent'
@@ -344,10 +344,11 @@ export default {
           key: item.key,
           label: this.renderSectionLabel(item),
         }
-        // 工作站标签页带卡片 logo，章节类（文档目录、设置分区等）统一用章节图标
+        // 工作站标签页带卡片 logo；章节类由页面给出图标（如设置页各板块），页面交出的图标
+        // 随响应式数据传递会被包成代理，需取回原始组件定义再渲染，没给图标的统一用章节图标
         const icon = item.logo
           ? makeLogoIcon(item.logo, 18)
-          : this.renderIcon(markRaw(NumberSymbol24Filled))
+          : this.renderIcon(markRaw(toRaw(item.icon || NumberSymbol24Filled)))
         if (icon) option.icon = icon
         return option
       })

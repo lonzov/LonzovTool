@@ -2,7 +2,11 @@
 import { ref, computed, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { NSelect, NSwitch, NIcon, useMessage } from 'naive-ui'
-import { ArrowDownload16Regular, ArrowExportUp24Filled, Settings24Regular, ChevronUp16Regular, ArrowCounterclockwise24Filled, Open16Filled } from '@vicons/fluent'
+import {
+  ArrowDownload16Regular, ArrowExportUp24Filled, Settings24Regular, ChevronUp16Regular,
+  ArrowCounterclockwise24Filled, Open16Filled, PaintBrush24Regular, CalendarWorkWeek24Regular,
+  Database24Regular, Save24Regular, DocumentText24Regular, ShieldCheckmark24Regular,
+} from '@vicons/fluent'
 import AppModal from '../components/ui/AppModal.vue'
 import { useTheme } from '../composables/useTheme'
 import { confirmDialog } from '../composables/useConfirm'
@@ -225,13 +229,23 @@ function toggleSection(key) {
 // 折叠过渡时长，与 .collapse-enter-active 的 transition 一致
 const COLLAPSE_DURATION = 320
 
+// 各板块图标：卡片标题直接引用，侧边栏分类栏经 SETTING_SECTIONS 的 icon 字段取用
+const SECTION_ICONS = {
+  personalization: PaintBrush24Regular,
+  workspace: CalendarWorkWeek24Regular,
+  cache: Database24Regular,
+  config: Save24Regular,
+  docs: DocumentText24Regular,
+  privacy: ShieldCheckmark24Regular,
+}
+
 const SETTING_SECTIONS = [
-  { key: 'setting-personalization', label: '个性化', collapseKey: 'personalization' },
-  { key: 'setting-workspace', label: '工作站', collapseKey: 'workspace' },
-  { key: 'setting-cache', label: '缓存管理', collapseKey: 'cache' },
-  { key: 'setting-config', label: '配置管理', collapseKey: 'config' },
-  { key: 'setting-docs', label: '文档', collapseKey: 'docs' },
-  { key: 'setting-privacy', label: '隐私偏好' },
+  { key: 'setting-personalization', label: '个性化', collapseKey: 'personalization', icon: SECTION_ICONS.personalization },
+  { key: 'setting-workspace', label: '工作站', collapseKey: 'workspace', icon: SECTION_ICONS.workspace },
+  { key: 'setting-cache', label: '缓存管理', collapseKey: 'cache', icon: SECTION_ICONS.cache },
+  { key: 'setting-config', label: '配置管理', collapseKey: 'config', icon: SECTION_ICONS.config },
+  { key: 'setting-docs', label: '文档', collapseKey: 'docs', icon: SECTION_ICONS.docs },
+  { key: 'setting-privacy', label: '隐私偏好', icon: SECTION_ICONS.privacy },
 ]
 
 const rootEl = ref(null)
@@ -247,7 +261,7 @@ async function expandBeforeScroll(key) {
   }
 }
 
-usePageOutline(rootEl, () => SETTING_SECTIONS.map(({ key, label }) => ({ key, label })), {
+usePageOutline(rootEl, () => SETTING_SECTIONS.map(({ key, label, icon }) => ({ key, label, icon })), {
   id: 'settings',
   beforeScroll: expandBeforeScroll,
 })
@@ -716,7 +730,10 @@ const embedCloseActions = [
           :class="{ 'card-header--collapsed': collapsedSections.personalization }"
           @click="toggleSection('personalization')"
         >
-          <span>个性化</span>
+          <span class="section-title">
+            <NIcon :component="SECTION_ICONS.personalization" size="18" class="section-icon" />
+            个性化
+          </span>
           <NIcon
             :component="ChevronUp16Regular"
             size="16"
@@ -796,7 +813,10 @@ const embedCloseActions = [
           :class="{ 'card-header--collapsed': collapsedSections.workspace }"
           @click="toggleSection('workspace')"
         >
-          <span>工作站</span>
+          <span class="section-title">
+            <NIcon :component="SECTION_ICONS.workspace" size="18" class="section-icon" />
+            工作站
+          </span>
           <NIcon
             :component="ChevronUp16Regular"
             size="16"
@@ -866,7 +886,10 @@ const embedCloseActions = [
           :class="{ 'card-header--collapsed': collapsedSections.cache }"
           @click="toggleSection('cache')"
         >
-          <span>缓存管理</span>
+          <span class="section-title">
+            <NIcon :component="SECTION_ICONS.cache" size="18" class="section-icon" />
+            缓存管理
+          </span>
           <NIcon
             :component="ChevronUp16Regular"
             size="16"
@@ -926,7 +949,10 @@ const embedCloseActions = [
           :class="{ 'card-header--collapsed': collapsedSections.config }"
           @click="toggleSection('config')"
         >
-          <span>配置管理</span>
+          <span class="section-title">
+            <NIcon :component="SECTION_ICONS.config" size="18" class="section-icon" />
+            配置管理
+          </span>
           <NIcon
             :component="ChevronUp16Regular"
             size="16"
@@ -968,7 +994,10 @@ const embedCloseActions = [
           :class="{ 'card-header--collapsed': collapsedSections.docs }"
           @click="toggleSection('docs')"
         >
-          <span>文档</span>
+          <span class="section-title">
+            <NIcon :component="SECTION_ICONS.docs" size="18" class="section-icon" />
+            文档
+          </span>
           <NIcon
             :component="ChevronUp16Regular"
             size="16"
@@ -999,7 +1028,10 @@ const embedCloseActions = [
 
       <!-- 隐私偏好 -->
       <div class="settings-bar" id="setting-privacy" @click="openPrivacyModal">
-        <span>隐私偏好</span>
+        <span class="section-title">
+          <NIcon :component="SECTION_ICONS.privacy" size="18" class="section-icon" />
+          隐私偏好
+        </span>
         <NIcon :component="ChevronUp16Regular" size="16" class="settings-bar-arrow" />
       </div>
     </div>
@@ -1242,6 +1274,20 @@ const embedCloseActions = [
 
 .chevron-icon--rotated {
   transform: rotate(180deg);
+}
+
+/* ========== 板块标题图标 ========== */
+.section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.section-icon {
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+  transition: color 0.4s ease;
 }
 
 /* ========== 卡片内容区 ========== */
