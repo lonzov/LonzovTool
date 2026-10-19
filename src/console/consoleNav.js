@@ -1,4 +1,4 @@
-import { Apps24Regular, DataPie24Regular, Send24Regular } from '@vicons/fluent'
+import { Apps24Regular, DataPie24Regular, MegaphoneLoud24Regular, Send24Regular } from '@vicons/fluent'
 
 /**
  * 控制台目录，同时是侧边栏分类栏与控制台页面标题的唯一来源。
@@ -18,6 +18,13 @@ export const CONSOLE_NAV = [
     icon: Apps24Regular,
     title: '卡片管理',
     description: '站点卡片的增删改与隐藏，隐藏后公开接口不再返回',
+  },
+  {
+    key: '/console/notices',
+    label: '公告管理',
+    icon: MegaphoneLoud24Regular,
+    title: '公告管理',
+    description: '首页公告栏的条目，按优先级升序轮播，改动即时推送到站上',
   },
   {
     key: '/console/submissions',

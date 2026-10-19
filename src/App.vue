@@ -3,7 +3,7 @@ import { computed, ref, provide, watch, nextTick, onMounted, onBeforeUnmount, de
 import { useRouter, useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
 import { getGlobalHead } from './main.js'
-import { NMessageProvider, NIcon, NTooltip, darkTheme, lightTheme } from 'naive-ui'
+import { NMessageProvider, NIcon, NTooltip, darkTheme, lightTheme, zhCN, dateZhCN } from 'naive-ui'
 import { lightThemeOverrides, darkThemeOverrides } from './theme'
 import { ShareAndroid20Regular, Open16Filled } from '@vicons/fluent'
 import AppMenu from './components/AppMenu.vue'
@@ -431,6 +431,9 @@ export default {
       darkThemeOverrides,
       darkTheme,
       lightTheme,
+      /* 日期面板的月份 / 星期 / 按钮文案取自这里，缺了就是英文 */
+      zhCN,
+      dateZhCN,
       activeKey,
       showShareModal,
       mobileMenuOpen,
@@ -482,6 +485,8 @@ export default {
   <NConfigProvider
     :theme="isDark ? darkTheme : lightTheme"
     :theme-overrides="isDark ? darkThemeOverrides : lightThemeOverrides"
+    :locale="zhCN"
+    :date-locale="dateZhCN"
   >
     <NMessageProvider>
     <!-- 桌面端 -->

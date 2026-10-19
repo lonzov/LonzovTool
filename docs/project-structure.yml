@@ -100,7 +100,9 @@ src:
     components/ConsolePageHeader.vue: 控制台页面标题区（图标 + 标题 + 说明 + 右侧附加区）
     components/ConsolePanel.vue: 控制台面板卡外壳（图标 + 标题 + 说明 + 内容区）
     components/StatCard.vue: 控制台指标卡（图标 + 标签 + 数值 + 说明）
+    pages/ConsoleCards.vue: 卡片管理页，列表与模拟布局两种视图、增删改与显隐，编辑器内支持图标上传
     pages/ConsoleLogin.vue: 控制台登录页，仅管理员可登录
+    pages/ConsoleNotices.vue: 公告管理页，列表、增删改，时间用日期选择器录入
     pages/ConsoleOverview.vue: 控制台概览页，待办事项、站点指标、访问统计、提交预览、Uptime 与管理日志，前两类仍为占位数据
     pages/ConsoleSubmissions.vue: 网址提交审核页，待审队列与通过/拒绝，支持 ?id= 定位并高亮指定提交
   composables:

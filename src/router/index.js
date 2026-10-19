@@ -158,6 +158,7 @@ const NotFoundView = () => import('../views/NotFoundView.vue')
 const ConsoleLayout = () => import('../console/ConsoleLayout.vue')
 const ConsoleOverview = () => import('../console/pages/ConsoleOverview.vue')
 const ConsoleCards = () => import('../console/pages/ConsoleCards.vue')
+const ConsoleNotices = () => import('../console/pages/ConsoleNotices.vue')
 const ConsoleSubmissions = () => import('../console/pages/ConsoleSubmissions.vue')
 const ConsoleLogin = () => import('../console/pages/ConsoleLogin.vue')
 
@@ -337,6 +338,14 @@ export const routes = [
         component: ConsoleCards,
         meta: {
           title: '卡片管理 - 控制台 - 小舟工具箱',
+        },
+      },
+      {
+        path: 'notices',
+        name: 'console-notices',
+        component: ConsoleNotices,
+        meta: {
+          title: '公告管理 - 控制台 - 小舟工具箱',
         },
       },
       {

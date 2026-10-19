@@ -353,6 +353,44 @@ const baseOverrides = {
     borderRadius: 'var(--radius-md)',
   },
 
+  /* 日期面板的选中态：默认取 primaryColor 作底色、popoverColor 作文字色，
+     而本项目的 primary 是灰阶强调色，落在日历上就是灰底白字，与其它组件
+     "叠层底 + 前景色文字" 的选中态不一致。触发器是内嵌的 NInput，
+     它取的是 DatePicker 自己的 peers.Input，不继承全局 Input 那一份。 */
+  DatePicker: {
+    itemColorActive: 'var(--accent)',
+    itemColorIncluded: 'var(--accent)',
+    itemTextColorActive: 'var(--foreground)',
+    itemTextColorCurrent: 'var(--foreground)',
+    itemBorderRadius: 'var(--radius-sm)',
+    panelBorderRadius: 'var(--radius-md)',
+    panelBoxShadow: 'var(--shadow-popover)',
+    panelHeaderDividerColor: 'var(--border)',
+    calendarDaysDividerColor: 'var(--border)',
+    calendarDividerColor: 'var(--border)',
+    panelActionDividerColor: 'var(--border)',
+    scrollItemBorderRadius: 'var(--radius-sm)',
+    iconColor: 'var(--subtle-foreground)',
+    iconColorDisabled: 'var(--disabled-foreground)',
+    peers: {
+      Input: {
+        color: 'var(--input-background)',
+        colorFocus: 'var(--input-background)',
+        textColor: 'var(--foreground)',
+        placeholderColor: 'var(--subtle-foreground)',
+        caretColor: 'var(--foreground)',
+        border: '1px solid var(--input)',
+        borderHover: '1px solid var(--muted-foreground)',
+        borderFocus: '1px solid var(--foreground)',
+        boxShadowFocus: '0 0 0 2px var(--ring)',
+        iconColor: 'var(--subtle-foreground)',
+        iconColorHover: 'var(--muted-foreground)',
+        clearColor: 'var(--subtle-foreground)',
+        borderRadius: 'var(--radius-sm)',
+      },
+    },
+  },
+
   /* 全站统一反色气泡。
      Tooltip 自己没有样式表，气泡整个交给 NPopover 渲染，并把自己的 self 当
      builtinThemeOverrides 传下去 —— 而 builtin 在同名合并里优先级最低，会被全局的
