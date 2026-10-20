@@ -121,12 +121,43 @@ const VERSIONS_URL = '/api/v1/versions'
 const VERSION_POLL_MS = 10 * 60 * 1000
 // 资源键 → 接口路径 + 落地方式（形状见后端仓库 docs/api.md 的「站点数据（按资源拆分）」）
 const RESOURCES = {
-  cards: { url: '/api/v1/cards', apply: (data) => (cardsData.value = data) },
+  cards: { url: '/api/v1/cards', apply: applyCards },
   menus: { url: '/api/v1/parent-menus', apply: (data) => (parentMenusData.value = data) },
   notices: { url: '/api/v1/notices', apply: (data) => (noticesData.value = data) },
   donations: { url: '/api/v1/donations', apply: (data) => (donateRecordsData.value = data) },
   contributors: { url: '/api/v1/contributors', apply: (data) => (contributorsData.value = data) },
   promo: { url: '/api/v1/promo', apply: (data) => (promoData.value = data) },
+}
+
+/**
+ * 卡片列表为空时一律不采信。
+ *
+ * 一个导航站没有任何卡片不是一种正常状态：只可能是库没导数据、迁移漏拷或接口发错了版本。
+ * 运行时同步是整体替换，照单全收会让首页在访客眼里直接变成空站——比继续用旧快照糟糕得多。
+ * 公告、推广为空是正常状态，不做这种保护。
+ * @param {object} data 接口返回的卡片载荷
+ * @returns {boolean} true 表示这份载荷不可信
+ */
+export function isCardsPayloadEmpty(data) {
+  const categories = Array.isArray(data?.categories) ? data.categories : []
+  if (!categories.length) return true
+  // 分类还在、卡片全没了同样是空站，按同一类故障处理
+  return categories.every(
+    (category) => !Array.isArray(category?.tools) || category.tools.length === 0,
+  )
+}
+
+let warnedEmptyCards = false
+
+function applyCards(data) {
+  if (isCardsPayloadEmpty(data)) {
+    if (!warnedEmptyCards) {
+      warnedEmptyCards = true
+      console.warn('[siteData] 卡片接口返回空数据，已忽略并继续使用构建期快照')
+    }
+    return
+  }
+  cardsData.value = data
 }
 
 let syncedVersions = null
