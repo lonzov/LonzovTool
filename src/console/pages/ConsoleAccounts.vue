@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   NCheckbox,
@@ -22,6 +22,7 @@ import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { consoleFetch } from '../consoleRequest.js'
 import { useConsoleAuth } from '../consoleAuth.js'
+import { createPasswordGuard } from '../usePasswordGuard.js'
 
 const ACCOUNTS_URL = '/api/v1/console/accounts'
 const CATALOG_URL = '/api/v1/console/accounts/roles'
@@ -49,6 +50,21 @@ const form = ref({
 const editorSaving = ref(false)
 
 const reset = ref({ show: false, id: 0, email: '', password: '', error: '', saving: false })
+
+// 密码强度预检：本地即时判据 + 服务端权威判据（同一套校验器），提交前就能看到结论
+const createGuard = createPasswordGuard()
+const createPasswordCheck = createGuard.state
+const resetGuard = createPasswordGuard()
+const resetPasswordCheck = resetGuard.state
+
+watch(
+  () => form.value.password,
+  (value) => createGuard.evaluate(value, form.value.email),
+)
+watch(
+  () => reset.value.password,
+  (value) => resetGuard.evaluate(value, reset.value.email),
+)
 
 const STATUS_TONES = {
   disabled: { text: '已停用', tone: 'destructive' },
@@ -203,6 +219,10 @@ async function save() {
     editor.value.error = '邮箱与初始密码都是必填项'
     return
   }
+  if (editor.value.mode === 'create' && createPasswordCheck.value.blocked) {
+    editor.value.error = createPasswordCheck.value.message
+    return
+  }
   // 默认拒绝：没有任何角色与权限点的账号能登录成功，但进去后什么也看不到
   if (!roles.length && !grants.length) {
     editor.value.error = '至少分配一个角色或权限点，否则该账号无法进入控制台'
@@ -248,6 +268,10 @@ function openReset(item) {
 async function submitReset() {
   if (!reset.value.password) {
     reset.value.error = '请填写新的临时密码'
+    return
+  }
+  if (resetPasswordCheck.value.blocked) {
+    reset.value.error = resetPasswordCheck.value.message
     return
   }
   reset.value.saving = true
@@ -390,7 +414,13 @@ async function submitReset() {
           <NInput v-model:value="form.displayName" maxlength="64" placeholder="留空则显示邮箱" />
         </NFormItem>
 
-        <NFormItem v-if="editor.mode === 'create'" label="初始密码" required>
+        <NFormItem
+          v-if="editor.mode === 'create'"
+          label="初始密码"
+          required
+          :validation-status="createPasswordCheck.status || undefined"
+          :feedback="createPasswordCheck.message || undefined"
+        >
           <NInput
             v-model:value="form.password"
             type="password"
@@ -463,7 +493,11 @@ async function submitReset() {
           为 <span class="mono">{{ reset.email }}</span> 设置一次性密码：该账号已登录的设备全部退出，
           本人下次登录后必须先修改密码。
         </p>
-        <NFormItem label="新的临时密码">
+        <NFormItem
+          label="新的临时密码"
+          :validation-status="resetPasswordCheck.status || undefined"
+          :feedback="resetPasswordCheck.message || undefined"
+        >
           <NInput
             v-model:value="reset.password"
             type="password"
