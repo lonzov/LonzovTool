@@ -9,10 +9,11 @@ import {
   PersonCircle24Regular,
   SignOut24Regular,
 } from '@vicons/fluent'
-import ConsolePanel from '../components/ConsolePanel.vue'
+import AppModal from '../../components/ui/AppModal.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useConsoleAuth } from '../consoleAuth.js'
+import { describeDevice } from '../deviceLabel.js'
 
 const SESSIONS_URL = '/api/v1/console/sessions'
 const PASSWORD_URL = '/api/v1/console/password'
@@ -22,6 +23,7 @@ const router = useRouter()
 const message = useMessage()
 const { account, mustChangePassword, verify } = useConsoleAuth()
 
+const passwordModal = ref(false)
 const passwordForm = ref({ current: '', next: '' })
 const passwordError = ref('')
 const passwordSaving = ref(false)
@@ -30,8 +32,12 @@ const sessions = ref([])
 const sessionsLoading = ref(false)
 const sessionsError = ref('')
 const revokingId = ref(0)
+const revokingOthers = ref(false)
 
 const roles = computed(() => account.value?.roles || [])
+const devices = computed(() =>
+  sessions.value.map((session) => ({ ...session, device: describeDevice(session.user_agent) })),
+)
 
 function formatTime(timestamp) {
   if (!timestamp) return '—'
@@ -49,6 +55,12 @@ function gotUnauthorized(e) {
   if (e?.code !== 'unauthorized') return false
   router.replace({ path: '/console/login', query: { redirect: route.fullPath } })
   return true
+}
+
+function openPasswordModal() {
+  passwordForm.value = { current: '', next: '' }
+  passwordError.value = ''
+  passwordModal.value = true
 }
 
 async function loadSessions() {
@@ -84,6 +96,7 @@ async function changePassword() {
       }),
     })
     passwordForm.value = { current: '', next: '' }
+    passwordModal.value = false
     message.success('密码已修改，其他设备上的会话已退出')
     // 临时密码标记由服务端清除，这里顺带把 /me 的状态（含权限与账号信息）拉回最新
     try {
@@ -106,7 +119,7 @@ async function revoke(session) {
 
   const confirmed = await confirmDialog({
     title: '撤销会话',
-    message: `撤销后该设备需要重新登录。\n${session.user_agent || '未知设备'} · ${session.last_ip || session.created_ip || '未知地址'}`,
+    message: `撤销后该设备需要重新登录。\n${session.device.label} · ${session.last_ip || session.created_ip || '未知地址'}`,
     confirmText: '撤销',
     danger: true,
   })
@@ -124,142 +137,214 @@ async function revoke(session) {
     revokingId.value = 0
   }
 }
+
+async function revokeOthers() {
+  const others = sessions.value.filter((session) => !session.current)
+  if (!others.length) return
+
+  const confirmed = await confirmDialog({
+    title: '下线其他设备',
+    message: `将撤销 ${others.length} 个其他设备的会话，只保留当前这一台。`,
+    confirmText: '全部下线',
+    danger: true,
+  })
+  if (!confirmed) return
+
+  revokingOthers.value = true
+  try {
+    const result = await consoleFetch(`${SESSIONS_URL}/revoke-others`, { method: 'POST' })
+    message.success(`已下线 ${result?.revoked ?? 0} 个设备`)
+    await loadSessions()
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    message.error(e?.message || '下线失败，请稍后重试')
+  } finally {
+    revokingOthers.value = false
+  }
+}
 </script>
 
 <template>
-  <div class="console-account">
-    <div class="account-columns">
-      <ConsolePanel
-        :icon="PersonCircle24Regular"
-        title="账号信息"
-        description="登录身份与当前挂载的角色"
-      >
-        <ul class="info-list">
-          <li class="info-row">
-            <span class="info-label">邮箱</span>
-            <span class="info-value">{{ account?.email || account?.name || '—' }}</span>
-          </li>
-          <li class="info-row">
-            <span class="info-label">角色</span>
-            <span class="info-value info-tags">
-              <span v-for="role in roles" :key="role" class="role-tag">{{ role }}</span>
-              <span v-if="!roles.length" class="info-muted">无角色，权限来自单点授权</span>
-            </span>
-          </li>
-          <li class="info-row">
-            <span class="info-label">密码</span>
-            <span class="info-value">
-              <span v-if="mustChangePassword" class="status-pill status-pill--warning">
-                临时密码，待修改
-              </span>
-              <span v-else class="info-muted">已设置</span>
-            </span>
-          </li>
-        </ul>
-      </ConsolePanel>
-
-      <ConsolePanel
-        :icon="Key24Regular"
-        title="修改密码"
-        description="改完会作废其他设备上的会话，当前设备保持登录"
-      >
-        <NForm label-placement="top">
-          <div class="password-grid">
-            <NFormItem label="当前密码">
-              <NInput
-                v-model:value="passwordForm.current"
-                type="password"
-                show-password-on="click"
-                maxlength="1024"
-                autocomplete="current-password"
-                placeholder="请输入当前使用的密码"
-              />
-            </NFormItem>
-            <NFormItem label="新密码">
-              <NInput
-                v-model:value="passwordForm.next"
-                type="password"
-                show-password-on="click"
-                maxlength="1024"
-                autocomplete="new-password"
-                placeholder="不能与当前密码相同"
-              />
-            </NFormItem>
-          </div>
-          <p class="form-note">新密码的强度由服务端校验，过短或过于简单会被拒绝。</p>
-          <p v-if="passwordError" class="form-error">{{ passwordError }}</p>
-          <div class="form-actions">
-            <button
-              class="app-btn app-btn--fill app-btn--sm"
-              type="button"
-              :disabled="passwordSaving"
-              @click="changePassword"
-            >
-              {{ passwordSaving ? '提交中…' : '修改密码' }}
-            </button>
-          </div>
-        </NForm>
-      </ConsolePanel>
-    </div>
-
-    <ConsolePanel
-      :icon="Desktop24Regular"
-      title="登录设备"
-      description="当前有效的会话；撤销后该设备需要重新登录"
-    >
-      <template #extra>
-        <button
-          class="app-btn app-btn--outline app-btn--sm"
-          type="button"
-          :disabled="sessionsLoading"
-          @click="loadSessions"
-        >
-          <NIcon :component="ArrowClockwise24Regular" :size="14" />
-          <span class="btn-label">刷新</span>
-        </button>
-      </template>
-
-      <p v-if="sessionsError" class="inline-hint inline-hint--error">{{ sessionsError }}</p>
-      <p v-else-if="!sessions.length" class="inline-hint">
-        {{ sessionsLoading ? '读取中…' : '没有有效会话' }}
-      </p>
-
-      <div v-else class="session-table">
-        <div class="session-row session-row--head">
-          <span>设备</span>
-          <span>来源地址</span>
-          <span>最近使用</span>
-          <span>有效期至</span>
-          <span class="col-actions">操作</span>
+  <div class="account-page">
+    <section class="account-section">
+      <header class="section-head">
+        <div class="head-main">
+          <h2 class="section-title">
+            <NIcon :component="PersonCircle24Regular" :size="16" class="section-icon" />
+            账号信息
+          </h2>
+          <p class="section-desc">登录身份与当前挂载的角色</p>
         </div>
-        <div v-for="session in sessions" :key="session.id" class="session-row">
-          <span class="cell-agent">
-            <span class="agent-text" :title="session.user_agent">{{ session.user_agent || '未知设备' }}</span>
-            <span v-if="session.current" class="self-tag">当前会话</span>
-          </span>
-          <span class="cell-meta">{{ session.last_ip || session.created_ip || '未知地址' }}</span>
-          <span class="cell-meta">{{ formatTime(session.last_used_at || session.created_at) }}</span>
-          <span class="cell-meta">{{ formatTime(session.expires_at) }}</span>
-          <span class="col-actions">
-            <button
-              class="app-btn app-btn--outline app-btn--sm revoke-btn"
-              type="button"
-              :disabled="session.current || revokingId === session.id"
-              :title="session.current ? '当前会话请用右上角「退出」结束' : '撤销该会话'"
-              @click="revoke(session)"
-            >
-              <NIcon :component="SignOut24Regular" :size="14" />
-              <span class="btn-label">撤销</span>
-            </button>
+      </header>
+
+      <div class="section-row">
+        <div class="row-main">
+          <span class="row-label">邮箱</span>
+          <span class="row-value">{{ account?.email || account?.name || '—' }}</span>
+        </div>
+      </div>
+
+      <div class="section-row">
+        <div class="row-main">
+          <span class="row-label">角色</span>
+          <span class="row-value row-value--tags">
+            <span v-for="role in roles" :key="role" class="role-tag">{{ role }}</span>
+            <span v-if="!roles.length">无角色，权限来自单点授权</span>
           </span>
         </div>
       </div>
-    </ConsolePanel>
+    </section>
+
+    <section class="account-section">
+      <header class="section-head">
+        <div class="head-main">
+          <h2 class="section-title">
+            <NIcon :component="Key24Regular" :size="16" class="section-icon" />
+            安全
+          </h2>
+          <p class="section-desc">登录密码与当前账号的凭据状态</p>
+        </div>
+      </header>
+
+      <div class="section-row">
+        <div class="row-main">
+          <span class="row-label">密码</span>
+          <span class="row-value">
+            <template v-if="mustChangePassword">
+              临时密码，待修改
+              <span class="row-badge">需处理</span>
+            </template>
+            <template v-else>已设置</template>
+          </span>
+        </div>
+        <div class="row-action">
+          <button
+            class="app-btn app-btn--outline app-btn--sm app-btn--rect"
+            type="button"
+            @click="openPasswordModal"
+          >
+            修改密码
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="account-section">
+      <header class="section-head section-head--plain">
+        <div class="head-main">
+          <h2 class="section-title">
+            <NIcon :component="Desktop24Regular" :size="16" class="section-icon" />
+            登录设备
+          </h2>
+          <p class="section-desc">看到不认识的设备就直接下线它</p>
+        </div>
+        <div class="section-head-extra">
+          <button
+            class="icon-btn"
+            type="button"
+            title="刷新"
+            :disabled="sessionsLoading"
+            @click="loadSessions"
+          >
+            <NIcon :component="ArrowClockwise24Regular" :size="16" />
+          </button>
+          <button
+            class="app-btn app-btn--outline app-btn--sm"
+            type="button"
+            :disabled="revokingOthers || sessions.length < 2"
+            @click="revokeOthers"
+          >
+            下线其他设备
+          </button>
+        </div>
+      </header>
+
+      <p v-if="sessionsError" class="inline-hint inline-hint--error">{{ sessionsError }}</p>
+      <p v-else-if="!devices.length" class="inline-hint">
+        {{ sessionsLoading ? '读取中…' : '没有有效会话' }}
+      </p>
+
+      <div v-else class="device-list">
+        <article v-for="session in devices" :key="session.id" class="device-card">
+          <span class="device-icon">
+            <NIcon :component="Desktop24Regular" :size="18" />
+          </span>
+
+          <div class="device-main">
+            <p class="device-title">
+              <span class="device-name">{{ session.device.label }}</span>
+              <span v-if="session.current" class="device-tag">当前设备</span>
+            </p>
+            <p class="device-meta">
+              {{ session.last_ip || session.created_ip || '未知地址' }}
+            </p>
+            <p class="device-meta device-meta--dim">
+              最近活动 {{ formatTime(session.last_used_at || session.created_at) }} ·
+              登录于 {{ formatTime(session.created_at) }}
+            </p>
+          </div>
+
+          <button
+            class="app-btn app-btn--outline app-btn--sm"
+            type="button"
+            :disabled="session.current || revokingId === session.id"
+            :title="session.current ? '当前设备请用右上角「退出」结束' : `撤销该设备（原始 UA：${session.user_agent || '未知'}）`"
+            @click="revoke(session)"
+          >
+            <NIcon :component="SignOut24Regular" :size="14" />
+            <span class="btn-label">下线</span>
+          </button>
+        </article>
+      </div>
+    </section>
+
+    <AppModal
+      v-model:show="passwordModal"
+      title="修改密码"
+      :max-width="420"
+      :auto-focus="false"
+      :actions="[
+        { text: '取消', variant: 'outline', onClick: () => (passwordModal = false) },
+        {
+          text: passwordSaving ? '提交中…' : '修改密码',
+          variant: 'fill',
+          disabled: passwordSaving,
+          onClick: changePassword,
+        },
+      ]"
+    >
+      <NForm label-placement="top">
+        <NFormItem label="当前密码">
+          <NInput
+            v-model:value="passwordForm.current"
+            type="password"
+            show-password-on="click"
+            maxlength="1024"
+            autocomplete="current-password"
+            placeholder="请输入当前使用的密码"
+          />
+        </NFormItem>
+        <NFormItem label="新密码">
+          <NInput
+            v-model:value="passwordForm.next"
+            type="password"
+            show-password-on="click"
+            maxlength="1024"
+            autocomplete="new-password"
+            placeholder="不能与当前密码相同"
+          />
+        </NFormItem>
+        <p class="form-note">修改成功后，其他设备上的会话会一并退出。</p>
+        <p v-if="passwordError" class="form-error">{{ passwordError }}</p>
+      </NForm>
+    </AppModal>
   </div>
 </template>
 
 <style scoped>
-.console-account {
+/* 类名不要用 console-account：那是页头账号胶囊的类名，父组件的 scoped 样式会命中
+   子组件根节点，整页会被套上胶囊的圆角与描边 */
+.account-page {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -267,54 +352,143 @@ async function revoke(session) {
   min-width: 0;
 }
 
-.account-columns {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  align-items: start;
-  gap: 16px;
+.account-section {
+  padding: 16px 18px 4px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
-.info-list {
+.section-head {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.info-row {
-  display: flex;
-  align-items: baseline;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 12px;
-  padding: 8px 0;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
 
-.info-row + .info-row {
-  border-top: 1px solid var(--border);
-  transition: border-color 0.4s ease;
+/* 标题与说明合成左组，右上角操作与标题同一行 */
+.head-main {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
-.info-label {
-  flex: 0 0 48px;
-  color: var(--subtle-foreground);
-  font-size: 0.78rem;
+/* 下面紧接的是设备卡片，标题区不再画分隔线 */
+.section-head--plain {
+  padding-bottom: 4px;
+  border-bottom: none;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: var(--foreground);
+  font-size: 0.95rem;
+  font-weight: 600;
   transition: color 0.4s ease;
 }
 
-.info-value {
-  flex: 1;
-  min-width: 0;
+.section-desc {
+  margin: 3px 0 0;
+  color: var(--subtle-foreground);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  transition: color 0.4s ease;
+}
+
+.section-head-extra {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  corner-shape: round;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--accent);
   color: var(--foreground);
-  font-size: 0.82rem;
+}
+
+.icon-btn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* 一行 = 左侧「标签 + 值」+ 行末操作；标签在上、值在下，值用与邮箱同级的前景色 */
+.section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+}
+
+.section-row + .section-row {
+  border-top: 1px solid var(--border);
+}
+
+.row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.row-label {
+  color: var(--subtle-foreground);
+  font-size: 0.74rem;
+  transition: color 0.4s ease;
+}
+
+.row-value {
+  /* 值比标签更亮更大，左对齐时会显得往前凸，往回收一点点做视觉补偿 */
+  padding-left: 3px;
+  color: var(--foreground);
+  font-size: 0.86rem;
+  line-height: 1.5;
   overflow-wrap: anywhere;
   transition: color 0.4s ease;
 }
 
-.info-tags {
+.row-value--tags {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+.row-badge {
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: var(--radius-full);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
+  color: var(--warning);
+  font-size: 0.68rem;
+}
+
+.row-action {
+  flex-shrink: 0;
 }
 
 .role-tag {
@@ -328,38 +502,86 @@ async function revoke(session) {
   transition: color 0.4s ease, border-color 0.4s ease;
 }
 
-.info-muted {
-  color: var(--subtle-foreground);
-  font-size: 0.78rem;
+/* ===== 设备卡片 ===== */
+.device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 0;
+}
+
+.device-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.device-card:hover {
+  border-color: var(--border-strong);
+}
+
+.device-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.device-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.device-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  min-width: 0;
+}
+
+.device-name {
+  color: var(--foreground);
+  font-size: 0.86rem;
+  font-weight: 500;
   transition: color 0.4s ease;
 }
 
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 9px;
-  border: 1px solid transparent;
+.device-tag {
+  padding: 0 7px;
   border-radius: var(--radius-full);
   corner-shape: round;
-  font-size: 0.72rem;
-  white-space: nowrap;
-  transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: var(--success);
+  font-size: 0.68rem;
 }
 
-.status-pill--warning {
-  color: var(--warning);
-  background: color-mix(in srgb, var(--warning) 14%, transparent);
-  border-color: color-mix(in srgb, var(--warning) 28%, transparent);
+.device-meta {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.74rem;
+  overflow-wrap: anywhere;
+  transition: color 0.4s ease;
 }
 
-.password-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 0 12px;
+.device-meta--dim {
+  color: var(--subtle-foreground);
 }
 
 .form-note {
-  margin: -4px 0 10px;
+  margin: 0 0 10px;
   color: var(--subtle-foreground);
   font-size: 0.74rem;
   line-height: 1.6;
@@ -371,119 +593,27 @@ async function revoke(session) {
   font-size: 0.78rem;
 }
 
-.form-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.session-table {
-  display: flex;
-  flex-direction: column;
-}
-
-.session-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) 120px 116px 116px 88px;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-  transition: border-color 0.4s ease;
-}
-
-.session-row:last-child {
-  border-bottom: none;
-}
-
-.session-row--head {
-  padding-top: 0;
-  color: var(--subtle-foreground);
-  font-size: 0.74rem;
-  transition: color 0.4s ease;
-}
-
-.cell-agent {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.agent-text {
-  overflow: hidden;
-  color: var(--foreground);
-  font-size: 0.8rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: color 0.4s ease;
-}
-
-.self-tag {
-  flex-shrink: 0;
-  padding: 1px 7px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  background: var(--accent);
-  color: var(--subtle-foreground);
-  font-size: 0.68rem;
-  transition: color 0.4s ease, background-color 0.4s ease;
-}
-
-.cell-meta {
-  color: var(--muted-foreground);
-  font-size: 0.76rem;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.col-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-}
-
-.revoke-btn {
-  gap: 5px;
-}
-
-.revoke-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 .inline-hint {
   margin: 0;
-  padding: 8px 0;
+  padding: 14px 0;
   color: var(--subtle-foreground);
   font-size: 0.8rem;
-  text-align: center;
 }
 
 .inline-hint--error {
   color: var(--destructive);
-  text-align: left;
 }
 
-/* 窄屏：设备一行、时间与操作一行，来源地址与有效期让位 */
 @media (width <= 720px) {
-  .session-row--head {
-    display: none;
+  .section-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
-  .session-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    row-gap: 6px;
-  }
-
-  .session-row > .cell-agent {
-    grid-column: 1 / -1;
-  }
-
-  .session-row > .cell-meta:nth-child(2),
-  .session-row > .cell-meta:nth-child(4) {
-    display: none;
+  .device-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
 }
 </style>

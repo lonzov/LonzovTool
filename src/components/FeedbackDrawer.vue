@@ -512,8 +512,9 @@ onBeforeUnmount(() => {
     <NDrawerContent
       title="建议反馈"
       closable
-      :body-content-style="{ padding: '4px 20px 20px' }"
+      :body-content-style="{ padding: '0' }"
     >
+      <div class="fb-body">
       <div v-if="mode === 'success'" class="fb-done">
         <NIcon :component="CheckmarkCircle24Regular" :size="42" class="fb-done-icon" />
         <p class="fb-done-title">反馈已提交</p>
@@ -685,11 +686,17 @@ onBeforeUnmount(() => {
           </button>
         </div>
       </NForm>
+      </div>
     </NDrawerContent>
   </NDrawer>
 </template>
 
 <style scoped>
+/* 抽屉内容自己做内边距：NDrawerContent 的 body padding 在部分版本下不生效，
+   表单会直接贴到抽屉左右边缘 */
+.fb-body {
+  padding: 20px;
+}
 /* 末项不留下 18px 的默认下边距，否则底部操作区与图片区之间会空一大块 */
 .fb-form :deep(.n-form-item:last-of-type) {
   margin-bottom: 4px;

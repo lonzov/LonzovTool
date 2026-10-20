@@ -90,12 +90,12 @@ useSidebarSectionProvider('console', () => ({
       <template #extra>
         <RouterLink
           v-if="account"
-          class="console-account"
+          class="account-chip"
           to="/console/account"
           :title="account.email ? `我的账号 · ${account.email}` : '我的账号'"
         >
-          <span class="console-account-name">{{ account.name }}</span>
-          <span v-if="roleLabel" class="console-account-role">{{ roleLabel }}</span>
+          <span class="account-chip-name">{{ account.name }}</span>
+          <span v-if="roleLabel" class="account-chip-role">{{ roleLabel }}</span>
         </RouterLink>
         <button class="app-btn app-btn--text app-btn--sm" type="button" @click="handleLogout">
           退出
@@ -154,7 +154,22 @@ useSidebarSectionProvider('console', () => ({
   transition: color 0.4s ease;
 }
 
-.console-account {
+/* 提示条里的按钮沿用提示条自己的底色与边框，避免一块卡片底色突然插进来 */
+.password-banner .app-btn {
+  border-color: color-mix(in srgb, var(--warning) 32%, transparent);
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  color: var(--foreground);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.password-banner .app-btn:hover {
+  border-color: color-mix(in srgb, var(--warning) 48%, transparent);
+  background: color-mix(in srgb, var(--warning) 20%, transparent);
+}
+
+/* 页头账号胶囊。类名刻意不叫 console-account：页面根节点若同名会被这里的
+   圆角与描边命中（父组件的 scoped 样式会作用到子组件根节点） */
+.account-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -167,18 +182,18 @@ useSidebarSectionProvider('console', () => ({
   transition: border-color 0.4s ease, background-color 0.2s ease;
 }
 
-.console-account:hover {
+.account-chip:hover {
   background: var(--accent);
 }
 
-.console-account-name {
+.account-chip-name {
   font-size: 0.78rem;
   font-weight: 500;
   color: var(--foreground);
   transition: color 0.4s ease;
 }
 
-.console-account-role {
+.account-chip-role {
   font-size: 0.72rem;
   color: var(--subtle-foreground);
   transition: color 0.4s ease;

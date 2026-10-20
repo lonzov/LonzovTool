@@ -158,6 +158,8 @@ button {
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  /* 同一个按钮样式也会用在 RouterLink 上，必须显式去掉链接下划线 */
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   border: none;
@@ -183,14 +185,26 @@ button {
   opacity: 0.85;
 }
 
+/* 与调色板页 Naive 默认按钮同一套取值：静止是淡边框，悬停加深、按下到一级文字色 */
 .app-btn--outline {
-  border: 1.5px solid currentColor;
+  border: 1px solid var(--border);
   background: var(--card);
   color: var(--foreground);
 }
 
 .app-btn--outline:hover:not(:disabled) {
+  border-color: var(--muted-foreground);
   background: var(--muted);
+}
+
+.app-btn--outline:active:not(:disabled) {
+  border-color: var(--foreground);
+}
+
+/* 列表行内的按钮：胶囊是给独立按钮用的，行内按钮要和列表的方正形态统一，走圆角矩形 */
+.app-btn--rect {
+  border-radius: var(--radius-sm);
+  corner-shape: round;
 }
 
 .app-btn--text {
