@@ -17,7 +17,7 @@ src:
     DonateRecords.vue: 打赏记录表格，异步加载 JSON 动态渲染
     DarkFilterIcon.vue: 深色滤镜状态图标（月亮 + 可生长/回缩的描边斜杠），用 stroke-dashoffset 动画实现斜杠生长
     ExternalSiteView.vue: 站外站点 iframe 嵌入视图（工作站标签页内显示站外卡片内容）
-    FeedbackDrawer.vue: 建议反馈抽屉，右侧滑出内嵌飞书反馈表单（首次打开才加载 iframe）
+    FeedbackDrawer.vue: 建议反馈抽屉，站内自研表单（类型/标题/联系方式/页面/描述/截图/极验/草稿/蜜罐），提交后就地显示反馈编号
     Footer.vue: 页脚组件，包含版权信息、运行时间、隐私政策入口
     HomeView.vue: 首页视图容器，集成搜索栏、工具网格、页脚
     IframeForm.vue: iframe 表单封装组件
@@ -108,6 +108,7 @@ src:
     pages/ConsolePromo.vue: 推广位管理页，四档槽位的图文、到期时间与隐藏，图可点击/拖拽/粘贴上传
     pages/ConsoleOverview.vue: 控制台概览页，待办事项、站点指标、访问统计、提交预览、Uptime 与管理日志，前两类仍为占位数据
     pages/ConsoleSubmissions.vue: 网址提交审核页，待审队列与通过/拒绝，支持 ?id= 定位并高亮指定提交
+    pages/ConsoleFeedback.vue: 反馈处理页，状态筛选与增量翻页，详情含截图看大图，可标记已处理与删除
   composables:
     honorBrowserNotice.js: 荣耀浏览器提示，建议用户更换标准浏览器（按需加载）
     useConfirm.js: 全局确认弹窗状态，confirmDialog() 返回 Promise 供任意模块（含 composable）调用
@@ -141,7 +142,7 @@ src:
     discreteMessage.js: 全局共享的 Naive UI 独立 message 实例（供 NMessageProvider 之外的模块使用）
     loadingBar.js: 全局共享的 Naive UI 顶部加载条实例（供路由守卫等无组件上下文处使用）
     jsonError.js: JSON 解析前修复字符串内的原始换行 + 语法错误定位与友好化提示
-    iconUpload.js: 网址提交的图标前端预检（扩展名与 1 MB 上限），仅省一次失败往返，判据在服务端
+    iconUpload.js: 上传图片的前端预检与本机压缩（图标 / 推广图 / 反馈截图），体积与格式判据在服务端
     headingSlug.js: Markdown 标题锚点 id 生成，同一文档内重名标题追加序号
     mcTranslate.js: 基岩版翻译键渲染内核（.lang/JSON 解析、占位符算法、selector/score 求值），纯函数无框架依赖
     mcTextRender.js: rawtext 元素与 § 格式化文本到 HTML 的渲染内核，语言包与模拟器由调用方传入，无框架依赖但经 mcfc 渲染器依赖 DOM

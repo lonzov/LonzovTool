@@ -1,5 +1,6 @@
 import {
   Apps24Regular,
+  ChatHelp24Regular,
   DataPie24Regular,
   MegaphoneLoud24Regular,
   People24Regular,
@@ -52,6 +53,14 @@ export const CONSOLE_NAV = [
     title: '网址提交审核',
     description: '访客投递的网址卡片，审核通过后再整理进内容表',
     permission: 'cards.review',
+  },
+  {
+    key: '/console/feedback',
+    label: '反馈处理',
+    icon: ChatHelp24Regular,
+    title: '反馈处理',
+    description: '站内反馈队列，处理完即标记，删除会一并移除截图',
+    permission: 'feedback.manage',
   },
   {
     key: '/console/accounts',

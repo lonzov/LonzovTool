@@ -19,6 +19,14 @@ export const PROMO_MAX_WIDTH = 1200
 export const PROMO_MAX_HEIGHT = 600
 export const PROMO_QUALITY = 0.82
 
+/* 反馈截图：手机截图与长截图都很常见，只按宽度封顶、高度等比，
+   不设高度上限，否则整页长图会被压成一条看不见内容的窄带。
+   原图上限 5 MB 比图标宽松：手机直出的截图常有 2~4 MB，卡在 1 MB 会逼用户自己去找工具压。 */
+export const FEEDBACK_MAX_SOURCE_BYTES = 5 * 1024 * 1024
+export const FEEDBACK_MAX_WIDTH = 1600
+export const FEEDBACK_MAX_HEIGHT = 20000
+export const FEEDBACK_QUALITY = 0.82
+
 /**
  * 前端侧的图片预检：只为省一次失败往返，判据仍在服务端。
  * 服务端会用图片解码核对真实格式，这里不做内容嗅探。
@@ -90,6 +98,11 @@ export async function compressIcon(file) {
 
 const LOGO_BOUNDS = { maxWidth: LOGO_MAX_WIDTH, maxHeight: LOGO_HEIGHT, quality: LOGO_QUALITY }
 const PROMO_BOUNDS = { maxWidth: PROMO_MAX_WIDTH, maxHeight: PROMO_MAX_HEIGHT, quality: PROMO_QUALITY }
+const FEEDBACK_BOUNDS = {
+  maxWidth: FEEDBACK_MAX_WIDTH,
+  maxHeight: FEEDBACK_MAX_HEIGHT,
+  quality: FEEDBACK_QUALITY,
+}
 
 /**
  * 一次拿到"可上传的图片"或一句可读的错误。
@@ -117,6 +130,29 @@ export async function prepareIcon(file) {
 /** 推广图：宽 ≤1200 的横幅 WebP */
 export async function preparePromoImage(file) {
   return prepareImage(file, PROMO_BOUNDS, '推广图')
+}
+
+/**
+ * 反馈截图：宽 ≤1600 的 WebP。
+ *
+ * 不走 prepareImage 的两处差异：体积闸门在压缩前（原图 ≤5 MB），
+ * 压缩后不再卡 1 MB —— 1600 宽的长截图压完仍可能过 MB，而服务端会再压一次。
+ */
+export async function prepareFeedbackImage(file) {
+  if (!file) return { file: null, error: '没有读到图片' }
+
+  const extension = (file.name.split('.').pop() || '').toLowerCase()
+  if (!ALLOWED_EXTENSIONS.includes(extension)) {
+    return {
+      file: null,
+      error: `截图仅支持 ${ALLOWED_EXTENSIONS.map((item) => item.toUpperCase()).join('、')} 格式`,
+    }
+  }
+  if (file.size > FEEDBACK_MAX_SOURCE_BYTES) {
+    return { file: null, error: '图片超过 5 MB，请换一张或先压缩' }
+  }
+
+  return { file: await compressImage(file, FEEDBACK_BOUNDS), error: '' }
 }
 
 export { ALLOWED_EXTENSIONS }

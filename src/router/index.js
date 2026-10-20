@@ -161,6 +161,7 @@ const ConsoleCards = () => import('../console/pages/ConsoleCards.vue')
 const ConsoleNotices = () => import('../console/pages/ConsoleNotices.vue')
 const ConsolePromo = () => import('../console/pages/ConsolePromo.vue')
 const ConsoleSubmissions = () => import('../console/pages/ConsoleSubmissions.vue')
+const ConsoleFeedback = () => import('../console/pages/ConsoleFeedback.vue')
 const ConsoleAccounts = () => import('../console/pages/ConsoleAccounts.vue')
 const ConsoleAccount = () => import('../console/pages/ConsoleAccount.vue')
 const ConsoleLogin = () => import('../console/pages/ConsoleLogin.vue')
@@ -370,6 +371,15 @@ export const routes = [
         meta: {
           title: '网址提交审核 - 控制台 - 小舟工具箱',
           permission: 'cards.review',
+        },
+      },
+      {
+        path: 'feedback',
+        name: 'console-feedback',
+        component: ConsoleFeedback,
+        meta: {
+          title: '反馈处理 - 控制台 - 小舟工具箱',
+          permission: 'feedback.manage',
         },
       },
       {
