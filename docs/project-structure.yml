@@ -98,8 +98,7 @@ src:
     consoleNav.js: 控制台目录配置，侧边栏分类栏与控制台页面标题的唯一来源，含页面所需的权限点与可见项过滤
     usePermissions.js: 控制台权限判定（can/permissions/account），由壳层 provide 给子页面，口径与服务端一致
     deviceLabel.js: 把 User-Agent 压成「浏览器 · 系统」一句人话，供登录设备列表展示
-    passwordStrength.js: 密码强度的本地即时判据（长度、纯数字、常见弱口令子集、与邮箱相似度）
-    usePasswordGuard.js: 密码强度守卫，本地即时判据配合服务端预检接口给出权威结论
+    passwordStrength.js: 密码位数预检（下限与服务端一致），其余强度规则由服务端在提交时判定
     components/ConsolePageHeader.vue: 控制台页面标题区（图标 + 标题 + 说明 + 右侧附加区）
     components/ConsolePanel.vue: 控制台面板卡外壳（图标 + 标题 + 说明 + 内容区）
     components/StatCard.vue: 控制台指标卡（图标 + 标签 + 数值 + 说明）

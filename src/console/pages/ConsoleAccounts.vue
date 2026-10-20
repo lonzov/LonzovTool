@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   NCheckbox,
@@ -22,7 +22,7 @@ import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { consoleFetch } from '../consoleRequest.js'
 import { useConsoleAuth } from '../consoleAuth.js'
-import { createPasswordGuard } from '../usePasswordGuard.js'
+import { checkPasswordLength } from '../passwordStrength.js'
 
 const ACCOUNTS_URL = '/api/v1/console/accounts'
 const CATALOG_URL = '/api/v1/console/accounts/roles'
@@ -51,20 +51,9 @@ const editorSaving = ref(false)
 
 const reset = ref({ show: false, id: 0, email: '', password: '', error: '', saving: false })
 
-// 密码强度预检：本地即时判据 + 服务端权威判据（同一套校验器），提交前就能看到结论
-const createGuard = createPasswordGuard()
-const createPasswordCheck = createGuard.state
-const resetGuard = createPasswordGuard()
-const resetPasswordCheck = resetGuard.state
-
-watch(
-  () => form.value.password,
-  (value) => createGuard.evaluate(value, form.value.email),
-)
-watch(
-  () => reset.value.password,
-  (value) => resetGuard.evaluate(value, reset.value.email),
-)
+// 密码只做位数预检；其余规则由服务端在提交时判定
+const createPasswordCheck = computed(() => checkPasswordLength(form.value.password))
+const resetPasswordCheck = computed(() => checkPasswordLength(reset.value.password))
 
 const STATUS_TONES = {
   disabled: { text: '已停用', tone: 'destructive' },

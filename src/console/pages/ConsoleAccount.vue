@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NForm, NFormItem, NIcon, NInput, useMessage } from 'naive-ui'
 import {
@@ -14,7 +14,7 @@ import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useConsoleAuth } from '../consoleAuth.js'
 import { describeDevice } from '../deviceLabel.js'
-import { createPasswordGuard } from '../usePasswordGuard.js'
+import { checkPasswordLength } from '../passwordStrength.js'
 
 const SESSIONS_URL = '/api/v1/console/sessions'
 const PASSWORD_URL = '/api/v1/console/password'
@@ -36,13 +36,7 @@ const revokingId = ref(0)
 const revokingOthers = ref(false)
 
 const roles = computed(() => account.value?.roles || [])
-const passwordGuard = createPasswordGuard()
-const passwordCheck = passwordGuard.state
-
-watch(
-  () => passwordForm.value.next,
-  (value) => passwordGuard.evaluate(value, account.value?.email || ''),
-)
+const passwordCheck = computed(() => checkPasswordLength(passwordForm.value.next))
 const devices = computed(() =>
   sessions.value.map((session) => ({ ...session, device: describeDevice(session.user_agent) })),
 )
