@@ -1,8 +1,17 @@
-import { Apps24Regular, DataPie24Regular, MegaphoneLoud24Regular, Send24Regular, Speaker224Regular } from '@vicons/fluent'
+import {
+  Apps24Regular,
+  DataPie24Regular,
+  MegaphoneLoud24Regular,
+  People24Regular,
+  PersonCircle24Regular,
+  Send24Regular,
+  Speaker224Regular,
+} from '@vicons/fluent'
 
 /**
  * 控制台目录，同时是侧边栏分类栏与控制台页面标题的唯一来源。
- * 新增子页面时在此登记一项：key 即路由路径，title / description 供页面标题区使用。
+ * 新增子页面时在此登记一项：key 即路由路径，title / description 供页面标题区使用，
+ * permission 为该页要求的权限点（缺省表示登录即可访问），与路由 meta 保持一致。
  */
 export const CONSOLE_NAV = [
   {
@@ -18,6 +27,7 @@ export const CONSOLE_NAV = [
     icon: Apps24Regular,
     title: '卡片管理',
     description: '站点卡片的增删改与隐藏，隐藏后公开接口不再返回',
+    permission: 'cards.write',
   },
   {
     key: '/console/notices',
@@ -25,6 +35,7 @@ export const CONSOLE_NAV = [
     icon: MegaphoneLoud24Regular,
     title: '公告管理',
     description: '首页公告栏的条目，按优先级升序轮播，改动即时推送到站上',
+    permission: 'notices.write',
   },
   {
     key: '/console/promo',
@@ -32,6 +43,7 @@ export const CONSOLE_NAV = [
     icon: Speaker224Regular,
     title: '推广位',
     description: '首页四个推广位；到期自动下架，改一个未来的到期时间即可恢复',
+    permission: 'promo.write',
   },
   {
     key: '/console/submissions',
@@ -39,6 +51,22 @@ export const CONSOLE_NAV = [
     icon: Send24Regular,
     title: '网址提交审核',
     description: '访客投递的网址卡片，审核通过后再整理进内容表',
+    permission: 'cards.review',
+  },
+  {
+    key: '/console/accounts',
+    label: '账号管理',
+    icon: People24Regular,
+    title: '账号管理',
+    description: '控制台账号、角色与单点授权，停用与改权在下次请求即刻生效',
+    permission: 'accounts.manage',
+  },
+  {
+    key: '/console/account',
+    label: '我的账号',
+    icon: PersonCircle24Regular,
+    title: '我的账号',
+    description: '修改密码与查看登录设备，撤销不再使用的会话',
   },
 ]
 
@@ -49,4 +77,13 @@ export const CONSOLE_NAV = [
 export function findConsoleNav(path) {
   const normalized = (path || '').replace(/\/+$/, '')
   return CONSOLE_NAV.find((item) => item.key === normalized) || CONSOLE_NAV[0]
+}
+
+/**
+ * 当前账号可见的目录项。没有权限的页面连入口都不出现，
+ * 直接输地址访问由外壳的权限闸门拦下（见 ConsoleLayout）。
+ * @param {(codename: string) => boolean} can 权限判定，取自 usePermissions
+ */
+export function visibleConsoleNav(can) {
+  return CONSOLE_NAV.filter((item) => !item.permission || can(item.permission))
 }

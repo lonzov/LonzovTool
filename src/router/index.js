@@ -161,6 +161,8 @@ const ConsoleCards = () => import('../console/pages/ConsoleCards.vue')
 const ConsoleNotices = () => import('../console/pages/ConsoleNotices.vue')
 const ConsolePromo = () => import('../console/pages/ConsolePromo.vue')
 const ConsoleSubmissions = () => import('../console/pages/ConsoleSubmissions.vue')
+const ConsoleAccounts = () => import('../console/pages/ConsoleAccounts.vue')
+const ConsoleAccount = () => import('../console/pages/ConsoleAccount.vue')
 const ConsoleLogin = () => import('../console/pages/ConsoleLogin.vue')
 const DevOptionsView = () => import('../views/DevOptionsView.vue')
 
@@ -340,6 +342,7 @@ export const routes = [
         component: ConsoleCards,
         meta: {
           title: '卡片管理 - 控制台 - 小舟工具箱',
+          permission: 'cards.write',
         },
       },
       {
@@ -348,6 +351,7 @@ export const routes = [
         component: ConsoleNotices,
         meta: {
           title: '公告管理 - 控制台 - 小舟工具箱',
+          permission: 'notices.write',
         },
       },
       {
@@ -356,6 +360,7 @@ export const routes = [
         component: ConsolePromo,
         meta: {
           title: '推广位 - 控制台 - 小舟工具箱',
+          permission: 'promo.write',
         },
       },
       {
@@ -364,6 +369,24 @@ export const routes = [
         component: ConsoleSubmissions,
         meta: {
           title: '网址提交审核 - 控制台 - 小舟工具箱',
+          permission: 'cards.review',
+        },
+      },
+      {
+        path: 'accounts',
+        name: 'console-accounts',
+        component: ConsoleAccounts,
+        meta: {
+          title: '账号管理 - 控制台 - 小舟工具箱',
+          permission: 'accounts.manage',
+        },
+      },
+      {
+        path: 'account',
+        name: 'console-account',
+        component: ConsoleAccount,
+        meta: {
+          title: '我的账号 - 控制台 - 小舟工具箱',
         },
       },
     ],

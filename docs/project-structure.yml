@@ -92,15 +92,18 @@ src:
           HaspermissionModal.vue: haspermission 编辑器弹窗
           CoordinateCalcModal.vue: 坐标自动计算弹窗，输入起终点坐标自动生成 x,y,z,dx,dy,dz 参数
   console:
-    ConsoleLayout.vue: 控制台外壳，页面标题取自 consoleNav，并把控制台目录挂到侧边栏分类栏，右上角为账号与退出
-    consoleAuth.js: 控制台会话状态（账号名与角色），登录、退出与会话校验，凭证为后端下发的 HttpOnly Cookie
+    ConsoleLayout.vue: 控制台外壳，页面标题取自 consoleNav，并把控制台目录挂到侧边栏分类栏，右上角为账号与退出，按权限隐藏目录项并拦下无权限路由，临时密码时顶部常驻提示条
+    consoleAuth.js: 控制台会话状态（账号邮箱、角色、权限清单与临时密码标记），登录、退出与会话校验，凭证为后端下发的 HttpOnly Cookie
     consoleRequest.js: 控制台请求与错误映射（服务端信封 → 状态码 → 网络/超时），写操作回填 CSRF 头，不依赖 Vue
-    consoleNav.js: 控制台目录配置，侧边栏分类栏与控制台页面标题的唯一来源
+    consoleNav.js: 控制台目录配置，侧边栏分类栏与控制台页面标题的唯一来源，含页面所需的权限点与可见项过滤
+    usePermissions.js: 控制台权限判定（can/permissions/account），由壳层 provide 给子页面，口径与服务端一致
     components/ConsolePageHeader.vue: 控制台页面标题区（图标 + 标题 + 说明 + 右侧附加区）
     components/ConsolePanel.vue: 控制台面板卡外壳（图标 + 标题 + 说明 + 内容区）
     components/StatCard.vue: 控制台指标卡（图标 + 标签 + 数值 + 说明）
+    pages/ConsoleAccount.vue: 我的账号页，账号信息、改密码与登录设备列表（撤销会话）
+    pages/ConsoleAccounts.vue: 账号管理页，账号列表与新建/编辑/重置密码，编辑角色与单点授权范围
     pages/ConsoleCards.vue: 卡片管理页，列表与模拟布局两种视图、增删改与显隐，编辑器内支持图标上传
-    pages/ConsoleLogin.vue: 控制台登录页，仅管理员可登录
+    pages/ConsoleLogin.vue: 控制台登录页，邮箱 + 密码登录，仅拥有控制台权限的账号可进入
     pages/ConsoleNotices.vue: 公告管理页，列表、增删改，时间用日期选择器录入
     pages/ConsolePromo.vue: 推广位管理页，四档槽位的图文、到期时间与隐藏，图可点击/拖拽/粘贴上传
     pages/ConsoleOverview.vue: 控制台概览页，待办事项、站点指标、访问统计、提交预览、Uptime 与管理日志，前两类仍为占位数据

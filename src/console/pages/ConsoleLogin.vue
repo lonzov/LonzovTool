@@ -9,18 +9,25 @@ const route = useRoute()
 const router = useRouter()
 const { login } = useConsoleAuth()
 
-const username = ref('')
+const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const error = ref('')
 const submitting = ref(false)
+
+/* 登录被拒的原因分三类：账密错误、账号本身不可用、账号没有任何控制台权限。
+   后两类服务端也会给文案，但账号状态属于高频排障场景，这里单独把话说明白 */
+const LOGIN_ERROR_TEXT = {
+  account_disabled: '账号已被停用，请联系管理员恢复',
+  no_permission: '该账号没有控制台权限，请联系管理员分配角色',
+}
 
 /* 限流是服务端状态，只有真被限流时才提示，并给出 Retry-After 里的确切等待时间 */
 const lockoutSeconds = ref(0)
 let lockoutTimer = null
 
 const canSubmit = computed(
-  () => !!username.value.trim() && !!password.value && !submitting.value && lockoutSeconds.value === 0,
+  () => !!email.value.trim() && !!password.value && !submitting.value && lockoutSeconds.value === 0,
 )
 
 /* 剩这么多机会时开始提醒，再晚就只剩最后一次了 */
@@ -36,6 +43,7 @@ function formatDuration(seconds) {
  * 剩得多就不打扰用户，进入倒数才开始提醒。
  */
 function describeLoginFailure(failure) {
+  const text = LOGIN_ERROR_TEXT[failure.code] || failure.message
   const remaining = failure.meta?.attempts_remaining
   const showRemaining =
     failure.code === 'invalid_credentials' &&
@@ -43,7 +51,7 @@ function describeLoginFailure(failure) {
     remaining > 0 &&
     remaining <= ATTEMPTS_WARN_AT
 
-  return showRemaining ? `${failure.message}，还可尝试 ${remaining} 次` : failure.message
+  return showRemaining ? `${text}，还可尝试 ${remaining} 次` : text
 }
 
 const lockoutText = computed(() =>
@@ -70,7 +78,7 @@ function stopLockout() {
 onBeforeUnmount(stopLockout)
 
 // 改动任一字段即撤掉上一次的报错，避免"改完了错误还挂着"
-watch([username, password], () => {
+watch([email, password], () => {
   error.value = ''
 })
 
@@ -79,7 +87,7 @@ async function handleSubmit() {
   error.value = ''
   submitting.value = true
   try {
-    await login(username.value, password.value)
+    await login(email.value, password.value)
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/console'
     router.replace(redirect)
   } catch (e) {
@@ -103,19 +111,20 @@ async function handleSubmit() {
     <form class="login-card" @submit.prevent="handleSubmit">
       <div class="card-header">
         <h1 class="card-title">控制台登录</h1>
-        <p class="card-desc">仅管理员账号可进入控制台</p>
+        <p class="card-desc">仅拥有控制台权限的账号可登录</p>
       </div>
 
       <div class="card-body">
         <div class="field">
-          <label class="field-label" for="console-username">账号</label>
+          <label class="field-label" for="console-email">邮箱</label>
           <input
-            id="console-username"
-            v-model="username"
+            id="console-email"
+            v-model="email"
             class="field-input"
-            type="text"
-            autocomplete="username"
-            placeholder="请输入管理员账号"
+            type="email"
+            autocomplete="email"
+            spellcheck="false"
+            placeholder="请输入邮箱地址"
             :disabled="submitting"
           />
         </div>

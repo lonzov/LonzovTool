@@ -1,19 +1,33 @@
 <script setup>
-import { computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { computed, onMounted, ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { NIcon, useMessage } from 'naive-ui'
+import { Warning24Regular } from '@vicons/fluent'
 import { useSidebarSectionProvider } from '../composables/useSidebarSection.js'
 import ConsolePageHeader from './components/ConsolePageHeader.vue'
-import { CONSOLE_NAV, findConsoleNav } from './consoleNav.js'
+import { findConsoleNav, visibleConsoleNav } from './consoleNav.js'
 import { useConsoleAuth } from './consoleAuth.js'
+import { provideConsolePermissions } from './usePermissions.js'
 
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
-const { account, logout, verify } = useConsoleAuth()
+const { account, mustChangePassword, permissionsReady, logout, verify } = useConsoleAuth()
+const { can } = provideConsolePermissions()
 
+const checking = ref(true)
+const sessionError = ref('')
+
+const navItems = computed(() =>
+  visibleConsoleNav(can).map(({ key, label, icon }) => ({ key, label, icon })),
+)
 const current = computed(() => findConsoleNav(route.path))
-const roleLabel = computed(() => (account.value?.role === 'admin' ? '管理员' : '账号'))
+// 目录里没权限的项不渲染，直接在地址栏输进来的同样拦下：权限未就绪前不能判定，等 /me 回来
+const denied = computed(() => {
+  const required = route.meta.permission
+  return !!required && !can(required)
+})
+const roleLabel = computed(() => (account.value?.roles || []).join(' · '))
 
 async function handleLogout() {
   try {
@@ -26,7 +40,9 @@ async function handleLogout() {
 }
 
 // 本地账号痕迹只是体验层，进控制台必须问一次服务端：过期、被吊销或手工伪造的凭证都过不了这一步
-onMounted(async () => {
+async function checkSession() {
+  checking.value = true
+  sessionError.value = ''
   try {
     await verify()
   } catch (e) {
@@ -35,15 +51,20 @@ onMounted(async () => {
       return
     }
     // 网络或服务端问题不等于登录失效，不能因此把人踢下线
-    message.error(e?.message || '会话校验失败，请稍后重试')
+    sessionError.value = e?.message || '会话校验失败，请稍后重试'
+    message.error(sessionError.value)
+  } finally {
+    checking.value = false
   }
-})
+}
+
+onMounted(checkSession)
 
 // 控制台目录挂在侧边栏分类栏上。目录本身不随子页面变化，key 固定为 'console'：
 // 子页面之间切换不重放分类栏的切页动画，只有进出控制台才换源。
 useSidebarSectionProvider('console', () => ({
   key: 'console',
-  items: CONSOLE_NAV.map(({ key, label, icon }) => ({ key, label, icon })),
+  items: navItems.value,
   selectedKey: current.value.key,
   onSelect: (key) => {
     if (key !== route.path) router.push(key)
@@ -53,22 +74,49 @@ useSidebarSectionProvider('console', () => ({
 
 <template>
   <div class="console-layout">
+    <div v-if="mustChangePassword" class="password-banner" role="status">
+      <NIcon :component="Warning24Regular" :size="15" class="password-banner-icon" />
+      <span class="password-banner-text">当前是临时密码，请先修改密码</span>
+      <RouterLink class="app-btn app-btn--outline app-btn--sm" to="/console/account">
+        去修改
+      </RouterLink>
+    </div>
+
     <ConsolePageHeader
       :icon="current.icon"
       :title="current.title"
       :description="current.description"
     >
       <template #extra>
-        <span v-if="account" class="console-account">
+        <RouterLink
+          v-if="account"
+          class="console-account"
+          to="/console/account"
+          :title="account.email ? `我的账号 · ${account.email}` : '我的账号'"
+        >
           <span class="console-account-name">{{ account.name }}</span>
-          <span class="console-account-role">{{ roleLabel }}</span>
-        </span>
+          <span v-if="roleLabel" class="console-account-role">{{ roleLabel }}</span>
+        </RouterLink>
         <button class="app-btn app-btn--text app-btn--sm" type="button" @click="handleLogout">
           退出
         </button>
       </template>
     </ConsolePageHeader>
-    <RouterView />
+
+    <p v-if="!permissionsReady && checking" class="console-gate">正在校验会话…</p>
+    <div v-else-if="!permissionsReady" class="console-gate">
+      <p class="console-gate-text">{{ sessionError || '会话校验未完成' }}</p>
+      <button
+        class="app-btn app-btn--outline app-btn--sm"
+        type="button"
+        :disabled="checking"
+        @click="checkSession"
+      >
+        重试
+      </button>
+    </div>
+    <p v-else-if="denied" class="console-gate">没有访问权限</p>
+    <RouterView v-else />
   </div>
 </template>
 
@@ -76,6 +124,34 @@ useSidebarSectionProvider('console', () => ({
 .console-layout {
   max-width: 1200px;
   padding-top: 24px;
+}
+
+/* 临时密码提示：常驻而不是弹窗，页面上任何操作都可能被后端拦下，必须一直看得见 */
+.password-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--warning) 32%, transparent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+
+.password-banner-icon {
+  flex-shrink: 0;
+  color: var(--warning);
+  transition: color 0.4s ease;
+}
+
+.password-banner-text {
+  flex: 1;
+  min-width: 0;
+  color: var(--foreground);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  transition: color 0.4s ease;
 }
 
 .console-account {
@@ -87,7 +163,12 @@ useSidebarSectionProvider('console', () => ({
   border-radius: var(--radius-full);
   corner-shape: round;
   white-space: nowrap;
-  transition: border-color 0.4s ease;
+  text-decoration: none;
+  transition: border-color 0.4s ease, background-color 0.2s ease;
+}
+
+.console-account:hover {
+  background: var(--accent);
 }
 
 .console-account-name {
@@ -101,5 +182,20 @@ useSidebarSectionProvider('console', () => ({
   font-size: 0.72rem;
   color: var(--subtle-foreground);
   transition: color 0.4s ease;
+}
+
+.console-gate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 48px 0 0;
+  color: var(--subtle-foreground);
+  font-size: 0.84rem;
+  transition: color 0.4s ease;
+}
+
+.console-gate-text {
+  margin: 0;
 }
 </style>

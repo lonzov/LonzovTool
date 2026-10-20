@@ -24,6 +24,12 @@ import { useStats } from '../../composables/useStats.js'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import StatCard from '../components/StatCard.vue'
 import { consoleFetch } from '../consoleRequest.js'
+import { usePermissions } from '../usePermissions.js'
+
+// 页面挂在控制台外壳下，权限清单在校验通过后才有，这里读到的已经是最终结果
+const { can } = usePermissions()
+const canReviewSubmissions = computed(() => can('cards.review'))
+const canReadLogs = computed(() => can('logs.read'))
 
 /* ===========================================================================
    占位数据：以下常量覆盖控制台里尚无后端支撑的部分，接口就绪后逐个替换，
@@ -175,7 +181,10 @@ async function loadSubmissionPreview() {
   }
 }
 
-onMounted(loadSubmissionPreview)
+// 没有审核权限时接口会直接 403，没必要的往返与报错都不该发生
+onMounted(() => {
+  if (canReviewSubmissions.value) loadSubmissionPreview()
+})
 
 /* ===== 管理日志 =====
    读后端 console_audit_log（GET /api/v1/console/logs）：登录、内容增删改等操作。
@@ -266,8 +275,11 @@ function onKeydown(event) {
 }
 
 onMounted(() => {
-  fetchLogs({ initial: true })
-  logTimer = setInterval(() => fetchLogs(), LOG_POLL_MS)
+  // 日志读取需要 logs.read，没有权限时连轮询都不起来
+  if (canReadLogs.value) {
+    fetchLogs({ initial: true })
+    logTimer = setInterval(() => fetchLogs(), LOG_POLL_MS)
+  }
   window.addEventListener('keydown', onKeydown)
 })
 
@@ -329,7 +341,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="panel-columns">
-      <ConsolePanel :icon="Send24Regular" title="网址提交">
+      <ConsolePanel v-if="canReviewSubmissions" :icon="Send24Regular" title="网址提交">
         <template #extra>
           <span class="panel-note">最新 5 条待审核</span>
         </template>
@@ -383,6 +395,7 @@ onBeforeUnmount(() => {
     </div>
 
     <ConsolePanel
+      v-if="canReadLogs"
       class="log-panel"
       :class="{ 'log-panel--full': fullscreen }"
       :icon="History24Regular"
