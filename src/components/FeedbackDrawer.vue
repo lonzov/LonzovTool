@@ -40,11 +40,43 @@ const KIND_OPTIONS = [
   { value: 'reminder', label: '提醒' },
 ]
 
-const DETAIL_EXAMPLE = `示例：
-在「首页 → 在线网站」点开「某工具」，页面空白并提示 500。
-期望：能正常打开工具。
-复现：连续点两次「重新加载」必现。
-环境：Windows 11 / Chrome 129 / 2026-05-20 14:30`
+/* 示例按类型分开：出问题的人需要说清"预期 vs 实际"，
+   想要新功能的人需要说清"做什么、什么时候用、大概怎么操作"——
+   只写"希望增加 XX 生成器"这种工具名，等于把最难的部分留给读的人去猜。
+   数组里 strong 的片段是重点词，渲染时加粗提亮，扫一眼就能抓住句式。 */
+const EXAMPLE_PARTS = {
+  bug: [
+    [{ text: '我以为', strong: true }, { text: '点「复制指令」会把整段指令复制下来，' }],
+    [{ text: '实际', strong: true }, { text: '只复制了第一行，贴到游戏里就少了几条。' }],
+    [{ text: '我是在「指令工具」页用的，用的手机。' }],
+    [{ text: '如果是我操作不对，也告诉我应该怎么点。' }],
+  ],
+  suggestion: [
+    [
+      { text: '我想做的', strong: true },
+      { text: '：把一段指令里的数字批量换成别的数字。' },
+    ],
+    [
+      { text: '用在哪', strong: true },
+      { text: '：调参数时要一条条改，十几条改起来很麻烦。' },
+    ],
+    [
+      { text: '大概长这样', strong: true },
+      { text: '：上面贴指令，下面填「把 10 换成 20」，点一下全改完。' },
+    ],
+    [{ text: '不一定要做成「批量替换生成器」，能这样用就行。' }],
+  ],
+  reminder: [
+    [{ text: '想提醒', strong: true }, { text: '：某条指令在新版本里已经不能用了。' }],
+    [{ text: '我遇到的情况', strong: true }, { text: '：照着站里的说明填，进游戏提示语法错误。' }],
+  ],
+}
+
+const DETAIL_PLACEHOLDER = {
+  bug: '照平常说话写：你本来想做什么、它实际做了什么、你希望它怎么做',
+  suggestion: '写清想让它做什么、你什么时候会用到、大概怎么操作，不用起工具名',
+  reminder: '说清要提醒的是哪件事、你是怎么发现的',
+}
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const QQ_PATTERN = /^\d{5,12}$/
@@ -79,6 +111,10 @@ const imageBusy = ref(false)
 const dragActive = ref(false)
 const exampleOpen = ref(false)
 
+// form 是 reactive，不是 ref：写成 form.value.kind 会在渲染时抛错，整个抽屉都打不开
+const exampleLines = computed(() => EXAMPLE_PARTS[form.kind] || EXAMPLE_PARTS.bug)
+const detailPlaceholder = computed(() => DETAIL_PLACEHOLDER[form.kind] || DETAIL_PLACEHOLDER.bug)
+
 /* 验证组件的生命周期状态：showCaptcha 在未 ready 时调用不会有任何反应，
    用户点提交看起来就会像"没响应"，所以必须自己跟踪并在按钮旁给出说明 */
 const captchaState = ref('loading')
@@ -99,7 +135,7 @@ const drawerStyle = computed(() => ({
 }))
 
 const rules = {
-  title: { required: true, message: '请用一句话概括问题', trigger: ['input', 'blur'] },
+  title: { required: true, message: '请用一句话说清哪里不对', trigger: ['input', 'blur'] },
   contact: [
     { required: true, message: '请填写联系方式', trigger: ['input', 'blur'] },
     {
@@ -257,7 +293,9 @@ function pickImages() {
 }
 
 function onImagesPicked(event) {
-  const files = event.target.files || []
+  // 先把 FileList 拍成数组再清空 input：清空会把这个活引用一起清掉，
+  // 留着原对象传下去等于传了个空列表，表现就是"选完图什么都没发生"
+  const files = Array.from(event.target.files || [])
   event.target.value = ''
   addFiles(files)
 }
@@ -554,12 +592,12 @@ onBeforeUnmount(() => {
             v-model:value="form.title"
             maxlength="100"
             show-count
-            placeholder="一句话概括，比如「在线网站点开后空白」"
+            placeholder="一句话说清哪里不对，比如「复制指令只复制了一部分」"
           />
         </NFormItem>
 
         <NFormItem label="联系方式" path="contact">
-          <NInput v-model:value="form.contact" maxlength="120" placeholder="邮箱或 QQ 号" />
+          <NInput v-model:value="form.contact" maxlength="120" placeholder="留个能联系到你的邮箱或 QQ" />
         </NFormItem>
 
         <NFormItem label="发生问题的页面（选填）">
@@ -567,7 +605,7 @@ onBeforeUnmount(() => {
             <NInput
               v-model:value="form.pagePath"
               maxlength="200"
-              placeholder="可从下方按钮带入，也可以自己改"
+              placeholder="不确定就点下面的按钮自动填"
             />
             <button
               class="app-btn app-btn--outline app-btn--sm fb-page-btn"
@@ -587,7 +625,7 @@ onBeforeUnmount(() => {
               :autosize="{ minRows: 3, maxRows: 8 }"
               maxlength="2000"
               show-count
-              placeholder="说清现象、期望结果与复现步骤，越具体越好"
+              :placeholder="detailPlaceholder"
             />
             <button
               class="fb-example-toggle"
@@ -596,11 +634,16 @@ onBeforeUnmount(() => {
               @click="exampleOpen = !exampleOpen"
             >
               <NIcon :component="ChevronDown24Regular" :size="12" :class="{ 'is-open': exampleOpen }" />
-              怎么写才有效？
+              不知道怎么描述？照这个样子说就行
             </button>
             <div class="fb-example" :class="{ 'is-open': exampleOpen }">
               <div class="fb-example-inner">
-                <p class="fb-example-text">{{ DETAIL_EXAMPLE }}</p>
+                <p v-for="(line, index) in exampleLines" :key="index" class="fb-example-text">
+                  <template v-for="(part, partIndex) in line" :key="partIndex">
+                    <strong v-if="part.strong">{{ part.text }}</strong>
+                    <template v-else>{{ part.text }}</template>
+                  </template>
+                </p>
               </div>
             </div>
           </div>
@@ -646,7 +689,7 @@ onBeforeUnmount(() => {
             />
 
             <p class="fb-hint">
-              最多 3 张，可点击选择、拖入或直接粘贴；单张 5 MB 以内，本机先压成宽 1600 以内的 WebP。
+              最多 3 张。可以点这里选图，也可以直接把截图粘贴进来。
             </p>
             <p v-if="imageError" class="fb-error">{{ imageError }}</p>
           </div>
@@ -783,8 +826,14 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 
+/* 示例里的重点词要跳出来：正文是次级灰，重点词用一级前景色 + 加粗 */
+.fb-example-text strong {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
 .fb-example-text {
-  margin: 0;
+  margin: 0 0 6px;
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);

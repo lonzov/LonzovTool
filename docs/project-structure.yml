@@ -11,6 +11,7 @@ src:
   components:
     ui:
       AppModal.vue: 全站统一的模态框外壳（宽度/紧凑高度/毛玻璃遮罩/页脚按钮），事件一律透传
+      InputOtp.vue: 分格验证码输入（单隐藏输入 + 装饰槽位），对齐 shadcn 的 InputOTP 观感
     PromoCarousel.vue: 首页推广位轮播组件，滑片数据取自 promoData（接口下发，快照兜底），滑片支持站内外链接
     AppMenu.vue: 侧边栏导航菜单，分固定栏与分类栏两段，分类栏内容由页面模块接管（未接管时回落首页工具分类）、换源时交叉淡入淡出，含 PWA 安装入口
     DonateCard.vue: 打赏收款码卡片，含三平台切换 + 爱发电按钮
@@ -99,13 +100,17 @@ src:
     usePermissions.js: 控制台权限判定（can/permissions/account），由壳层 provide 给子页面，口径与服务端一致
     deviceLabel.js: 把 User-Agent 压成「浏览器 · 系统」一句人话，供登录设备列表展示
     passwordStrength.js: 密码位数预检（下限与服务端一致），其余强度规则由服务端在提交时判定
+    useIsMobile.js: 窄屏断点判定（matchMedia，771px），抽屉与浮窗按它切铺满/定宽
+    useImageLightbox.js: 截图灯箱，按需加载 Viewer.js（仅控制台使用）
+    components/FeedbackFilterModal.vue: 反馈筛选规则编辑器，字段+匹配方式+动态搜索取值
+    useResendCountdown.js: 邮件验证码重发的 60 秒冷却倒计时，登录两步验证与账号页开关共用
     components/ConsolePageHeader.vue: 控制台页面标题区（图标 + 标题 + 说明 + 右侧附加区）
     components/ConsolePanel.vue: 控制台面板卡外壳（图标 + 标题 + 说明 + 内容区）
     components/StatCard.vue: 控制台指标卡（图标 + 标签 + 数值 + 说明）
-    pages/ConsoleAccount.vue: 我的账号页，账号信息、改密码与登录设备列表（撤销会话）
+    pages/ConsoleAccount.vue: 我的账号页，账号信息、改密码、邮箱两步验证开关与登录设备列表（撤销会话）
     pages/ConsoleAccounts.vue: 账号管理页，账号列表与新建/编辑/重置密码，编辑角色与单点授权范围
     pages/ConsoleCards.vue: 卡片管理页，列表与模拟布局两种视图、增删改与显隐，编辑器内支持图标上传
-    pages/ConsoleLogin.vue: 控制台登录页，邮箱 + 密码登录，仅拥有控制台权限的账号可进入
+    pages/ConsoleLogin.vue: 控制台登录页，邮箱 + 密码登录，账号开启两步验证时切到验证码步骤，仅拥有控制台权限的账号可进入
     pages/ConsoleNotices.vue: 公告管理页，列表、增删改，时间用日期选择器录入
     pages/ConsolePromo.vue: 推广位管理页，四档槽位的图文、到期时间与隐藏，图可点击/拖拽/粘贴上传
     pages/ConsoleOverview.vue: 控制台概览页，待办事项、站点指标、访问统计、提交预览、Uptime 与管理日志，前两类仍为占位数据

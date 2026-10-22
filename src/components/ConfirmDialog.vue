@@ -28,6 +28,7 @@ const actions = computed(() => {
 
 <template>
   <AppModal
+    :z-index="2400"
     :auto-focus="false"
     :segmented="false"
     :show="confirmState.show"

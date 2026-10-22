@@ -1,40 +1,69 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NIcon, useMessage } from 'naive-ui'
+import { NDrawer, NDrawerContent, NIcon, NInput, NSelect, useMessage } from 'naive-ui'
 import {
   ArrowClockwise24Regular,
+  ArrowUndo24Regular,
   ChatHelp24Regular,
-  CheckmarkCircle24Regular,
+  Bug24Regular,
+  Checkmark24Regular,
+  CommentNote24Regular,
+  Lightbulb24Regular,
   Copy24Regular,
   Delete24Regular,
-  Mail24Regular,
+  Filter24Regular,
+  Image24Regular,
 } from '@vicons/fluent'
-import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import FeedbackFilterModal from '../components/FeedbackFilterModal.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { copyText } from '../../utils/clipboard.js'
 import { consoleFetch } from '../consoleRequest.js'
+import { openImageLightbox } from '../useImageLightbox.js'
+import { useIsMobile } from '../../composables/useIsMobile.js'
 
-/* 访客反馈的处理队列。取数走 after + last_id 增量：反馈只增不删，
-   翻页期间新提交插入队列头部也不会造成重复或漏项。 */
+/* 访客反馈的处理队列。
+   列表只做预览：一眼看清"是什么事、什么状态、要不要现在处理"；
+   优先级与备注的编辑全部发生在详情抽屉里，列表不承载任何输入控件。 */
 const LIST_URL = '/api/v1/console/feedback'
 const PAGE_SIZE = 50
 
-const FILTERS = [
+const TABS = [
   { value: 'pending', label: '待处理' },
   { value: 'handled', label: '已处理' },
   { value: '', label: '全部' },
 ]
 
-const KIND_TEXT = { bug: 'BUG', suggestion: '建议', reminder: '提醒' }
+/* 类型用图标表达：列表里一个形状 + 一种颜色就能区分"这是 bug 还是建议"，
+   比再挂一个文字标签省位置，也不会让标题行堆满标签 */
+const KIND_META = {
+  bug: { label: 'BUG', icon: Bug24Regular, tone: 'danger' },
+  suggestion: { label: '建议', icon: Lightbulb24Regular, tone: 'info' },
+  reminder: { label: '提醒', icon: CommentNote24Regular, tone: 'warn' },
+}
+const KIND_TONE = { bug: 'danger', suggestion: 'info', reminder: 'warn' }
+
+const PRIORITY_OPTIONS = [
+  { label: '一般', value: 'normal' },
+  { label: '注意', value: 'attention' },
+  { label: '紧急', value: 'urgent' },
+  { label: '重复', value: 'duplicate' },
+]
+const PRIORITY_TONE = {
+  normal: 'muted',
+  attention: 'warn',
+  urgent: 'danger',
+  duplicate: 'muted',
+}
 
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
+const { isMobile } = useIsMobile()
 
 const items = ref([])
-const filter = ref('pending')
+const status = ref('pending')
 const loading = ref(false)
 const loadingMore = ref(false)
 const errorText = ref('')
@@ -42,10 +71,23 @@ const lastId = ref(0)
 const hasMore = ref(false)
 const pendingId = ref(0)
 
+/** 已应用的筛选规则 */
+const rules = ref([])
+const filterOpen = ref(false)
+
 const detail = ref({ show: false, item: null })
-const preview = ref({ show: false, src: '' })
+const form = ref({ priority: 'normal', note: '' })
+const saving = ref(false)
+const reopening = ref(false)
 
 const emptyText = computed(() => (loading.value ? '读取中…' : '没有符合条件的反馈'))
+
+const drawerStyle = computed(() => ({
+  background: 'var(--background)',
+  borderLeft: '1px solid var(--border)',
+  boxShadow: 'var(--shadow-drawer)',
+  ...(isMobile.value ? { borderTopLeftRadius: '0', borderBottomLeftRadius: '0' } : {}),
+}))
 
 function gotUnauthorized(e) {
   if (e?.code !== 'unauthorized') return false
@@ -54,19 +96,36 @@ function gotUnauthorized(e) {
 }
 
 function kindText(item) {
-  return item?.kind_label || KIND_TEXT[item?.kind] || '反馈'
+  return item?.kind_label || KIND_META[item?.kind]?.label || '反馈'
+}
+
+function kindIcon(item) {
+  return KIND_META[item?.kind]?.icon || CommentNote24Regular
 }
 
 function statusOf(item) {
-  if (item?.status === 'handled') return { text: '已处理', tone: 'success' }
-  return { text: '待处理', tone: 'warning' }
+  return item?.status === 'handled'
+    ? { text: '已处理', tone: 'success' }
+    : { text: '待处理', tone: 'warn' }
 }
 
 function isEmail(contact) {
   return (contact || '').includes('@')
 }
 
-function formatTime(value) {
+/** 相对时间：列表里「3 天前」比绝对时间更有用 */
+function relativeTime(value) {
+  const seconds = Number(value)
+  if (!Number.isFinite(seconds) || seconds <= 0) return ''
+  const diff = Date.now() / 1000 - seconds
+  if (diff < 60) return '刚刚'
+  if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`
+  if (diff < 86400) return `${Math.floor(diff / 3600)} 小时前`
+  if (diff < 86400 * 30) return `${Math.floor(diff / 86400)} 天前`
+  return new Date(seconds * 1000).toLocaleDateString('zh-CN')
+}
+
+function fullTime(value) {
   const seconds = Number(value)
   if (!Number.isFinite(seconds) || seconds <= 0) return '—'
   return new Date(seconds * 1000).toLocaleString('zh-CN', {
@@ -83,6 +142,11 @@ function imageList(item) {
   return Array.isArray(item?.images) ? item.images.filter(Boolean) : []
 }
 
+function excerpt(item) {
+  const text = (item?.detail || '').replace(/\s+/g, ' ').trim()
+  return text || '（没有填写详细描述）'
+}
+
 async function load({ append = false } = {}) {
   if (append ? loadingMore.value : loading.value) return
 
@@ -95,7 +159,10 @@ async function load({ append = false } = {}) {
       after: append ? String(lastId.value) : '0',
       limit: String(PAGE_SIZE),
     })
-    if (filter.value) params.set('status', filter.value)
+    if (status.value) params.set('status', status.value)
+    for (const rule of rules.value) {
+      params.append('filter', `${rule.field}:${rule.op}:${rule.value}`)
+    }
 
     const payload = await consoleFetch(`${LIST_URL}?${params.toString()}`)
     const list = Array.isArray(payload?.items) ? payload.items : []
@@ -108,7 +175,6 @@ async function load({ append = false } = {}) {
         : list.length
           ? list[list.length - 1].id
           : lastId.value
-    // 契约不带 has_more，满页就认为还有下一页：多请求一次只会拿到空列表
     hasMore.value = list.length >= PAGE_SIZE
   } catch (e) {
     if (gotUnauthorized(e)) return
@@ -121,19 +187,70 @@ async function load({ append = false } = {}) {
   }
 }
 
+function openDetail(item) {
+  detail.value = { show: true, item }
+  form.value = { priority: item.priority || 'normal', note: item.note || '' }
+}
+
+/** 保存优先级与备注：只改这两个字段，不动处理状态 */
+async function saveReview() {
+  const item = detail.value.item
+  if (!item) return
+  saving.value = true
+  try {
+    const updated = await consoleFetch(`${LIST_URL}/${item.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ priority: form.value.priority, note: form.value.note }),
+    })
+    Object.assign(item, updated)
+    message.success('已保存')
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    message.error(e?.message || '保存失败，请稍后重试')
+  } finally {
+    saving.value = false
+  }
+}
+
+/** 重新打开：状态回到待处理，处理人与处理时间由服务端清空 */
+async function reopen(item) {
+  reopening.value = true
+  try {
+    const updated = await consoleFetch(`${LIST_URL}/${item.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        status: 'pending',
+        priority: form.value.priority,
+        note: form.value.note,
+      }),
+    })
+    Object.assign(item, updated)
+    message.success('已重新打开')
+    await load()
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    message.error(e?.message || '重新打开失败，请稍后重试')
+  } finally {
+    reopening.value = false
+  }
+}
+
 async function markHandled(item) {
   pendingId.value = item.id
   try {
-    const updated = await consoleFetch(`${LIST_URL}/${item.id}/handle`, { method: 'POST' })
+    const updated = await consoleFetch(`${LIST_URL}/${item.id}/handle`, {
+      method: 'POST',
+      body: JSON.stringify({ priority: form.value.priority, note: form.value.note }),
+    })
     Object.assign(item, updated)
+    form.value = { priority: updated.priority || 'normal', note: updated.note || '' }
     message.success('已标记为已处理')
+    await load()
   } catch (e) {
     if (gotUnauthorized(e)) return
     message.error(e?.message || '操作失败，请稍后重试')
   } finally {
     pendingId.value = 0
-    // 待处理筛选下处理完就该从列表里消失，重拉一次比手工剔除更不容易漏状态
-    await load()
   }
 }
 
@@ -151,12 +268,12 @@ async function remove(item) {
     await consoleFetch(`${LIST_URL}/${item.id}`, { method: 'DELETE' })
     message.success('已删除')
     if (detail.value.item?.id === item.id) detail.value.show = false
+    await load()
   } catch (e) {
     if (gotUnauthorized(e)) return
     message.error(e?.message || '删除失败，请稍后重试')
   } finally {
     pendingId.value = 0
-    await load()
   }
 }
 
@@ -167,59 +284,50 @@ async function copyContact(contact) {
   else message.error('复制失败，请手动选中')
 }
 
-function openDetail(item) {
-  detail.value = { show: true, item }
+function openShots(item, index = 0) {
+  openImageLightbox(imageList(item), index)
 }
 
-function openPreview(src) {
-  preview.value = { show: true, src }
+function applyRules(next) {
+  rules.value = next
+  load()
 }
 
-// 页脚动作跟着详情里的状态走：已处理的条目不再出现「标记已处理」
-const detailActions = computed(() => {
-  const item = detail.value.item
-  const busy = !!item && pendingId.value === item.id
-  const actions = []
-
-  if (item && item.status !== 'handled') {
-    actions.push({
-      text: busy ? '处理中…' : '标记已处理',
-      variant: 'fill',
-      disabled: busy,
-      onClick: () => markHandled(item),
-    })
-  }
-  if (item) {
-    actions.push({ text: '删除', variant: 'danger', disabled: busy, onClick: () => remove(item) })
-  }
-  actions.push({ text: '关闭', variant: 'outline', onClick: () => (detail.value.show = false) })
-  return actions
-})
-
-watch(filter, () => load())
-
+watch(status, () => load())
 onMounted(load)
 </script>
 
 <template>
   <div class="console-feedback">
     <div class="feedback-toolbar">
-      <div class="filter-group">
+      <div class="tab-group">
         <button
-          v-for="option in FILTERS"
-          :key="option.label"
-          class="filter-pill"
-          :class="{ 'filter-pill--on': filter === option.value }"
+          v-for="tab in TABS"
+          :key="tab.label"
+          class="tab"
+          :class="{ 'tab--on': status === tab.value }"
           type="button"
-          @click="filter = option.value"
+          @click="status = tab.value"
         >
-          {{ option.label }}
+          {{ tab.label }}
         </button>
       </div>
-      <button class="refresh-btn" type="button" :disabled="loading" @click="load()">
-        <NIcon :component="ArrowClockwise24Regular" :size="14" />
-        刷新
-      </button>
+
+      <div class="toolbar-actions">
+        <button
+          class="tool-btn"
+          :class="{ 'tool-btn--on': rules.length }"
+          type="button"
+          @click="filterOpen = true"
+        >
+          <NIcon :component="Filter24Regular" :size="15" />
+          筛选
+          <span v-if="rules.length" class="tool-count">{{ rules.length }}</span>
+        </button>
+        <button class="tool-btn tool-btn--icon" type="button" title="刷新" :disabled="loading" @click="load()">
+          <NIcon :component="ArrowClockwise24Regular" :size="16" />
+        </button>
+      </div>
     </div>
 
     <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
@@ -227,73 +335,34 @@ onMounted(load)
     <ConsolePanel :icon="ChatHelp24Regular" :title="`反馈列表（${items.length}）`">
       <p v-if="!items.length" class="inline-hint">{{ emptyText }}</p>
 
-      <div v-else class="feedback-list">
-        <article
-          v-for="item in items"
-          :key="item.id"
-          class="feedback-card"
-          role="button"
-          tabindex="0"
-          @click="openDetail(item)"
-          @keydown.enter="openDetail(item)"
-        >
-          <div class="feedback-head">
-            <span class="kind-pill" :class="`kind-pill--${item.kind}`">{{ kindText(item) }}</span>
-            <span class="feedback-title">{{ item.title }}</span>
-            <span class="status-pill" :class="`status-pill--${statusOf(item).tone}`">
-              {{ statusOf(item).text }}
+      <ul v-else class="issue-list">
+        <li v-for="item in items" :key="item.id">
+          <button class="issue-row" type="button" @click="openDetail(item)">
+            <span class="issue-kind" :class="`issue-kind--${KIND_META[item.kind]?.tone || 'info'}`" :title="kindText(item)">
+              <NIcon :component="kindIcon(item)" :size="18" />
             </span>
-            <span class="feedback-time">{{ formatTime(item.created_at) }}</span>
-          </div>
 
-          <div class="feedback-meta">
-            <span class="meta-item">
-              <NIcon :component="Mail24Regular" :size="12" class="meta-icon" />
-              <a
-                v-if="isEmail(item.contact)"
-                class="meta-link"
-                :href="`mailto:${item.contact}`"
-                @click.stop
-              >
-                {{ item.contact }}
-              </a>
-              <button
-                v-else
-                class="meta-link"
-                type="button"
-                title="复制 QQ 号"
-                @click.stop="copyContact(item.contact)"
-              >
-                {{ item.contact }}
-                <NIcon :component="Copy24Regular" :size="11" />
-              </button>
+            <span class="issue-main">
+              <span class="issue-title-line">
+                <span class="issue-title">{{ item.title }}</span>
+                <span class="tag" :class="`tag--${PRIORITY_TONE[item.priority] || 'muted'}`">
+                  {{ item.priority_label || '一般' }}
+                </span>
+              </span>
+              <span class="issue-excerpt">{{ excerpt(item) }}</span>
+              <span class="issue-meta">
+                #{{ item.id }} · {{ relativeTime(item.created_at) }} · {{ statusOf(item).text }}
+                <template v-if="item.note"> · 已备注</template>
+              </span>
             </span>
-            <span v-if="item.page_path" class="meta-item meta-path">{{ item.page_path }}</span>
-          </div>
 
-          <div class="feedback-actions">
-            <button
-              v-if="item.status !== 'handled'"
-              class="app-btn app-btn--fill app-btn--sm action-btn"
-              type="button"
-              :disabled="pendingId === item.id"
-              @click.stop="markHandled(item)"
-            >
-              <NIcon :component="CheckmarkCircle24Regular" :size="14" />
-              标记已处理
-            </button>
-            <button
-              class="app-btn app-btn--danger app-btn--sm action-btn"
-              type="button"
-              :disabled="pendingId === item.id"
-              @click.stop="remove(item)"
-            >
-              <NIcon :component="Delete24Regular" :size="14" />
-              删除
-            </button>
-          </div>
-        </article>
-      </div>
+            <span v-if="imageList(item).length" class="issue-shots">
+              <NIcon :component="Image24Regular" :size="14" />
+              {{ imageList(item).length }}
+            </span>
+          </button>
+        </li>
+      </ul>
 
       <div v-if="hasMore" class="load-more-row">
         <button
@@ -307,86 +376,147 @@ onMounted(load)
       </div>
     </ConsolePanel>
 
-    <AppModal
-      v-model:show="detail.show"
-      :title="detail.item ? detail.item.title : '反馈详情'"
-      :max-width="640"
-      :auto-focus="false"
-      :actions="detailActions"
-      content-scrollable
-    >
-      <div v-if="detail.item" class="detail">
-        <div class="detail-tags">
-          <span class="kind-pill" :class="`kind-pill--${detail.item.kind}`">
-            {{ kindText(detail.item) }}
-          </span>
-          <span class="status-pill" :class="`status-pill--${statusOf(detail.item).tone}`">
-            {{ statusOf(detail.item).text }}
-          </span>
-          <span class="detail-id">#{{ detail.item.id }}</span>
-        </div>
+    <FeedbackFilterModal v-model:show="filterOpen" :rules="rules" @apply="applyRules" />
 
-        <dl class="detail-meta">
-          <div>
-            <dt>联系方式</dt>
-            <dd>
-              <a
-                v-if="isEmail(detail.item.contact)"
-                class="meta-link"
-                :href="`mailto:${detail.item.contact}`"
+    <NDrawer
+      v-model:show="detail.show"
+      placement="right"
+      :width="isMobile ? '100%' : 640"
+      :z-index="2100"
+      :style="drawerStyle"
+      @update:show="detail.show = $event"
+    >
+      <NDrawerContent
+        v-if="detail.item"
+        :title="`反馈详情 #${detail.item.id}`"
+        closable
+        :body-content-style="{ padding: '0' }"
+        :footer-style="{ padding: '0' }"
+      >
+        <div class="detail">
+          <div class="detail-tags">
+            <span class="tag" :class="`tag--${statusOf(detail.item).tone}`">
+              {{ statusOf(detail.item).text }}
+            </span>
+            <span class="tag" :class="`tag--${KIND_TONE[detail.item.kind] || 'muted'}`">
+              {{ kindText(detail.item) }}
+            </span>
+          </div>
+
+          <h2 class="detail-title">{{ detail.item.title }}</h2>
+          <p class="detail-sub">{{ fullTime(detail.item.created_at) }} 提交</p>
+
+          <section class="detail-section">
+            <h3 class="section-title">反馈内容</h3>
+            <!-- 纯文本渲染：内容来自访客，按 HTML 解释等于开 XSS 口子 -->
+            <p class="detail-body">{{ detail.item.detail || '（没有填写详细描述）' }}</p>
+          </section>
+
+          <section v-if="imageList(detail.item).length" class="detail-section">
+            <h3 class="section-title">截图</h3>
+            <div class="detail-shots">
+              <button
+                v-for="(src, index) in imageList(detail.item)"
+                :key="src"
+                class="detail-shot"
+                type="button"
+                :title="`查看第 ${index + 1} 张截图`"
+                @click="openShots(detail.item, index)"
               >
-                {{ detail.item.contact }}
-              </a>
+                <img :src="src" :alt="`截图 ${index + 1}`" loading="lazy" />
+              </button>
+            </div>
+          </section>
+
+          <section class="detail-section">
+            <h3 class="section-title">处理</h3>
+
+            <div class="form-field">
+              <span class="form-label">优先级</span>
+              <NSelect v-model:value="form.priority" :options="PRIORITY_OPTIONS" />
+            </div>
+
+            <div class="form-field">
+              <span class="form-label">备注</span>
+              <NInput
+                v-model:value="form.note"
+                type="textarea"
+                :rows="3"
+                maxlength="200"
+                show-count
+                placeholder="写点给下一个人看的东西：已经联系过访客、同样的问题出现过几次……"
+              />
+            </div>
+
+            <div class="form-actions">
+              <button class="app-btn app-btn--fill" type="button" :disabled="saving" @click="saveReview">
+                <NIcon :component="Checkmark24Regular" :size="16" />
+                {{ saving ? '保存中…' : '保存' }}
+              </button>
+              <button
+                v-if="detail.item.status !== 'handled'"
+                class="app-btn app-btn--outline"
+                type="button"
+                :disabled="pendingId === detail.item.id"
+                @click="markHandled(detail.item)"
+              >
+                标记已处理
+              </button>
               <button
                 v-else
-                class="meta-link"
+                class="app-btn app-btn--outline"
                 type="button"
-                title="复制 QQ 号"
-                @click="copyContact(detail.item.contact)"
+                :disabled="reopening"
+                @click="reopen(detail.item)"
               >
-                {{ detail.item.contact }}
-                <NIcon :component="Copy24Regular" :size="11" />
+                <NIcon :component="ArrowUndo24Regular" :size="16" />
+                {{ reopening ? '处理中…' : '重新打开' }}
               </button>
-            </dd>
-          </div>
-          <div><dt>页面路径</dt><dd>{{ detail.item.page_path || '未填写' }}</dd></div>
-          <div><dt>提交时间</dt><dd>{{ formatTime(detail.item.created_at) }}</dd></div>
-          <div><dt>处理人</dt><dd>{{ detail.item.handled_by || '—' }}</dd></div>
-          <div><dt>处理时间</dt><dd>{{ formatTime(detail.item.handled_at) }}</dd></div>
-        </dl>
+            </div>
+          </section>
 
-        <p class="detail-label">详细描述</p>
-        <!-- 纯文本渲染：内容来自访客，按 HTML 解释等于开 XSS 口子 -->
-        <p class="detail-body">{{ detail.item.detail || '—' }}</p>
+          <section class="detail-section">
+            <h3 class="section-title">访客信息</h3>
+            <dl class="detail-meta">
+              <div class="meta-row">
+                <dt>联系方式</dt>
+                <dd>
+                  <a v-if="isEmail(detail.item.contact)" class="meta-link" :href="`mailto:${detail.item.contact}`">
+                    {{ detail.item.contact }}
+                  </a>
+                  <span v-else>{{ detail.item.contact }}</span>
+                  <button class="meta-copy" type="button" title="复制" @click="copyContact(detail.item.contact)">
+                    <NIcon :component="Copy24Regular" :size="13" />
+                  </button>
+                </dd>
+              </div>
+              <div class="meta-row">
+                <dt>页面</dt>
+                <dd>{{ detail.item.page_path || '未填写' }}</dd>
+              </div>
+              <div v-if="detail.item.handled_by" class="meta-row">
+                <dt>处理人</dt>
+                <dd>{{ detail.item.handled_by }} · {{ fullTime(detail.item.handled_at) }}</dd>
+              </div>
+            </dl>
+          </section>
+        </div>
 
-        <template v-if="imageList(detail.item).length">
-          <p class="detail-label">截图（点击看大图）</p>
-          <div class="detail-images">
+        <template #footer>
+          <div class="detail-footer">
             <button
-              v-for="(src, index) in imageList(detail.item)"
-              :key="src"
-              class="detail-shot"
+              class="app-btn app-btn--text app-btn--sm detail-delete"
               type="button"
-              @click="openPreview(src)"
+              :disabled="pendingId === detail.item.id"
+              @click="remove(detail.item)"
             >
-              <img :src="src" :alt="`截图 ${index + 1}`" loading="lazy" />
+              <NIcon :component="Delete24Regular" :size="14" />
+              删除这条反馈
             </button>
           </div>
         </template>
-      </div>
-    </AppModal>
-
-    <AppModal
-      v-model:show="preview.show"
-      title="截图"
-      :max-width="960"
-      :max-height-offset="96"
-      :auto-focus="false"
-      :actions="[{ text: '关闭', variant: 'outline', onClick: () => (preview.show = false) }]"
-      content-scrollable
-    >
-      <img v-if="preview.src" class="preview-image" :src="preview.src" alt="截图大图" />
-    </AppModal>
+      </NDrawerContent>
+    </NDrawer>
   </div>
 </template>
 
@@ -407,167 +537,190 @@ onMounted(load)
   flex-wrap: wrap;
 }
 
-.filter-group {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+.tab-group {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--muted);
+  transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
-.filter-pill {
-  padding: 4px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  corner-shape: round;
+.tab {
+  padding: 5px 14px;
+  border: none;
+  border-radius: calc(var(--radius-md) - 3px);
   background: transparent;
   color: var(--muted-foreground);
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.tab:hover {
+  color: var(--foreground);
+}
+
+.tab--on {
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: var(--shadow-sm);
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-family: inherit;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
-.filter-pill:hover {
+.tool-btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--accent);
   color: var(--foreground);
 }
 
-.filter-pill--on {
-  color: var(--foreground);
+.tool-btn--on {
   border-color: var(--border-strong);
+  background: var(--accent);
+  color: var(--foreground);
+}
+
+.tool-btn--icon {
+  width: 32px;
+  padding: 0;
+  justify-content: center;
+}
+
+.tool-count {
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-full);
+  corner-shape: round;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 0.7rem;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* ===== 列表：一条条 issue，靠分隔线而不是卡片堆叠 ===== */
+.issue-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.issue-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 10px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.issue-list li:last-child .issue-row {
+  border-bottom: none;
+}
+
+.issue-row:hover {
   background: var(--accent);
 }
 
-.refresh-btn {
+.issue-kind {
   display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  background: transparent;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+.issue-kind--danger {
+  color: var(--destructive);
+}
+
+.issue-kind--info {
   color: var(--muted-foreground);
-  font-family: inherit;
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
 }
 
-.refresh-btn:hover:not(:disabled) {
-  color: var(--foreground);
+.issue-kind--warn {
+  color: var(--warning);
 }
 
-.refresh-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.feedback-list {
+.issue-main {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
 }
 
-.feedback-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--muted);
-  cursor: pointer;
-  transition: border-color 0.3s ease, background-color 0.4s ease;
-}
-
-.feedback-card:hover {
-  border-color: var(--border-strong);
-}
-
-.feedback-head {
+.issue-title-line {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  min-width: 0;
 }
 
-.feedback-title {
-  flex: 1 1 200px;
+.issue-title {
   min-width: 0;
   color: var(--foreground);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.issue-excerpt {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.5;
   white-space: nowrap;
-  transition: color 0.4s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.feedback-time {
-  flex-shrink: 0;
+.issue-meta {
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
-  transition: color 0.4s ease;
+  font-size: 0.8125rem;
+  line-height: 1.5;
 }
 
-.feedback-meta {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-  min-width: 0;
-}
-
-.meta-item {
+.issue-shots {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  min-width: 0;
-  color: var(--muted-foreground);
-  font-size: 0.78rem;
-}
-
-.meta-icon {
   flex-shrink: 0;
+  padding-top: 2px;
   color: var(--subtle-foreground);
-}
-
-/* 路径可能很长，允许在任意位置断行，不让它把卡片撑出横向滚动 */
-.meta-path {
-  overflow-wrap: anywhere;
-  color: var(--subtle-foreground);
-  font-size: 0.74rem;
-}
-
-.meta-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--muted-foreground);
-  font-family: inherit;
-  font-size: inherit;
-  text-decoration: none;
-  cursor: pointer;
-  overflow-wrap: anywhere;
-  transition: color 0.2s ease;
-}
-
-.meta-link:hover {
-  color: var(--foreground);
-}
-
-.feedback-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.action-btn {
-  gap: 6px;
-  flex-shrink: 0;
+  font-size: 0.8125rem;
 }
 
 .load-more-row {
@@ -576,173 +729,249 @@ onMounted(load)
   padding-top: 12px;
 }
 
-.kind-pill {
+/* ===== 标签 ===== */
+.tag {
   flex-shrink: 0;
-  padding: 1px 8px;
+  padding: 1px 9px;
   border-radius: var(--radius-full);
   corner-shape: round;
-  font-size: 0.7rem;
-  transition: color 0.4s ease;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 20px;
+  white-space: nowrap;
+  transition: color 0.4s ease, background-color 0.4s ease;
 }
 
-.kind-pill--bug {
-  color: var(--destructive);
-  background: color-mix(in srgb, var(--destructive) 12%, transparent);
-}
-
-.kind-pill--suggestion {
+.tag--success {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
   color: var(--success);
-  background: color-mix(in srgb, var(--success) 12%, transparent);
 }
 
-.kind-pill--reminder {
+.tag--warn {
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
   color: var(--warning);
-  background: color-mix(in srgb, var(--warning) 12%, transparent);
 }
 
-.status-pill {
-  flex-shrink: 0;
-  padding: 1px 8px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 0.7rem;
-  transition: color 0.4s ease;
-}
-
-.status-pill--warning {
-  color: var(--warning);
-  background: color-mix(in srgb, var(--warning) 12%, transparent);
-}
-
-.status-pill--success {
-  color: var(--success);
-  background: color-mix(in srgb, var(--success) 12%, transparent);
-}
-
-.inline-hint {
-  margin: 0;
-  padding: 8px 0;
-  color: var(--subtle-foreground);
-  font-size: 0.8rem;
-  text-align: center;
-}
-
-.inline-hint--error {
+.tag--danger {
+  background: color-mix(in srgb, var(--destructive) 14%, transparent);
   color: var(--destructive);
-  text-align: left;
 }
 
-/* ===== 详情 ===== */
+.tag--info {
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  color: var(--foreground);
+}
+
+/* ===== 详情抽屉：编辑只在这里出现 ===== */
 .detail {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 22px;
+  padding: 20px 24px 24px;
 }
 
 .detail-tags {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
 }
 
 .detail-id {
+  margin-left: auto;
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
 }
 
-.detail-meta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 6px 16px;
+.detail-title {
   margin: 0;
-  font-size: 0.78rem;
+  color: var(--foreground);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
-.detail-meta div {
+.detail-sub {
+  margin: -14px 0 0;
+  color: var(--subtle-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.detail-section {
   display: flex;
-  gap: 8px;
-  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
 }
 
-.detail-meta dt {
-  flex-shrink: 0;
-  color: var(--subtle-foreground);
-}
-
-.detail-meta dd {
+/* 段落标题是父级：字号与颜色都要压过下方的表单标签，否则父子层级看不出来 */
+.section-title {
   margin: 0;
-  min-width: 0;
-  color: var(--muted-foreground);
-  overflow-wrap: anywhere;
+  color: var(--foreground);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
-.detail-label {
-  margin: 0;
-  color: var(--subtle-foreground);
-  font-size: 0.74rem;
-}
-
-/* 滚动交给 AppModal 的 content-scrollable 统一处理，这里只负责排版 */
 .detail-body {
   margin: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--muted);
-  color: var(--muted-foreground);
-  font-size: 0.82rem;
-  line-height: 1.7;
+  color: var(--foreground);
+  font-size: 0.9375rem;
+  line-height: 1.8;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
 }
 
-.detail-images {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 8px;
+.detail-shots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .detail-shot {
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 3;
+  width: 104px;
+  height: 104px;
   padding: 0;
-  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--muted);
+  overflow: hidden;
   cursor: zoom-in;
-  transition: border-color 0.2s ease, background-color 0.4s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
 .detail-shot:hover {
   border-color: var(--border-strong);
+  transform: translateY(-1px);
 }
 
 .detail-shot img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.preview-image {
   display: block;
-  max-width: 100%;
-  max-height: 68vh;
-  margin: 0 auto;
-  border-radius: var(--radius-md);
-  object-fit: contain;
 }
 
-@media (width <= 520px) {
-  .feedback-title {
-    flex-basis: 100%;
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.detail-meta {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meta-row {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.meta-row dt {
+  color: var(--subtle-foreground);
+}
+
+.meta-row dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--foreground);
+  overflow-wrap: anywhere;
+}
+
+.meta-link {
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.meta-link:hover {
+  text-decoration: underline;
+}
+
+.meta-copy {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--subtle-foreground);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.meta-copy:hover {
+  color: var(--foreground);
+}
+
+.detail-footer {
+  display: flex;
+  justify-content: flex-start;
+  padding: 12px 24px;
+}
+
+.detail-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--subtle-foreground);
+  font-size: 0.8125rem;
+}
+
+.detail-delete:hover:not(:disabled) {
+  color: var(--destructive);
+}
+
+@media (width <= 640px) {
+  .issue-row {
+    padding: 14px 4px;
+    gap: 10px;
   }
 
-  .feedback-time {
-    margin-left: auto;
+  .issue-title {
+    font-size: 0.9375rem;
+  }
+
+  .detail {
+    padding: 16px 18px 20px;
+    gap: 18px;
+  }
+
+  .detail-title {
+    font-size: 1.125rem;
+  }
+
+  .detail-shot {
+    width: 84px;
+    height: 84px;
+  }
+
+  .meta-row {
+    grid-template-columns: 68px minmax(0, 1fr);
   }
 }
 </style>
