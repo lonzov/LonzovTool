@@ -34,6 +34,9 @@ const reordering = ref(false)
 const listEl = ref(null)
 let sortable = null
 
+const contentError = ref('')
+const dateError = ref('')
+
 const editor = ref({ show: false, editing: false, noticeId: 0, error: '' })
 const form = ref({ content: '', link: '', dateAt: null })
 const editorSaving = ref(false)
@@ -152,14 +155,9 @@ function openEdit(item) {
 
 async function save() {
   const content = form.value.content.trim()
-  if (!content) {
-    editor.value.error = '公告内容不能为空'
-    return
-  }
-  if (!form.value.dateAt) {
-    editor.value.error = '请选择公告时间'
-    return
-  }
+  contentError.value = content ? '' : '公告内容不能为空'
+  dateError.value = form.value.dateAt ? '' : '请选择公告时间'
+  if (contentError.value || dateError.value) return
 
   const payload = {
     content,
@@ -315,7 +313,12 @@ onBeforeUnmount(() => {
       content-scrollable
     >
       <NForm label-placement="top">
-        <NFormItem label="内容" required>
+        <NFormItem
+          label="内容"
+          required
+          :validation-status="contentError ? 'error' : undefined"
+          :feedback="contentError || undefined"
+        >
           <NInput
             v-model:value="form.content"
             type="textarea"
@@ -332,7 +335,12 @@ onBeforeUnmount(() => {
             placeholder="可选。填了之后公告可以点开，以 http:// 或 https:// 开头"
           />
         </NFormItem>
-        <NFormItem label="公告时间" required>
+        <NFormItem
+          label="公告时间"
+          required
+          :validation-status="dateError ? 'error' : undefined"
+          :feedback="dateError || undefined"
+        >
           <NDatePicker
             v-model:value="form.dateAt"
             type="datetime"

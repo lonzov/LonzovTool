@@ -39,6 +39,10 @@ const pendingSlug = ref('')
 /* 列表 / 模拟布局：后者用首页同一个卡片组件渲染，点击进入编辑而非跳转 */
 const viewMode = ref('list')
 
+const titleError = ref('')
+const linkError = ref('')
+const categoryError = ref('')
+
 const editor = ref({ show: false, editing: false, slug: '', error: '' })
 const form = ref({
   title: '',
@@ -264,10 +268,10 @@ async function save() {
     hidden: form.value.hidden,
     open_in_new_tab: form.value.openInNewTab,
   }
-  if (!payload.title || !payload.link || !payload.category) {
-    editor.value.error = '标题、链接与分类都是必填项'
-    return
-  }
+  titleError.value = payload.title ? '' : '标题不能为空'
+  linkError.value = payload.link ? '' : '链接不能为空'
+  categoryError.value = payload.category ? '' : '请选择分类'
+  if (titleError.value || linkError.value || categoryError.value) return
 
   editorSaving.value = true
   editor.value.error = ''
@@ -509,13 +513,25 @@ async function remove(card) {
     >
       <NForm label-placement="top">
         <div class="editor-grid">
-          <NFormItem class="field--wide" label="标题" required>
+          <NFormItem
+            class="field--wide"
+            label="标题"
+            required
+            :validation-status="titleError ? 'error' : undefined"
+            :feedback="titleError || undefined"
+          >
             <NInput v-model:value="form.title" maxlength="128" show-count />
           </NFormItem>
           <NFormItem class="field--wide" label="简介">
             <NInput v-model:value="form.description" maxlength="256" show-count />
           </NFormItem>
-          <NFormItem class="field--wide" label="链接" required>
+          <NFormItem
+            class="field--wide"
+            label="链接"
+            required
+            :validation-status="linkError ? 'error' : undefined"
+            :feedback="linkError || undefined"
+          >
             <NInput v-model:value="form.link" maxlength="512" placeholder="https://example.com" />
           </NFormItem>
           <NFormItem class="field--wide" label="图标">
@@ -558,7 +574,13 @@ async function remove(card) {
               </div>
             </div>
           </NFormItem>
-          <NFormItem class="field--wide" label="分类" required>
+          <NFormItem
+            class="field--wide"
+            label="分类"
+            required
+            :validation-status="categoryError ? 'error' : undefined"
+            :feedback="categoryError || undefined"
+          >
             <NSelect v-model:value="form.category" :options="categoryOptions" placeholder="选择分类" />
           </NFormItem>
           <div class="field--wide settings-block">
