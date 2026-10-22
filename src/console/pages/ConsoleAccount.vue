@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NForm, NFormItem, NIcon, NInput, useMessage } from 'naive-ui'
 import {
@@ -10,14 +10,19 @@ import {
   SignOut24Regular,
 } from '@vicons/fluent'
 import AppModal from '../../components/ui/AppModal.vue'
+import InputOtp from '../../components/ui/InputOtp.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useConsoleAuth } from '../consoleAuth.js'
 import { describeDevice } from '../deviceLabel.js'
-import { checkPasswordLength } from '../passwordStrength.js'
+import { checkPasswordLength, checkPasswordRemote } from '../passwordStrength.js'
+import { RESEND_COOLDOWN_SECONDS, useResendCountdown } from '../useResendCountdown.js'
 
 const SESSIONS_URL = '/api/v1/console/sessions'
 const PASSWORD_URL = '/api/v1/console/password'
+const TWO_FACTOR_ENABLE_URL = '/api/v1/console/2fa/email/enable'
+const TWO_FACTOR_VERIFY_URL = '/api/v1/console/2fa/email/verify'
+const TWO_FACTOR_DISABLE_URL = '/api/v1/console/2fa/email/disable'
 
 const route = useRoute()
 const router = useRouter()
@@ -29,6 +34,32 @@ const passwordForm = ref({ current: '', next: '' })
 const passwordError = ref('')
 const passwordSaving = ref(false)
 
+const twoFactorEnabled = computed(() => account.value?.twoFactorEnabled === true)
+
+const enableModal = ref(false)
+const enableCode = ref('')
+const enableCheck = ref({ status: '', message: '' })
+const enableError = ref('')
+const enableSaving = ref(false)
+const enableRequesting = ref(false)
+const enableOtpRef = ref(null)
+const {
+  remaining: enableResendSeconds,
+  start: startEnableResend,
+  reset: resetEnableResend,
+} = useResendCountdown()
+
+const disableModal = ref(false)
+const disablePassword = ref('')
+const disableCheck = ref({ status: '', message: '' })
+const disableError = ref('')
+const disableSaving = ref(false)
+
+// 重填验证码即撤掉上一次的报错；报错后值会被清空，空值不该反过来触发清空
+watch(enableCode, (val) => {
+  if (val && enableCheck.value.status) enableCheck.value = { status: '', message: '' }
+})
+
 const sessions = ref([])
 const sessionsLoading = ref(false)
 const sessionsError = ref('')
@@ -36,7 +67,43 @@ const revokingId = ref(0)
 const revokingOthers = ref(false)
 
 const roles = computed(() => account.value?.roles || [])
-const passwordCheck = computed(() => checkPasswordLength(passwordForm.value.next))
+const passwordLengthCheck = computed(() => checkPasswordLength(passwordForm.value.next))
+// 新旧相同是本地就能判的关系，不用等网络；服务端也会再拒一次
+const passwordSameCheck = computed(() => {
+  const { current, next } = passwordForm.value
+  if (!current || !next || current !== next) return { status: '', message: '', blocked: false }
+  return { status: 'error', message: '新密码不能与当前密码相同', blocked: true }
+})
+// 服务端结论只显示在密码输入框下方，与表单级错误分开
+const passwordServerCheck = ref({ status: '', message: '' })
+const currentPasswordError = ref({ status: '', message: '' })
+const passwordSubmitted = ref(false)
+
+// 当前密码框：必填与"密码不正确"都就近显示
+const currentPasswordCheck = computed(() => {
+  if (passwordSubmitted.value && !passwordForm.value.current) {
+    return { status: 'error', message: '请填写当前密码' }
+  }
+  return currentPasswordError.value
+})
+const passwordCheck = computed(() => {
+  if (passwordSubmitted.value && !passwordForm.value.next) {
+    return { status: 'error', message: '请填写新密码', blocked: true }
+  }
+  const local = passwordLengthCheck.value.blocked ? passwordLengthCheck.value : passwordSameCheck.value
+  return {
+    status: local.status || passwordServerCheck.value.status,
+    message: local.message || passwordServerCheck.value.message,
+    blocked: local.blocked,
+  }
+})
+
+watch(
+  () => [passwordForm.value.current, passwordForm.value.next],
+  () => {
+    passwordServerCheck.value = { status: '', message: '' }
+  },
+)
 const devices = computed(() =>
   sessions.value.map((session) => ({ ...session, device: describeDevice(session.user_agent) })),
 )
@@ -62,6 +129,9 @@ function gotUnauthorized(e) {
 function openPasswordModal() {
   passwordForm.value = { current: '', next: '' }
   passwordError.value = ''
+  passwordSubmitted.value = false
+  currentPasswordError.value = { status: '', message: '' }
+  passwordServerCheck.value = { status: '', message: '' }
   passwordModal.value = true
 }
 
@@ -83,17 +153,22 @@ onMounted(loadSessions)
 
 async function changePassword() {
   passwordError.value = ''
-  if (!passwordForm.value.current || !passwordForm.value.next) {
-    passwordError.value = '请填写当前密码与新密码'
-    return
-  }
-  if (passwordCheck.value.blocked) {
-    passwordError.value = passwordCheck.value.message
-    return
-  }
+  passwordSubmitted.value = true
+  currentPasswordError.value = { status: '', message: '' }
+  passwordServerCheck.value = { status: '', message: '' }
+  if (!passwordForm.value.current || !passwordForm.value.next) return
+  if (passwordCheck.value.blocked) return
 
   passwordSaving.value = true
   try {
+    const verdict = await checkPasswordRemote(
+      passwordForm.value.next,
+      account.value?.email || '',
+    )
+    if (!verdict.ok) {
+      passwordServerCheck.value = { status: 'error', message: verdict.reason }
+      return
+    }
     await consoleFetch(PASSWORD_URL, {
       method: 'POST',
       body: JSON.stringify({
@@ -114,9 +189,149 @@ async function changePassword() {
     await loadSessions()
   } catch (e) {
     if (gotUnauthorized(e)) return
-    passwordError.value = e?.message || '修改失败，请稍后重试'
+    if (e?.code === 'current_password_incorrect') {
+      currentPasswordError.value = { status: 'error', message: e.message || '当前密码不正确' }
+    } else if (e?.code === 'password_unchanged') {
+      passwordServerCheck.value = { status: 'error', message: e.message || '新密码不能与当前密码相同' }
+    } else {
+      passwordError.value = e?.message || '修改失败，请稍后重试'
+    }
   } finally {
     passwordSaving.value = false
+  }
+}
+
+/** 开启弹窗出现时验证码已经发出，重发按钮先按住一个冷却窗口 */
+function openEnableModal(seconds) {
+  enableCode.value = ''
+  enableCheck.value = { status: '', message: '' }
+  enableError.value = ''
+  enableModal.value = true
+  startEnableResend(seconds)
+}
+
+async function requestEnableCode() {
+  if (enableRequesting.value) return
+  enableRequesting.value = true
+  try {
+    await consoleFetch(TWO_FACTOR_ENABLE_URL, { method: 'POST' })
+    openEnableModal()
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    // 冷却期内重复请求说明上一封验证码还在有效期内，直接进弹窗，只把重发按钮按住
+    if (e?.code === 'resend_too_soon') {
+      openEnableModal(e.retryAfterSeconds || RESEND_COOLDOWN_SECONDS)
+      return
+    }
+    message.error(e?.message || '验证码发送失败，请稍后重试')
+  } finally {
+    enableRequesting.value = false
+  }
+}
+
+async function resendEnableCode() {
+  if (enableResendSeconds.value > 0 || enableRequesting.value) return
+  enableRequesting.value = true
+  try {
+    await consoleFetch(TWO_FACTOR_ENABLE_URL, { method: 'POST' })
+    enableCheck.value = { status: '', message: '' }
+    startEnableResend()
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    if (e?.code === 'resend_too_soon') {
+      if (e.retryAfterSeconds > 0) startEnableResend(e.retryAfterSeconds)
+      message.warning(e.message || '验证码刚发出，请稍后重试')
+      return
+    }
+    message.error(e?.message || '验证码发送失败，请稍后重试')
+  } finally {
+    enableRequesting.value = false
+  }
+}
+
+async function submitEnable() {
+  enableCheck.value = { status: '', message: '' }
+  enableError.value = ''
+  if (!/^\d{6}$/.test(enableCode.value)) {
+    enableCheck.value = { status: 'error', message: '请输入 6 位验证码' }
+    return
+  }
+
+  enableSaving.value = true
+  try {
+    await consoleFetch(TWO_FACTOR_VERIFY_URL, {
+      method: 'POST',
+      body: JSON.stringify({ code: enableCode.value }),
+    })
+    enableModal.value = false
+    resetEnableResend()
+    message.success('两步验证已开启')
+    await refreshAccount()
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    if (e?.code === 'invalid_code') {
+      const remaining = e?.meta?.remaining
+      enableCheck.value = {
+        status: 'error',
+        message:
+          Number.isInteger(remaining) && remaining > 0
+            ? `验证码错误，还可尝试 ${remaining} 次`
+            : '验证码错误，请重新输入',
+      }
+      enableCode.value = ''
+      // 等本轮提交的禁用态解除再聚焦，否则光标进不去输入框
+      nextTick(() => enableOtpRef.value?.focus())
+    } else {
+      enableError.value = e?.message || '开启失败，请稍后重试'
+    }
+  } finally {
+    enableSaving.value = false
+  }
+}
+
+function openDisableModal() {
+  disablePassword.value = ''
+  disableCheck.value = { status: '', message: '' }
+  disableError.value = ''
+  disableModal.value = true
+}
+
+async function submitDisable() {
+  disableCheck.value = { status: '', message: '' }
+  disableError.value = ''
+  if (!disablePassword.value) {
+    disableCheck.value = { status: 'error', message: '请输入当前密码' }
+    return
+  }
+
+  disableSaving.value = true
+  try {
+    await consoleFetch(TWO_FACTOR_DISABLE_URL, {
+      method: 'POST',
+      body: JSON.stringify({ password: disablePassword.value }),
+    })
+    disableModal.value = false
+    message.success('两步验证已关闭')
+    await refreshAccount()
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    if (e?.code === 'current_password_incorrect') {
+      disableCheck.value = { status: 'error', message: e.message || '当前密码不正确' }
+    } else {
+      disableError.value = e?.message || '关闭失败，请稍后重试'
+    }
+  } finally {
+    disableSaving.value = false
+  }
+}
+
+/** 开关成功后让 `/me` 把账号状态拉回最新；刷新失败不影响已经生效的变更，只提示用户复核 */
+async function refreshAccount() {
+  try {
+    await verify()
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    message.warning('操作已生效，但账号状态未能刷新，请重新进入控制台确认')
   }
 }
 
@@ -233,6 +448,34 @@ async function revokeOthers() {
           </button>
         </div>
       </div>
+
+      <div class="section-row">
+        <div class="row-main">
+          <span class="row-label">两步验证</span>
+          <span class="row-value" :class="{ 'row-value--subtle': !twoFactorEnabled }">
+            {{ twoFactorEnabled ? '已开启' : '未开启' }}
+          </span>
+        </div>
+        <div class="row-action">
+          <button
+            v-if="twoFactorEnabled"
+            class="app-btn app-btn--outline app-btn--sm app-btn--rect"
+            type="button"
+            @click="openDisableModal"
+          >
+            关闭
+          </button>
+          <button
+            v-else
+            class="app-btn app-btn--outline app-btn--sm app-btn--rect"
+            type="button"
+            :disabled="enableRequesting"
+            @click="requestEnableCode"
+          >
+            开启两步验证
+          </button>
+        </div>
+      </div>
     </section>
 
     <section class="account-section">
@@ -320,7 +563,11 @@ async function revokeOthers() {
       ]"
     >
       <NForm label-placement="top">
-        <NFormItem label="当前密码">
+        <NFormItem
+          label="当前密码"
+          :validation-status="currentPasswordCheck.status || undefined"
+          :feedback="currentPasswordCheck.message || undefined"
+        >
           <NInput
             v-model:value="passwordForm.current"
             type="password"
@@ -346,6 +593,87 @@ async function revokeOthers() {
         </NFormItem>
         <p class="form-note">修改成功后，其他设备上的会话会一并退出。</p>
         <p v-if="passwordError" class="form-error">{{ passwordError }}</p>
+      </NForm>
+    </AppModal>
+
+    <AppModal
+      v-model:show="enableModal"
+      title="开启两步验证"
+      :max-width="420"
+      :auto-focus="false"
+      :actions="[
+        { text: '取消', variant: 'outline', onClick: () => (enableModal = false) },
+        {
+          text: enableSaving ? '提交中…' : '确认开启',
+          variant: 'fill',
+          disabled: enableSaving,
+          onClick: submitEnable,
+        },
+      ]"
+    >
+      <NForm label-placement="top">
+        <p class="form-note">
+          验证码已发送至 {{ account?.email || '你的邮箱' }}，10 分钟内有效。
+        </p>
+        <NFormItem
+          label="验证码"
+          :validation-status="enableCheck.status || undefined"
+          :feedback="enableCheck.message || undefined"
+        >
+          <InputOtp
+            ref="enableOtpRef"
+            v-model:value="enableCode"
+            :status="enableCheck.status"
+            :autofocus="false"
+            :disabled="enableSaving"
+          />
+        </NFormItem>
+        <div class="form-inline-action">
+          <button
+            class="app-btn app-btn--text app-btn--sm"
+            type="button"
+            :disabled="enableResendSeconds > 0 || enableRequesting"
+            @click="resendEnableCode"
+          >
+            {{ enableResendSeconds > 0 ? `重新发送（${enableResendSeconds}s）` : '重新发送验证码' }}
+          </button>
+        </div>
+        <p v-if="enableError" class="form-error">{{ enableError }}</p>
+      </NForm>
+    </AppModal>
+
+    <AppModal
+      v-model:show="disableModal"
+      title="关闭两步验证"
+      :max-width="420"
+      :auto-focus="false"
+      :actions="[
+        { text: '取消', variant: 'outline', onClick: () => (disableModal = false) },
+        {
+          text: disableSaving ? '提交中…' : '确认关闭',
+          variant: 'fill',
+          disabled: disableSaving,
+          onClick: submitDisable,
+        },
+      ]"
+    >
+      <NForm label-placement="top">
+        <NFormItem
+          label="当前密码"
+          :validation-status="disableCheck.status || undefined"
+          :feedback="disableCheck.message || undefined"
+        >
+          <NInput
+            v-model:value="disablePassword"
+            type="password"
+            show-password-on="click"
+            maxlength="1024"
+            autocomplete="current-password"
+            placeholder="请输入当前使用的密码"
+          />
+        </NFormItem>
+        <p class="form-note">关闭后登录只校验密码，账号安全性会随之下降。</p>
+        <p v-if="disableError" class="form-error">{{ disableError }}</p>
       </NForm>
     </AppModal>
   </div>
@@ -487,6 +815,11 @@ async function revokeOthers() {
   gap: 4px;
 }
 
+/* 「未开启」不是异常，只是次级状态，用次级前景色而不是警告色 */
+.row-value--subtle {
+  color: var(--muted-foreground);
+}
+
 .row-badge {
   margin-left: 6px;
   padding: 0 7px;
@@ -601,6 +934,13 @@ async function revokeOthers() {
   margin: 0 0 10px;
   color: var(--destructive);
   font-size: 0.78rem;
+}
+
+/* 文字按钮自带内边距，右侧负回去与表单内容的右边缘对齐 */
+.form-inline-action {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 -14px 10px 0;
 }
 
 .inline-hint {

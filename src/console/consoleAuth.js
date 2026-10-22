@@ -16,6 +16,8 @@ import { ConsoleApiError, consoleFetch, setUnauthorizedHandler } from './console
 
 const ACCOUNT_KEY = 'console_account'
 const LOGIN_URL = '/api/v1/console/login'
+const LOGIN_2FA_URL = '/api/v1/console/login/2fa'
+const LOGIN_2FA_RESEND_URL = '/api/v1/console/login/2fa/resend'
 const ME_URL = '/api/v1/console/me'
 const LOGOUT_URL = '/api/v1/console/logout'
 
@@ -28,6 +30,7 @@ function normalizeAccount(info) {
     name,
     email,
     roles: Array.isArray(info.roles) ? info.roles.filter((role) => typeof role === 'string') : [],
+    twoFactorEnabled: info.email_2fa_enabled === true,
   }
 }
 
@@ -80,19 +83,76 @@ function rememberSession(payload) {
   permissionsReady.value = true
 }
 
-async function login(email, password) {
+/**
+ * 登录有两种正常结局：直接下发会话，或账号开了两步验证时只返回一次性 challenge。
+ * 后者绝不能当成功处理 —— 那时没有任何会话，本地记住账号会让路由守卫直接放行。
+ * challenge 由调用方留在组件内存里（等同「密码已通过」的凭证，不落盘）。
+ */
+async function login(email, password, captcha = null) {
   const address = (email || '').trim()
   if (!address || !password) {
     throw new ConsoleApiError('missing_credentials', '请填写邮箱与密码')
   }
 
+  // 人机验证的一次性凭证：服务端每次登录都要校验，缺了直接 403
+  const body = { email: address, password }
+  if (captcha) {
+    body.lot_number = captcha.lot_number
+    body.captcha_output = captcha.captcha_output
+    body.pass_token = captcha.pass_token
+    body.gen_time = captcha.gen_time
+  }
+
   const payload = await consoleFetch(LOGIN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: address, password }),
+    body: JSON.stringify(body),
+  })
+
+  if (payload?.need_2fa) {
+    return {
+      need2fa: true,
+      challenge: typeof payload.challenge === 'string' ? payload.challenge : '',
+      maskedEmail: typeof payload.masked_email === 'string' ? payload.masked_email : '',
+    }
+  }
+
+  rememberSession(payload)
+  return { need2fa: false, payload }
+}
+
+/**
+ * 用 challenge 换会话：成功时与直接登录拿到同一份会话响应。
+ * remember 为真时服务端额外下发该设备的长期豁免 Cookie，30 天内这台设备登录不再走验证码。
+ */
+async function submitTwoFactor(challenge, code, remember = false) {
+  if (!challenge) {
+    throw new ConsoleApiError('challenge_invalid', '验证已失效，请重新登录')
+  }
+  if (!code) {
+    throw new ConsoleApiError('missing_code', '请填写验证码')
+  }
+
+  const payload = await consoleFetch(LOGIN_2FA_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ challenge, code, remember: remember === true }),
   })
   rememberSession(payload)
   return payload
+}
+
+/** 重发验证码。冷却由服务端判定，60 秒内的重复请求返回 429 resend_too_soon */
+async function resendTwoFactorCode(challenge) {
+  if (!challenge) {
+    throw new ConsoleApiError('challenge_invalid', '验证已失效，请重新登录')
+  }
+
+  return consoleFetch(LOGIN_2FA_RESEND_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ challenge }),
+  })
 }
 
 /** 进入控制台或改完密码后向服务端确认会话、刷新权限与临时密码标记 */
@@ -119,6 +179,8 @@ export function useConsoleAuth() {
     permissionsReady,
     isAuthenticated,
     login,
+    submitTwoFactor,
+    resendTwoFactorCode,
     verify,
     logout,
   }

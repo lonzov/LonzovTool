@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   NCheckbox,
@@ -22,7 +22,7 @@ import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { consoleFetch } from '../consoleRequest.js'
 import { useConsoleAuth } from '../consoleAuth.js'
-import { checkPasswordLength } from '../passwordStrength.js'
+import { checkPasswordLength, checkPasswordRemote } from '../passwordStrength.js'
 
 const ACCOUNTS_URL = '/api/v1/console/accounts'
 const CATALOG_URL = '/api/v1/console/accounts/roles'
@@ -51,9 +51,57 @@ const editorSaving = ref(false)
 
 const reset = ref({ show: false, id: 0, email: '', password: '', error: '', saving: false })
 
-// 密码只做位数预检；其余规则由服务端在提交时判定
-const createPasswordCheck = computed(() => checkPasswordLength(form.value.password))
-const resetPasswordCheck = computed(() => checkPasswordLength(reset.value.password))
+// 字段级报错：能落到具体输入框的，就不要丢到表单底部的公共报错区
+const createSubmitted = ref(false)
+const resetSubmitted = ref(false)
+const emailFieldError = ref({ status: '', message: '' })
+
+const emailFieldCheck = computed(() => {
+  if (createSubmitted.value && !form.value.email.trim()) {
+    return { status: 'error', message: '请填写邮箱' }
+  }
+  return emailFieldError.value
+})
+
+// 本地只查位数（输入即时反馈），提交前再向服务端要一次权威结论，显示在密码输入框下方
+const createServerCheck = ref({ status: '', message: '' })
+const resetServerCheck = ref({ status: '', message: '' })
+
+const createPasswordCheck = computed(() => {
+  if (createSubmitted.value && !form.value.password) {
+    return { status: 'error', message: '请填写初始密码', blocked: true }
+  }
+  const local = checkPasswordLength(form.value.password)
+  return {
+    status: local.status || createServerCheck.value.status,
+    message: local.message || createServerCheck.value.message,
+    blocked: local.blocked,
+  }
+})
+const resetPasswordCheck = computed(() => {
+  if (resetSubmitted.value && !reset.value.password) {
+    return { status: 'error', message: '请填写新的临时密码', blocked: true }
+  }
+  const local = checkPasswordLength(reset.value.password)
+  return {
+    status: local.status || resetServerCheck.value.status,
+    message: local.message || resetServerCheck.value.message,
+    blocked: local.blocked,
+  }
+})
+
+watch(
+  () => form.value.password,
+  () => {
+    createServerCheck.value = { status: '', message: '' }
+  },
+)
+watch(
+  () => reset.value.password,
+  () => {
+    resetServerCheck.value = { status: '', message: '' }
+  },
+)
 
 const STATUS_TONES = {
   disabled: { text: '已停用', tone: 'destructive' },
@@ -204,13 +252,11 @@ async function save() {
   const roles = [...form.value.roles]
   const grants = collectGrants()
 
-  if (editor.value.mode === 'create' && (!form.value.email.trim() || !form.value.password)) {
-    editor.value.error = '邮箱与初始密码都是必填项'
-    return
-  }
-  if (editor.value.mode === 'create' && createPasswordCheck.value.blocked) {
-    editor.value.error = createPasswordCheck.value.message
-    return
+  if (editor.value.mode === 'create') {
+    createSubmitted.value = true
+    // 必填与格式问题就近显示在各自输入框下，公共报错区只留给跨字段或服务端异常
+    if (!form.value.email.trim() || !form.value.password) return
+    if (createPasswordCheck.value.blocked) return
   }
   // 默认拒绝：没有任何角色与权限点的账号能登录成功，但进去后什么也看不到
   if (!roles.length && !grants.length) {
@@ -218,8 +264,17 @@ async function save() {
     return
   }
 
+  if (editor.value.mode === 'create') {
+    const verdict = await checkPasswordRemote(form.value.password, form.value.email.trim())
+    if (!verdict.ok) {
+      createServerCheck.value = { status: 'error', message: verdict.reason }
+      return
+    }
+  }
+
   editorSaving.value = true
   editor.value.error = ''
+  emailFieldError.value = { status: '', message: '' }
   try {
     if (editor.value.mode === 'create') {
       await consoleFetch(ACCOUNTS_URL, {
@@ -243,7 +298,11 @@ async function save() {
     editor.value.show = false
   } catch (e) {
     if (gotUnauthorized(e)) return
-    editor.value.error = e?.message || '保存失败，请稍后重试'
+    if (e?.code === 'email_taken') {
+      emailFieldError.value = { status: 'error', message: e.message || '该邮箱已被使用' }
+    } else {
+      editor.value.error = e?.message || '保存失败，请稍后重试'
+    }
   } finally {
     editorSaving.value = false
     await load()
@@ -252,15 +311,18 @@ async function save() {
 
 function openReset(item) {
   reset.value = { show: true, id: item.id, email: item.email, password: '', error: '', saving: false }
+  resetSubmitted.value = false
+  resetServerCheck.value = { status: '', message: '' }
 }
 
 async function submitReset() {
-  if (!reset.value.password) {
-    reset.value.error = '请填写新的临时密码'
-    return
-  }
-  if (resetPasswordCheck.value.blocked) {
-    reset.value.error = resetPasswordCheck.value.message
+  resetSubmitted.value = true
+  if (!reset.value.password) return
+  if (resetPasswordCheck.value.blocked) return
+
+  const verdict = await checkPasswordRemote(reset.value.password, reset.value.email)
+  if (!verdict.ok) {
+    resetServerCheck.value = { status: 'error', message: verdict.reason }
     return
   }
   reset.value.saving = true
@@ -387,7 +449,13 @@ async function submitReset() {
       content-scrollable
     >
       <NForm label-placement="top">
-        <NFormItem v-if="editor.mode === 'create'" label="邮箱" required>
+        <NFormItem
+          v-if="editor.mode === 'create'"
+          label="邮箱"
+          required
+          :validation-status="emailFieldCheck.status || undefined"
+          :feedback="emailFieldCheck.message || undefined"
+        >
           <NInput
             v-model:value="form.email"
             type="email"
