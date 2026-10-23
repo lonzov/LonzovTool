@@ -16,6 +16,9 @@ import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
+import { useSensitiveTrust } from '../useSensitiveTrust.js'
+
+const { ensureTrust } = useSensitiveTrust()
 
 const NOTICES_URL = '/api/v1/console/notices'
 
@@ -116,6 +119,11 @@ async function handleDragEnd(event) {
   const previous = notices.value.map((notice) => notice.notice_id)
   if (ids.join() === previous.join()) return
 
+  if (!(await ensureTrust())) {
+    await load()
+    return
+  }
+
   const byId = new Map(notices.value.map((notice) => [notice.notice_id, notice]))
   notices.value = ids.map((id) => byId.get(id)).filter(Boolean)
 
@@ -158,6 +166,7 @@ async function save() {
   contentError.value = content ? '' : '公告内容不能为空'
   dateError.value = form.value.dateAt ? '' : '请选择公告时间'
   if (contentError.value || dateError.value) return
+  if (!(await ensureTrust())) return
 
   const payload = {
     content,
@@ -200,6 +209,7 @@ async function remove(item) {
     danger: true,
   })
   if (!confirmed) return
+  if (!(await ensureTrust())) return
 
   pendingId.value = item.notice_id
   try {

@@ -17,6 +17,7 @@ import { consoleFetch } from '../consoleRequest.js'
 import { useConsoleAuth } from '../consoleAuth.js'
 import { describeDevice } from '../deviceLabel.js'
 import { checkPasswordLength, checkPasswordRemote } from '../passwordStrength.js'
+import { useSensitiveTrust } from '../useSensitiveTrust.js'
 import { switchRailStyle } from '../../utils/switchRailStyle.js'
 
 const SESSIONS_URL = '/api/v1/console/sessions'
@@ -30,6 +31,7 @@ const route = useRoute()
 const router = useRouter()
 const message = useMessage()
 const { account, mustChangePassword, verify } = useConsoleAuth()
+const { ensureTrust } = useSensitiveTrust()
 
 const passwordModal = ref(false)
 const passwordForm = ref({ next: '' })
@@ -68,7 +70,8 @@ function onVerified(token) {
     passwordServerCheck.value = { status: '', message: '' }
     passwordModal.value = true
   }
-  else if (action === 'revoke-others') runRevokeOthers()
+
+
 }
 
 function authHeaders() {
@@ -379,6 +382,7 @@ async function revoke(session) {
     danger: true,
   })
   if (!confirmed) return
+  if (!(await ensureTrust())) return
 
   revokingId.value = session.id
   try {
@@ -405,17 +409,15 @@ async function revokeOthers() {
   })
   if (!confirmed) return
 
-  // 撤销会话属于敏感操作：先过一次身份确认
-  askVerify('revoke-others')
+  // 撤销会话属于敏感但可回滚的操作：先要一次短时信任
+  if (!(await ensureTrust())) return
+  await runRevokeOthers()
 }
 
 async function runRevokeOthers() {
   revokingOthers.value = true
   try {
-    const result = await consoleFetch(`${SESSIONS_URL}/revoke-others`, {
-      method: 'POST',
-      headers: authHeaders(),
-    })
+    const result = await consoleFetch(`${SESSIONS_URL}/revoke-others`, { method: 'POST' })
     message.success(`已下线 ${result?.revoked ?? 0} 个设备`)
     await loadSessions()
   } catch (e) {

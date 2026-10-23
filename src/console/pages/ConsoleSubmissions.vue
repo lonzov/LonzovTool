@@ -13,9 +13,12 @@ import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
+import { useSensitiveTrust } from '../useSensitiveTrust.js'
 
 /* 待审核队列。概览里的卡片只是预览，审核动作全部落在这个页面：
    概览的「查看」会带 ?id= 跳过来，这里定位并高亮那一条。 */
+const { ensureTrust } = useSensitiveTrust()
+
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
@@ -125,6 +128,7 @@ async function remove(item) {
     danger: true,
   })
   if (!confirmed) return
+  if (!(await ensureTrust())) return
 
   pendingId.value = item.id
   try {

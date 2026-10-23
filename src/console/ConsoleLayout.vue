@@ -5,15 +5,24 @@ import { NIcon, useMessage } from 'naive-ui'
 import { Warning24Regular } from '@vicons/fluent'
 import { useSidebarSectionProvider } from '../composables/useSidebarSection.js'
 import ConsolePageHeader from './components/ConsolePageHeader.vue'
+import SensitiveActionModal from './components/SensitiveActionModal.vue'
 import { findConsoleNav, visibleConsoleNav } from './consoleNav.js'
 import { useConsoleAuth } from './consoleAuth.js'
 import { provideConsolePermissions } from './usePermissions.js'
+import { useSensitiveTrust } from './useSensitiveTrust.js'
 
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
 const { account, mustChangePassword, permissionsReady, logout, verify } = useConsoleAuth()
 const { can } = provideConsolePermissions()
+
+const {
+  modalOpen: trustModalOpen,
+  refresh: refreshTrust,
+  resolveVerification,
+  cancelVerification,
+} = useSensitiveTrust()
 
 const checking = ref(true)
 const sessionError = ref('')
@@ -58,7 +67,15 @@ async function checkSession() {
   }
 }
 
-onMounted(checkSession)
+onMounted(async () => {
+  await checkSession()
+  if (permissionsReady.value) refreshTrust()
+})
+
+/* 弹窗关闭时若还没验证通过，就让等待中的写操作直接放弃 */
+function onTrustModalShow(visible) {
+  if (!visible) cancelVerification()
+}
 
 // 控制台目录挂在侧边栏分类栏上。目录本身不随子页面变化，key 固定为 'console'：
 // 子页面之间切换不重放分类栏的切页动画，只有进出控制台才换源。
@@ -117,6 +134,13 @@ useSidebarSectionProvider('console', () => ({
     </div>
     <p v-else-if="denied" class="console-gate">没有访问权限</p>
     <RouterView v-else />
+
+    <SensitiveActionModal
+      v-model:show="trustModalOpen"
+      description="为了账号的安全，请先确认是你本人"
+      @verified="resolveVerification"
+      @update:show="onTrustModalShow"
+    />
   </div>
 </template>
 

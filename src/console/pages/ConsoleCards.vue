@@ -21,7 +21,10 @@ import ConsolePanel from '../components/ConsolePanel.vue'
 import { getCategoryIcon } from '../../config/categoryIcons.js'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
+import { useSensitiveTrust } from '../useSensitiveTrust.js'
 import { prepareIcon } from '../../utils/iconUpload.js'
+
+const { ensureTrust } = useSensitiveTrust()
 
 const CARDS_URL = '/api/v1/console/cards'
 
@@ -98,6 +101,11 @@ async function handleLogoFile(file) {
     setPendingLogo(prepared)
     logoUploading.value = false
     message.success('图标已就绪，保存卡片后自动上传')
+    return
+  }
+
+  if (!(await ensureTrust())) {
+    logoUploading.value = false
     return
   }
 
@@ -272,6 +280,7 @@ async function save() {
   linkError.value = payload.link ? '' : '链接不能为空'
   categoryError.value = payload.category ? '' : '请选择分类'
   if (titleError.value || linkError.value || categoryError.value) return
+  if (!(await ensureTrust())) return
 
   editorSaving.value = true
   editor.value.error = ''
@@ -314,6 +323,7 @@ async function save() {
 }
 
 async function toggleHidden(card) {
+  if (!(await ensureTrust())) return
   pendingSlug.value = card.slug
   try {
     const updated = await consoleFetch(`${CARDS_URL}/${card.slug}`, {
@@ -341,6 +351,7 @@ async function remove(card) {
     danger: true,
   })
   if (!confirmed) return
+  if (!(await ensureTrust())) return
 
   pendingSlug.value = card.slug
   try {

@@ -20,8 +20,8 @@ import {
 } from '@vicons/fluent'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
-import SensitiveActionModal from '../components/SensitiveActionModal.vue'
 import { consoleFetch } from '../consoleRequest.js'
+import { useSensitiveTrust } from '../useSensitiveTrust.js'
 import { useConsoleAuth } from '../consoleAuth.js'
 import { checkPasswordLength, checkPasswordRemote } from '../passwordStrength.js'
 
@@ -52,28 +52,7 @@ const editorSaving = ref(false)
 
 const reset = ref({ show: false, id: 0, email: '', password: '', error: '', saving: false })
 /* 停用账号、重置他人密码都属于敏感操作：先过一次身份确认再执行 */
-const sensitiveModal = ref(false)
-const editingDisabled = ref(false)
-const pendingAction = ref('')
-const pendingVerifyToken = ref('')
-
-function askVerify(action) {
-  pendingAction.value = action
-  pendingVerifyToken.value = ''
-  sensitiveModal.value = true
-}
-
-function onVerified(token) {
-  pendingVerifyToken.value = token
-  const action = pendingAction.value
-  pendingAction.value = ''
-  if (action === 'save') runSave()
-  else if (action === 'reset') runReset()
-}
-
-function authHeaders() {
-  return { 'X-Verify-Token': pendingVerifyToken.value }
-}
+const { ensureTrust } = useSensitiveTrust()
 
 // 字段级报错：能落到具体输入框的，就不要丢到表单底部的公共报错区
 const createSubmitted = ref(false)
@@ -269,7 +248,6 @@ function openEdit(item) {
     grants: grantRowsOf(item.grants),
     disabled: item.disabled,
   }
-  editingDisabled.value = item.disabled
 }
 
 async function save() {
@@ -296,11 +274,8 @@ async function save() {
     }
   }
 
-  // 停用/启用会改变对方能否登录，属于敏感操作：先确认操作者身份
-  if (editor.value.mode === 'edit' && form.value.disabled !== editingDisabled.value) {
-    askVerify('save')
-    return
-  }
+  // 账号管理属于敏感但可回滚的操作：先要一次短时信任，窗口内不再打断
+  if (!(await ensureTrust())) return
 
   await runSave()
 }
@@ -328,7 +303,6 @@ async function runSave() {
     } else {
       await consoleFetch(`${ACCOUNTS_URL}/${editor.value.id}`, {
         method: 'PATCH',
-        headers: authHeaders(),
         body: JSON.stringify({ display_name: displayName, roles, grants, disabled: form.value.disabled }),
       })
       message.success('已保存修改')
@@ -357,11 +331,11 @@ async function submitReset() {
   resetSubmitted.value = true
   if (!reset.value.password) return
   if (resetPasswordCheck.value.blocked) return
-  askVerify('reset')
+  if (!(await ensureTrust())) return
+  await runReset()
 }
 
 async function runReset() {
-
   const verdict = await checkPasswordRemote(reset.value.password, reset.value.email)
   if (!verdict.ok) {
     resetServerCheck.value = { status: 'error', message: verdict.reason }
@@ -372,7 +346,6 @@ async function runReset() {
   try {
     await consoleFetch(`${ACCOUNTS_URL}/${reset.value.id}/password`, {
       method: 'POST',
-      headers: authHeaders(),
       body: JSON.stringify({ password: reset.value.password }),
     })
     message.success('密码已重置，该账号已登录的设备全部退出')
@@ -610,7 +583,6 @@ async function runReset() {
       </NForm>
     </AppModal>
 
-    <SensitiveActionModal v-model:show="sensitiveModal" @verified="onVerified" />
   </div>
 </template>
 

@@ -105,6 +105,7 @@
     switchRailStyle.js: 开关轨道的统一配色（选中深灰、未选浅灰），深浅主题一致
     useImageLightbox.js: 截图灯箱，按需加载 Viewer.js（仅控制台使用）
     components/FeedbackFilterModal.vue: 反馈筛选规则编辑器，字段+匹配方式+动态搜索取值
+    useSensitiveTrust.js: 敏感操作的短时信任，3 小时窗口内不再重复弹身份确认
     useResendCountdown.js: 邮件验证码重发的 60 秒冷却倒计时，登录两步验证与账号页开关共用
     components/ConsolePageHeader.vue: 控制台页面标题区（图标 + 标题 + 说明 + 右侧附加区）
     components/ConsolePanel.vue: 控制台面板卡外壳（图标 + 标题 + 说明 + 内容区）

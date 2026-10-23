@@ -10,7 +10,10 @@ import {
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { consoleFetch } from '../consoleRequest.js'
+import { useSensitiveTrust } from '../useSensitiveTrust.js'
 import { preparePromoImage } from '../../utils/iconUpload.js'
+
+const { ensureTrust } = useSensitiveTrust()
 
 const PROMO_URL = '/api/v1/console/promo'
 
@@ -95,6 +98,8 @@ function applyItem(updated) {
 
 async function uploadImage(file) {
   if (!file) return
+  if (!(await ensureTrust())) return
+
   editor.value.error = ''
   editor.value.uploading = true
 
@@ -159,6 +164,7 @@ onBeforeUnmount(() => {
 })
 
 async function save() {
+  if (!(await ensureTrust())) return
   saving.value = true
   editor.value.error = ''
   try {

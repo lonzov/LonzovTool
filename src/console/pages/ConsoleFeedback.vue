@@ -20,12 +20,15 @@ import FeedbackFilterModal from '../components/FeedbackFilterModal.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { copyText } from '../../utils/clipboard.js'
 import { consoleFetch } from '../consoleRequest.js'
+import { useSensitiveTrust } from '../useSensitiveTrust.js'
 import { openImageLightbox } from '../useImageLightbox.js'
 import { useIsMobile } from '../../composables/useIsMobile.js'
 
 /* 访客反馈的处理队列。
    列表只做预览：一眼看清"是什么事、什么状态、要不要现在处理"；
    优先级与备注的编辑全部发生在详情抽屉里，列表不承载任何输入控件。 */
+const { ensureTrust } = useSensitiveTrust()
+
 const LIST_URL = '/api/v1/console/feedback'
 const PAGE_SIZE = 50
 
@@ -262,6 +265,7 @@ async function remove(item) {
     danger: true,
   })
   if (!confirmed) return
+  if (!(await ensureTrust())) return
 
   pendingId.value = item.id
   try {
