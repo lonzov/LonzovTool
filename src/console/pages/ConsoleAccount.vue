@@ -1,7 +1,7 @@
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NForm, NFormItem, NIcon, NInput, useMessage } from 'naive-ui'
+import { NForm, NFormItem, NIcon, NInput, NSwitch, useMessage } from 'naive-ui'
 import {
   ArrowClockwise24Regular,
   Desktop24Regular,
@@ -11,21 +11,19 @@ import {
 } from '@vicons/fluent'
 import AppModal from '../../components/ui/AppModal.vue'
 import InputOtp from '../../components/ui/InputOtp.vue'
+import SensitiveActionModal from '../components/SensitiveActionModal.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useConsoleAuth } from '../consoleAuth.js'
 import { describeDevice } from '../deviceLabel.js'
 import { checkPasswordLength, checkPasswordRemote } from '../passwordStrength.js'
-import { RESEND_COOLDOWN_SECONDS, useResendCountdown } from '../useResendCountdown.js'
 
 const SESSIONS_URL = '/api/v1/console/sessions'
 const PASSWORD_URL = '/api/v1/console/password'
-const TWO_FACTOR_ENABLE_URL = '/api/v1/console/2fa/email/enable'
-const TWO_FACTOR_VERIFY_URL = '/api/v1/console/2fa/email/verify'
-const TWO_FACTOR_DISABLE_URL = '/api/v1/console/2fa/email/disable'
 const TOTP_SETUP_URL = '/api/v1/console/2fa/totp/setup'
 const TOTP_VERIFY_URL = '/api/v1/console/2fa/totp/verify'
 const TOTP_DISABLE_URL = '/api/v1/console/2fa/totp/disable'
+const TOTP_RECOVERY_URL = '/api/v1/console/2fa/totp/recovery'
 
 const route = useRoute()
 const router = useRouter()
@@ -33,17 +31,65 @@ const message = useMessage()
 const { account, mustChangePassword, verify } = useConsoleAuth()
 
 const passwordModal = ref(false)
-const passwordForm = ref({ current: '', next: '' })
+const passwordForm = ref({ next: '' })
 const passwordError = ref('')
 const passwordSaving = ref(false)
 
-const twoFactorEnabled = computed(() => account.value?.twoFactorEnabled === true)
-/* /me 的 account 里目前只有 email_2fa_enabled，TOTP 状态由 verify() 后回填的字段判断 */
 const totpEnabled = computed(() => account.value?.totpEnabled === true)
+const recoveryGeneratedText = computed(() => {
+  const stamp = account.value?.totpRecoveryGeneratedAt || 0
+  if (!stamp) return '尚未生成恢复码'
+  return `生成于 ${new Date(stamp * 1000).toLocaleString('zh-CN')}`
+})
+
+/* ===== 敏感操作的身份确认 ===== */
+const sensitiveModal = ref(false)
+const pendingAction = ref('')
+const pendingVerifyToken = ref('')
+
+function askVerify(action) {
+  pendingAction.value = action
+  pendingVerifyToken.value = ''
+  sensitiveModal.value = true
+}
+
+function onVerified(token) {
+  pendingVerifyToken.value = token
+  const action = pendingAction.value
+  pendingAction.value = ''
+  if (action === 'totp-enable') startTotpSetup()
+  else if (action === 'totp-disable') runTotpDisable()
+  else if (action === 'recovery') runRecoveryRegenerate()
+  else if (action === 'password') {
+    passwordForm.value = { next: '' }
+    passwordError.value = ''
+    passwordSubmitted.value = false
+    passwordServerCheck.value = { status: '', message: '' }
+    passwordModal.value = true
+  }
+  else if (action === 'revoke-others') runRevokeOthers()
+}
+
+function authHeaders() {
+  return { 'X-Verify-Token': pendingVerifyToken.value }
+}
+
+/* ===== 动态口令验证器 ===== */
+const totpModal = ref(false)
+const totpStep = ref('scan')
+const totpSecret = ref('')
+const totpQr = ref('')
+const totpCode = ref('')
+const totpCodes = ref([])
+const totpCheck = ref({ status: '', message: '' })
+const totpError = ref('')
+const totpBusy = ref(false)
+
+const recoveryModal = ref(false)
+const recoveryCodes = ref([])
 
 function resetTotpWizard() {
-  totpStep.value = 'password'
-  totpPassword.value = ''
+  totpStep.value = 'scan'
   totpSecret.value = ''
   totpQr.value = ''
   totpCode.value = ''
@@ -52,22 +98,21 @@ function resetTotpWizard() {
   totpError.value = ''
 }
 
-function openTotpModal() {
+function closeTotpModal() {
+  totpModal.value = false
   resetTotpWizard()
-  totpModal.value = true
 }
 
-async function requestTotpSecret() {
-  if (!totpPassword.value || totpBusy.value) return
+async function startTotpSetup() {
+  resetTotpWizard()
+  totpModal.value = true
   totpBusy.value = true
-  totpError.value = ''
   try {
     const payload = await consoleFetch(TOTP_SETUP_URL, {
       method: 'POST',
-      body: JSON.stringify({ password: totpPassword.value }),
+      headers: authHeaders(),
     })
     totpSecret.value = payload?.secret || ''
-    totpStep.value = 'scan'
     if (payload?.uri) {
       try {
         const QRCode = (await import('qrcode')).default
@@ -77,7 +122,6 @@ async function requestTotpSecret() {
         totpQr.value = ''
       }
     }
-    nextTick(() => message.success('扫码后输入验证器显示的动态码'))
   } catch (e) {
     totpError.value = e?.message || '获取密钥失败，请稍后重试'
   } finally {
@@ -96,7 +140,7 @@ async function confirmTotp() {
     })
     totpCodes.value = Array.isArray(payload?.recovery_codes) ? payload.recovery_codes : []
     totpStep.value = 'codes'
-    await verify()
+    await refreshAccount()
   } catch (e) {
     totpCheck.value = { status: 'error', message: e?.message || '验证码不正确' }
     totpCode.value = ''
@@ -105,87 +149,81 @@ async function confirmTotp() {
   }
 }
 
-async function copyTextValue(value) {
+async function runTotpDisable() {
+  try {
+    await consoleFetch(TOTP_DISABLE_URL, { method: 'POST', headers: authHeaders() })
+    message.success('动态口令验证器已关闭，请重新登录')
+    // 关闭会推高会话版本：本页会话随即失效，回登录页重新登录
+    router.replace({ path: '/console/login', query: { redirect: '/console/account' } })
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    message.error(e?.message || '关闭失败，请稍后重试')
+  }
+}
+
+async function runRecoveryRegenerate() {
+  try {
+    const payload = await consoleFetch(TOTP_RECOVERY_URL, {
+      method: 'POST',
+      headers: authHeaders(),
+    })
+    recoveryCodes.value = Array.isArray(payload?.recovery_codes) ? payload.recovery_codes : []
+    recoveryModal.value = true
+    await refreshAccount()
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    message.error(e?.message || '重新生成失败，请稍后重试')
+  }
+}
+
+/** 恢复码下载：开头写清用途与保管要求，空一行后再列码。 */
+function downloadRecoveryCodes(codes) {
+  if (!codes.length) return
+  const header = [
+    '小舟工具箱 动态口令恢复码',
+    '',
+    '这些恢复码用于在手机丢失、无法使用身份验证器时登录控制台。',
+    '每一枚只能使用一次，登录后会立即作废。',
+    '请离线保存：不要放进聊天软件、邮箱草稿或任何会被同步的笔记。',
+    '建议打印一份放在安全的地方；泄露等同于泄露登录权限。',
+    '如果怀疑恢复码已外泄，请立刻在「我的账号」里重新生成。',
+    '',
+    '',
+  ].join('\n')
+  const body = codes.join('\n')
+  const blob = new Blob([`${header}${body}\n`], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = 'lonzovtool-backup-codes.txt'
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
+
+/* 开关组件只是入口：真正动作要过一次身份确认 */
+function onMasterSwitch(value) {
+  if (value) return
+  // 前端摆设：账号涉及编辑权限，两步验证不允许关闭
+  message.warning('账号涉及网站编辑权限，为了安全所以不允许关闭两步验证')
+}
+
+function onTotpSwitch(value) {
+  askVerify(value ? 'totp-enable' : 'totp-disable')
+}
+
+async function copyTextValue(value, container) {
   if (!value) return
   const { copyText } = await import('../../utils/clipboard.js')
-  const ok = await copyText(value)
+  const ok = await copyText(value, { container })
   if (ok) message.success('已复制')
   else message.error('复制失败，请手动选中')
 }
 
-function closeTotpModal() {
-  totpModal.value = false
-  resetTotpWizard()
+function gotUnauthorized(e) {
+  if (e?.code !== 'unauthorized') return false
+  router.replace({ path: '/console/login', query: { redirect: route.fullPath } })
+  return true
 }
-
-function openTotpDisable() {
-  totpDisablePassword.value = ''
-  totpDisableError.value = ''
-  totpDisableCheck.value = { status: '', message: '' }
-  totpDisableModal.value = true
-}
-
-async function submitTotpDisable() {
-  if (!totpDisablePassword.value || totpDisableBusy.value) return
-  totpDisableBusy.value = true
-  totpDisableError.value = ''
-  try {
-    await consoleFetch(TOTP_DISABLE_URL, {
-      method: 'POST',
-      body: JSON.stringify({ password: totpDisablePassword.value }),
-    })
-    message.success('身份验证器已关闭，请重新登录')
-    totpDisableModal.value = false
-    // 关闭会推高会话版本：本页会话随即失效，回到登录页重新登录
-    router.replace({ path: '/console/login', query: { redirect: '/console/account' } })
-  } catch (e) {
-    totpDisableError.value = e?.message || '关闭失败，请稍后重试'
-  } finally {
-    totpDisableBusy.value = false
-  }
-}
-
-const enableModal = ref(false)
-const enableCode = ref('')
-const enableCheck = ref({ status: '', message: '' })
-const enableError = ref('')
-const enableSaving = ref(false)
-const enableRequesting = ref(false)
-const enableOtpRef = ref(null)
-const {
-  remaining: enableResendSeconds,
-  start: startEnableResend,
-  reset: resetEnableResend,
-} = useResendCountdown()
-
-/* 身份验证器：三步向导（密码 → 扫码/手填密钥 + 动态码 → 一次性恢复码）。
-   恢复码只显示这一次，所以关掉向导前先让用户确认已抄走。 */
-const totpModal = ref(false)
-const totpStep = ref('password')
-const totpPassword = ref('')
-const totpSecret = ref('')
-const totpQr = ref('')
-const totpCode = ref('')
-const totpCodes = ref([])
-const totpCheck = ref({ status: '', message: '' })
-const totpError = ref('')
-const totpBusy = ref(false)
-
-const totpDisableModal = ref(false)
-const totpDisablePassword = ref('')
-const totpDisableError = ref('')
-const totpDisableCheck = ref({ status: '', message: '' })
-const totpDisableBusy = ref(false)
-const disableModal = ref(false)
-const disablePassword = ref('')
-const disableCheck = ref({ status: '', message: '' })
-const disableError = ref('')
-const disableSaving = ref(false)
-
-// 重填验证码即撤掉上一次的报错；报错后值会被清空，空值不该反过来触发清空
-watch(enableCode, (val) => {
-  if (val && enableCheck.value.status) enableCheck.value = { status: '', message: '' }
-})
 
 const sessions = ref([])
 const sessionsLoading = ref(false)
@@ -195,79 +233,43 @@ const revokingOthers = ref(false)
 
 const roles = computed(() => account.value?.roles || [])
 const passwordLengthCheck = computed(() => checkPasswordLength(passwordForm.value.next))
-// 新旧相同是本地就能判的关系，不用等网络；服务端也会再拒一次
-const passwordSameCheck = computed(() => {
-  const { current, next } = passwordForm.value
-  if (!current || !next || current !== next) return { status: '', message: '', blocked: false }
-  return { status: 'error', message: '新密码不能与当前密码相同', blocked: true }
-})
-// 服务端结论只显示在密码输入框下方，与表单级错误分开
+
 const passwordServerCheck = ref({ status: '', message: '' })
-const currentPasswordError = ref({ status: '', message: '' })
 const passwordSubmitted = ref(false)
 
-// 当前密码框：必填与"密码不正确"都就近显示
-const currentPasswordCheck = computed(() => {
-  if (passwordSubmitted.value && !passwordForm.value.current) {
-    return { status: 'error', message: '请填写当前密码' }
-  }
-  return currentPasswordError.value
-})
 const passwordCheck = computed(() => {
   if (passwordSubmitted.value && !passwordForm.value.next) {
     return { status: 'error', message: '请填写新密码', blocked: true }
   }
-  const local = passwordLengthCheck.value.blocked ? passwordLengthCheck.value : passwordSameCheck.value
-  return {
-    status: local.status || passwordServerCheck.value.status,
-    message: local.message || passwordServerCheck.value.message,
-    blocked: local.blocked,
-  }
+  const local = passwordLengthCheck.value
+  if (local.blocked) return local
+  return passwordServerCheck.value
 })
 
-watch(
-  () => [passwordForm.value.current, passwordForm.value.next],
-  () => {
-    passwordServerCheck.value = { status: '', message: '' }
-  },
-)
-const devices = computed(() =>
-  sessions.value.map((session) => ({ ...session, device: describeDevice(session.user_agent) })),
-)
-
-function formatTime(timestamp) {
-  if (!timestamp) return '—'
-  return new Date(timestamp * 1000).toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
-}
-
-function gotUnauthorized(e) {
-  if (e?.code !== 'unauthorized') return false
-  router.replace({ path: '/console/login', query: { redirect: route.fullPath } })
-  return true
-}
-
-function openPasswordModal() {
-  passwordForm.value = { current: '', next: '' }
-  passwordError.value = ''
-  passwordSubmitted.value = false
-  currentPasswordError.value = { status: '', message: '' }
-  passwordServerCheck.value = { status: '', message: '' }
-  passwordModal.value = true
-}
+/* 输入框下方的提示：本地长度检查优先，其次服务端强度结论 */
+const passwordFieldStatus = computed(() => {
+  if (passwordSubmitted.value && !passwordForm.value.next) return 'error'
+  const local = passwordLengthCheck.value
+  if (local.blocked) return 'error'
+  return passwordServerCheck.value.status || ''
+})
+const passwordFieldMessage = computed(() => {
+  if (passwordSubmitted.value && !passwordForm.value.next) return '请填写新密码'
+  const local = passwordLengthCheck.value
+  if (local.blocked) return local.message
+  return passwordServerCheck.value.message || ''
+})
 
 async function loadSessions() {
   sessionsLoading.value = true
   sessionsError.value = ''
   try {
     const payload = await consoleFetch(SESSIONS_URL)
-    sessions.value = payload?.items || []
+    // 设备信息由 UA 推出来，服务端只存原始 UA，不在库里做解释
+    sessions.value = (payload?.items || []).map((item) => ({
+      ...item,
+      device: describeDevice(item.user_agent),
+    }))
   } catch (e) {
     if (gotUnauthorized(e)) return
     sessionsError.value = e?.message || '读取失败，请稍后重试'
@@ -281,9 +283,8 @@ onMounted(loadSessions)
 async function changePassword() {
   passwordError.value = ''
   passwordSubmitted.value = true
-  currentPasswordError.value = { status: '', message: '' }
   passwordServerCheck.value = { status: '', message: '' }
-  if (!passwordForm.value.current || !passwordForm.value.next) return
+  if (!passwordForm.value.next) return
   if (passwordCheck.value.blocked) return
 
   passwordSaving.value = true
@@ -298,12 +299,11 @@ async function changePassword() {
     }
     await consoleFetch(PASSWORD_URL, {
       method: 'POST',
-      body: JSON.stringify({
-        current_password: passwordForm.value.current,
-        new_password: passwordForm.value.next,
-      }),
+      headers: authHeaders(),
+      body: JSON.stringify({ new_password: passwordForm.value.next }),
     })
-    passwordForm.value = { current: '', next: '' }
+    pendingVerifyToken.value = ''
+    passwordForm.value = { next: '' }
     passwordModal.value = false
     message.success('密码已修改，其他设备上的会话已退出')
     // 临时密码标记由服务端清除，这里顺带把 /me 的状态（含权限与账号信息）拉回最新
@@ -316,139 +316,13 @@ async function changePassword() {
     await loadSessions()
   } catch (e) {
     if (gotUnauthorized(e)) return
-    if (e?.code === 'current_password_incorrect') {
-      currentPasswordError.value = { status: 'error', message: e.message || '当前密码不正确' }
-    } else if (e?.code === 'password_unchanged') {
+    if (e?.code === 'password_unchanged') {
       passwordServerCheck.value = { status: 'error', message: e.message || '新密码不能与当前密码相同' }
     } else {
       passwordError.value = e?.message || '修改失败，请稍后重试'
     }
   } finally {
     passwordSaving.value = false
-  }
-}
-
-/** 开启弹窗出现时验证码已经发出，重发按钮先按住一个冷却窗口 */
-function openEnableModal(seconds) {
-  enableCode.value = ''
-  enableCheck.value = { status: '', message: '' }
-  enableError.value = ''
-  enableModal.value = true
-  startEnableResend(seconds)
-}
-
-async function requestEnableCode() {
-  if (enableRequesting.value) return
-  enableRequesting.value = true
-  try {
-    await consoleFetch(TWO_FACTOR_ENABLE_URL, { method: 'POST' })
-    openEnableModal()
-  } catch (e) {
-    if (gotUnauthorized(e)) return
-    // 冷却期内重复请求说明上一封验证码还在有效期内，直接进弹窗，只把重发按钮按住
-    if (e?.code === 'resend_too_soon') {
-      openEnableModal(e.retryAfterSeconds || RESEND_COOLDOWN_SECONDS)
-      return
-    }
-    message.error(e?.message || '验证码发送失败，请稍后重试')
-  } finally {
-    enableRequesting.value = false
-  }
-}
-
-async function resendEnableCode() {
-  if (enableResendSeconds.value > 0 || enableRequesting.value) return
-  enableRequesting.value = true
-  try {
-    await consoleFetch(TWO_FACTOR_ENABLE_URL, { method: 'POST' })
-    enableCheck.value = { status: '', message: '' }
-    startEnableResend()
-  } catch (e) {
-    if (gotUnauthorized(e)) return
-    if (e?.code === 'resend_too_soon') {
-      if (e.retryAfterSeconds > 0) startEnableResend(e.retryAfterSeconds)
-      message.warning(e.message || '验证码刚发出，请稍后重试')
-      return
-    }
-    message.error(e?.message || '验证码发送失败，请稍后重试')
-  } finally {
-    enableRequesting.value = false
-  }
-}
-
-async function submitEnable() {
-  enableCheck.value = { status: '', message: '' }
-  enableError.value = ''
-  if (!/^\d{6}$/.test(enableCode.value)) {
-    enableCheck.value = { status: 'error', message: '请输入 6 位验证码' }
-    return
-  }
-
-  enableSaving.value = true
-  try {
-    await consoleFetch(TWO_FACTOR_VERIFY_URL, {
-      method: 'POST',
-      body: JSON.stringify({ code: enableCode.value }),
-    })
-    enableModal.value = false
-    resetEnableResend()
-    message.success('两步验证已开启')
-    await refreshAccount()
-  } catch (e) {
-    if (gotUnauthorized(e)) return
-    if (e?.code === 'invalid_code') {
-      const remaining = e?.meta?.remaining
-      enableCheck.value = {
-        status: 'error',
-        message:
-          Number.isInteger(remaining) && remaining > 0
-            ? `验证码错误，还可尝试 ${remaining} 次`
-            : '验证码错误，请重新输入',
-      }
-      enableCode.value = ''
-      // 等本轮提交的禁用态解除再聚焦，否则光标进不去输入框
-      nextTick(() => enableOtpRef.value?.focus())
-    } else {
-      enableError.value = e?.message || '开启失败，请稍后重试'
-    }
-  } finally {
-    enableSaving.value = false
-  }
-}
-
-function openDisableModal() {
-  disablePassword.value = ''
-  disableCheck.value = { status: '', message: '' }
-  disableError.value = ''
-  disableModal.value = true
-}
-
-async function submitDisable() {
-  disableCheck.value = { status: '', message: '' }
-  disableError.value = ''
-  if (!disablePassword.value) {
-    disableCheck.value = { status: 'error', message: '请输入当前密码' }
-    return
-  }
-
-  disableSaving.value = true
-  try {
-    await consoleFetch(TWO_FACTOR_DISABLE_URL, {
-      method: 'POST',
-      body: JSON.stringify({ password: disablePassword.value }),
-    })
-    disableModal.value = false
-    message.success('两步验证已关闭')
-    await refreshAccount()
-  } catch (e) {
-    if (gotUnauthorized(e)) return
-    if (e?.code === 'current_password_incorrect') {
-      disableCheck.value = { status: 'error', message: e.message || '当前密码不正确' }
-    } else {
-      disableError.value = e?.message || '关闭失败，请稍后重试'
-    }
-  } finally {
-    disableSaving.value = false
   }
 }
 
@@ -498,9 +372,17 @@ async function revokeOthers() {
   })
   if (!confirmed) return
 
+  // 撤销会话属于敏感操作：先过一次身份确认
+  askVerify('revoke-others')
+}
+
+async function runRevokeOthers() {
   revokingOthers.value = true
   try {
-    const result = await consoleFetch(`${SESSIONS_URL}/revoke-others`, { method: 'POST' })
+    const result = await consoleFetch(`${SESSIONS_URL}/revoke-others`, {
+      method: 'POST',
+      headers: authHeaders(),
+    })
     message.success(`已下线 ${result?.revoked ?? 0} 个设备`)
     await loadSessions()
   } catch (e) {
@@ -569,7 +451,7 @@ async function revokeOthers() {
           <button
             class="app-btn app-btn--outline app-btn--sm app-btn--rect"
             type="button"
-            @click="openPasswordModal"
+            @click="askVerify('password')"
           >
             修改密码
           </button>
@@ -578,54 +460,38 @@ async function revokeOthers() {
 
       <div class="section-row">
         <div class="row-main">
-          <span class="row-label">邮箱验证码</span>
-          <span class="row-value" :class="{ 'row-value--subtle': !twoFactorEnabled }">
-            {{ twoFactorEnabled ? '已开启' : '未开启' }}
-          </span>
+          <span class="row-label">两步验证 (2FA)</span>
+          <span class="row-desc">账号涉及网站编辑权限，为保障安全已强制开启，不允许关闭</span>
         </div>
         <div class="row-action">
-          <button
-            v-if="twoFactorEnabled"
-            class="app-btn app-btn--outline app-btn--sm app-btn--rect"
-            type="button"
-            @click="openDisableModal"
-          >
-            关闭
-          </button>
-          <button
-            v-else
-            class="app-btn app-btn--outline app-btn--sm app-btn--rect"
-            type="button"
-            :disabled="enableRequesting"
-            @click="requestEnableCode"
-          >
-            开启两步验证
-          </button>
+          <NSwitch :value="true" @update:value="onMasterSwitch" />
         </div>
       </div>
+
       <div class="section-row">
         <div class="row-main">
-          <span class="row-label">身份验证器</span>
-          <span class="row-value" :class="{ 'row-value--subtle': !totpEnabled }">
-            {{ totpEnabled ? '已开启' : '未开启' }}
+          <span class="row-label">动态口令验证器</span>
+          <span class="row-desc">
+            用手机上的身份验证器 App 生成 6 位动态码，登录与敏感操作都需要它
           </span>
         </div>
         <div class="row-action">
+          <NSwitch :value="totpEnabled" @update:value="onTotpSwitch" />
+        </div>
+      </div>
+
+      <div v-if="totpEnabled" class="section-row">
+        <div class="row-main">
+          <span class="row-label">恢复码</span>
+          <span class="row-desc">{{ recoveryGeneratedText }}</span>
+        </div>
+        <div class="row-action">
           <button
-            v-if="totpEnabled"
-            class="app-btn app-btn--outline app-btn--sm app-btn--rect"
+            class="app-btn app-btn--text app-btn--sm"
             type="button"
-            @click="openTotpDisable"
+            @click="askVerify('recovery')"
           >
-            关闭
-          </button>
-          <button
-            v-else
-            class="app-btn app-btn--outline app-btn--sm app-btn--rect"
-            type="button"
-            @click="openTotpModal"
-          >
-            开启身份验证器
+            重新生成
           </button>
         </div>
       </div>
@@ -703,12 +569,13 @@ async function revokeOthers() {
     <AppModal
       v-model:show="passwordModal"
       title="修改密码"
-      :max-width="420"
+      description="设置新密码后，其他设备上的会话会立即失效"
+      :max-width="440"
       :auto-focus="false"
       :actions="[
         { text: '取消', variant: 'outline', onClick: () => (passwordModal = false) },
         {
-          text: passwordSaving ? '提交中…' : '修改密码',
+          text: passwordSaving ? '提交中…' : '保存新密码',
           variant: 'fill',
           disabled: passwordSaving,
           onClick: changePassword,
@@ -717,23 +584,9 @@ async function revokeOthers() {
     >
       <NForm label-placement="top">
         <NFormItem
-          label="当前密码"
-          :validation-status="currentPasswordCheck.status || undefined"
-          :feedback="currentPasswordCheck.message || undefined"
-        >
-          <NInput
-            v-model:value="passwordForm.current"
-            type="password"
-            show-password-on="click"
-            maxlength="1024"
-            autocomplete="current-password"
-            placeholder="请输入当前使用的密码"
-          />
-        </NFormItem>
-        <NFormItem
           label="新密码"
-          :validation-status="passwordCheck.status || undefined"
-          :feedback="passwordCheck.message || undefined"
+          :validation-status="passwordFieldStatus"
+          :feedback="passwordFieldMessage"
         >
           <NInput
             v-model:value="passwordForm.next"
@@ -741,147 +594,43 @@ async function revokeOthers() {
             show-password-on="click"
             maxlength="1024"
             autocomplete="new-password"
-            placeholder="不能与当前密码相同"
+            placeholder="至少 8 位，建议混合大小写、数字与符号"
           />
         </NFormItem>
-        <p class="form-note">修改成功后，其他设备上的会话会一并退出。</p>
         <p v-if="passwordError" class="form-error">{{ passwordError }}</p>
       </NForm>
     </AppModal>
 
-    <AppModal
-      v-model:show="enableModal"
-      title="开启两步验证"
-      :max-width="420"
-      :auto-focus="false"
-      :actions="[
-        { text: '取消', variant: 'outline', onClick: () => (enableModal = false) },
-        {
-          text: enableSaving ? '提交中…' : '确认开启',
-          variant: 'fill',
-          disabled: enableSaving,
-          onClick: submitEnable,
-        },
-      ]"
-    >
-      <NForm label-placement="top">
-        <p class="form-note">
-          验证码已发送至 {{ account?.email || '你的邮箱' }}，10 分钟内有效。
-        </p>
-        <NFormItem
-          label="验证码"
-          :validation-status="enableCheck.status || undefined"
-          :feedback="enableCheck.message || undefined"
-        >
-          <InputOtp
-            ref="enableOtpRef"
-            v-model:value="enableCode"
-            :status="enableCheck.status"
-            :autofocus="false"
-            :disabled="enableSaving"
-          />
-        </NFormItem>
-        <div class="form-inline-action">
-          <button
-            class="app-btn app-btn--text app-btn--sm"
-            type="button"
-            :disabled="enableResendSeconds > 0 || enableRequesting"
-            @click="resendEnableCode"
-          >
-            {{ enableResendSeconds > 0 ? `重新发送（${enableResendSeconds}s）` : '重新发送验证码' }}
-          </button>
-        </div>
-        <p v-if="enableError" class="form-error">{{ enableError }}</p>
-      </NForm>
-    </AppModal>
 
     <AppModal
-      v-model:show="disableModal"
-      title="关闭两步验证"
-      :max-width="420"
-      :auto-focus="false"
-      :actions="[
-        { text: '取消', variant: 'outline', onClick: () => (disableModal = false) },
-        {
-          text: disableSaving ? '提交中…' : '确认关闭',
-          variant: 'fill',
-          disabled: disableSaving,
-          onClick: submitDisable,
-        },
-      ]"
-    >
-      <NForm label-placement="top">
-        <NFormItem
-          label="当前密码"
-          :validation-status="disableCheck.status || undefined"
-          :feedback="disableCheck.message || undefined"
-        >
-          <NInput
-            v-model:value="disablePassword"
-            type="password"
-            show-password-on="click"
-            maxlength="1024"
-            autocomplete="current-password"
-            placeholder="请输入当前使用的密码"
-          />
-        </NFormItem>
-        <p class="form-note">关闭后登录只校验密码，账号安全性会随之下降。</p>
-        <p v-if="disableError" class="form-error">{{ disableError }}</p>
-      </NForm>
-    </AppModal>
-    <AppModal
       v-model:show="totpModal"
-      title="开启身份验证器"
+      title="开启动态口令验证器"
+      description="用身份验证器 App 扫描二维码，再输入它显示的 6 位动态码"
       :max-width="440"
       :auto-focus="false"
       :actions="
-        totpStep === 'password'
+        totpStep === 'scan'
           ? [
               { text: '取消', variant: 'outline', onClick: closeTotpModal },
               {
-                text: totpBusy ? '请求中…' : '下一步',
+                text: totpBusy ? '验证中…' : '确认开启',
                 variant: 'fill',
-                disabled: totpBusy || !totpPassword,
-                onClick: requestTotpSecret,
+                disabled: totpBusy || !/^\d{6}$/.test(totpCode),
+                onClick: confirmTotp,
               },
             ]
-          : totpStep === 'scan'
-            ? [
-                { text: '返回', variant: 'outline', onClick: () => (totpStep = 'password') },
-                {
-                  text: totpBusy ? '验证中…' : '确认开启',
-                  variant: 'fill',
-                  disabled: totpBusy || !/^\d{6}$/.test(totpCode),
-                  onClick: confirmTotp,
-                },
-              ]
-            : [{ text: '我已保存', variant: 'fill', onClick: closeTotpModal }]
+          : [{ text: '我已保存', variant: 'fill', onClick: closeTotpModal }]
       "
     >
-      <NForm v-if="totpStep === 'password'" label-placement="top">
-        <p class="form-note">开启前请确认是你本人操作：需要重新输入当前密码。</p>
-        <NFormItem label="当前密码">
-          <NInput
-            v-model:value="totpPassword"
-            type="password"
-            show-password-on="click"
-            maxlength="1024"
-            autocomplete="current-password"
-            placeholder="请输入当前使用的密码"
-          />
-        </NFormItem>
-        <p v-if="totpError" class="form-error">{{ totpError }}</p>
-      </NForm>
-
-      <NForm v-else-if="totpStep === 'scan'" label-placement="top">
-        <p class="form-note">
-          用身份验证器 App（如 Google Authenticator、1Password）扫描下面的二维码；
-          扫不了就手动输入密钥。
-        </p>
+      <NForm v-if="totpStep === 'scan'" label-placement="top">
         <div class="totp-qr">
-          <img v-if="totpQr" :src="totpQr" alt="身份验证器二维码" width="168" height="168" />
+          <img v-if="totpQr" :src="totpQr" alt="动态口令二维码" width="168" height="168" />
           <code class="totp-secret">{{ totpSecret }}</code>
-          <button class="app-btn app-btn--text app-btn--sm" type="button" @click="copyTextValue(totpSecret)">
+          <button
+            class="app-btn app-btn--text app-btn--sm"
+            type="button"
+            @click="copyTextValue(totpSecret, $event.currentTarget)"
+          >
             复制密钥
           </button>
         </div>
@@ -902,13 +651,17 @@ async function revokeOthers() {
 
       <div v-else class="totp-codes">
         <p class="form-note">
-          下面 8 枚恢复码只显示这一次，手机丢失时用它们登录。请立刻抄到安全的地方。
+          下面 8 枚恢复码只显示这一次，手机丢失时用它们登录。请立刻下载或抄到安全的地方。
         </p>
         <ul class="totp-code-list">
           <li v-for="code in totpCodes" :key="code">{{ code }}</li>
         </ul>
-        <button class="app-btn app-btn--outline app-btn--sm" type="button" @click="copyTextValue(totpCodes.join('\n'))">
-          复制全部
+        <button
+          class="app-btn app-btn--outline app-btn--sm"
+          type="button"
+          @click="downloadRecoveryCodes(totpCodes)"
+        >
+          下载恢复码
         </button>
       </div>
     </AppModal>
@@ -943,6 +696,28 @@ async function revokeOthers() {
         <p v-if="totpDisableError" class="form-error">{{ totpDisableError }}</p>
       </NForm>
     </AppModal>
+    <SensitiveActionModal v-model:show="sensitiveModal" @verified="onVerified" />
+
+    <AppModal
+      v-model:show="recoveryModal"
+      title="新的恢复码"
+      description="旧的恢复码已全部作废；这些只显示这一次"
+      :max-width="460"
+      :auto-focus="false"
+      :actions="[
+        { text: '复制', variant: 'outline', onClick: () => copyTextValue(recoveryCodes.join('\n')) },
+        { text: '下载', variant: 'outline', onClick: () => downloadRecoveryCodes(recoveryCodes) },
+        { text: '我已保存', variant: 'fill', onClick: () => (recoveryModal = false) },
+      ]"
+    >
+      <ul class="totp-code-list">
+        <li v-for="code in recoveryCodes" :key="code">{{ code }}</li>
+      </ul>
+      <p class="form-note">
+        手机丢失时用其中任意一枚登录；每枚只能用一次。请离线保存，不要放进聊天软件或同步笔记。
+      </p>
+    </AppModal>
+
 
   </div>
 </template>
@@ -1065,6 +840,14 @@ async function revokeOthers() {
   color: var(--subtle-foreground);
   font-size: 0.74rem;
   transition: color 0.4s ease;
+}
+
+.row-desc {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+  line-height: 1.5;
 }
 
 .row-value {

@@ -1,4 +1,4 @@
-src:
+﻿src:
   App.vue: 根组件，包含桌面/移动端双布局、主题配置、NScrollbar 滚动容器
   main.js: 应用入口，全局注册组件、@vueuse/head 插件注册、scrollRestoration 禁用、预渲染路由过滤（控制台不预渲染）
   assets:
@@ -101,6 +101,7 @@ src:
     deviceLabel.js: 把 User-Agent 压成「浏览器 · 系统」一句人话，供登录设备列表展示
     passwordStrength.js: 密码位数预检（下限与服务端一致），其余强度规则由服务端在提交时判定
     useIsMobile.js: 窄屏断点判定（matchMedia，771px），抽屉与浮窗按它切铺满/定宽
+    components/SensitiveActionModal.vue: 敏感操作的身份确认模态框，按服务端给出的方式校验并换一次性凭证
     useImageLightbox.js: 截图灯箱，按需加载 Viewer.js（仅控制台使用）
     components/FeedbackFilterModal.vue: 反馈筛选规则编辑器，字段+匹配方式+动态搜索取值
     useResendCountdown.js: 邮件验证码重发的 60 秒冷却倒计时，登录两步验证与账号页开关共用

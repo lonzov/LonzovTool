@@ -51,6 +51,8 @@ const props = defineProps({
    * 需要完全自由布局时改用 #footer 插槽。
    */
   actions: { type: Array, default: null },
+  /** 标题下方的说明文字，渲染在头部而不是内容区 */
+  description: { type: String, default: '' },
   /**
    * 关闭前置守卫。返回 `false` 可拦截本次关闭（Naive 认这个协议：
    * `Promise.resolve(onClose()).then(v => { if (v === false) return; ... })`）。
@@ -130,6 +132,13 @@ const modalStyle = computed(() => ({
     @after-enter="emit('after-enter')"
     @after-leave="emit('after-leave')"
   >
+    <template v-if="description" #header>
+      <div class="app-modal-head">
+        <span class="app-modal-title">{{ title }}</span>
+        <p class="app-modal-desc">{{ description }}</p>
+      </div>
+    </template>
+
     <div v-if="animated" ref="animWrap" class="app-modal-anim">
       <div ref="animInner">
         <slot />
@@ -188,6 +197,25 @@ const modalStyle = computed(() => ({
 .app-modal-blur-enter-from,
 .app-modal-blur-leave-to {
   opacity: 0;
+}
+
+.app-modal-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.app-modal-title {
+  color: var(--foreground);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.app-modal-desc {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.5;
 }
 
 .app-modal-actions {
