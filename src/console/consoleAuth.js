@@ -30,7 +30,6 @@ function normalizeAccount(info) {
     name,
     email,
     roles: Array.isArray(info.roles) ? info.roles.filter((role) => typeof role === 'string') : [],
-    twoFactorEnabled: info.email_2fa_enabled === true,
     totpEnabled: info.totp_enabled === true,
     totpRecoveryGeneratedAt: Number(info.totp_recovery_generated_at) || 0,
   }
