@@ -23,6 +23,9 @@ const PASSWORD_URL = '/api/v1/console/password'
 const TWO_FACTOR_ENABLE_URL = '/api/v1/console/2fa/email/enable'
 const TWO_FACTOR_VERIFY_URL = '/api/v1/console/2fa/email/verify'
 const TWO_FACTOR_DISABLE_URL = '/api/v1/console/2fa/email/disable'
+const TOTP_SETUP_URL = '/api/v1/console/2fa/totp/setup'
+const TOTP_VERIFY_URL = '/api/v1/console/2fa/totp/verify'
+const TOTP_DISABLE_URL = '/api/v1/console/2fa/totp/disable'
 
 const route = useRoute()
 const router = useRouter()
@@ -35,6 +38,112 @@ const passwordError = ref('')
 const passwordSaving = ref(false)
 
 const twoFactorEnabled = computed(() => account.value?.twoFactorEnabled === true)
+/* /me 的 account 里目前只有 email_2fa_enabled，TOTP 状态由 verify() 后回填的字段判断 */
+const totpEnabled = computed(() => account.value?.totpEnabled === true)
+
+function resetTotpWizard() {
+  totpStep.value = 'password'
+  totpPassword.value = ''
+  totpSecret.value = ''
+  totpQr.value = ''
+  totpCode.value = ''
+  totpCodes.value = []
+  totpCheck.value = { status: '', message: '' }
+  totpError.value = ''
+}
+
+function openTotpModal() {
+  resetTotpWizard()
+  totpModal.value = true
+}
+
+async function requestTotpSecret() {
+  if (!totpPassword.value || totpBusy.value) return
+  totpBusy.value = true
+  totpError.value = ''
+  try {
+    const payload = await consoleFetch(TOTP_SETUP_URL, {
+      method: 'POST',
+      body: JSON.stringify({ password: totpPassword.value }),
+    })
+    totpSecret.value = payload?.secret || ''
+    totpStep.value = 'scan'
+    if (payload?.uri) {
+      try {
+        const QRCode = (await import('qrcode')).default
+        totpQr.value = await QRCode.toDataURL(payload.uri, { margin: 1, width: 168 })
+      } catch {
+        // 出不了二维码就让用户手填密钥，不阻塞流程
+        totpQr.value = ''
+      }
+    }
+    nextTick(() => message.success('扫码后输入验证器显示的动态码'))
+  } catch (e) {
+    totpError.value = e?.message || '获取密钥失败，请稍后重试'
+  } finally {
+    totpBusy.value = false
+  }
+}
+
+async function confirmTotp() {
+  if (!/^\d{6}$/.test(totpCode.value) || totpBusy.value) return
+  totpBusy.value = true
+  totpError.value = ''
+  try {
+    const payload = await consoleFetch(TOTP_VERIFY_URL, {
+      method: 'POST',
+      body: JSON.stringify({ code: totpCode.value }),
+    })
+    totpCodes.value = Array.isArray(payload?.recovery_codes) ? payload.recovery_codes : []
+    totpStep.value = 'codes'
+    await verify()
+  } catch (e) {
+    totpCheck.value = { status: 'error', message: e?.message || '验证码不正确' }
+    totpCode.value = ''
+  } finally {
+    totpBusy.value = false
+  }
+}
+
+async function copyTextValue(value) {
+  if (!value) return
+  const { copyText } = await import('../../utils/clipboard.js')
+  const ok = await copyText(value)
+  if (ok) message.success('已复制')
+  else message.error('复制失败，请手动选中')
+}
+
+function closeTotpModal() {
+  totpModal.value = false
+  resetTotpWizard()
+}
+
+function openTotpDisable() {
+  totpDisablePassword.value = ''
+  totpDisableError.value = ''
+  totpDisableCheck.value = { status: '', message: '' }
+  totpDisableModal.value = true
+}
+
+async function submitTotpDisable() {
+  if (!totpDisablePassword.value || totpDisableBusy.value) return
+  totpDisableBusy.value = true
+  totpDisableError.value = ''
+  try {
+    await consoleFetch(TOTP_DISABLE_URL, {
+      method: 'POST',
+      body: JSON.stringify({ password: totpDisablePassword.value }),
+    })
+    message.success('身份验证器已关闭，请重新登录')
+    totpDisableModal.value = false
+    // 关闭会推高会话版本：本页会话随即失效，回到登录页重新登录
+    router.replace({ path: '/console/login', query: { redirect: '/console/account' } })
+  } catch (e) {
+    totpDisableError.value = e?.message || '关闭失败，请稍后重试'
+  } finally {
+    totpDisableBusy.value = false
+  }
+}
 
 const enableModal = ref(false)
 const enableCode = ref('')
@@ -49,6 +158,24 @@ const {
   reset: resetEnableResend,
 } = useResendCountdown()
 
+/* 身份验证器：三步向导（密码 → 扫码/手填密钥 + 动态码 → 一次性恢复码）。
+   恢复码只显示这一次，所以关掉向导前先让用户确认已抄走。 */
+const totpModal = ref(false)
+const totpStep = ref('password')
+const totpPassword = ref('')
+const totpSecret = ref('')
+const totpQr = ref('')
+const totpCode = ref('')
+const totpCodes = ref([])
+const totpCheck = ref({ status: '', message: '' })
+const totpError = ref('')
+const totpBusy = ref(false)
+
+const totpDisableModal = ref(false)
+const totpDisablePassword = ref('')
+const totpDisableError = ref('')
+const totpDisableCheck = ref({ status: '', message: '' })
+const totpDisableBusy = ref(false)
 const disableModal = ref(false)
 const disablePassword = ref('')
 const disableCheck = ref({ status: '', message: '' })
@@ -451,7 +578,7 @@ async function revokeOthers() {
 
       <div class="section-row">
         <div class="row-main">
-          <span class="row-label">两步验证</span>
+          <span class="row-label">邮箱验证码</span>
           <span class="row-value" :class="{ 'row-value--subtle': !twoFactorEnabled }">
             {{ twoFactorEnabled ? '已开启' : '未开启' }}
           </span>
@@ -473,6 +600,32 @@ async function revokeOthers() {
             @click="requestEnableCode"
           >
             开启两步验证
+          </button>
+        </div>
+      </div>
+      <div class="section-row">
+        <div class="row-main">
+          <span class="row-label">身份验证器</span>
+          <span class="row-value" :class="{ 'row-value--subtle': !totpEnabled }">
+            {{ totpEnabled ? '已开启' : '未开启' }}
+          </span>
+        </div>
+        <div class="row-action">
+          <button
+            v-if="totpEnabled"
+            class="app-btn app-btn--outline app-btn--sm app-btn--rect"
+            type="button"
+            @click="openTotpDisable"
+          >
+            关闭
+          </button>
+          <button
+            v-else
+            class="app-btn app-btn--outline app-btn--sm app-btn--rect"
+            type="button"
+            @click="openTotpModal"
+          >
+            开启身份验证器
           </button>
         </div>
       </div>
@@ -676,6 +829,121 @@ async function revokeOthers() {
         <p v-if="disableError" class="form-error">{{ disableError }}</p>
       </NForm>
     </AppModal>
+    <AppModal
+      v-model:show="totpModal"
+      title="开启身份验证器"
+      :max-width="440"
+      :auto-focus="false"
+      :actions="
+        totpStep === 'password'
+          ? [
+              { text: '取消', variant: 'outline', onClick: closeTotpModal },
+              {
+                text: totpBusy ? '请求中…' : '下一步',
+                variant: 'fill',
+                disabled: totpBusy || !totpPassword,
+                onClick: requestTotpSecret,
+              },
+            ]
+          : totpStep === 'scan'
+            ? [
+                { text: '返回', variant: 'outline', onClick: () => (totpStep = 'password') },
+                {
+                  text: totpBusy ? '验证中…' : '确认开启',
+                  variant: 'fill',
+                  disabled: totpBusy || !/^\d{6}$/.test(totpCode),
+                  onClick: confirmTotp,
+                },
+              ]
+            : [{ text: '我已保存', variant: 'fill', onClick: closeTotpModal }]
+      "
+    >
+      <NForm v-if="totpStep === 'password'" label-placement="top">
+        <p class="form-note">开启前请确认是你本人操作：需要重新输入当前密码。</p>
+        <NFormItem label="当前密码">
+          <NInput
+            v-model:value="totpPassword"
+            type="password"
+            show-password-on="click"
+            maxlength="1024"
+            autocomplete="current-password"
+            placeholder="请输入当前使用的密码"
+          />
+        </NFormItem>
+        <p v-if="totpError" class="form-error">{{ totpError }}</p>
+      </NForm>
+
+      <NForm v-else-if="totpStep === 'scan'" label-placement="top">
+        <p class="form-note">
+          用身份验证器 App（如 Google Authenticator、1Password）扫描下面的二维码；
+          扫不了就手动输入密钥。
+        </p>
+        <div class="totp-qr">
+          <img v-if="totpQr" :src="totpQr" alt="身份验证器二维码" width="168" height="168" />
+          <code class="totp-secret">{{ totpSecret }}</code>
+          <button class="app-btn app-btn--text app-btn--sm" type="button" @click="copyTextValue(totpSecret)">
+            复制密钥
+          </button>
+        </div>
+        <NFormItem
+          label="验证器显示的 6 位动态码"
+          :validation-status="totpCheck.status || undefined"
+          :feedback="totpCheck.message || undefined"
+        >
+          <InputOtp
+            v-model:value="totpCode"
+            :status="totpCheck.status"
+            :autofocus="false"
+            :disabled="totpBusy"
+          />
+        </NFormItem>
+        <p v-if="totpError" class="form-error">{{ totpError }}</p>
+      </NForm>
+
+      <div v-else class="totp-codes">
+        <p class="form-note">
+          下面 8 枚恢复码只显示这一次，手机丢失时用它们登录。请立刻抄到安全的地方。
+        </p>
+        <ul class="totp-code-list">
+          <li v-for="code in totpCodes" :key="code">{{ code }}</li>
+        </ul>
+        <button class="app-btn app-btn--outline app-btn--sm" type="button" @click="copyTextValue(totpCodes.join('\n'))">
+          复制全部
+        </button>
+      </div>
+    </AppModal>
+
+    <AppModal
+      v-model:show="totpDisableModal"
+      title="关闭身份验证器"
+      :max-width="420"
+      :auto-focus="false"
+      :actions="[
+        { text: '取消', variant: 'outline', onClick: () => (totpDisableModal = false) },
+        {
+          text: totpDisableBusy ? '提交中…' : '确认关闭',
+          variant: 'fill',
+          disabled: totpDisableBusy,
+          onClick: submitTotpDisable,
+        },
+      ]"
+    >
+      <NForm label-placement="top">
+        <NFormItem label="当前密码">
+          <NInput
+            v-model:value="totpDisablePassword"
+            type="password"
+            show-password-on="click"
+            maxlength="1024"
+            autocomplete="current-password"
+            placeholder="请输入当前使用的密码"
+          />
+        </NFormItem>
+        <p class="form-note">关闭后所有设备需要重新登录，恢复码一并作废。</p>
+        <p v-if="totpDisableError" class="form-error">{{ totpDisableError }}</p>
+      </NForm>
+    </AppModal>
+
   </div>
 </template>
 
@@ -921,6 +1189,50 @@ async function revokeOthers() {
 
 .device-meta--dim {
   color: var(--subtle-foreground);
+}
+
+.totp-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.totp-qr img {
+  border-radius: var(--radius-md);
+  background: var(--card);
+}
+
+.totp-secret {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  overflow-wrap: anywhere;
+}
+
+.totp-codes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.totp-code-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  list-style: none;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8125rem;
+  color: var(--foreground);
 }
 
 .form-note {

@@ -47,7 +47,27 @@ const maskedEmail = ref('')
 const code = ref('')
 const codeCheck = ref({ status: '', message: '' })
 const rememberDevice = ref(false)
-const resending = ref(false)
+/* 第二段的方式由用户选：服务端只列出可用项，选完才决定发不发信、输什么码 */
+const methods = ref([])
+const method = ref('')
+const sendingCode = ref(false)
+const codeSent = ref(false)
+
+const METHOD_LABEL = {
+  totp: '身份验证器',
+  email: '邮箱验证码',
+  recovery: '恢复码',
+}
+
+const availableMethods = computed(() =>
+  methods.value.filter((item) => item === 'totp' || item === 'email'),
+)
+/* 只剩一种方式时不用选，直接进入该方式；两种都有才让用户点 */
+const needMethodChoice = computed(() => !method.value && availableMethods.value.length > 1)
+const isRecovery = computed(() => method.value === 'recovery')
+const canSendCode = computed(
+  () => !sendingCode.value && resendSeconds.value === 0 && !!challenge.value,
+)
 const otpRef = ref(null)
 const isCodeStep = computed(() => !!challenge.value)
 const { remaining: resendSeconds, start: startResend, reset: resetResend } = useResendCountdown()
@@ -63,6 +83,16 @@ const LOGIN_ERROR_TEXT = {
 const CODE_ABORT_TEXT = {
   challenge_invalid: '验证已失效，请重新登录',
   code_attempts_exhausted: '验证码尝试次数已用完，请重新登录',
+  totp_not_enabled: '该账号没有开启身份验证器，请换一种方式',
+}
+
+/* 这些错误留在第二步：清空输入让用户重试，但不作废 challenge */
+const CODE_RETRY_TEXT = {
+  invalid_code: '验证码不正确，请重新输入',
+  code_not_sent: '请先发送验证码',
+  totp_invalid: '动态码不正确，请查看验证器后重新输入',
+  totp_replayed: '这枚动态码已经用过，请等下一枚',
+  recovery_invalid: '恢复码无效或已使用',
 }
 
 /* 限流是服务端状态，只有真被限流时才提示，并给出 Retry-After 里的确切等待时间 */
@@ -72,14 +102,24 @@ let lockoutTimer = null
 const canSubmit = computed(
   () => !!email.value.trim() && !!password.value && !submitting.value && lockoutSeconds.value === 0,
 )
-const canSubmitCode = computed(() => /^\d{6}$/.test(code.value) && !submitting.value)
+const canSubmitCode = computed(() => {
+  if (submitting.value || !method.value) return false
+  if (isRecovery.value) return code.value.trim().length >= 8
+  return /^\d{6}$/.test(code.value)
+})
 
 /* 剩这么多机会时开始提醒，再晚就只剩最后一次了 */
 const ATTEMPTS_WARN_AT = 5
 
-const codeSentText = computed(() =>
-  maskedEmail.value ? `验证码已发送至 ${maskedEmail.value}` : '验证码已发送至你的邮箱',
-)
+const codeSentText = computed(() => {
+  if (method.value === 'totp') return '打开身份验证器，输入当前显示的 6 位动态码'
+  if (method.value === 'recovery') return '输入一枚恢复码（形如 abc12-def34）'
+  if (method.value === 'email') {
+    if (!codeSent.value) return maskedEmail.value ? `验证码将发送至 ${maskedEmail.value}` : '验证码将发送至你的邮箱'
+    return maskedEmail.value ? `验证码已发送至 ${maskedEmail.value}` : '验证码已发送至你的邮箱'
+  }
+  return '请选择一种验证方式'
+})
 const submitText = computed(() => {
   if (isCodeStep.value) return submitting.value ? '验证中…' : '验证'
   return submitting.value ? '登录中…' : '登录'
@@ -141,6 +181,11 @@ function resolveRedirect() {
 function enterCodeStep(result) {
   challenge.value = result.challenge
   maskedEmail.value = result.maskedEmail
+  methods.value = Array.isArray(result.methods) ? result.methods : ['email']
+  codeSent.value = false
+  // 只有一种方式时没有"选择"可言；两种都有就等用户点
+  method.value = availableMethods.value.length === 1 ? availableMethods.value[0] : ''
+  if (method.value === 'email') sendCode()
   code.value = ''
   codeCheck.value = { status: '', message: '' }
   // 免验证是这台设备的一次性授权选择，每次进第二步都从「不勾选」开始
@@ -153,11 +198,49 @@ function enterCodeStep(result) {
 function backToCredentials(text) {
   challenge.value = ''
   maskedEmail.value = ''
+  methods.value = []
+  method.value = ''
+  codeSent.value = false
   code.value = ''
   codeCheck.value = { status: '', message: '' }
   rememberDevice.value = false
   resetResend()
   error.value = text
+}
+
+async function chooseMethod(next) {
+  if (submitting.value || sendingCode.value) return
+  method.value = next
+  code.value = ''
+  codeCheck.value = { status: '', message: '' }
+  error.value = ''
+  if (next === 'email') await sendCode()
+  if (next !== 'recovery') nextTick(() => otpRef.value?.focus())
+}
+
+/** 发送验证码：初次发送与重发是同一个接口，冷却由服务端判定 */
+async function sendCode() {
+  if (!canSendCode.value) return
+  sendingCode.value = true
+  error.value = ''
+  try {
+    await resendTwoFactorCode(challenge.value)
+    codeSent.value = true
+    startResend()
+  } catch (e) {
+    if (e instanceof ConsoleApiError && (e.code === 'resend_too_soon' || e.code === 'rate_limited')) {
+      if (e.retryAfterSeconds > 0) startResend(e.retryAfterSeconds)
+      error.value = e.message || '验证码刚刚发过，请稍后再试'
+      return
+    }
+    if (e instanceof ConsoleApiError && CODE_ABORT_TEXT[e.code]) {
+      backToCredentials(CODE_ABORT_TEXT[e.code])
+      return
+    }
+    error.value = e?.message || '验证码发送失败，请稍后再试'
+  } finally {
+    sendingCode.value = false
+  }
 }
 
 function handleSubmit() {
@@ -218,7 +301,7 @@ async function submitCode() {
   codeCheck.value = { status: '', message: '' }
   submitting.value = true
   try {
-    await submitTwoFactor(challenge.value, code.value, rememberDevice.value)
+    await submitTwoFactor(challenge.value, code.value, rememberDevice.value, method.value)
     router.replace(resolveRedirect())
   } catch (e) {
     handleCodeFailure(e)
@@ -251,6 +334,16 @@ function handleCodeFailure(failure) {
     backToCredentials(CODE_ABORT_TEXT[failure.code])
     return
   }
+  if (CODE_RETRY_TEXT[failure.code]) {
+    // 留在第二步：清空输入并重新聚焦，让用户直接再试一次
+    codeCheck.value = {
+      status: 'error',
+      message: CODE_RETRY_TEXT[failure.code],
+    }
+    code.value = ''
+    nextTick(() => otpRef.value?.focus())
+    return
+  }
   error.value = failure.message || '验证失败，请稍后重试'
 }
 
@@ -259,29 +352,6 @@ watch(code, (val) => {
   if (val && codeCheck.value.status) codeCheck.value = { status: '', message: '' }
 })
 
-async function handleResend() {
-  if (resendSeconds.value > 0 || resending.value) return
-  resending.value = true
-  try {
-    await resendTwoFactorCode(challenge.value)
-    startResend()
-    codeCheck.value = { status: '', message: '' }
-  } catch (e) {
-    if (e instanceof ConsoleApiError && (e.code === 'resend_too_soon' || e.code === 'rate_limited')) {
-      // 服务端还有剩余冷却就按它给的时间按住按钮，拿不到就只提示不编造倒计时
-      if (e.retryAfterSeconds > 0) startResend(e.retryAfterSeconds)
-      error.value = e.message || '验证码刚发出，请稍后重试'
-      return
-    }
-    if (e instanceof ConsoleApiError && CODE_ABORT_TEXT[e.code]) {
-      backToCredentials(CODE_ABORT_TEXT[e.code])
-      return
-    }
-    error.value = e?.message || '验证码发送失败，请稍后重试'
-  } finally {
-    resending.value = false
-  }
-}
 </script>
 
 <template>
@@ -302,19 +372,58 @@ async function handleResend() {
 
         <div class="card-body">
           <template v-if="isCodeStep">
-            <div class="field">
+            <!-- 方式选择：两种方式都可用时才出现，选完才决定发不发信、输什么码 -->
+            <div v-if="needMethodChoice" class="method-picker">
+              <button
+                v-for="item in availableMethods"
+                :key="item"
+                class="method-option"
+                type="button"
+                :disabled="submitting || sendingCode"
+                @click="chooseMethod(item)"
+              >
+                <span class="method-name">{{ METHOD_LABEL[item] }}</span>
+                <span class="method-desc">
+                  {{ item === 'totp' ? '用手机上的身份验证器 App' : '发送 6 位验证码到邮箱' }}
+                </span>
+              </button>
+              <button
+                class="method-link"
+                type="button"
+                :disabled="submitting"
+                @click="chooseMethod('recovery')"
+              >
+                手机不在身边？用恢复码
+              </button>
+            </div>
+
+            <div v-else-if="method === 'email'" class="field">
               <div class="code-label-row">
                 <span class="field-label">输入验证码</span>
                 <button
                   class="app-btn app-btn--outline app-btn--rect resend-btn"
                   type="button"
-                  :disabled="resendSeconds > 0 || resending"
-                  @click="handleResend"
+                  :disabled="!canSendCode"
+                  @click="sendCode"
                 >
                   <NIcon :component="ArrowClockwise24Regular" :size="13" />
-                  <span>{{ resendSeconds > 0 ? `重新发送 ${resendSeconds}` : '重新发送' }}</span>
+                  <span>
+                    {{ sendingCode ? '发送中…' : resendSeconds > 0 ? `重新发送 ${resendSeconds}` : '发送验证码' }}
+                  </span>
                 </button>
               </div>
+              <InputOtp
+                ref="otpRef"
+                v-model:value="code"
+                :status="codeCheck.status"
+                :autofocus="true"
+                :disabled="submitting || sendingCode"
+              />
+              <p v-if="codeCheck.message" class="field-error">{{ codeCheck.message }}</p>
+            </div>
+
+            <div v-else-if="method === 'totp'" class="field">
+              <span class="field-label">输入动态码</span>
               <InputOtp
                 ref="otpRef"
                 v-model:value="code"
@@ -323,9 +432,31 @@ async function handleResend() {
                 :disabled="submitting"
               />
               <p v-if="codeCheck.message" class="field-error">{{ codeCheck.message }}</p>
+              <button class="method-link" type="button" :disabled="submitting" @click="chooseMethod('email')">
+                改用邮箱验证码
+              </button>
+            </div>
+
+            <div v-else-if="method === 'recovery'" class="field">
+              <label class="field-label" for="console-recovery">输入恢复码</label>
+              <input
+                id="console-recovery"
+                v-model="code"
+                class="field-input"
+                type="text"
+                autocomplete="one-time-code"
+                spellcheck="false"
+                placeholder="abc12-def34"
+                :disabled="submitting"
+              />
+              <p v-if="codeCheck.message" class="field-error">{{ codeCheck.message }}</p>
+              <button class="method-link" type="button" :disabled="submitting" @click="chooseMethod('totp')">
+                改用身份验证器
+              </button>
             </div>
 
             <NCheckbox
+              v-if="method && !isRecovery"
               v-model:checked="rememberDevice"
               class="remember-option"
               :disabled="submitting"
@@ -386,7 +517,7 @@ async function handleResend() {
           >
             {{ submitText }}
           </button>
-          <p v-if="isCodeStep" class="card-note">
+          <p v-if="isCodeStep && method === 'email'" class="card-note">
             没收到？检查垃圾邮件，或稍等片刻后重新发送。
           </p>
         </div>
@@ -479,6 +610,71 @@ async function handleResend() {
 }
 
 /* 标签与重发按钮同一行：重发是次要操作，靠右与标签基线对齐 */
+/* 方式选择：两张等宽按钮 + 一个低调的备用入口 */
+.method-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.method-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  color: var(--foreground);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.method-option:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--accent);
+}
+
+.method-option:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.method-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.method-desc {
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+}
+
+.method-link {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-family: inherit;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.method-link:hover:not(:disabled) {
+  color: var(--foreground);
+}
+
+.method-link:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .code-label-row {
   display: flex;
   align-items: center;

@@ -31,6 +31,7 @@ function normalizeAccount(info) {
     email,
     roles: Array.isArray(info.roles) ? info.roles.filter((role) => typeof role === 'string') : [],
     twoFactorEnabled: info.email_2fa_enabled === true,
+    totpEnabled: info.totp_enabled === true,
   }
 }
 
@@ -125,7 +126,7 @@ async function login(email, password, captcha = null) {
  * 用 challenge 换会话：成功时与直接登录拿到同一份会话响应。
  * remember 为真时服务端额外下发该设备的长期豁免 Cookie，30 天内这台设备登录不再走验证码。
  */
-async function submitTwoFactor(challenge, code, remember = false) {
+async function submitTwoFactor(challenge, code, remember = false, method = 'email') {
   if (!challenge) {
     throw new ConsoleApiError('challenge_invalid', '验证已失效，请重新登录')
   }
@@ -136,13 +137,17 @@ async function submitTwoFactor(challenge, code, remember = false) {
   const payload = await consoleFetch(LOGIN_2FA_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ challenge, code, remember: remember === true }),
+    // method 由用户在选择栏里点出来，服务端只按这种方式校验
+    body: JSON.stringify({ challenge, code, method, remember: remember === true }),
   })
   rememberSession(payload)
   return payload
 }
 
-/** 重发验证码。冷却由服务端判定，60 秒内的重复请求返回 429 resend_too_soon */
+/**
+ * 发送/重发邮箱验证码。首次发送也走这里：用户在第二段选了"验证码"才会真的发信。
+ * 冷却由服务端判定，60 秒内的重复请求返回 429 resend_too_soon。
+ */
 async function resendTwoFactorCode(challenge) {
   if (!challenge) {
     throw new ConsoleApiError('challenge_invalid', '验证已失效，请重新登录')

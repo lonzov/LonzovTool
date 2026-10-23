@@ -277,9 +277,10 @@ async function remove(item) {
   }
 }
 
-async function copyContact(contact) {
+/* 抽屉锁着焦点，兜底复制必须把临时节点挂进抽屉内部，否则 execCommand 会假装成功 */
+async function copyContact(contact, container) {
   if (!contact) return
-  const ok = await copyText(contact)
+  const ok = await copyText(contact, { container })
   if (ok) message.success('已复制')
   else message.error('复制失败，请手动选中')
 }
@@ -485,7 +486,12 @@ onMounted(load)
                     {{ detail.item.contact }}
                   </a>
                   <span v-else>{{ detail.item.contact }}</span>
-                  <button class="meta-copy" type="button" title="复制" @click="copyContact(detail.item.contact)">
+                  <button
+                    class="meta-copy"
+                    type="button"
+                    title="复制"
+                    @click="copyContact(detail.item.contact, $event.currentTarget)"
+                  >
                     <NIcon :component="Copy24Regular" :size="13" />
                   </button>
                 </dd>
@@ -764,6 +770,17 @@ onMounted(load)
 }
 
 /* ===== 详情抽屉：编辑只在这里出现 ===== */
+
+/* 全局禁选（App.vue）对抽屉整体生效，这里只给"需要复制的内容"开白名单：
+   标题、反馈正文、字段值可选中；标签、字段名、时间这类装饰性文字保持不可选 */
+.detail-title,
+.detail-body,
+.detail-meta dd {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
 .detail {
   display: flex;
   flex-direction: column;
