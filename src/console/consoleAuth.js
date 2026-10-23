@@ -115,6 +115,8 @@ async function login(email, password, captcha = null) {
       need2fa: true,
       challenge: typeof payload.challenge === 'string' ? payload.challenge : '',
       maskedEmail: typeof payload.masked_email === 'string' ? payload.masked_email : '',
+      // 可用方式由服务端列出，具体选哪个在登录页完成
+      methods: Array.isArray(payload.methods) ? payload.methods.filter((m) => typeof m === 'string') : [],
     }
   }
 
