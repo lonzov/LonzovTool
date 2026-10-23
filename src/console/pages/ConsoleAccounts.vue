@@ -441,7 +441,7 @@ async function runReset() {
             </span>
             <span v-if="!item.roles.length && !item.grants.length" class="cell-muted">无授权</span>
           </span>
-          <span>
+          <span class="cell-status">
             <span class="status-pill" :class="`status-pill--${statusOf(item).tone}`">
               {{ statusOf(item).text }}
             </span>
@@ -961,6 +961,7 @@ async function runReset() {
 }
 
 /* 窄屏：邮箱与操作各占一行，显式列（显示名、最后登录）让位给可见内容 */
+/* 窄屏把表格折成卡片：邮箱与操作同排，状态独占一行，标签整行铺开 */
 @media (width <= 720px) {
   .account-row--head {
     display: none;
@@ -968,16 +969,33 @@ async function runReset() {
 
   .account-row {
     grid-template-columns: minmax(0, 1fr) auto;
-    row-gap: 6px;
-  }
-
-  .account-row > .cell-email {
-    grid-column: 1 / -1;
+    row-gap: 8px;
+    padding: 12px 0;
   }
 
   .account-row > .cell-name,
   .account-row > .cell-time {
     display: none;
+  }
+
+  .account-row > .cell-email {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .account-row > .col-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .account-row > .cell-status {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .account-row > .cell-tags {
+    grid-column: 1 / -1;
+    grid-row: 3;
   }
 }
 </style>

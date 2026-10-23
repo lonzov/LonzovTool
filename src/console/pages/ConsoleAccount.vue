@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NForm, NFormItem, NIcon, NInput, NSwitch, useMessage } from 'naive-ui'
 import {
@@ -17,6 +17,7 @@ import { consoleFetch } from '../consoleRequest.js'
 import { useConsoleAuth } from '../consoleAuth.js'
 import { describeDevice } from '../deviceLabel.js'
 import { checkPasswordLength, checkPasswordRemote } from '../passwordStrength.js'
+import { switchRailStyle } from '../../utils/switchRailStyle.js'
 
 const SESSIONS_URL = '/api/v1/console/sessions'
 const PASSWORD_URL = '/api/v1/console/password'
@@ -200,12 +201,29 @@ function downloadRecoveryCodes(codes) {
   URL.revokeObjectURL(url)
 }
 
-/* 开关组件只是入口：真正动作要过一次身份确认 */
+/* 两步验证是强制的：允许开关先真的拨到关闭位置，停顿一下再弹回去。
+   立刻赋值回 true 会让动画来不及发生，看起来像"点了没反应"。 */
+const masterSwitchOn = ref(true)
+const masterSwitchPinging = ref(false)
+let masterSwitchTimer = null
+
 function onMasterSwitch(value) {
   if (value) return
-  // 前端摆设：账号涉及编辑权限，两步验证不允许关闭
-  message.warning('账号涉及网站编辑权限，为了安全所以不允许关闭两步验证')
+  masterSwitchOn.value = false
+  masterSwitchPinging.value = true
+  message.warning('本账号具有编辑权限，为了保护网站内容安全，无法关闭此功能')
+
+  // 停顿够一次完整的开关动画再复位，用户才看得到"关掉又被打开"
+  masterSwitchTimer = window.setTimeout(() => {
+    masterSwitchOn.value = true
+    masterSwitchPinging.value = false
+    masterSwitchTimer = null
+  }, 420)
 }
+
+onBeforeUnmount(() => {
+  if (masterSwitchTimer) window.clearTimeout(masterSwitchTimer)
+})
 
 function onTotpSwitch(value) {
   askVerify(value ? 'totp-enable' : 'totp-disable')
@@ -219,6 +237,20 @@ async function copyTextValue(value, container) {
   else message.error('复制失败，请手动选中')
 }
 
+/** 会话时间戳按本地时区展示，空值统一显示破折号 */
+function formatTime(timestamp) {
+  const seconds = Number(timestamp)
+  if (!Number.isFinite(seconds) || seconds <= 0) return '—'
+  return new Date(seconds * 1000).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+}
+
 function gotUnauthorized(e) {
   if (e?.code !== 'unauthorized') return false
   router.replace({ path: '/console/login', query: { redirect: route.fullPath } })
@@ -230,6 +262,11 @@ const sessionsLoading = ref(false)
 const sessionsError = ref('')
 const revokingId = ref(0)
 const revokingOthers = ref(false)
+
+/* 设备信息由 UA 推出来：服务端只存原始 UA，解释放在前端，排障时 title 里仍留着原文 */
+const devices = computed(() =>
+  sessions.value.map((session) => ({ ...session, device: describeDevice(session.user_agent) })),
+)
 
 const roles = computed(() => account.value?.roles || [])
 const passwordLengthCheck = computed(() => checkPasswordLength(passwordForm.value.next))
@@ -265,11 +302,7 @@ async function loadSessions() {
   sessionsError.value = ''
   try {
     const payload = await consoleFetch(SESSIONS_URL)
-    // 设备信息由 UA 推出来，服务端只存原始 UA，不在库里做解释
-    sessions.value = (payload?.items || []).map((item) => ({
-      ...item,
-      device: describeDevice(item.user_agent),
-    }))
+    sessions.value = payload?.items || []
   } catch (e) {
     if (gotUnauthorized(e)) return
     sessionsError.value = e?.message || '读取失败，请稍后重试'
@@ -398,13 +431,11 @@ async function runRevokeOthers() {
   <div class="account-page">
     <section class="account-section">
       <header class="section-head">
-        <div class="head-main">
-          <h2 class="section-title">
-            <NIcon :component="PersonCircle24Regular" :size="16" class="section-icon" />
-            账号信息
-          </h2>
-          <p class="section-desc">登录身份与当前挂载的角色</p>
+        <div class="section-title-row">
+          <NIcon :component="PersonCircle24Regular" :size="16" class="section-icon" />
+          <h2 class="section-title">账号信息</h2>
         </div>
+        <p class="section-desc">登录身份与当前挂载的角色</p>
       </header>
 
       <div class="section-row">
@@ -427,13 +458,11 @@ async function runRevokeOthers() {
 
     <section class="account-section">
       <header class="section-head">
-        <div class="head-main">
-          <h2 class="section-title">
-            <NIcon :component="Key24Regular" :size="16" class="section-icon" />
-            安全
-          </h2>
-          <p class="section-desc">登录密码与当前账号的凭据状态</p>
+        <div class="section-title-row">
+          <NIcon :component="Key24Regular" :size="16" class="section-icon" />
+          <h2 class="section-title">安全</h2>
         </div>
+        <p class="section-desc">登录密码与当前账号的凭据状态</p>
       </header>
 
       <div class="section-row">
@@ -460,29 +489,38 @@ async function runRevokeOthers() {
 
       <div class="section-row">
         <div class="row-main">
-          <span class="row-label">两步验证 (2FA)</span>
-          <span class="row-desc">账号涉及网站编辑权限，为保障安全已强制开启，不允许关闭</span>
+          <span class="row-title">两步验证 (2FA)</span>
+          <span class="row-desc">登录时需输入额外验证码，有效防止账号被盗用。</span>
         </div>
         <div class="row-action">
-          <NSwitch :value="true" @update:value="onMasterSwitch" />
+          <NSwitch
+            :value="masterSwitchOn"
+            :rail-style="switchRailStyle"
+            :loading="masterSwitchPinging"
+            @update:value="onMasterSwitch"
+          />
         </div>
       </div>
 
       <div class="section-row">
         <div class="row-main">
-          <span class="row-label">动态口令验证器</span>
+          <span class="row-title">动态口令验证器</span>
           <span class="row-desc">
             用手机上的身份验证器 App 生成 6 位动态码，登录与敏感操作都需要它
           </span>
         </div>
         <div class="row-action">
-          <NSwitch :value="totpEnabled" @update:value="onTotpSwitch" />
+          <NSwitch
+            :value="totpEnabled"
+            :rail-style="switchRailStyle"
+            @update:value="onTotpSwitch"
+          />
         </div>
       </div>
 
       <div v-if="totpEnabled" class="section-row">
         <div class="row-main">
-          <span class="row-label">恢复码</span>
+          <span class="row-title">恢复码</span>
           <span class="row-desc">{{ recoveryGeneratedText }}</span>
         </div>
         <div class="row-action">
@@ -499,12 +537,9 @@ async function runRevokeOthers() {
 
     <section class="account-section">
       <header class="section-head section-head--plain">
-        <div class="head-main">
-          <h2 class="section-title">
-            <NIcon :component="Desktop24Regular" :size="16" class="section-icon" />
-            登录设备
-          </h2>
-          <p class="section-desc">看到不认识的设备就直接下线它</p>
+        <div class="section-title-row">
+          <NIcon :component="Desktop24Regular" :size="16" class="section-icon" />
+          <h2 class="section-title">登录设备</h2>
         </div>
         <div class="section-head-extra">
           <button
@@ -525,6 +560,7 @@ async function runRevokeOthers() {
             下线其他设备
           </button>
         </div>
+        <p class="section-desc">看到不认识的设备就直接下线它</p>
       </header>
 
       <p v-if="sessionsError" class="inline-hint inline-hint--error">{{ sessionsError }}</p>
@@ -539,23 +575,32 @@ async function runRevokeOthers() {
           </span>
 
           <div class="device-main">
-            <p class="device-title">
+            <p class="device-line">
               <span class="device-name">{{ session.device.label }}</span>
               <span v-if="session.current" class="device-tag">当前设备</span>
             </p>
-            <p class="device-meta">
+            <p class="device-ip">
               {{ session.last_ip || session.created_ip || '未知地址' }}
             </p>
-            <p class="device-meta device-meta--dim">
-              最近活动 {{ formatTime(session.last_used_at || session.created_at) }} ·
-              登录于 {{ formatTime(session.created_at) }}
-            </p>
+            <div class="device-meta">
+              <span class="meta-item">
+                <span class="meta-label">最近活动</span>
+                <span class="meta-value">
+                  {{ formatTime(session.last_used_at || session.created_at) }}
+                </span>
+              </span>
+              <span class="meta-item">
+                <span class="meta-label">登录于</span>
+                <span class="meta-value">{{ formatTime(session.created_at) }}</span>
+              </span>
+            </div>
           </div>
 
           <button
-            class="app-btn app-btn--outline app-btn--sm"
+            class="app-btn app-btn--outline app-btn--sm app-btn--rect device-action"
             type="button"
             :disabled="session.current || revokingId === session.id"
+            :aria-label="`下线 ${session.device.label}`"
             :title="session.current ? '当前设备请用右上角「退出」结束' : `撤销该设备（原始 UA：${session.user_agent || '未知'}）`"
             @click="revoke(session)"
           >
@@ -666,36 +711,6 @@ async function runRevokeOthers() {
       </div>
     </AppModal>
 
-    <AppModal
-      v-model:show="totpDisableModal"
-      title="关闭身份验证器"
-      :max-width="420"
-      :auto-focus="false"
-      :actions="[
-        { text: '取消', variant: 'outline', onClick: () => (totpDisableModal = false) },
-        {
-          text: totpDisableBusy ? '提交中…' : '确认关闭',
-          variant: 'fill',
-          disabled: totpDisableBusy,
-          onClick: submitTotpDisable,
-        },
-      ]"
-    >
-      <NForm label-placement="top">
-        <NFormItem label="当前密码">
-          <NInput
-            v-model:value="totpDisablePassword"
-            type="password"
-            show-password-on="click"
-            maxlength="1024"
-            autocomplete="current-password"
-            placeholder="请输入当前使用的密码"
-          />
-        </NFormItem>
-        <p class="form-note">关闭后所有设备需要重新登录，恢复码一并作废。</p>
-        <p v-if="totpDisableError" class="form-error">{{ totpDisableError }}</p>
-      </NForm>
-    </AppModal>
     <SensitiveActionModal v-model:show="sensitiveModal" @verified="onVerified" />
 
     <AppModal
@@ -734,6 +749,7 @@ async function runRevokeOthers() {
 }
 
 .account-section {
+  container-type: inline-size;
   padding: 16px 18px 4px;
   background: var(--card);
   border: 1px solid var(--border);
@@ -742,20 +758,23 @@ async function runRevokeOthers() {
 }
 
 .section-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
 }
 
-/* 标题与说明合成左组，右上角操作与标题同一行 */
-.head-main {
-  flex: 1 1 auto;
+.section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   min-width: 0;
+  grid-column: 1;
+  grid-row: 1;
 }
+
 
 /* 下面紧接的是设备卡片，标题区不再画分隔线 */
 .section-head--plain {
@@ -763,10 +782,13 @@ async function runRevokeOthers() {
   border-bottom: none;
 }
 
+.section-icon {
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+  transition: color 0.4s ease;
+}
+
 .section-title {
-  display: flex;
-  align-items: center;
-  gap: 7px;
   margin: 0;
   color: var(--foreground);
   font-size: 0.95rem;
@@ -775,7 +797,9 @@ async function runRevokeOthers() {
 }
 
 .section-desc {
-  margin: 3px 0 0;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin: 0;
   color: var(--subtle-foreground);
   font-size: 0.78rem;
   line-height: 1.5;
@@ -783,11 +807,11 @@ async function runRevokeOthers() {
 }
 
 .section-head-extra {
-  flex-shrink: 0;
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 22px;
 }
 
 .icon-btn {
@@ -833,6 +857,7 @@ async function runRevokeOthers() {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
   min-width: 0;
 }
 
@@ -842,12 +867,22 @@ async function runRevokeOthers() {
   transition: color 0.4s ease;
 }
 
+/* 带说明的行：标题承担主要信息，字号与颜色对齐设置页的 .setting-title */
+.row-title {
+  color: var(--foreground);
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: color 0.4s ease;
+}
+
 .row-desc {
   display: block;
-  margin-top: 2px;
-  color: var(--muted-foreground);
-  font-size: 0.78rem;
-  line-height: 1.5;
+  margin-top: 3px;
+  color: var(--subtle-foreground);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  transition: color 0.4s ease;
 }
 
 .row-value {
@@ -883,6 +918,9 @@ async function runRevokeOthers() {
 
 .row-action {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .role-tag {
@@ -905,9 +943,10 @@ async function runRevokeOthers() {
 }
 
 .device-card {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 12px;
+  align-items: center;
   padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -918,32 +957,33 @@ async function runRevokeOthers() {
   border-color: var(--border-strong);
 }
 
+.device-action:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--destructive) 8%, transparent);
+  border-color: color-mix(in srgb, var(--destructive) 35%, transparent);
+  color: var(--destructive);
+}
+
 .device-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
   border-radius: var(--radius-md);
   background: var(--muted);
   color: var(--muted-foreground);
 }
 
 .device-main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
   min-width: 0;
-  flex: 1;
 }
 
-.device-title {
+.device-line {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   margin: 0;
-  min-width: 0;
 }
 
 .device-name {
@@ -962,17 +1002,43 @@ async function runRevokeOthers() {
   font-size: 0.68rem;
 }
 
-.device-meta {
-  margin: 0;
+.device-ip {
+  margin: 2px 0 0;
   color: var(--muted-foreground);
+  font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
   font-size: 0.74rem;
   overflow-wrap: anywhere;
-  transition: color 0.4s ease;
 }
 
-.device-meta--dim {
+.device-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin-top: 6px;
+  color: var(--muted-foreground);
+  font-size: 0.74rem;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.meta-item + .meta-item::before {
+  content: '·';
   color: var(--subtle-foreground);
 }
+
+.meta-label {
+  color: var(--subtle-foreground);
+}
+
+.meta-value {
+  color: var(--muted-foreground);
+}
+
 
 .totp-qr {
   display: flex;
@@ -1049,16 +1115,64 @@ async function runRevokeOthers() {
   color: var(--destructive);
 }
 
-@media (width <= 720px) {
+/* 窄屏只收间距与字号，不改对齐方式：一改就会出现"720 上下按钮位置跳一下" */
+@container (width <= 620px) {
   .section-row {
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
   }
 
+  .section-head {
+    gap: 3px 10px;
+  }
+
+  /* 图标与操作按钮一起顶对齐到首行，形成稳定上边缘 */
   .device-card {
-    align-items: flex-start;
-    flex-wrap: wrap;
+    align-items: start;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .device-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .device-name {
+    font-size: 0.84rem;
+  }
+
+  .device-meta {
+    font-size: 0.72rem;
+  }
+
+  /* 时间改成 label/value 两列，行尾不再留孤零零的分隔点 */
+  .device-meta {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    margin-top: 8px;
+  }
+
+  .meta-item {
+    display: contents;
+  }
+
+  .meta-item + .meta-item::before {
+    content: none;
+  }
+
+  /* 设备多时按钮文字最占地方：窄屏只留图标，语义交给 aria-label */
+  .device-action {
+    justify-self: end;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    margin-top: -1px;
+  }
+
+  .device-action .btn-label {
+    display: none;
   }
 }
 </style>

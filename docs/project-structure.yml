@@ -102,6 +102,7 @@
     passwordStrength.js: 密码位数预检（下限与服务端一致），其余强度规则由服务端在提交时判定
     useIsMobile.js: 窄屏断点判定（matchMedia，771px），抽屉与浮窗按它切铺满/定宽
     components/SensitiveActionModal.vue: 敏感操作的身份确认模态框，按服务端给出的方式校验并换一次性凭证
+    switchRailStyle.js: 开关轨道的统一配色（选中深灰、未选浅灰），深浅主题一致
     useImageLightbox.js: 截图灯箱，按需加载 Viewer.js（仅控制台使用）
     components/FeedbackFilterModal.vue: 反馈筛选规则编辑器，字段+匹配方式+动态搜索取值
     useResendCountdown.js: 邮件验证码重发的 60 秒冷却倒计时，登录两步验证与账号页开关共用

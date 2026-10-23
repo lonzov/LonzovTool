@@ -18,6 +18,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   /* 自动盘古之白：中英文/数字之间自动插入间距（Chromium 120+ / Safari 18.4+，Firefox 静默忽略） */
   text-autospace: normal;
+  color: var(--foreground);
 }
 
 /* 表单控件不继承 body 的文本排版属性，单独声明一份 */

@@ -14,6 +14,7 @@ import { usePrivacyModal } from '../composables/usePrivacyModal'
 import { useWorkspaceSettings } from '../composables/useWorkspaceSettings'
 import { useWorkspace } from '../composables/useWorkspace'
 import { useMouseGlow } from '../composables/useMouseGlow'
+import { switchRailStyle } from '../utils/switchRailStyle.js'
 import { useMotion } from '../composables/useMotion'
 import { usePageOutline } from '../composables/usePageOutline.js'
 
@@ -155,17 +156,6 @@ function cancelEmbedClose() {
 }
 
 /* ========== 开关轨道颜色（参考特殊符号页） ========== */
-function switchRailStyle({ focused, checked }) {
-  if (checked) {
-    const style = { background: '#333' }
-    if (focused) style.boxShadow = '0 0 0 2px #33333340'
-    return style
-  }
-  const style = { background: '#a0a0a0' }
-  if (focused) style.boxShadow = '0 0 0 2px #a0a0a040'
-  return style
-}
-
 /* ========== 标签页拖拽触发时长 ========== */
 const DRAG_DELAY_KEY = 'tab_drag_delay'
 const DRAG_DELAY_DEFAULT = 700

@@ -2,8 +2,8 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { NIcon, NInput } from 'naive-ui'
 import { ArrowClockwise24Regular } from '@vicons/fluent'
-import AppModal from './AppModal.vue'
-import InputOtp from './InputOtp.vue'
+import AppModal from '../../components/ui/AppModal.vue'
+import InputOtp from '../../components/ui/InputOtp.vue'
 import { consoleFetch } from '../../console/consoleRequest.js'
 import { useResendCountdown } from '../../console/useResendCountdown.js'
 

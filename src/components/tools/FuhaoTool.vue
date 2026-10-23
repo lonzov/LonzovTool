@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { switchRailStyle } from '../../utils/switchRailStyle.js'
 import { NIcon, useMessage, NSwitch } from 'naive-ui'
 import { CurrencyDollarEuro20Regular } from '@vicons/fluent'
 import { useMouseGlow, applyGlow } from '../../composables/useMouseGlow.js'
@@ -75,18 +76,6 @@ useToolStorage('lonzovtool-fuhao', { copyModeCodepoint })
 
 function toggleCopyMode(value) {
   copyModeCodepoint.value = value
-}
-
-// 开关轨道颜色：加深灰色面（unchecked），checked 面保持默认（亮色黑/深色黑）
-function switchRailStyle({ focused, checked }) {
-  if (checked) {
-    const style = { background: '#333' }
-    if (focused) style.boxShadow = '0 0 0 2px #33333340'
-    return style
-  }
-  const style = { background: '#a0a0a0' }
-  if (focused) style.boxShadow = '0 0 0 2px #a0a0a040'
-  return style
 }
 
 // ===== 复制反馈 =====
