@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, toRef } from 'vue'
+import { h, ref, computed, toRef } from 'vue'
 import { NModal } from 'naive-ui'
 import { useHeightTransition } from '../../composables/useHeightTransition.js'
 
@@ -96,6 +96,17 @@ function handleClose() {
   emit('close')
 }
 
+// NCard 的 header 规则是「有 title 属性就忽略 header 插槽」，所以标题与说明
+// 一起做成渲染函数交给 title，说明才会跟着标题出现在头部而不是内容区。
+const headTitle = computed(() => {
+  if (!props.description) return props.title
+  return () =>
+    h('div', { class: 'app-modal-head' }, [
+      h('span', { class: 'app-modal-title' }, props.title),
+      h('p', { class: 'app-modal-desc' }, props.description),
+    ])
+})
+
 const modalStyle = computed(() => ({
   maxWidth: typeof props.maxWidth === 'number' ? `${props.maxWidth}px` : props.maxWidth,
   width: 'calc(100% - 32px)',
@@ -118,7 +129,7 @@ const modalStyle = computed(() => ({
     :show="show"
     preset="card"
     class="app-modal"
-    :title="title"
+    :title="headTitle"
     :style="modalStyle"
     :segmented="segmented"
     :bordered="bordered"
@@ -132,13 +143,6 @@ const modalStyle = computed(() => ({
     @after-enter="emit('after-enter')"
     @after-leave="emit('after-leave')"
   >
-    <template v-if="description" #header>
-      <div class="app-modal-head">
-        <span class="app-modal-title">{{ title }}</span>
-        <p class="app-modal-desc">{{ description }}</p>
-      </div>
-    </template>
-
     <div v-if="animated" ref="animWrap" class="app-modal-anim">
       <div ref="animInner">
         <slot />

@@ -20,7 +20,7 @@ import { useResendCountdown } from '../../console/useResendCountdown.js'
 const props = defineProps({
   show: { type: Boolean, default: false },
   /** 标题下方的说明，默认就是敏感操作的通用提示 */
-  description: { type: String, default: '这是一项敏感操作，需要先确认是你本人操作' },
+  description: { type: String, default: '为了账号的安全，请先确认是你本人' },
 })
 
 const emit = defineEmits(['update:show', 'verified'])
@@ -227,7 +227,6 @@ const actions = computed(() => [
     </div>
 
     <div v-else-if="method === 'totp'" class="field">
-      <span class="field-label">动态口令</span>
       <InputOtp
         ref="otpRef"
         v-model:value="code"
@@ -235,6 +234,7 @@ const actions = computed(() => [
         :autofocus="false"
         :disabled="busy"
       />
+      <p class="field-hint">打开手机上的身份验证器 App，输入它当前显示的 6 位动态码</p>
     </div>
 
     <p v-if="check.message" class="field-error">{{ check.message }}</p>
