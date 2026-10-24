@@ -5,13 +5,17 @@ import { NIcon } from 'naive-ui'
 import {
   Alert24Regular,
   Apps24Regular,
+  ArrowDown28Filled,
   ArrowDownload24Regular,
+  ArrowUp28Filled,
+  ChevronRight24Regular,
   DataTrending24Regular,
   FullScreenMaximize24Regular,
   FullScreenMinimize24Regular,
   Globe24Regular,
   Heart24Regular,
   History24Regular,
+  Open24Regular,
   Send24Regular,
   TopSpeed24Regular,
 } from '@vicons/fluent'
@@ -23,39 +27,22 @@ import {
 import { useStats } from '../../composables/useStats.js'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import StatCard from '../components/StatCard.vue'
+import TodoDrawer from '../components/TodoDrawer.vue'
 import { consoleFetch } from '../consoleRequest.js'
 import { usePermissions } from '../usePermissions.js'
+
+const router = useRouter()
 
 // 页面挂在控制台外壳下，权限清单在校验通过后才有，这里读到的已经是最终结果
 const { can } = usePermissions()
 const canReviewSubmissions = computed(() => can('cards.review'))
 const canReadLogs = computed(() => can('logs.read'))
 
-/* ===========================================================================
-   占位数据：以下常量覆盖控制台里尚无后端支撑的部分，接口就绪后逐个替换，
-   对应的面板在 extra 槽里挂「示例数据」标记，避免看起来像真数据。
-   =========================================================================== */
-
-const TODO_ITEMS = [
-  { label: '网址提交待审核', count: 1 },
-  { label: '建议反馈待处理', count: 0 },
-  { label: '卡片维护提醒', count: 0 },
-]
-
 const SUBMISSION_STATUS = {
   pending: { label: '待审核', tone: 'warning' },
   approved: { label: '已通过', tone: 'success' },
   rejected: { label: '已拒绝', tone: 'destructive' },
 }
-
-const UPTIME_ROWS = [
-  { host: 'www.example.com', up: true, ms: '112 ms', checked: '2026-05-24 14:32' },
-  { host: 'api.example.com', up: true, ms: '236 ms', checked: '2026-05-24 14:29' },
-  { host: 'cdn.example.com', up: true, ms: '89 ms', checked: '2026-05-24 14:27' },
-  { host: 'www.google.com', up: true, ms: '142 ms', checked: '2026-05-24 14:25' },
-  { host: 'partner.example.com', up: false, ms: '523 ms', checked: '2026-05-24 14:23' },
-  { host: 'static.example.com', up: true, ms: '96 ms', checked: '2026-05-24 14:20' },
-]
 
 /* ===== 站点数据（构建期快照 + 接口刷新，见 useSiteData） ===== */
 
@@ -118,32 +105,164 @@ const stats = computed(() => [
   },
 ])
 
-/* ===== 待办事项：数量即入账的待处理条数，目前无后端，恒为占位值 ===== */
-const pendingCount = computed(() => TODO_ITEMS.filter((item) => item.count > 0).length)
+/* ===== 待办事项 =====
+   卡片上只留总数，点开抽屉才看具体条目；合并与排序都在服务端做，
+   这里拿到的 items 已经是「紧急优先、同档等得最久的在前」。 */
+const overview = ref(null)
+const overviewLoading = ref(true)
+const overviewError = ref('')
+const todoOpen = ref(false)
 
-/* ===== 访问统计（Umami 分享接口，模块级缓存 30 分钟） ===== */
+const todoCounts = computed(() => overview.value?.counts || {})
+const todoItems = computed(() => overview.value?.items || [])
+const todoBreakdown = computed(() => {
+  const parts = []
+  if ('submissions_pending' in todoCounts.value) {
+    parts.push(`网址提交 ${todoCounts.value.submissions_pending}`)
+  }
+  if ('feedback_pending' in todoCounts.value) {
+    parts.push(`建议反馈 ${todoCounts.value.feedback_pending}`)
+  }
+  return parts.join(' · ')
+})
+// 读取失败时也留着这张卡：直接隐藏会让人以为"没有待办"，与真的 0 条分不开
+const hasTodoQueue = computed(
+  () => Object.keys(todoCounts.value).length > 0 || Boolean(overviewError.value),
+)
+const todoTotal = computed(() =>
+  Object.values(todoCounts.value).reduce((sum, value) => sum + (Number(value) || 0), 0),
+)
+const todoValue = computed(() => {
+  if (overviewError.value) return '—'
+  return overviewLoading.value ? '—' : todoTotal.value
+})
+const todoHint = computed(() => {
+  if (overviewError.value) return '读取失败，点击查看原因'
+  return todoBreakdown.value || '暂无待处理事项'
+})
+
+async function loadOverview() {
+  overviewLoading.value = true
+  overviewError.value = ''
+  try {
+    overview.value = await consoleFetch('/api/v1/console/overview')
+  } catch (e) {
+    if (e?.code === 'unauthorized') {
+      router.replace({ path: '/console/login', query: { redirect: '/console' } })
+      return
+    }
+    overviewError.value = e?.message || '待办读取失败，请稍后重试'
+  } finally {
+    overviewLoading.value = false
+  }
+}
+
+/* ===== Uptime（服务端代取 Uptime Kuma 状态页） ===== */
+const UPTIME_LIMIT = 6
+const UPTIME_TONE = { 0: 'down', 1: 'up', 2: 'pending', 3: 'maintenance' }
+const UPTIME_STATUS_TEXT = { 0: '异常', 1: '正常', 2: '待确认', 3: '维护中' }
+
+const uptime = ref(null)
+const uptimeLoading = ref(true)
+const uptimeError = ref('')
+
+const statusPageUrl = computed(() => uptime.value?.status_page_url || '')
+
+const uptimeRows = computed(() =>
+  (uptime.value?.items || []).map((item) => {
+    const ratio = typeof item.uptime_24h === 'number' ? item.uptime_24h : null
+    return {
+      id: item.id,
+      name: item.name,
+      tone: UPTIME_TONE[item.status] ?? 'unknown',
+      beats: (item.beats || []).map((status) => UPTIME_TONE[status] ?? 'unknown'),
+      pctText: ratio === null ? '—' : `${(ratio * 100).toFixed(ratio >= 0.9995 ? 0 : 1)}%`,
+      pctTone:
+        ratio === null ? 'muted' : ratio >= 0.99 ? 'ok' : ratio >= 0.9 ? 'warn' : 'bad',
+      tip: uptimeTip(item),
+    }
+  }),
+)
+
+function uptimeTip(item) {
+  const parts = [item.name, UPTIME_STATUS_TEXT[item.status] || '未知状态']
+  if (typeof item.ping_ms === 'number') parts.push(`响应 ${item.ping_ms} ms`)
+  if (item.checked_at) {
+    parts.push(`检测于 ${new Date(item.checked_at * 1000).toLocaleTimeString('zh-CN', { hour12: false })}`)
+  }
+  return parts.join(' · ')
+}
+
+// 卡片上只显示更新时间，读取失败时不再显示上一次的时间戳，免得看起来像刚更新过
+const uptimeNote = computed(() => {
+  if (uptimeLoading.value) return '读取中…'
+  if (uptimeError.value) return '读取失败'
+  const updated = uptime.value?.updated_at
+  if (!updated) return ''
+  return `更新于 ${new Date(updated * 1000).toLocaleTimeString('zh-CN', { hour12: false })}`
+})
+
+async function loadUptime() {
+  uptimeLoading.value = true
+  uptimeError.value = ''
+  try {
+    uptime.value = await consoleFetch(`/api/v1/console/uptime?limit=${UPTIME_LIMIT}`)
+  } catch (e) {
+    if (e?.code === 'unauthorized') {
+      router.replace({ path: '/console/login', query: { redirect: '/console' } })
+      return
+    }
+    uptimeError.value = e?.message || '监控数据读取失败'
+  } finally {
+    uptimeLoading.value = false
+  }
+}
+
+/* ===== 访问统计（后端代理 Umami，模块级缓存 30 分钟） ===== */
 const { stats: siteStats, loading: statsLoading, lastUpdate, isMocked, fetchStats } = useStats()
-
-onMounted(fetchStats)
 
 function formatCount(value) {
   return value == null ? '—' : String(value).toLocaleString('zh-CN')
 }
 
-// 昨日没有单独的浏览量口径，故只有独立访客一项能算环比
-const uvDelta = computed(() => {
-  const today = siteStats.value.todayUV
-  const yesterday = siteStats.value.yesterdayUV
-  if (!today || !yesterday) return null
-  return Math.round(((today - yesterday) / yesterday) * 100)
-})
+// Umami 的公开分享页：口径与接口下发的一致，点进去能看到图表与明细
+const STATS_SHARE_URL = 'https://imamu.lonzov.top/share/FmUyTde668rZaCXX'
+
+/* 环比标记按「红涨绿跌」上色：数据看板沿用看盘习惯，涨用红、跌用绿。
+   持平不给箭头，只写 0%，免得读成一格涨跌。 */
+function deltaBadge(delta) {
+  if (delta === null || delta === undefined) return null
+  if (delta > 0) return { text: `${delta}%`, tone: 'up', icon: ArrowUp28Filled }
+  if (delta < 0) return { text: `${Math.abs(delta)}%`, tone: 'down', icon: ArrowDown28Filled }
+  return { text: '0%', tone: 'flat', icon: null }
+}
 
 const trafficRows = computed(() => [
-  { label: '今日访问量', value: formatCount(siteStats.value.todayPV), delta: null },
-  { label: '今日独立访客', value: formatCount(siteStats.value.todayUV), delta: uvDelta.value },
-  { label: '昨日独立访客', value: formatCount(siteStats.value.yesterdayUV), delta: null },
-  { label: '本月独立访客', value: formatCount(siteStats.value.monthUV), delta: null },
-  { label: '本年访问量', value: formatCount(siteStats.value.yearPV), delta: null },
+  {
+    label: '今日访问量',
+    value: formatCount(siteStats.value.todayPV),
+    delta: deltaBadge(siteStats.value.todayPvDelta),
+  },
+  {
+    label: '今日独立访客',
+    value: formatCount(siteStats.value.todayUV),
+    delta: deltaBadge(siteStats.value.todayUvDelta),
+  },
+  {
+    label: '昨日独立访客',
+    value: formatCount(siteStats.value.yesterdayUV),
+    delta: deltaBadge(siteStats.value.yesterdayUvDelta),
+  },
+  {
+    label: '本月独立访客',
+    value: formatCount(siteStats.value.monthUV),
+    delta: deltaBadge(siteStats.value.monthUvDelta),
+  },
+  {
+    label: '本年独立访客',
+    value: formatCount(siteStats.value.yearUV),
+    delta: null,
+  },
 ])
 
 const statsNote = computed(() => {
@@ -152,8 +271,6 @@ const statsNote = computed(() => {
   // 接口可能回估算值，必须让管理侧一眼看出这不是真实口径
   return `更新于 ${lastUpdate.value}${isMocked.value ? '（估算）' : ''}`
 })
-
-const todoTitle = computed(() => `待办事项 (${pendingCount.value}/${TODO_ITEMS.length})`)
 
 /* ===== 网址提交预览 =====
    这里只读最新 5 条待审核（接口按 id 倒序，即时间从新到旧）；
@@ -181,16 +298,9 @@ async function loadSubmissionPreview() {
   }
 }
 
-// 没有审核权限时接口会直接 403，没必要的往返与报错都不该发生
-onMounted(() => {
-  if (canReviewSubmissions.value) loadSubmissionPreview()
-})
-
 /* ===== 管理日志 =====
    读后端 console_audit_log（GET /api/v1/console/logs）：登录、内容增删改等操作。
    用 after=last_id 增量拉取，只把新行追加到尾部；其余筛选在前端做，省一次往返。 */
-const router = useRouter()
-
 const LEVEL_FILTERS = [
   { value: 'all', label: '全部' },
   { value: 'info', label: '信息' },
@@ -275,6 +385,11 @@ function onKeydown(event) {
 }
 
 onMounted(() => {
+  fetchStats()
+  loadOverview()
+  loadUptime()
+  if (canReviewSubmissions.value) loadSubmissionPreview()
+
   // 日志读取需要 logs.read，没有权限时连轮询都不起来
   if (canReadLogs.value) {
     fetchLogs({ initial: true })
@@ -291,53 +406,24 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="console-overview">
-    <div class="overview-top">
-      <div class="overview-main">
-        <ConsolePanel
-          :icon="Alert24Regular"
-          :title="todoTitle"
-          description="包含 网址提交、建议反馈、卡片维护 等需要处理的事项"
-        >
-          <template #extra>
-            <span class="sample-tag">示例数据</span>
-          </template>
-          <ul class="row-list">
-            <li v-for="item in TODO_ITEMS" :key="item.label" class="row">
-              <span class="row-main">{{ item.label }}</span>
-              <span class="todo-count" :class="{ 'todo-count--active': item.count > 0 }">
-                {{ item.count }}
-              </span>
-            </li>
-          </ul>
-        </ConsolePanel>
-
-        <div class="stat-grid">
-          <StatCard v-for="item in stats" :key="item.label" v-bind="item" />
-        </div>
-      </div>
-
-      <ConsolePanel
-        :icon="DataTrending24Regular"
-        title="最近网站数据"
-        description="数据来自站点访问统计"
+    <div class="metric-row">
+      <button
+        v-if="hasTodoQueue"
+        class="todo-card"
+        type="button"
+        title="查看待处理的具体条目"
+        @click="todoOpen = true"
       >
-        <template #extra>
-          <span class="panel-note">{{ statsNote }}</span>
-        </template>
-        <ul class="row-list">
-          <li v-for="row in trafficRows" :key="row.label" class="row">
-            <span class="row-main">{{ row.label }}</span>
-            <span class="traffic-value">{{ row.value }}</span>
-            <span
-              v-if="row.delta !== null"
-              class="traffic-delta"
-              :class="row.delta >= 0 ? 'traffic-delta--up' : 'traffic-delta--down'"
-            >
-              {{ row.delta >= 0 ? '↑' : '↓' }}{{ Math.abs(row.delta) }}%
-            </span>
-          </li>
-        </ul>
-      </ConsolePanel>
+        <span class="todo-card-head">
+          <NIcon :component="Alert24Regular" :size="15" class="todo-card-icon" />
+          <span class="todo-card-label">待办事项</span>
+        </span>
+        <span class="todo-card-value">{{ todoValue }}</span>
+        <span class="todo-card-hint">{{ todoHint }}</span>
+        <NIcon class="todo-card-arrow" :component="ChevronRight24Regular" :size="14" />
+      </button>
+
+      <StatCard v-for="item in stats" :key="item.label" v-bind="item" />
     </div>
 
     <div class="panel-columns">
@@ -373,26 +459,81 @@ onBeforeUnmount(() => {
 
       <ConsolePanel :icon="TopSpeed24Regular" title="Uptime">
         <template #extra>
-          <span class="sample-tag">示例数据</span>
+          <div class="uptime-extra">
+            <span v-if="uptimeNote" class="panel-note">{{ uptimeNote }}</span>
+            <a
+              v-if="statusPageUrl"
+              class="icon-link"
+              :href="statusPageUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="前往状态页"
+            >
+              <NIcon :component="Open24Regular" :size="14" />
+            </a>
+          </div>
         </template>
-        <div class="data-table uptime-table">
-          <div class="data-row data-row--head">
-            <span>域名 / 地址</span>
-            <span>状态</span>
-            <span>响应时间</span>
-            <span>检测时间</span>
-          </div>
-          <div v-for="item in UPTIME_ROWS" :key="item.host" class="data-row">
-            <span class="cell-title cell-title--mono">{{ item.host }}</span>
-            <span class="uptime-state" :class="item.up ? 'uptime-state--up' : 'uptime-state--down'">
-              <i class="uptime-dot"></i>{{ item.up ? '正常' : '异常' }}
+
+        <p v-if="uptimeError" class="inline-empty">{{ uptimeError }}</p>
+        <p v-else-if="!uptimeRows.length" class="inline-empty">
+          {{ uptimeLoading ? '读取中…' : '暂无监控数据' }}
+        </p>
+        <ul v-else class="uptime-list">
+          <li v-for="row in uptimeRows" :key="row.id" class="uptime-row" :title="row.tip">
+            <span class="uptime-name">
+              <i class="uptime-dot" :class="`uptime-dot--${row.tone}`"></i>
+              <span class="uptime-name-text">{{ row.name }}</span>
             </span>
-            <span class="cell-meta">{{ item.ms }}</span>
-            <span class="cell-meta">{{ item.checked }}</span>
-          </div>
-        </div>
+            <span class="uptime-beats" aria-hidden="true">
+              <i
+                v-for="(tone, index) in row.beats"
+                :key="index"
+                class="uptime-beat"
+                :class="`uptime-beat--${tone}`"
+              ></i>
+            </span>
+            <span class="uptime-pct" :class="`uptime-pct--${row.pctTone}`">{{ row.pctText }}</span>
+          </li>
+        </ul>
       </ConsolePanel>
     </div>
+
+    <ConsolePanel
+      :icon="DataTrending24Regular"
+      title="最近网站数据"
+      description="数据来自站点访问统计"
+    >
+      <template #extra>
+        <div class="traffic-extra">
+          <span class="panel-note">{{ statsNote }}</span>
+          <a
+            class="icon-link"
+            :href="STATS_SHARE_URL"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="打开访问统计"
+          >
+            <NIcon :component="Open24Regular" :size="14" />
+          </a>
+        </div>
+      </template>
+      <div class="traffic-grid">
+        <div v-for="row in trafficRows" :key="row.label" class="traffic-cell">
+          <span class="traffic-label">{{ row.label }}</span>
+          <span class="traffic-cell-value">
+            {{ row.value }}
+            <span
+              v-if="row.delta"
+              class="traffic-delta"
+              :class="`traffic-delta--${row.delta.tone}`"
+            >
+              <NIcon v-if="row.delta.icon" :component="row.delta.icon" :size="12" />
+              {{ row.delta.text }}
+            </span>
+          </span>
+        </div>
+      </div>
+    </ConsolePanel>
 
     <ConsolePanel
       v-if="canReadLogs"
@@ -450,29 +591,101 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </ConsolePanel>
+
+    <TodoDrawer
+      v-model:show="todoOpen"
+      :counts="todoCounts"
+      :items="todoItems"
+      :loading="overviewLoading"
+      :error="overviewError"
+      :truncated="Boolean(overview && overview.truncated)"
+    />
   </div>
 </template>
 
 <style scoped>
-/* ===== 上区：主区（待办 + 指标卡）与右侧统计栏 ===== */
-.overview-top {
-  display: grid;
-  grid-template-columns: minmax(0, 2.35fr) minmax(0, 1fr);
-  align-items: start;
-  gap: 16px;
-}
-
-.overview-main {
+.console-overview {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* ===== 指标行：待办数量卡 + 四张指标卡同处一行 =====
+   一行里的卡片天然等高，待办从整块列表改成数量卡后也不会在下方留出空洞。 */
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+/* ===== 待办数量卡：与指标卡同一套外观，整卡可点 ===== */
+.todo-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--card);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.4s ease, border-color 0.2s ease;
+}
+
+.todo-card:hover {
+  border-color: var(--border-strong);
+}
+
+.todo-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
 }
 
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+.todo-card-icon {
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+  transition: color 0.4s ease;
+}
+
+.todo-card-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  transition: color 0.4s ease;
+}
+
+.todo-card-value {
+  margin-top: 10px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.4s ease;
+}
+
+.todo-card-hint {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--subtle-foreground);
+  line-height: 1.45;
+  transition: color 0.4s ease;
+}
+
+.todo-card-arrow {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  color: var(--subtle-foreground);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.todo-card:hover .todo-card-arrow {
+  color: var(--foreground);
+  transform: translateX(2px);
 }
 
 /* ===== 中区：同行两张卡等高 =====
@@ -483,7 +696,6 @@ onBeforeUnmount(() => {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   align-items: stretch;
   gap: 16px;
-  margin-top: 16px;
 }
 
 .panel-columns :deep(.console-panel) {
@@ -491,87 +703,79 @@ onBeforeUnmount(() => {
   max-height: var(--console-panel-max-height, 420px);
 }
 
-.log-panel {
-  margin-top: 16px;
-}
-
-/* ===== 通用行列表 ===== */
-.row-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.row {
+/* ===== 访问统计：整行铺开的五格，不再是一列 label/value ===== */
+.traffic-extra {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  position: relative;
+  gap: 8px;
 }
 
-.row + .row::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--border);
+.traffic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.traffic-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  background: var(--muted);
   transition: background-color 0.4s ease;
 }
 
-.row-main {
-  flex: 1;
-  min-width: 0;
-  font-size: 0.84rem;
-  color: var(--foreground);
-  line-height: 1.5;
+.traffic-label {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: color 0.4s ease;
 }
 
-.todo-count {
-  flex-shrink: 0;
-  min-width: 20px;
-  text-align: center;
-  font-size: 0.78rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--subtle-foreground);
-  transition: color 0.4s ease;
-}
-
-.todo-count--active {
-  color: var(--warning);
-  font-weight: 600;
-}
-
-/* ===== 访问统计 ===== */
-.traffic-value {
-  flex-shrink: 0;
-  font-size: 0.95rem;
-  font-weight: 600;
+.traffic-cell-value {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.3;
   color: var(--foreground);
   font-variant-numeric: tabular-nums;
   transition: color 0.4s ease;
 }
 
+/* 环比胶囊：箭头 + 百分比，底色由语义色按透明度派生（与状态胶囊同一套做法） */
 .traffic-delta {
-  flex-shrink: 0;
-  min-width: 46px;
-  text-align: right;
-  font-size: 0.78rem;
-  font-variant-numeric: tabular-nums;
-  transition: color 0.4s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  align-self: center;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  corner-shape: round;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  transition: color 0.4s ease, background-color 0.4s ease;
 }
 
 .traffic-delta--up {
-  color: var(--success);
+  color: var(--destructive);
+  background: color-mix(in srgb, var(--destructive) 12%, transparent);
 }
 
 .traffic-delta--down {
-  color: var(--destructive);
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+}
+
+.traffic-delta--flat {
+  color: var(--subtle-foreground);
+  background: color-mix(in srgb, var(--muted-foreground) 12%, transparent);
 }
 
 /* ===== 数据表 ===== */
@@ -615,10 +819,6 @@ onBeforeUnmount(() => {
   grid-template-columns: minmax(0, 1fr) auto auto auto;
 }
 
-.uptime-table .data-row {
-  grid-template-columns: minmax(0, 1fr) auto auto auto;
-}
-
 .cell-main {
   display: flex;
   flex-direction: column;
@@ -632,11 +832,6 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   transition: color 0.4s ease;
-}
-
-.cell-title--mono {
-  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-  font-size: 0.78rem;
 }
 
 .cell-sub {
@@ -696,12 +891,6 @@ onBeforeUnmount(() => {
   border-color: color-mix(in srgb, var(--destructive) 28%, transparent);
 }
 
-.status-pill--muted {
-  color: var(--muted-foreground);
-  background: var(--accent);
-  border-color: var(--border);
-}
-
 .cell-btn {
   padding: 3px 12px;
   border: 1px solid var(--border);
@@ -720,12 +909,70 @@ onBeforeUnmount(() => {
   cursor: not-allowed;
 }
 
-/* ===== Uptime 状态 ===== */
-.uptime-state {
+/* ===== Uptime：名称 + 心跳条 + 24 小时可用率 ===== */
+.uptime-extra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-link {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.78rem;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted-foreground);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.icon-link:hover {
+  color: var(--foreground);
+  border-color: var(--border-strong);
+}
+
+.uptime-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.uptime-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  position: relative;
+  font-size: 0.82rem;
+}
+
+.uptime-row + .uptime-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border);
+  transition: background-color 0.4s ease;
+}
+
+.uptime-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.uptime-name-text {
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   transition: color 0.4s ease;
 }
@@ -733,18 +980,95 @@ onBeforeUnmount(() => {
 .uptime-dot {
   width: 6px;
   height: 6px;
+  flex-shrink: 0;
   border-radius: var(--radius-full);
   corner-shape: round;
   background: currentColor;
-  flex-shrink: 0;
+  transition: background-color 0.4s ease;
 }
 
-.uptime-state--up {
+.uptime-dot--up {
   color: var(--success);
 }
 
-.uptime-state--down {
+.uptime-dot--down {
   color: var(--destructive);
+}
+
+.uptime-dot--pending {
+  color: var(--warning);
+}
+
+.uptime-dot--maintenance {
+  color: var(--muted-foreground);
+}
+
+.uptime-dot--unknown {
+  color: var(--subtle-foreground);
+}
+
+/* 心跳条：正常状态压得很淡，异常才跳出来——一眼扫过去先看到红点 */
+.uptime-beats {
+  display: inline-flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 14px;
+}
+
+.uptime-beat {
+  width: 4px;
+  height: 100%;
+  border-radius: var(--radius-full);
+  corner-shape: round;
+  transition: background-color 0.4s ease;
+}
+
+/* 正常态用实色：45% 的绿压在白色卡片上对比度只有 1.7:1，30 格连成一片几乎融进背景。
+   异常与维护仍靠色相和灰阶区分，不再靠"把正常态压淡"来突出 */
+.uptime-beat--up {
+  background: var(--success);
+}
+
+.uptime-beat--down {
+  background: var(--destructive);
+}
+
+.uptime-beat--pending {
+  background: var(--warning);
+}
+
+.uptime-beat--maintenance {
+  background: color-mix(in srgb, var(--muted-foreground) 45%, transparent);
+}
+
+.uptime-beat--unknown {
+  background: var(--border);
+}
+
+/* 可用率是右对齐的定宽列：各行的数字位数不同（9.9% / 99.9% / 100%），
+   宽度跟着文字走会让每行的网格不同宽，心跳条整列跟着左右错位 */
+.uptime-pct {
+  width: 3.6em;
+  text-align: right;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.4s ease;
+}
+
+.uptime-pct--ok {
+  color: var(--muted-foreground);
+}
+
+.uptime-pct--warn {
+  color: var(--warning);
+}
+
+.uptime-pct--bad {
+  color: var(--destructive);
+}
+
+.uptime-pct--muted {
+  color: var(--subtle-foreground);
 }
 
 /* ===== 管理日志 ===== */
@@ -891,17 +1215,6 @@ onBeforeUnmount(() => {
 }
 
 /* ===== 标记与提示 ===== */
-.sample-tag {
-  padding: 2px 9px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  font-size: 0.72rem;
-  color: var(--subtle-foreground);
-  white-space: nowrap;
-  transition: color 0.4s ease, border-color 0.4s ease;
-}
-
 .panel-note {
   font-size: 0.75rem;
   color: var(--subtle-foreground);
@@ -910,26 +1223,28 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1100px) {
-  .overview-top {
-    grid-template-columns: minmax(0, 1fr);
+  .metric-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 720px) {
-  .stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .metric-row {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 
   /* 窄屏只保留「标题 + 状态」，时间与操作列让位 */
-  .submission-table .data-row,
-  .uptime-table .data-row {
+  .submission-table .data-row {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .submission-table .data-row > *:nth-child(2),
-  .submission-table .data-row > *:nth-child(4),
-  .uptime-table .data-row > *:nth-child(3),
-  .uptime-table .data-row > *:nth-child(4) {
+  .submission-table .data-row > *:nth-child(4) {
+    display: none;
+  }
+
+  /* 心跳条在窄屏放不下，留名称与可用率 */
+  .uptime-beats {
     display: none;
   }
 

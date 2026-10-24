@@ -1,7 +1,8 @@
 import { ref } from 'vue'
 
-const UMAMI_BASE = 'https://imamu.lonzov.top'
-const SHARE_SLUG = 'FmUyTde668rZaCXX'
+/* 统计由本站后端代理 Umami 后下发（API key 只在服务端）：
+   前端只认这一层聚合结果，形状见后端 docs/api.md 的 `GET /api/v1/stats`。 */
+const STATS_URL = '/api/v1/stats'
 
 // ===== 模块级单例（跨组件共享同一份缓存和状态） =====
 const CACHE_KEY = 'stats_cache'
@@ -10,10 +11,15 @@ const memoryCache = new Map()
 
 const stats = ref({
   todayPV: null,
+  todayPvDelta: null,
   todayUV: null,
+  todayUvDelta: null,
   yesterdayUV: null,
+  yesterdayUvDelta: null,
   monthUV: null,
+  monthUvDelta: null,
   yearPV: null,
+  yearUV: null,
 })
 
 const loading = ref(true)
@@ -38,10 +44,15 @@ function writeLocalCache(data, ts) {
 
 function applyStatsData(data) {
   stats.value.todayPV = data.today_pv ?? null
+  stats.value.todayPvDelta = data.today_pv_delta ?? null
   stats.value.todayUV = data.today_uv ?? null
+  stats.value.todayUvDelta = data.today_uv_delta ?? null
   stats.value.yesterdayUV = data.yesterday_uv ?? null
+  stats.value.yesterdayUvDelta = data.yesterday_uv_delta ?? null
   stats.value.monthUV = data.month_uv ?? null
+  stats.value.monthUvDelta = data.month_uv_delta ?? null
   stats.value.yearPV = data.year_pv ?? null
+  stats.value.yearUV = data.year_uv ?? null
 
   isMocked.value = data.is_mocked ?? null
   lastUpdate.value = data.last_update
@@ -53,65 +64,10 @@ function applyStatsData(data) {
   )
 }
 
-async function requestShareToken() {
-  const res = await fetch(`${UMAMI_BASE}/api/share/${SHARE_SLUG}`, {
-    headers: { Accept: 'application/json' },
-  })
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const { token, websiteId } = await res.json()
-  if (!token || !websiteId) throw new Error('分享 token 无效')
-  return { token, websiteId }
-}
-
-function requestRange(websiteId, token, startAt, endAt) {
-  const url = `${UMAMI_BASE}/api/websites/${websiteId}/stats?startAt=${startAt}&endAt=${endAt}`
-  return fetch(url, {
-    headers: {
-      'x-umami-share-token': token,
-      'x-umami-share-context': '1',
-      Accept: 'application/json',
-    },
-  }).then(res => {
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    return res.json()
-  })
-}
-
-// Umami 只给区间聚合值，按浏览器本地时区切出今天/昨天/本月/今年
-function getTimeRanges() {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth()
-  const dayStart = new Date(year, month, now.getDate()).getTime()
-  const nextDayStart = new Date(year, month, now.getDate() + 1).getTime()
-  const todayEnd = nextDayStart - 1
-  const dayMs = nextDayStart - dayStart
-  return {
-    today: [dayStart, todayEnd],
-    yesterday: [dayStart - dayMs, dayStart - 1],
-    month: [new Date(year, month, 1).getTime(), todayEnd],
-    year: [new Date(year, 0, 1).getTime(), todayEnd],
-  }
-}
-
 async function requestStats() {
-  const { token, websiteId } = await requestShareToken()
-  const ranges = getTimeRanges()
-  const [today, yesterday, month, year] = await Promise.all([
-    requestRange(websiteId, token, ...ranges.today),
-    requestRange(websiteId, token, ...ranges.yesterday),
-    requestRange(websiteId, token, ...ranges.month),
-    requestRange(websiteId, token, ...ranges.year),
-  ])
-  return {
-    today_pv: today.pageviews,
-    today_uv: today.visitors,
-    yesterday_uv: yesterday.visitors,
-    month_uv: month.visitors,
-    year_pv: year.pageviews,
-    is_mocked: false,
-    last_update: Math.floor(Date.now() / 1000),
-  }
+  const res = await fetch(STATS_URL, { headers: { Accept: 'application/json' } })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.json()
 }
 
 let fetchPromise = null

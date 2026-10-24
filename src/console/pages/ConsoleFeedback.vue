@@ -298,8 +298,30 @@ function applyRules(next) {
   load()
 }
 
+/* 待办抽屉与外部链接会带 ?id= 跳过来：按 id 找到那条并直接展开详情。
+   目标可能已经被处理、不在「待处理」页里，因此找不到时退到「全部」再定位一次。 */
+async function focusRequested() {
+  const id = Number(route.query.id)
+  if (!Number.isInteger(id) || id <= 0) return
+
+  const found = items.value.find((item) => item.id === id)
+  if (found) {
+    openDetail(found)
+    return
+  }
+
+  status.value = ''
+  await load()
+  const target = items.value.find((item) => item.id === id)
+  if (target) openDetail(target)
+  else errorText.value = `没有找到编号 ${id} 的反馈`
+}
+
 watch(status, () => load())
-onMounted(load)
+onMounted(async () => {
+  await load()
+  await focusRequested()
+})
 </script>
 
 <template>
