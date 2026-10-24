@@ -167,6 +167,7 @@ const actions = computed(() => [
     :description="description"
     :max-width="420"
     :auto-focus="false"
+    animated
     :actions="actions"
     @update:show="emit('update:show', $event)"
   >
