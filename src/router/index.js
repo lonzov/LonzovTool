@@ -160,6 +160,7 @@ const ConsoleOverview = () => import('../console/pages/ConsoleOverview.vue')
 const ConsoleCards = () => import('../console/pages/ConsoleCards.vue')
 const ConsoleNotices = () => import('../console/pages/ConsoleNotices.vue')
 const ConsolePromo = () => import('../console/pages/ConsolePromo.vue')
+const ConsolePeople = () => import('../console/pages/ConsolePeople.vue')
 const ConsoleSubmissions = () => import('../console/pages/ConsoleSubmissions.vue')
 const ConsoleFeedback = () => import('../console/pages/ConsoleFeedback.vue')
 const ConsoleAccounts = () => import('../console/pages/ConsoleAccounts.vue')
@@ -362,6 +363,15 @@ export const routes = [
         meta: {
           title: '推广位 - 控制台 - 小舟工具箱',
           permission: 'promo.write',
+        },
+      },
+      {
+        path: 'people',
+        name: 'console-people',
+        component: ConsolePeople,
+        meta: {
+          title: '共建者与打赏 - 控制台 - 小舟工具箱',
+          permission: 'people.write',
         },
       },
       {

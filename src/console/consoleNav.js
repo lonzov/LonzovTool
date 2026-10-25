@@ -4,6 +4,7 @@ import {
   DataPie24Regular,
   MegaphoneLoud24Regular,
   People24Regular,
+  PeopleCommunity24Regular,
   PersonCircle24Regular,
   Send24Regular,
   Speaker224Regular,
@@ -45,6 +46,14 @@ export const CONSOLE_NAV = [
     title: '推广位',
     description: '首页四个推广位；到期自动下架，改一个未来的到期时间即可恢复',
     permission: 'promo.write',
+  },
+  {
+    key: '/console/people',
+    label: '共建者与打赏',
+    icon: PeopleCommunity24Regular,
+    title: '共建者与打赏',
+    description: '首页感谢区的两份名单：共建者与打赏记录，列表顺序即展示顺序',
+    permission: 'people.write',
   },
   {
     key: '/console/submissions',
