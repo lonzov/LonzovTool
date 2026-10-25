@@ -167,7 +167,12 @@ let inflight = null
 async function pullResource(key) {
   const resource = RESOURCES[key]
   if (!resource) return
-  const res = await fetch(resource.url, { headers: { Accept: 'application/json' } })
+  // 资源接口带 max-age 与 stale-while-revalidate：不强制确认的话，拿到的新版本戳
+  // 配上的可能是浏览器缓存里的旧内容。no-cache 会带 ETag 问一次，没变就是 304。
+  const res = await fetch(resource.url, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-cache',
+  })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   resource.apply(await res.json())
 }
@@ -178,7 +183,10 @@ async function pullAll() {
 }
 
 async function pullVersions() {
-  const res = await fetch(VERSIONS_URL, { headers: { Accept: 'application/json' } })
+  const res = await fetch(VERSIONS_URL, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-cache',
+  })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const versions = await res.json()
 
