@@ -13,6 +13,13 @@
           "link": "https://idlist.projectxero.top/"
         },
         {
+          "id": "example-com",
+          "title": "示例文本",
+          "description": "",
+          "logo": "/uploads/logos/example-com-90f90535.webp",
+          "link": "https://example.com"
+        },
+        {
           "id": "chelper",
           "title": "CHelper",
           "description": "命令助手在线版",
