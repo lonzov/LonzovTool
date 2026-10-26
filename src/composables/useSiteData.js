@@ -3,6 +3,7 @@ import toolsSnapshot from '../data/tools.json'
 import parentMenusSnapshot from '../data/parentMenus.json'
 import noticesSnapshot from '../data/notices.json'
 import promoSnapshot from '../data/homePromo.json'
+import downloadsSnapshot from '../data/downloads.json'
 
 /**
  * 站点动态数据的唯一入口。
@@ -24,6 +25,8 @@ export const promoData = ref(promoSnapshot)
 // 接口一旦给出对应键就以接口数据为准，不再碰快照，因此加载前先看 ref。
 export const donateRecordsData = ref(null)
 export const contributorsData = ref(null)
+// 下载页整页下发（含 Markdown 正文）：页面数量少，拆详情接口不划算
+export const downloadsData = ref(downloadsSnapshot)
 
 let donateRecordsSnapshot = null
 
@@ -75,6 +78,11 @@ function stripTrailingSlash(value) {
 }
 
 /** 按 id 反查卡片（站外嵌入标签靠 id 反查原始 URL） */
+/** 按 slug 取下载页；找不到返回 null（路由已按快照生成，正常不会命中） */
+export function getDownloadPage(slug) {
+  return downloadsData.value.find((item) => item.slug === slug) || null
+}
+
 export function findToolById(id) {
   if (!id) return null
   return eachTool((tool) => (tool.id === id ? tool : null))
@@ -127,6 +135,7 @@ const RESOURCES = {
   donations: { url: '/api/v1/donations', apply: (data) => (donateRecordsData.value = data) },
   contributors: { url: '/api/v1/contributors', apply: (data) => (contributorsData.value = data) },
   promo: { url: '/api/v1/promo', apply: (data) => (promoData.value = data) },
+  downloads: { url: '/api/v1/downloads', apply: (data) => (downloadsData.value = data) },
 }
 
 /**

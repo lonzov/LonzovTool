@@ -6,14 +6,11 @@ import { getDiscreteMessage } from '../utils/discreteMessage'
 import { startLoading, finishLoading } from '../utils/loadingBar'
 import { useConsoleAuth } from '../console/consoleAuth.js'
 
-// 预加载所有下载配置，提取 slug → name 映射用于 SEO 动态标题
-const downloadModules = import.meta.glob('../data/downloads/*.json', { eager: true })
-const DOWNLOAD_NAMES = {}
-for (const [path, mod] of Object.entries(downloadModules)) {
-  const slug = path.replace('../data/downloads/', '').replace('.json', '')
-  const data = mod.default || mod
-  DOWNLOAD_NAMES[slug] = data.name || slug
-}
+// 下载页快照：slug → name 映射用于 SEO 与静态路由
+import downloadsSnapshot from '../data/downloads.json'
+const DOWNLOAD_NAMES = Object.fromEntries(
+  (downloadsSnapshot || []).map((item) => [item.slug, item.name || item.slug]),
+)
 
 // ===== 路由导航超时机制 =====
 const PING_DELAY = 8000
@@ -161,6 +158,7 @@ const ConsoleCards = () => import('../console/pages/ConsoleCards.vue')
 const ConsoleNotices = () => import('../console/pages/ConsoleNotices.vue')
 const ConsolePromo = () => import('../console/pages/ConsolePromo.vue')
 const ConsolePeople = () => import('../console/pages/ConsolePeople.vue')
+const ConsoleDownloads = () => import('../console/pages/ConsoleDownloads.vue')
 const ConsoleSubmissions = () => import('../console/pages/ConsoleSubmissions.vue')
 const ConsoleFeedback = () => import('../console/pages/ConsoleFeedback.vue')
 const ConsoleAccounts = () => import('../console/pages/ConsoleAccounts.vue')
@@ -372,6 +370,15 @@ export const routes = [
         meta: {
           title: '共建者与打赏 - 控制台 - 小舟工具箱',
           permission: 'people.write',
+        },
+      },
+      {
+        path: 'downloads',
+        name: 'console-downloads',
+        component: ConsoleDownloads,
+        meta: {
+          title: '下载页 - 控制台 - 小舟工具箱',
+          permission: 'downloads.write',
         },
       },
       {

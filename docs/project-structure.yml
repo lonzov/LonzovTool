@@ -42,7 +42,7 @@
       ArtTextTool.vue: 艺术字转换工具页
       DownloadDisclaimer.vue: 下载免责声明模态框，带冷却倒计时的确认后继续
       DownloadModal.vue: 下载方式选择模态框
-      DownloadIntro.vue: 下载页功能介绍区，加载 Markdown 后交 MarkdownRenderer 渲染，兼容旧字符串配置
+      DownloadIntro.vue: 下载页功能介绍区，把接口下发的 Markdown 交 MarkdownRenderer 渲染
       DownloadTool.vue: 工具下载页（蓝奏云解析）
       TrAnimationTool.vue: T显动画编辑器工具页
       ExecuteTool.vue: 语法转换工具页
@@ -108,6 +108,7 @@
     useSensitiveTrust.js: 敏感操作的短时信任，3 小时窗口内不再重复弹身份确认
     useResendCountdown.js: 邮件验证码重发的 60 秒冷却倒计时，登录两步验证与账号页开关共用
     components/ConsolePageHeader.vue: 控制台页面标题区（图标 + 标题 + 说明 + 右侧附加区）
+    components/ImageUploadField.vue: 通用图片上传组件（预览、选文件、上传后回填路径），用途决定落盘目录与所需权限
     components/ConsolePanel.vue: 控制台面板卡外壳（图标 + 标题 + 说明 + 内容区）
     components/StatCard.vue: 控制台指标卡（图标 + 标签 + 数值 + 说明）
     components/TodoDrawer.vue: 待办抽屉，列出待审核提交与待处理反馈并跳转到对应页面
@@ -116,6 +117,7 @@
     pages/ConsoleCards.vue: 卡片管理页，列表与模拟布局两种视图、增删改与显隐，编辑器内支持图标上传
     pages/ConsoleLogin.vue: 控制台登录页，邮箱 + 密码登录，账号开启两步验证时切到验证码步骤，仅拥有控制台权限的账号可进入
     pages/ConsoleNotices.vue: 公告管理页，列表、增删改，时间用日期选择器录入
+    pages/ConsoleDownloads.vue: 下载页管理页，列表含下载量，编辑链接、版本与 Markdown 正文，封面走通用图片上传
     pages/ConsolePeople.vue: 共建者与打赏名单的维护页，两个列表同页切换；共建者可拖动排序，打赏按时间倒序
     pages/ConsolePromo.vue: 推广位管理页，四档槽位的图文、到期时间与隐藏，图可点击/拖拽/粘贴上传
     pages/ConsoleOverview.vue: 控制台概览页，待办数量卡（抽屉展开明细）、站点指标、访问统计、提交预览、Uptime 与管理日志
@@ -149,7 +151,6 @@
     useToolStorage.js: 工具页 localStorage 持久化组合式函数
     useWorkspace.js: 工作站状态管理组合式函数，包括标签页处理，站外 iframe 标签（/embed/工具id 反查 URL）与域名白名单，及按 path 解析卡片 logo
     useWorkspaceSettings.js: 工作站相关偏好设置（站外卡片 iframe 嵌入开关默认关闭、深色模式 iframe 遮罩 off/black/invert 默认黑色、按站点的深色滤镜开关持久化为同一密钥内 id:0/1）
-    useDownloadIntro.js: 下载页 Markdown 功能介绍加载组合式函数（按需加载原始 md 字符串）
   utils:
     discreteMessage.js: 全局共享的 Naive UI 独立 message 实例（供 NMessageProvider 之外的模块使用）
     loadingBar.js: 全局共享的 Naive UI 顶部加载条实例（供路由守卫等无组件上下文处使用）
@@ -167,10 +168,7 @@
   constants:
     geetest.js: 极验 gt4 的公开配置（captcha_id 与脚本地址），captcha_key 只在服务端，绝不进前端
   data:
-    downloads:
-      index.js: 模块映射与动态导入配置
-      '*.json': 下载页配置 JSON 文件，包含工具信息与下载链接
-      md/: 下载页功能介绍 Markdown 文件目录，通过 JSON 配置的 introMd 字段引用
+    downloads.json: 下载页快照（构建时由 /api/v1/downloads 覆盖），含链接与 Markdown 正文
     donateRecords.json: 打赏记录数据（带哈希异步加载）
     homePromo.json: 首页推广位快照（构建时由 /api/v1/promo 覆盖），按首屏位 / 付费位 / 免费位 / 公告位分档，image 为后端 /uploads/promo/ 地址或完整外链
     contributors.json: 贡献者数据（avatar/name/link，异步加载）

@@ -22,6 +22,7 @@ import {
 import {
   cardsData,
   donateRecordsData,
+  downloadsData,
   loadDonateRecords,
 } from '../../composables/useSiteData.js'
 import { useStats } from '../../composables/useStats.js'
@@ -45,9 +46,6 @@ const SUBMISSION_STATUS = {
 }
 
 /* ===== 站点数据（构建期快照 + 接口刷新，见 useSiteData） ===== */
-
-// 下载页以配置目录为准，只取键名，不把配置内容拉进控制台 chunks
-const downloadPages = import.meta.glob('../../data/downloads/*.json')
 
 const allTools = computed(() => cardsData.value.categories.flatMap((category) => category.tools))
 const externalTools = computed(() =>
@@ -93,9 +91,9 @@ const stats = computed(() => [
   },
   {
     label: '下载页',
-    value: Object.keys(downloadPages).length,
+    value: downloadsData.value.length,
     icon: ArrowDownload24Regular,
-    hint: '下载配置目录',
+    hint: '公开可见页',
   },
   {
     label: '打赏记录',

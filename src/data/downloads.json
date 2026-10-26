@@ -1,0 +1,132 @@
+[
+  {
+    "slug": "zhiling-yinfuhe",
+    "icon": "/logos/command_plus.webp",
+    "name": "指令音符盒",
+    "version": "v4.0",
+    "tagline": "MID音乐转指令音符盒，半自动填入命令方块",
+    "intro": "本工具的核心功能是**生成 Minecraft 命令链**，并支持**半自动填入命令方块**。它能够将多种格式的本地文件，转换为游戏内可执行的命令链：\n\n### 支持转换的内容\n\n- **🎵 MIDI 音乐文件**：转换为 `playsound` 命令链，用于在游戏内播放音乐。\n- **🖼️ 图片文件 (v2.0+)**：转换为 `setblock` / `fill` 命令链，用于导入像素地图画。\n- **🏗️ 结构文件 (v3.0+)**：转换为 `setblock` / `fill` 命令链，用于导入建筑结构。\n\n### 相关资源\n\n- **📺 视频教程**：[v1.0 版本教程 (BV13HAtzXECM)](https://www.bilibili.com/video/BV13HAtzXECM/)  \n  _(Tip：v2.0~3.0 版本的教程请查看 B站评论区置顶笔记，v1.0和v3.5+内置配置编辑)_\n- **💻 开源仓库**：[xukun142857/Music-Minecraft](https://github.com/xukun142857/Music-Minecraft)",
+    "developer": "QQ3762024811",
+    "developerLink": "mailto:3762024811@qq.com",
+    "lanzou": [
+      {
+        "version": "v4.0",
+        "url": "https://lonzov.lanzouu.com/ivBWD3ydtlhi",
+        "password": "75p2"
+      },
+      {
+        "version": "v3.5",
+        "url": "https://lonzov.lanzouu.com/iO1z93xkdo1a",
+        "password": "bsy6"
+      },
+      {
+        "version": "v3.0",
+        "url": "https://lonzov.lanzouu.com/iQqjQ3wefz6b",
+        "password": "c1wt"
+      },
+      {
+        "version": "v2.5",
+        "url": "https://lonzov.lanzouu.com/i4s9W3rn2axe",
+        "password": "5oj8"
+      },
+      {
+        "version": "v2.0",
+        "url": "https://lonzov.lanzouu.com/iJ5kX3weg8mb",
+        "password": "2mmb"
+      },
+      {
+        "version": "v1.0",
+        "url": "https://lonzov.lanzouu.com/i4lQD3jqj5jc",
+        "password": "40qi"
+      }
+    ],
+    "quark": "https://pan.quark.cn/s/c32b491cfd37",
+    "fileSize": "5.5",
+    "downloads": 4113
+  },
+  {
+    "slug": "mc-yufabao",
+    "icon": "/logos/mt2_cn.webp",
+    "name": "指令语法高亮包",
+    "version": "v1.2.9",
+    "tagline": "指令语法高亮包，适用于 MT 管理器",
+    "intro": "这是一个专用于 MT 管理器的语法包，为 MT 管理器提供 Minecraft 基岩版指令的语法高亮支持，安装后 `.mcfunction` 文件会默认使用此语法包进行语法高亮渲染，或在其他文件手动选择语法为 `语法高亮MCGH` 也可以达到一样的效果。\n\n**Q**：MT管理器是什么/在哪下载？  \n**A**：一款安卓的全能文件管理器，官网 [mt2.cn](https://mt2.cn) 。\n\n**开源仓库**：[long-or/syntax-by-mt-mtsx](https://github.com/long-or/syntax-by-mt-mtsx)  \n**QQ 群**：[549528248](https://qm.qq.com/q/vfCFekynVC)\n\n---\n\n### 原作者的话：\n\n**导入方式**：在MT管理器里面点击后缀为mtsx的文件，然后选择安装  \n**说明**：\n\n- 给基岩版常用语法添加了高亮和报错功能\n- 颜色只有暗色模式下的，可以自己改\n- 有bug可以报给我(QQ:356134208)(bug挺多的,等你们发现)\n- 其他的可以在mtsx文件里面看\n- 语法高亮和MT语法模块同步更新\n\n**正式版和重构版的区别**:\n\n- 重构版在 MT版本v2.14.3 以上才能用\n- 用的是语法树结构匹配，效果会更好\n- 正式版不要求MT版本，效果比重构版差一点\n\nBeta版发布群: 549528248",
+    "developer": "胧_CB",
+    "developerLink": "https://space.bilibili.com/1637130924",
+    "lanzou": [
+      {
+        "version": "v1.2.9",
+        "url": "https://lonzov.lanzouu.com/i2ZyS370w8zg",
+        "password": "无"
+      }
+    ],
+    "quark": "https://pan.quark.cn/s/4c5589a050a0",
+    "fileSize": "0.8",
+    "downloads": 514
+  },
+  {
+    "slug": "AIEX-FMBE",
+    "icon": "/logos/1AIEX-FMBE.webp",
+    "name": "AIEX-FMBE 编辑器",
+    "version": "v1.0.39",
+    "tagline": "一句话 AI 生成 fmbe 模型",
+    "intro": "支持 AI 辅助建模的 EX-FMBE 编辑器，基于 [EX-FMBE](/?search=EX+FMBE) 编辑器开发，**提供了 AI 辅助建模功能**，可以通过输入文本描述来生成 FMBE 模型，极大地降低了建模的门槛。\n\n**作者Q群**：[865739735](https://qm.qq.com/q/M3q5XQoCQK)  \n**Bilibili 主页**：[波登可可](https://space.bilibili.com/437778690)\n\n<iframe src=\"//player.bilibili.com/player.html?isOutside=true&amp;aid=117065826504924&amp;bvid=BV1MWuS6VEAc&amp;cid=40753628960&amp;p=1&amp;autoplay=0\" scrolling=\"no\" border=\"0\" frameborder=\"no\" framespacing=\"0\" allowfullscreen=\"true\" style=\"width:100%;aspect-ratio:16/9;\"></iframe>",
+    "developer": "波登可可",
+    "developerLink": "https://space.bilibili.com/437778690",
+    "lanzou": [
+      {
+        "version": "1.0.39",
+        "url": "https://lonzov.lanzouu.com/i40Kn4ajj65e",
+        "password": "4so9"
+      }
+    ],
+    "quark": "https://pan.quark.cn/s/a200bfaa6a3c",
+    "fileSize": "69.8",
+    "downloads": 283
+  },
+  {
+    "slug": "HOSDLA-toolbox",
+    "icon": "/logos/HOSDLA_toolbox.webp",
+    "name": "HOSDLA 工具箱",
+    "version": "1.1.2",
+    "tagline": "指令音乐视频合成器等自动复制文本其他工具",
+    "intro": "这是 红令·HOSDLA 的 GDT(Game Do The) 团队制作的工具箱，团队群: [996173587](https://qm.qq.com/q/D4cINiaSJk) (异常原因可能导致搜索不到)\n\n反馈？联系原作者:  \n3578945356 (QQ号)\n\n---\n\n### 功能介绍:\n\n- **MC音乐中心**  \n  可以用MID生成高等指令音乐，鼓组适配，以及各项乐器优化非常好，软件内自带钢琴键，可以直接用手弹琴来制作指令文本或者wav，同样导入指令音乐文本，可以直接演示弹琴！还有实时指令文件播放音乐预览，效果也非常好，直接是音乐播放器，识别 playsound 指令就可以充当指令播放器。五线谱生成暂时为测试版，有 bug，而且还有指令文本生成 wav 的音乐用来保存\n\n- **多媒体生成**  \n  这是一个强大的视频或者图片转成 titleraw 显示的功能，用盲文/ASCII/真彩生成，三种模式\n\n三种模式对比:\n\n| ASCII字符生成                                                      | 盲文字符/Lite:                                                             | MC真彩色生成                                 |\n| ------------------------------------------------------------------ | -------------------------------------------------------------------------- | -------------------------------------------- |\n| 排版不统一，文件大小一致，灰度调整极佳，适用于黑白灰度视频生成文本 | 一种是抖动算法灰度盲文，还有一种纯黑白(0和255字色)，排版统一，文件大小统一 | 作者让我自己写，不会写qwq 就字面意思，真彩色 |\n\n<iframe src=\"//player.bilibili.com/player.html?isOutside=true&amp;aid=116760715987162&amp;bvid=BV1W6jG6HEFV&amp;cid=39170083634&amp;p=1&amp;autoplay=0\" scrolling=\"no\" border=\"0\" frameborder=\"no\" framespacing=\"0\" allowfullscreen=\"true\" style=\"width:100%;aspect-ratio:20/9;\"></iframe>",
+    "developer": "红令颠佬HOSDLA",
+    "developerLink": "https://space.bilibili.com/2122214034",
+    "lanzou": [
+      {
+        "version": "1.1.2",
+        "url": "https://lonzov.lanzouu.com/iGkDM4chqaje",
+        "password": "hp9b"
+      }
+    ],
+    "quark": "https://pan.quark.cn/s/d6f0c9b9a533",
+    "fileSize": "13.7",
+    "downloads": 99
+  },
+  {
+    "slug": "LonzovTool",
+    "icon": "/logos/1tool_lonzov_top.webp",
+    "name": "小舟工具箱",
+    "version": "v3.3",
+    "tagline": "小舟工具箱本地安卓应用版本",
+    "intro": "> 如果你的浏览器或系统不支持 [PWA](https://developer.mozilla.org/zh-CN/docs/Web/Progressive_web_apps) 应用安装，请在本页下载安装包版本\n\n## 我该选择哪个版本？\n\n| 版本 | 说明                                                                                             |\n| ---- | ------------------------------------------------------------------------------------------------ |\n| WTA  | [web-to-app](https://github.com/shiaho777/web-to-app) 打包的版本，无法确定系统环境时推荐选择     |\n| PWA  | 系统浏览器支持 [PWA](https://developer.mozilla.org/zh-CN/docs/Web/Progressive_web_apps) 应用运行 |",
+    "developer": "浪小舟",
+    "developerLink": "https://blog.lonzov.top/",
+    "lanzou": [
+      {
+        "version": "WTP",
+        "url": "https://lonzov.lanzouu.com/irgD93tut1cf",
+        "password": "entj"
+      },
+      {
+        "version": "PWA",
+        "url": "https://lonzov.lanzouu.com/iQNBN3tqx86b",
+        "password": "bxwf"
+      }
+    ],
+    "quark": "https://pan.quark.cn/s/8fbf60718653",
+    "fileSize": "14",
+    "downloads": 0
+  }
+]

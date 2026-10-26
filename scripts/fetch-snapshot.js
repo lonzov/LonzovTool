@@ -33,6 +33,7 @@ const SNAPSHOT_FILES = {
   notices: { url: '/api/v1/notices', file: 'src/data/notices.json' },
   donations: { url: '/api/v1/donations', file: 'src/data/donateRecords.json' },
   contributors: { url: '/api/v1/contributors', file: 'src/data/contributors.json' },
+  downloads: { url: '/api/v1/downloads', file: 'src/data/downloads.json' },
   promo: { url: '/api/v1/promo', file: 'src/data/homePromo.json' },
 }
 

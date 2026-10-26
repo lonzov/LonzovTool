@@ -1,7 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { NIcon, NNumberAnimation, useMessage } from 'naive-ui'
+import { NIcon, NNumberAnimation } from 'naive-ui'
 import { PersonBoard24Filled } from '@vicons/fluent'
 import DownloadModal from './DownloadModal.vue'
 import DownloadDisclaimer from './DownloadDisclaimer.vue'
@@ -16,7 +16,6 @@ const props = defineProps({
 })
 
 const route = useRoute()
-const message = useMessage()
 
 const pageName = computed(() => {
   if (props.tabPath) {
@@ -29,37 +28,10 @@ const pageName = computed(() => {
   return route.path.replace(/\/+$/, '').split('/').pop() || ''
 })
 
-const config = ref(null)
-const loading = ref(true)
-const notFound = ref(false)
+import { getDownloadPage } from '../../composables/useSiteData'
 
-import { getDownloadConfig } from '../../data/downloads/index.js'
-
-async function loadConfig() {
-  loading.value = true
-  config.value = null
-  notFound.value = false
-
-  try {
-    const slug = pageName.value
-
-    const loader = getDownloadConfig(slug)
-    if (!loader) {
-      notFound.value = true
-      return
-    }
-
-    const mod = await loader()
-    config.value = mod.default || mod
-  } catch (e) {
-    message.error('加载失败：' + e.message, { duration: 2500 })
-  } finally {
-    loading.value = false
-  }
-}
-
-watch(pageName, () => loadConfig())
-onMounted(() => { loadConfig() })
+const config = computed(() => getDownloadPage(pageName.value))
+const notFound = computed(() => !config.value)
 
 // ===== 下载逻辑 =====
 const showDownloadModal = ref(false)
@@ -174,7 +146,7 @@ async function fetchDownloadCount() {
   if (hasFreshCache) return
 
   try {
-    const res = await fetch(`https://api.lonzov.top/count/?s=${encodeURIComponent(slug)}`)
+    const res = await fetch(`/api/v1/downloads/${encodeURIComponent(slug)}/count`)
     const data = await res.json()
     const count = typeof data === 'number' ? data : (data?.count ?? data?.value ?? null)
     if (isValidCount(count)) {
@@ -190,7 +162,7 @@ function reportDownload() {
   const slug = pageName.value
   if (!slug || !shouldReport(slug)) return
   markReported(slug)
-  fetch(`https://api.lonzov.top/count/?p=${encodeURIComponent(slug)}`, { mode: 'no-cors' }).catch(() => {})
+  fetch(`/api/v1/downloads/${encodeURIComponent(slug)}/count`, { method: 'POST' }).catch(() => {})
   const now = Date.now()
   let current = dlCount.value
   if (isValidCount(current)) {
@@ -208,16 +180,9 @@ watch(config, (val) => {
 
 <template>
   <div class="download-tool">
-    <!-- 加载状态 -->
-    <div v-if="loading" class="download-loading">
-      <div class="download-loader"></div>
-      <span>加载中...</span>
-    </div>
+    <!-- 快照里没有这个 slug -->
+    <NotFoundView v-if="notFound" />
 
-    <!-- 404：下载配置不存在 -->
-    <NotFoundView v-else-if="notFound" />
-
-    <!-- 加载错误 -->
     <div v-else-if="!config" class="download-empty">
       <p>加载失败</p>
     </div>

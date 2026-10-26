@@ -1,5 +1,6 @@
 import {
   Apps24Regular,
+  ArrowDownload24Regular,
   ChatHelp24Regular,
   DataPie24Regular,
   MegaphoneLoud24Regular,
@@ -54,6 +55,14 @@ export const CONSOLE_NAV = [
     title: '共建者与打赏',
     description: '首页感谢区的两份名单：共建者与打赏记录，列表顺序即展示顺序',
     permission: 'people.write',
+  },
+  {
+    key: '/console/downloads',
+    label: '下载页',
+    icon: ArrowDownload24Regular,
+    title: '下载页',
+    description: '侧边栏「下载」里的页面：链接、版本、功能介绍与可见性',
+    permission: 'downloads.write',
   },
   {
     key: '/console/submissions',
