@@ -14,6 +14,7 @@ import {
 } from '@vicons/fluent'
 import Sortable from 'sortablejs'
 import AppModal from '../../components/ui/AppModal.vue'
+import ImageUploadField from '../components/ImageUploadField.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
@@ -484,24 +485,19 @@ onBeforeUnmount(() => {
         </NFormItem>
         <NFormItem label="头像">
           <div class="avatar-field">
-            <span class="person-avatar person-avatar--preview">
-              <img
-                v-if="avatarPreview"
-                :src="avatarPreview"
-                alt="头像预览"
-                loading="lazy"
-              />
-              <span v-else class="person-avatar-fallback">
-                {{ contributorForm.name.trim().slice(0, 1) || '头' }}
-              </span>
-            </span>
-            <NInput
-              v-model:value="contributorForm.avatar"
-              maxlength="512"
-              placeholder="站内路径（/uploads/…）或 http(s) 图片地址"
-              :status="fieldErrors.avatar ? 'error' : undefined"
+            <ImageUploadField
+              v-model="contributorForm.avatar"
+              purpose="avatar"
+              :fallback="contributorForm.name.trim().slice(0, 1) || '头'"
             />
           </div>
+          <NInput
+            v-model:value="contributorForm.avatar"
+            class="avatar-url"
+            maxlength="512"
+            placeholder="也可以直接填站内路径或 http(s) 图片地址"
+            :status="fieldErrors.avatar ? 'error' : undefined"
+          />
           <p v-if="fieldErrors.avatar" class="field-error">{{ fieldErrors.avatar }}</p>
         </NFormItem>
         <NFormItem
@@ -829,17 +825,11 @@ a.person-sub:hover {
 }
 
 .avatar-field {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   width: 100%;
 }
 
-.person-avatar--preview {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border: 1px solid var(--border);
+.avatar-url {
+  margin-top: 8px;
 }
 
 .date-input {
