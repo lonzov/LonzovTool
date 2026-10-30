@@ -17,8 +17,12 @@ import ImageUploadField from '../components/ImageUploadField.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
+import { usePermissions } from '../usePermissions.js'
 
 const { ensureTrust } = useSensitiveTrust()
+const { can } = usePermissions()
+// 新建页不属于任何既有范围：接口要求不限范围的 downloads.write，只有范围授权的账号不显示入口
+const canCreatePage = computed(() => can('downloads.write', ''))
 
 const URL = '/api/v1/console/downloads'
 
@@ -233,7 +237,12 @@ onMounted(load)
         <NIcon :component="ArrowClockwise24Regular" :size="14" />
         <span>刷新</span>
       </button>
-      <button class="app-btn app-btn--fill app-btn--sm" type="button" @click="openCreate">
+      <button
+        v-if="canCreatePage"
+        class="app-btn app-btn--fill app-btn--sm"
+        type="button"
+        @click="openCreate"
+      >
         <NIcon :component="Add24Regular" :size="14" />
         <span>新增</span>
       </button>

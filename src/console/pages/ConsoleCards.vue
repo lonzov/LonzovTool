@@ -341,6 +341,7 @@ function mergedCategoryOrder(categoryId, visibleSlugs) {
 }
 
 async function persistOrder(categoryId, visibleSlugs) {
+  if (!(await ensureTrust())) return
   const slugs = mergedCategoryOrder(categoryId, visibleSlugs)
   const rank = new Map(slugs.map((slug, index) => [slug, index]))
   cards.value = [...cards.value].sort((a, b) => {
