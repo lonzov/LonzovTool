@@ -55,18 +55,20 @@ function parseRetryAfter(response) {
  * 信封里的 code 是契约的一部分，只有拿不到信封（网关拦截、离线、超时）时前端才自己兜底。
  */
 export async function consoleFetch(path, options = {}) {
-  const method = (options.method || 'GET').toUpperCase()
-  const headers = { Accept: 'application/json', ...options.headers }
+  // 上传大图比普通读写慢，允许调用方单独放宽超时；其余请求保持默认值
+  const { timeoutMs = REQUEST_TIMEOUT_MS, ...fetchOptions } = options
+  const method = (fetchOptions.method || 'GET').toUpperCase()
+  const headers = { Accept: 'application/json', ...fetchOptions.headers }
   if (method !== 'GET' && method !== 'HEAD') {
     headers['X-CSRFToken'] = readCookie('csrftoken')
   }
 
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   let response
   try {
-    response = await fetch(path, { ...options, method, headers, signal: controller.signal })
+    response = await fetch(path, { ...fetchOptions, method, headers, signal: controller.signal })
   } catch {
     // 主动 abort 与服务端不可达都落到这里，对用户是同一件事：这次请求没发出去
     const offline = typeof navigator !== 'undefined' && navigator.onLine === false

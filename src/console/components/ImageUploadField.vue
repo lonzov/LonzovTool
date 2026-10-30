@@ -42,7 +42,7 @@ async function onPick(event) {
 
   uploading.value = true
   try {
-    const payload = await consoleFetch(UPLOAD_URL, { method: 'POST', body })
+    const payload = await consoleFetch(UPLOAD_URL, { method: 'POST', body, timeoutMs: 45000 })
     emit('update:modelValue', payload.path)
     message.success('图片已上传')
   } catch (e) {

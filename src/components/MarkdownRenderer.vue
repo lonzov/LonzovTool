@@ -21,6 +21,18 @@ function anchorPlugin(md) {
   })
 }
 
+/** 外链一律新标签打开：必须同时声明 rel，否则新页面能通过 window.opener 反向操作本站 */
+function linkRelPlugin(md) {
+  const fallback = (tokens, idx, options, env, self) => self.renderToken(tokens, idx, options)
+  const rule = md.renderer.rules.link_open || fallback
+  md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
+    if (tokens[idx].attrGet('target') === '_blank') {
+      tokens[idx].attrSet('rel', 'noopener noreferrer')
+    }
+    return rule(tokens, idx, options, env, self)
+  }
+}
+
 const props = defineProps({
   raw: { type: String, default: '' },
 })
@@ -33,7 +45,7 @@ const md = shallowRef(new MarkdownIt({
   highlight(str, lang) {
     return `<pre><code class="hljs language-${lang || ''}">${md.value.utils.escapeHtml(str)}</code></pre>`
   },
-}).use(anchorPlugin))
+}).use(anchorPlugin).use(linkRelPlugin))
 
 const html = ref('')
 
