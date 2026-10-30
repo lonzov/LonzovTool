@@ -5,6 +5,7 @@ import { NDatePicker, NForm, NFormItem, NIcon, NInput, NSwitch, useMessage } fro
 import {
   AppsListDetail24Regular,
   CalendarClock24Regular,
+  DataBarVertical24Regular,
   Edit24Regular,
 } from '@vicons/fluent'
 import AppModal from '../../components/ui/AppModal.vue'
@@ -16,6 +17,18 @@ import { preparePromoImage } from '../../utils/iconUpload.js'
 const { ensureTrust } = useSensitiveTrust()
 
 const PROMO_URL = '/api/v1/console/promo'
+
+// 埋点事件名形如 Promo+jzfk，查询参数交给 URLSearchParams 编码，避免标识里有特殊字符时拼错
+const ANALYTICS_BASE = 'https://imamu.lonzov.top/share/FmUyTde668rZaCXX/events'
+
+function analyticsUrl(item) {
+  const query = new URLSearchParams({
+    date: '30day',
+    page: '1',
+    event: `eq.Promo+${item.event_id}`,
+  })
+  return `${ANALYTICS_BASE}?${query.toString()}`
+}
 
 const DATE_SHORTCUTS = {
   一周后: () => Date.now() + 7 * 24 * 3600 * 1000,
@@ -220,9 +233,28 @@ async function save() {
             </span>
           </div>
 
-          <button class="icon-btn" type="button" title="编辑" @click="openEdit(item)">
-            <NIcon :component="Edit24Regular" :size="14" />
-          </button>
+          <div class="promo-actions">
+            <a
+              v-if="item.event_id"
+              class="icon-btn"
+              :href="analyticsUrl(item)"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="查看该埋点近 30 天的数据"
+            >
+              <NIcon :component="DataBarVertical24Regular" :size="14" />
+            </a>
+            <span
+              v-else
+              class="icon-btn icon-btn--disabled"
+              title="先在编辑里填写埋点标识，才能查看数据"
+            >
+              <NIcon :component="DataBarVertical24Regular" :size="14" />
+            </span>
+            <button class="icon-btn" type="button" title="编辑" @click="openEdit(item)">
+              <NIcon :component="Edit24Regular" :size="14" />
+            </button>
+          </div>
         </div>
       </div>
     </ConsolePanel>
@@ -325,7 +357,7 @@ async function save() {
 .promo-row {
   display: grid;
   /* 3:1 的缩略图，201px 宽即 67px 高，与右侧三行文案的高度相称 */
-  grid-template-columns: 201px minmax(0, 1fr) 32px;
+  grid-template-columns: 201px minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
   padding: 12px 0;
@@ -415,6 +447,12 @@ async function save() {
   white-space: nowrap;
 }
 
+.promo-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -432,6 +470,15 @@ async function save() {
 
 .icon-btn:hover {
   color: var(--foreground);
+}
+
+.icon-btn--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.icon-btn--disabled:hover {
+  color: var(--muted-foreground);
 }
 
 /* ===== 编辑器 ===== */
