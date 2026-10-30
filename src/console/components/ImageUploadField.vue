@@ -1,27 +1,48 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { NIcon, useMessage } from 'naive-ui'
 import { ArrowUpload24Regular, Image24Regular } from '@vicons/fluent'
-import { consoleFetch } from '../consoleRequest.js'
 
+/**
+ * 图片选择与本地预览。选中后只留在本地，由调用方在保存时上传：
+ * 上传是写操作，应该和数据一起过身份确认；取消编辑也不该在服务端留下孤儿文件。
+ */
 const props = defineProps({
   modelValue: { type: String, default: '' },
-  /** 服务端按用途决定落盘目录与所需权限：avatar → people.write，download → downloads.write */
-  purpose: { type: String, required: true },
+  pendingFile: { type: Object, default: null },
   label: { type: String, default: '上传图片' },
   /** 预览用的兜底文字（如昵称首字） */
   fallback: { type: String, default: '' },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'update:pendingFile'])
 
-const UPLOAD_URL = '/api/v1/console/media/images'
+const MAX_BYTES = 2 * 1024 * 1024
 
 const message = useMessage()
 const input = ref(null)
-const uploading = ref(false)
+const localPreview = ref('')
+
+function revokeLocal() {
+  if (localPreview.value) {
+    URL.revokeObjectURL(localPreview.value)
+    localPreview.value = ''
+  }
+}
+
+watch(
+  () => props.pendingFile,
+  (file) => {
+    revokeLocal()
+    if (file) localPreview.value = URL.createObjectURL(file)
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(revokeLocal)
 
 const preview = computed(() => {
+  if (localPreview.value) return localPreview.value
   const value = (props.modelValue || '').trim()
   if (!value) return ''
   return value.startsWith('/') || /^https?:\/\//i.test(value) ? value : ''
@@ -31,25 +52,25 @@ function pick() {
   input.value?.click()
 }
 
-async function onPick(event) {
+function onPick(event) {
   const file = event.target.files?.[0]
   event.target.value = ''
   if (!file) return
-
-  const body = new FormData()
-  body.append('purpose', props.purpose)
-  body.append('image', file)
-
-  uploading.value = true
-  try {
-    const payload = await consoleFetch(UPLOAD_URL, { method: 'POST', body, timeoutMs: 45000 })
-    emit('update:modelValue', payload.path)
-    message.success('图片已上传')
-  } catch (e) {
-    message.error(e?.message || '上传失败，请稍后重试')
-  } finally {
-    uploading.value = false
+  if (!file.type.startsWith('image/')) {
+    message.error('请选择图片文件')
+    return
   }
+  if (file.size > MAX_BYTES) {
+    message.error('图片不能超过 2 MB')
+    return
+  }
+  emit('update:modelValue', '')
+  emit('update:pendingFile', file)
+}
+
+function clear() {
+  emit('update:pendingFile', null)
+  emit('update:modelValue', '')
 }
 </script>
 
@@ -62,21 +83,15 @@ async function onPick(event) {
     </span>
     <div class="image-upload__body">
       <div class="image-upload__actions">
-        <button
-          class="app-btn app-btn--outline app-btn--sm"
-          type="button"
-          :disabled="uploading"
-          @click="pick"
-        >
+        <button class="app-btn app-btn--outline app-btn--sm" type="button" @click="pick">
           <NIcon :component="ArrowUpload24Regular" :size="13" />
-          <span>{{ uploading ? '上传中…' : label }}</span>
+          <span>{{ label }}</span>
         </button>
         <button
-          v-if="modelValue"
+          v-if="modelValue || pendingFile"
           class="app-btn app-btn--text app-btn--sm"
           type="button"
-          :disabled="uploading"
-          @click="emit('update:modelValue', '')"
+          @click="clear"
         >
           移除
         </button>
@@ -88,7 +103,7 @@ async function onPick(event) {
           @change="onPick"
         />
       </div>
-      <p class="image-upload__hint">PNG / JPG / WebP / ICO，不超过 2 MB；上传后自动转为 WebP</p>
+      <p class="image-upload__hint">PNG / JPG / WebP / ICO，不超过 2 MB；保存时上传并转为 WebP</p>
     </div>
   </div>
 </template>

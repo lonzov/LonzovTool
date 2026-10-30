@@ -109,19 +109,20 @@
     useSensitiveTrust.js: 敏感操作的短时信任，3 小时窗口内不再重复弹身份确认
     useResendCountdown.js: 邮件验证码重发的 60 秒冷却倒计时，登录两步验证与账号页开关共用
     components/ConsolePageHeader.vue: 控制台页面标题区（图标 + 标题 + 说明 + 右侧附加区）
-    components/ImageUploadField.vue: 通用图片上传组件（预览、选文件、上传后回填路径），用途决定落盘目录与所需权限
+    components/ImageUploadField.vue: 图片选择与本地预览，选中后只留在本地，由调用方在保存时上传
+    mediaUpload.js: 控制台通用图片上传（按用途落公开媒体目录），在保存流程里调用
     components/ConsolePanel.vue: 控制台面板卡外壳（图标 + 标题 + 说明 + 内容区）
     components/StatCard.vue: 控制台指标卡（图标 + 标签 + 数值 + 说明）
     components/TodoDrawer.vue: 待办抽屉，列出待审核提交与待处理反馈并跳转到对应页面
     pages/ConsoleAccount.vue: 我的账号页，账号信息、改密码、邮箱两步验证开关与登录设备列表（撤销会话）
     pages/ConsoleAccounts.vue: 账号管理页，账号列表与新建/编辑/重置密码，编辑角色与单点授权范围
-    pages/ConsoleCards.vue: 卡片管理页，列表与模拟布局两种视图、增删改与显隐，分类内可拖动排序（两种视图一致），模拟布局的卡片与首页一样按行拉齐高度
+    pages/ConsoleCards.vue: 卡片管理页，列表与模拟布局两种视图、增删改与显隐，分类内可拖动排序（两种视图一致），模拟布局的卡片与首页一样按行拉齐高度，图标保存时上传
     pages/ConsoleLogin.vue: 控制台登录页，邮箱 + 密码登录，账号开启两步验证时切到验证码步骤，仅拥有控制台权限的账号可进入
     pages/ConsoleNotices.vue: 公告管理页，列表、增删改，时间用日期选择器录入
-    pages/ConsoleDownloads.vue: 下载页管理页，列表含下载量，编辑链接、版本与 Markdown 正文，封面走通用图片上传
+    pages/ConsoleDownloads.vue: 下载页管理页，列表含下载量，编辑链接、版本与 Markdown 正文，封面保存时上传
     pages/ConsoleLogs.vue: 管理日志页，按级别筛选与关键词检索，向更早记录翻页，行内展示操作者/动作/对象/IP
-    pages/ConsolePeople.vue: 共建者与打赏名单的维护页，两个列表同页切换；共建者可拖动排序，打赏按时间倒序
-    pages/ConsolePromo.vue: 推广位管理页，四档槽位的图文、到期时间与隐藏，图可点击/拖拽/粘贴上传，可跳转 Umami 查看埋点数据
+    pages/ConsolePeople.vue: 共建者与打赏名单的维护页，两个列表同页切换；共建者可拖动排序且头像保存时上传，打赏按时间倒序
+    pages/ConsolePromo.vue: 推广位管理页，四档槽位的图文、到期时间与隐藏，配图可点击/拖拽/粘贴选择、保存时上传，可跳转 Umami 查看埋点数据
     pages/ConsoleOverview.vue: 控制台概览页，待办数量卡（抽屉展开明细）、站点指标、访问统计、提交预览、Uptime 与管理日志
     pages/ConsoleSubmissions.vue: 网址提交审核页，待审队列与通过/拒绝，支持 ?id= 定位并高亮指定提交
     pages/ConsoleFeedback.vue: 反馈处理页，状态筛选与增量翻页，详情含截图看大图，可标记已处理与删除，支持 ?id= 直接展开指定反馈

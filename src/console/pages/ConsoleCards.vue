@@ -64,15 +64,12 @@ const editorSaving = ref(false)
 const logoInput = ref(null)
 const logoDragging = ref(false)
 const logoUploading = ref(false)
-/* 新建卡片时还没有 slug，上传接口无从寻址：先把压缩好的文件留在内存，
-   等 POST 建卡拿到 slug 后再补上传，避免出现 /cards//logo 这种空 slug 请求 */
+/* 图标接口以 slug 寻址：新建时还没有 slug，编辑时也不该选图就落盘。
+   两种情况都先把压缩好的文件留在内存，保存时随其他字段一起上传。 */
 const pendingLogo = ref(null)
 const pendingLogoPreview = ref('')
 
-const logoPreview = computed(() => {
-  if (!editor.value.editing) return pendingLogoPreview.value || form.value.logo
-  return form.value.logo
-})
+const logoPreview = computed(() => pendingLogoPreview.value || form.value.logo)
 
 function setPendingLogo(file) {
   if (pendingLogoPreview.value) URL.revokeObjectURL(pendingLogoPreview.value)
@@ -98,33 +95,9 @@ async function handleLogoFile(file) {
     return
   }
 
-  // 新建态：先攒着，建卡后自动补传
-  if (!editor.value.editing || !editor.value.slug) {
-    setPendingLogo(prepared)
-    logoUploading.value = false
-    message.success('图标已就绪，保存卡片后自动上传')
-    return
-  }
-
-  if (!(await ensureTrust())) {
-    logoUploading.value = false
-    return
-  }
-
-  try {
-    const updated = await uploadLogo(editor.value.slug, prepared)
-    form.value.logo = updated.logo
-    message.success('图标已更新')
-    await load()
-  } catch (e) {
-    if (e?.code === 'unauthorized') {
-      router.replace({ path: '/console/login', query: { redirect: route.fullPath } })
-      return
-    }
-    editor.value.error = e?.message || '图标上传失败，请稍后重试'
-  } finally {
-    logoUploading.value = false
-  }
+  setPendingLogo(prepared)
+  logoUploading.value = false
+  message.success('图标已就绪，保存卡片后自动上传')
 }
 
 function pickLogo() {
@@ -483,7 +456,18 @@ async function save() {
         method: 'PATCH',
         body: JSON.stringify(payload),
       })
-      message.success('已保存修改')
+      if (pendingLogo.value) {
+        try {
+          await uploadLogo(editor.value.slug, pendingLogo.value)
+          setPendingLogo(null)
+          message.success('已保存修改并更新图标')
+        } catch {
+          setPendingLogo(null)
+          message.warning('已保存修改，但图标上传失败，请重新打开编辑上传')
+        }
+      } else {
+        message.success('已保存修改')
+      }
     } else {
       const created = await consoleFetch(CARDS_URL, {
         method: 'POST',
@@ -767,7 +751,7 @@ async function remove(card) {
                   @drop.prevent="onLogoDrop"
                 >
                   <NIcon :component="ArrowUpload24Regular" :size="16" />
-                  <span>{{ logoUploading ? '上传中…' : editor.editing ? '点击选择、拖入或 Ctrl+V 粘贴图片' : '点击选择、拖入或粘贴图片（保存后自动上传）' }}</span>
+                  <span>{{ logoUploading ? '处理中…' : '点击选择、拖入或粘贴图片（保存后自动上传）' }}</span>
                 </div>
                 <input
                   ref="logoInput"

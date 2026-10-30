@@ -15,6 +15,7 @@ import {
 import { createConsoleSortable } from '../sortable.js'
 import AppModal from '../../components/ui/AppModal.vue'
 import ImageUploadField from '../components/ImageUploadField.vue'
+import { uploadMediaImage } from '../mediaUpload.js'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
@@ -60,6 +61,8 @@ let sortable = null
 
 const editor = ref({ show: false, kind: 'contributors', editing: false, id: 0, error: '' })
 const contributorForm = ref({ name: '', avatar: '', link: '', qq: '' })
+// 选中的头像先留在本地，保存时再上传（上传属于写操作，要跟保存一起过身份确认）
+const pendingAvatar = ref(null)
 const donationForm = ref({ dateAt: null, name: '', amount: '', note: '', link: '' })
 const editorSaving = ref(false)
 const fieldErrors = ref({})
@@ -186,6 +189,7 @@ async function handleDragEnd(event) {
 
 function openCreate() {
   fieldErrors.value = {}
+  pendingAvatar.value = null
   if (isContributor.value) {
     contributorForm.value = { name: '', avatar: '', link: '', qq: '' }
   } else {
@@ -196,6 +200,7 @@ function openCreate() {
 
 function openEdit(row) {
   fieldErrors.value = {}
+  pendingAvatar.value = null
   if (isContributor.value) {
     contributorForm.value = {
       name: row.name,
@@ -221,7 +226,7 @@ function validate() {
     const form = contributorForm.value
     if (!form.name.trim()) errors.name = '请填写昵称'
     if (form.qq.trim() && !/^\d{5,12}$/.test(form.qq.trim())) errors.qq = 'QQ 号是 5-12 位数字'
-    if (form.avatar.trim() && !avatarPreview.value) {
+    if (!pendingAvatar.value && form.avatar.trim() && !avatarPreview.value) {
       errors.avatar = '头像要填 http(s) 地址，或以 / 开头的站内路径'
     }
     if (form.link.trim() && !/^https?:\/\//i.test(form.link.trim())) {
@@ -245,6 +250,22 @@ async function save() {
   if (!(await ensureTrust())) return
 
   const kind = editor.value.kind
+  editorSaving.value = true
+  editor.value.error = ''
+  if (kind === 'contributors' && pendingAvatar.value) {
+    try {
+      // 上传损坏或尺寸不合规时这里就会失败，下面的写入不应发生
+      const media = await uploadMediaImage('avatar', pendingAvatar.value)
+      contributorForm.value.avatar = media.path
+      pendingAvatar.value = null
+    } catch (e) {
+      if (gotUnauthorized(e)) return
+      editor.value.error = e?.message || '头像上传失败，请稍后重试'
+      editorSaving.value = false
+      return
+    }
+  }
+
   const payload =
     kind === 'contributors'
       ? {
@@ -261,8 +282,6 @@ async function save() {
           link: donationForm.value.link.trim(),
         }
 
-  editorSaving.value = true
-  editor.value.error = ''
   try {
     const url = editor.value.editing
       ? `${PEOPLE_URL}/${kind}/${editor.value.id}`
@@ -487,7 +506,7 @@ onBeforeUnmount(() => {
           <div class="avatar-field">
             <ImageUploadField
               v-model="contributorForm.avatar"
-              purpose="avatar"
+              v-model:pending-file="pendingAvatar"
               :fallback="contributorForm.name.trim().slice(0, 1) || '头'"
             />
           </div>

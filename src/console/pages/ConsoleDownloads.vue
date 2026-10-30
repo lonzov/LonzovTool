@@ -14,6 +14,7 @@ import {
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import ImageUploadField from '../components/ImageUploadField.vue'
+import { uploadMediaImage } from '../mediaUpload.js'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
@@ -39,6 +40,8 @@ const editor = ref({ show: false, editing: false, slug: '', error: '' })
 const form = ref(emptyForm())
 const fieldErrors = ref({})
 const saving = ref(false)
+// 封面图先留本地，保存时再上传
+const pendingIcon = ref(null)
 
 function emptyForm() {
   return {
@@ -88,6 +91,7 @@ async function load() {
 
 function openCreate() {
   fieldErrors.value = {}
+  pendingIcon.value = null
   form.value = emptyForm()
   form.value.links = [emptyLink()]
   editor.value = { show: true, editing: false, slug: '', error: '' }
@@ -95,6 +99,7 @@ function openCreate() {
 
 function openEdit(page) {
   fieldErrors.value = {}
+  pendingIcon.value = null
   form.value = {
     slug: page.slug,
     name: page.name,
@@ -131,7 +136,7 @@ function validate() {
     errors.slug = '标识只能用字母、数字、下划线与连字符，且不能以符号开头'
   }
   if (!value.name.trim()) errors.name = '请填写名称'
-  if (value.icon.trim() && !iconPreview.value) {
+  if (!pendingIcon.value && value.icon.trim() && !iconPreview.value) {
     errors.icon = '图标要填 http(s) 地址，或以 / 开头的站内路径'
   }
   if (value.developerLink.trim() && !/^(https?:\/\/|mailto:)/i.test(value.developerLink.trim())) {
@@ -155,6 +160,21 @@ async function save() {
   if (!validate()) return
   if (!(await ensureTrust())) return
 
+  saving.value = true
+  editor.value.error = ''
+  if (pendingIcon.value) {
+    try {
+      const media = await uploadMediaImage('download', pendingIcon.value)
+      form.value.icon = media.path
+      pendingIcon.value = null
+    } catch (e) {
+      if (gotUnauthorized(e)) return
+      editor.value.error = e?.message || '封面上传失败，请稍后重试'
+      saving.value = false
+      return
+    }
+  }
+
   const value = form.value
   const payload = {
     name: value.name.trim(),
@@ -177,8 +197,6 @@ async function save() {
   }
   if (!editor.value.editing) payload.slug = value.slug.trim()
 
-  saving.value = true
-  editor.value.error = ''
   try {
     await consoleFetch(
       editor.value.editing ? `${URL}/${encodeURIComponent(editor.value.slug)}` : URL,
@@ -359,7 +377,7 @@ onMounted(load)
           <div class="icon-field">
             <ImageUploadField
               v-model="form.icon"
-              purpose="download"
+              v-model:pending-file="pendingIcon"
               label="上传封面"
               :fallback="form.name.trim().slice(0, 1) || '图'"
             />

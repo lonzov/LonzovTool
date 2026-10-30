@@ -46,6 +46,16 @@ const errorText = ref('')
 const editor = ref({ show: false, slot: '', error: '', uploading: false })
 const form = ref({ title: '', image: '', link: '', eventId: '', expiresAt: null, hidden: false })
 const saving = ref(false)
+// 配图先留本地（对象 URL 预览），保存时再随其他字段一起上传
+const pendingImage = ref(null)
+const pendingImagePreview = ref('')
+const imagePreview = computed(() => pendingImagePreview.value || form.value.image)
+
+function setPendingImage(file) {
+  if (pendingImagePreview.value) URL.revokeObjectURL(pendingImagePreview.value)
+  pendingImage.value = file
+  pendingImagePreview.value = file ? URL.createObjectURL(file) : ''
+}
 
 const imageInput = ref(null)
 const dragging = ref(false)
@@ -93,6 +103,7 @@ async function load() {
 }
 
 function openEdit(item) {
+  setPendingImage(null)
   editor.value = { show: true, slot: item.slot, error: '', uploading: false }
   form.value = {
     title: item.title,
@@ -109,36 +120,19 @@ function applyItem(updated) {
   items.value = items.value.map((item) => (item.slot === updated.slot ? updated : item))
 }
 
-async function uploadImage(file) {
+async function prepareImage(file) {
   if (!file) return
-  if (!(await ensureTrust())) return
-
   editor.value.error = ''
   editor.value.uploading = true
 
   const { file: prepared, error } = await preparePromoImage(file)
+  editor.value.uploading = false
   if (error || !prepared) {
-    editor.value.uploading = false
     editor.value.error = error
     return
   }
-
-  try {
-    const body = new FormData()
-    body.append('image_file', prepared)
-    const updated = await consoleFetch(`${PROMO_URL}/${editor.value.slot}/image`, {
-      method: 'POST',
-      body,
-    })
-    form.value.image = updated.image
-    applyItem(updated)
-    message.success('推广图已更新')
-  } catch (e) {
-    if (gotUnauthorized(e)) return
-    editor.value.error = e?.message || '图片上传失败，请稍后重试'
-  } finally {
-    editor.value.uploading = false
-  }
+  setPendingImage(prepared)
+  message.success('图片已就绪，保存后上传')
 }
 
 function pickImage() {
@@ -148,13 +142,13 @@ function pickImage() {
 function onImagePicked(event) {
   const [file] = event.target.files || []
   event.target.value = ''
-  uploadImage(file)
+  prepareImage(file)
 }
 
 function onDrop(event) {
   dragging.value = false
   const [file] = event.dataTransfer?.files || []
-  uploadImage(file)
+  prepareImage(file)
 }
 
 // 编辑器打开时接管粘贴：截图直接 Cmd/Ctrl+V 进来
@@ -164,7 +158,7 @@ function onPaste(event) {
     ?.getAsFile()
   if (!file) return
   event.preventDefault()
-  uploadImage(file)
+  prepareImage(file)
 }
 
 onMounted(() => {
@@ -174,6 +168,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('paste', onPaste)
+  setPendingImage(null)
 })
 
 async function save() {
@@ -181,6 +176,16 @@ async function save() {
   saving.value = true
   editor.value.error = ''
   try {
+    if (pendingImage.value) {
+      const body = new FormData()
+      body.append('image_file', pendingImage.value)
+      const uploaded = await consoleFetch(`${PROMO_URL}/${editor.value.slot}/image`, {
+        method: 'POST',
+        body,
+      })
+      form.value.image = uploaded.image
+      setPendingImage(null)
+    }
     const updated = await consoleFetch(`${PROMO_URL}/${editor.value.slot}`, {
       method: 'PATCH',
       body: JSON.stringify({
@@ -280,9 +285,9 @@ async function save() {
             @dragleave.prevent="dragging = false"
             @drop.prevent="onDrop"
           >
-            <img v-if="form.image" :src="form.image" alt="推广图预览" />
+            <img v-if="imagePreview" :src="imagePreview" alt="推广图预览" />
             <span v-else class="image-drop__hint">
-              {{ editor.uploading ? '上传中…' : '点击、拖入或粘贴图片（建议 1200×400）' }}
+              {{ editor.uploading ? '处理中…' : '点击、拖入或粘贴图片（保存后上传，建议 1200×400）' }}
             </span>
           </div>
           <input
