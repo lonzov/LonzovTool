@@ -3,6 +3,7 @@ import {
   ArrowDownload24Regular,
   ChatHelp24Regular,
   DataPie24Regular,
+  History24Regular,
   MegaphoneLoud24Regular,
   People24Regular,
   PeopleCommunity24Regular,
@@ -87,6 +88,14 @@ export const CONSOLE_NAV = [
     title: '账号管理',
     description: '控制台账号、角色与单点授权，停用与改权在下次请求即刻生效',
     permission: 'accounts.manage',
+  },
+  {
+    key: '/console/logs',
+    label: '管理日志',
+    icon: History24Regular,
+    title: '管理日志',
+    description: '登录、内容增删改与账号变更的完整记录，可检索与翻页',
+    permission: 'logs.read',
   },
   {
     key: '/console/account',

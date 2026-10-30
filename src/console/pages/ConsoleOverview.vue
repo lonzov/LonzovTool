@@ -553,6 +553,7 @@ onBeforeUnmount(() => {
           >
             {{ option.label }}
           </button>
+          <RouterLink class="log-pill log-pill--link" to="/console/logs">全部日志</RouterLink>
           <button
             class="log-pill"
             :class="{ 'log-pill--on': autoScroll }"
@@ -1099,6 +1100,15 @@ onBeforeUnmount(() => {
   line-height: 1.6;
   cursor: pointer;
   transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.log-pill--link {
+  text-decoration: none;
+}
+
+.log-pill--link:hover {
+  color: var(--foreground);
+  border-color: var(--foreground);
 }
 
 .log-pill:hover {

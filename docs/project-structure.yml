@@ -118,6 +118,7 @@
     pages/ConsoleLogin.vue: 控制台登录页，邮箱 + 密码登录，账号开启两步验证时切到验证码步骤，仅拥有控制台权限的账号可进入
     pages/ConsoleNotices.vue: 公告管理页，列表、增删改，时间用日期选择器录入
     pages/ConsoleDownloads.vue: 下载页管理页，列表含下载量，编辑链接、版本与 Markdown 正文，封面走通用图片上传
+    pages/ConsoleLogs.vue: 管理日志页，按级别筛选与关键词检索，向更早记录翻页，行内展示操作者/动作/对象/IP
     pages/ConsolePeople.vue: 共建者与打赏名单的维护页，两个列表同页切换；共建者可拖动排序，打赏按时间倒序
     pages/ConsolePromo.vue: 推广位管理页，四档槽位的图文、到期时间与隐藏，图可点击/拖拽/粘贴上传
     pages/ConsoleOverview.vue: 控制台概览页，待办数量卡（抽屉展开明细）、站点指标、访问统计、提交预览、Uptime 与管理日志

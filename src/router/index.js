@@ -159,6 +159,7 @@ const ConsoleNotices = () => import('../console/pages/ConsoleNotices.vue')
 const ConsolePromo = () => import('../console/pages/ConsolePromo.vue')
 const ConsolePeople = () => import('../console/pages/ConsolePeople.vue')
 const ConsoleDownloads = () => import('../console/pages/ConsoleDownloads.vue')
+const ConsoleLogs = () => import('../console/pages/ConsoleLogs.vue')
 const ConsoleSubmissions = () => import('../console/pages/ConsoleSubmissions.vue')
 const ConsoleFeedback = () => import('../console/pages/ConsoleFeedback.vue')
 const ConsoleAccounts = () => import('../console/pages/ConsoleAccounts.vue')
@@ -379,6 +380,15 @@ export const routes = [
         meta: {
           title: '下载页 - 控制台 - 小舟工具箱',
           permission: 'downloads.write',
+        },
+      },
+      {
+        path: 'logs',
+        name: 'console-logs',
+        component: ConsoleLogs,
+        meta: {
+          title: '管理日志 - 控制台 - 小舟工具箱',
+          permission: 'logs.read',
         },
       },
       {
