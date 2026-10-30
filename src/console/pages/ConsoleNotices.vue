@@ -11,7 +11,7 @@ import {
   Open24Regular,
   ReOrderDotsVertical16Regular,
 } from '@vicons/fluent'
-import Sortable from 'sortablejs'
+import { createConsoleSortable } from '../sortable.js'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
@@ -92,7 +92,7 @@ function setupSortable() {
   sortable?.destroy()
   sortable = null
   if (!listEl.value) return
-  sortable = Sortable.create(listEl.value, {
+  sortable = createConsoleSortable(listEl.value, {
     handle: '.drag-handle',
     animation: 150,
     ghostClass: 'notice-row--ghost',

@@ -73,7 +73,8 @@
       selector:
         index.vue: 选择器参数编辑器入口，NConfigProvider 深色覆盖 + 组件组装
         constants.js: 参数种类定义(PARAM_KINDS)、游戏模式选项、权限选项等配置
-        composables:
+        sortable.js: 控制台拖拽实例（Sortable 封装），触屏/窄屏下补边缘自动滚动
+  composables:
           useState.js: 模块级共享状态（所有 ref 与内部变量）
           useParams.js: 参数 CRUD、编辑工作流（beginEdit/saveEdit/commitCurrentState）
           useOutput.js: 输出格式化、复制导出、加载示例、清空
@@ -114,7 +115,7 @@
     components/TodoDrawer.vue: 待办抽屉，列出待审核提交与待处理反馈并跳转到对应页面
     pages/ConsoleAccount.vue: 我的账号页，账号信息、改密码、邮箱两步验证开关与登录设备列表（撤销会话）
     pages/ConsoleAccounts.vue: 账号管理页，账号列表与新建/编辑/重置密码，编辑角色与单点授权范围
-    pages/ConsoleCards.vue: 卡片管理页，列表与模拟布局两种视图、增删改与显隐，编辑器内支持图标上传
+    pages/ConsoleCards.vue: 卡片管理页，列表与模拟布局两种视图、增删改与显隐，分类内可拖动排序（两种视图一致），模拟布局的卡片与首页一样按行拉齐高度
     pages/ConsoleLogin.vue: 控制台登录页，邮箱 + 密码登录，账号开启两步验证时切到验证码步骤，仅拥有控制台权限的账号可进入
     pages/ConsoleNotices.vue: 公告管理页，列表、增删改，时间用日期选择器录入
     pages/ConsoleDownloads.vue: 下载页管理页，列表含下载量，编辑链接、版本与 Markdown 正文，封面走通用图片上传

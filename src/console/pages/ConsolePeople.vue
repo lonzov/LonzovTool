@@ -12,7 +12,7 @@ import {
   PeopleCommunity24Regular,
   ReOrderDotsVertical16Regular,
 } from '@vicons/fluent'
-import Sortable from 'sortablejs'
+import { createConsoleSortable } from '../sortable.js'
 import AppModal from '../../components/ui/AppModal.vue'
 import ImageUploadField from '../components/ImageUploadField.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
@@ -132,7 +132,7 @@ function setupSortable() {
   sortable?.destroy()
   sortable = null
   if (!listEl.value || !isContributor.value) return
-  sortable = Sortable.create(listEl.value, {
+  sortable = createConsoleSortable(listEl.value, {
     handle: '.drag-handle',
     animation: 150,
     ghostClass: 'person-row--ghost',

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NForm, NFormItem, NIcon, NInput, NSelect, NSwitch, useMessage } from 'naive-ui'
 import {
@@ -13,7 +13,9 @@ import {
   Eye24Regular,
   Grid24Regular,
   List24Regular,
+  ReOrderDotsVertical16Regular,
 } from '@vicons/fluent'
+import { createConsoleSortable } from '../sortable.js'
 import AppModal from '../../components/ui/AppModal.vue'
 import ToolCard from '../../components/ToolCard.vue'
 import ToolLogo from '../../components/ToolLogo.vue'
@@ -157,6 +159,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('paste', onPaste)
+  destroySortables()
   setPendingLogo(null)
 })
 
@@ -188,6 +191,191 @@ const hiddenCount = computed(() => cards.value.filter((card) => card.hidden).len
 const summaryText = computed(
   () => `${visibleCards.value.length} 张 / 共 ${cards.value.length} 张，隐藏 ${hiddenCount.value} 张`,
 )
+
+/* ===== 分类内拖动排序 =====
+   两种视图都用 Sortable：列表是一个容器，模拟布局是每个分类一段网格。
+   顺序只认后端：拖动结束先把 DOM 挪回去，再由数据驱动重排。 */
+const listEl = ref(null)
+const gridEls = new Map()
+let sortables = []
+const reordering = ref(false)
+
+function setGridRef(categoryId, el) {
+  if (el) gridEls.set(categoryId, el)
+  else gridEls.delete(categoryId)
+}
+
+function destroySortables() {
+  sortables.forEach((instance) => instance.destroy())
+  sortables = []
+}
+
+function setupSortables() {
+  destroySortables()
+  nextTick(() => {
+    if (viewMode.value === 'list') {
+      if (!listEl.value) return
+      sortables.push(
+        createConsoleSortable(listEl.value, {
+          handle: '.drag-handle',
+          animation: 150,
+          ghostClass: 'card-row--ghost',
+          chosenClass: 'card-row--chosen',
+          onEnd: onListDragEnd,
+        }),
+      )
+      return
+    }
+    for (const [categoryId, el] of gridEls) {
+      if (!el) continue
+      sortables.push(
+        createConsoleSortable(el, {
+          handle: '.drag-handle',
+          animation: 150,
+          ghostClass: 'card-grid__item--ghost',
+          chosenClass: 'card-grid__item--chosen',
+          onEnd: (event) => onGridDragEnd(categoryId, event),
+        }),
+      )
+    }
+  })
+}
+
+function setDragDisabled(disabled) {
+  sortables.forEach((instance) => instance.option('disabled', disabled))
+}
+
+function slugsIn(container) {
+  return [...container.querySelectorAll('[data-card-slug]')].map((el) => el.dataset.cardSlug)
+}
+
+/** Sortable 直接改了 DOM，Vue 的虚拟 DOM 并不知道：先原样挪回去，顺序只由数据驱动 */
+function revertDomMove(event) {
+  const { item, from, oldIndex } = event
+  from.removeChild(item)
+  from.insertBefore(item, from.children[oldIndex] || null)
+}
+
+function categoryOf(slug) {
+  return cards.value.find((card) => card.slug === slug)?.category_id
+}
+
+function visibleSlugsOf(categoryId) {
+  return visibleCards.value
+    .filter((card) => card.category_id === categoryId)
+    .map((card) => card.slug)
+}
+
+function visibleOrderChanged(before, after) {
+  return before.join() !== after.join()
+}
+
+function groupByCategory(slugs) {
+  const grouped = new Map()
+  for (const slug of slugs) {
+    const categoryId = categoryOf(slug)
+    if (categoryId === undefined) continue
+    if (!grouped.has(categoryId)) grouped.set(categoryId, [])
+    grouped.get(categoryId).push(slug)
+  }
+  return grouped
+}
+
+/** 列表是跨分类的平铺：先确认拖动没有跨出分类，再找哪个分类内部顺序变了 */
+function changedCategory(beforeSlugs, afterSlugs) {
+  const before = groupByCategory(beforeSlugs)
+  const after = groupByCategory(afterSlugs)
+  for (const [categoryId, slugs] of before) {
+    if (visibleOrderChanged(slugs, after.get(categoryId) || [])) return categoryId
+  }
+  return null
+}
+
+async function onListDragEnd(event) {
+  suppressCardClick = true
+  setTimeout(() => (suppressCardClick = false), 250)
+  const container = listEl.value
+  const afterSlugs = slugsIn(container)
+  revertDomMove(event)
+
+  const beforeSlugs = visibleCards.value.map((card) => card.slug)
+  if (!visibleOrderChanged(beforeSlugs, afterSlugs)) return
+
+  // 卡片只能在自己的分类内调整：跨分类顺序会打乱分类段
+  const beforeKinds = beforeSlugs.map((slug) => categoryOf(slug)).filter((id) => id !== undefined)
+  const afterKinds = afterSlugs.map((slug) => categoryOf(slug)).filter((id) => id !== undefined)
+  if (beforeKinds.join() !== afterKinds.join()) {
+    message.warning('卡片只能在所属分类内排序')
+    return
+  }
+
+  const categoryId = changedCategory(beforeSlugs, afterSlugs)
+  if (categoryId === undefined || categoryId === null) return
+  const movedSlugs = afterSlugs.filter((slug) => categoryOf(slug) === categoryId)
+  await persistOrder(categoryId, movedSlugs)
+}
+
+async function onGridDragEnd(categoryId, event) {
+  suppressCardClick = true
+  setTimeout(() => (suppressCardClick = false), 250)
+  const container = gridEls.get(categoryId)
+  if (!container) return
+  const afterSlugs = slugsIn(container)
+  revertDomMove(event)
+
+  if (!visibleOrderChanged(visibleSlugsOf(categoryId), afterSlugs)) return
+  await persistOrder(categoryId, afterSlugs)
+}
+
+/**
+ * 把「可见卡片的新顺序」合并回该分类的完整顺序：隐藏或未命中的卡片保持原位，
+ * 这样接口总能拿到当前全集，并发校验也有意义。
+ */
+function mergedCategoryOrder(categoryId, visibleSlugs) {
+  const full = cards.value
+    .filter((card) => card.category_id === categoryId)
+    .map((card) => card.slug)
+  const moved = new Set(visibleSlugs)
+  let cursor = 0
+  return full.map((slug) => (moved.has(slug) ? visibleSlugs[cursor++] : slug))
+}
+
+async function persistOrder(categoryId, visibleSlugs) {
+  const slugs = mergedCategoryOrder(categoryId, visibleSlugs)
+  const rank = new Map(slugs.map((slug, index) => [slug, index]))
+  cards.value = [...cards.value].sort((a, b) => {
+    if (a.category_id !== b.category_id) return 0
+    return (rank.get(a.slug) ?? 0) - (rank.get(b.slug) ?? 0)
+  })
+
+  reordering.value = true
+  setDragDisabled(true)
+  try {
+    await consoleFetch(`${CARDS_URL}/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ category_id: categoryId, slugs }),
+    })
+    message.success('顺序已保存')
+  } catch (e) {
+    if (e?.code === 'unauthorized') {
+      router.replace({ path: '/console/login', query: { redirect: route.fullPath } })
+      return
+    }
+    message.error(e?.message || '顺序保存失败，已恢复原顺序')
+  } finally {
+    reordering.value = false
+    await load()
+  }
+}
+
+// 拖动结束后浏览器仍会补一个 click：短时间屏蔽，避免刚放下就弹出编辑器
+let suppressCardClick = false
+
+function onCardClick(event, card) {
+  if (suppressCardClick) return
+  if (event.target.closest?.('.drag-handle')) return
+  openEdit(card)
+}
 
 /* 模拟布局的分组：完全照首页 ToolGrid——按**分类实体**分组、每个分类一段网格。
    注意不能按分类名分组：同一个名字可能出现在不同父级菜单下（首页也是两段），
@@ -235,8 +423,12 @@ async function load() {
     errorText.value = e?.message || '读取失败，请稍后重试'
   } finally {
     loading.value = false
+    await nextTick()
+    setupSortables()
   }
 }
+
+watch(viewMode, setupSortables)
 
 function openCreate() {
   setPendingLogo(null)
@@ -434,14 +626,18 @@ async function remove(card) {
             <span class="card-group__name">{{ group.name }}</span>
             <span class="card-group__count">{{ group.cards.length }}</span>
           </div>
-          <div class="card-grid">
+          <div :ref="(el) => setGridRef(group.id, el)" class="card-grid">
             <div
               v-for="card in group.cards"
               :key="card.slug"
               class="card-grid__item"
               :class="{ 'card-grid__item--hidden': card.hidden }"
-              @click.capture.stop.prevent="openEdit(card)"
+              :data-card-slug="card.slug"
+              @click.capture.stop.prevent="onCardClick($event, card)"
             >
+              <span class="drag-handle card-grid__drag" title="拖动调整分类内顺序" aria-hidden="true">
+                <NIcon :component="ReOrderDotsVertical16Regular" :size="14" />
+              </span>
               <ToolCard
                 :title="card.title"
                 :description="card.description"
@@ -466,47 +662,53 @@ async function remove(card) {
           <span>状态</span>
           <span class="col-actions">操作</span>
         </div>
-        <div
-          v-for="card in visibleCards"
-          :key="card.slug"
-          class="card-row"
-          :class="{ 'card-row--hidden': card.hidden }"
-        >
-          <div class="cell-main">
-            <ToolLogo :logo="card.logo" :alt="card.title" :size="32" />
-            <div class="cell-text">
-              <span class="cell-title">{{ card.title }}</span>
-              <a class="cell-sub" :href="card.link" target="_blank" rel="noopener noreferrer">{{ card.link }}</a>
-              <span class="cell-slug">{{ card.slug }}</span>
+        <div ref="listEl" class="card-table-body">
+          <div
+            v-for="card in visibleCards"
+            :key="card.slug"
+            class="card-row"
+            :class="{ 'card-row--hidden': card.hidden }"
+            :data-card-slug="card.slug"
+          >
+            <div class="cell-main">
+              <span class="drag-handle" title="拖动调整分类内顺序" aria-hidden="true">
+                <NIcon :component="ReOrderDotsVertical16Regular" :size="14" />
+              </span>
+              <ToolLogo :logo="card.logo" :alt="card.title" :size="32" />
+              <div class="cell-text">
+                <span class="cell-title">{{ card.title }}</span>
+                <a class="cell-sub" :href="card.link" target="_blank" rel="noopener noreferrer">{{ card.link }}</a>
+                <span class="cell-slug">{{ card.slug }}</span>
+              </div>
             </div>
+            <span class="cell-meta">{{ card.category }}</span>
+            <span>
+              <button
+                class="state-pill"
+                :class="card.hidden ? 'state-pill--hidden' : 'state-pill--visible'"
+                type="button"
+                :disabled="pendingSlug === card.slug"
+                @click="toggleHidden(card)"
+              >
+                <NIcon :component="card.hidden ? EyeOff24Regular : Eye24Regular" :size="12" />
+                {{ card.hidden ? '已隐藏' : '显示中' }}
+              </button>
+            </span>
+            <span class="col-actions">
+              <button class="icon-btn" type="button" title="编辑" @click="openEdit(card)">
+                <NIcon :component="Edit24Regular" :size="14" />
+              </button>
+              <button
+                class="icon-btn icon-btn--danger"
+                type="button"
+                title="删除"
+                :disabled="pendingSlug === card.slug"
+                @click="remove(card)"
+              >
+                <NIcon :component="Delete24Regular" :size="14" />
+              </button>
+            </span>
           </div>
-          <span class="cell-meta">{{ card.category }}</span>
-          <span>
-            <button
-              class="state-pill"
-              :class="card.hidden ? 'state-pill--hidden' : 'state-pill--visible'"
-              type="button"
-              :disabled="pendingSlug === card.slug"
-              @click="toggleHidden(card)"
-            >
-              <NIcon :component="card.hidden ? EyeOff24Regular : Eye24Regular" :size="12" />
-              {{ card.hidden ? '已隐藏' : '显示中' }}
-            </button>
-          </span>
-          <span class="col-actions">
-            <button class="icon-btn" type="button" title="编辑" @click="openEdit(card)">
-              <NIcon :component="Edit24Regular" :size="14" />
-            </button>
-            <button
-              class="icon-btn icon-btn--danger"
-              type="button"
-              title="删除"
-              :disabled="pendingSlug === card.slug"
-              @click="remove(card)"
-            >
-              <NIcon :component="Delete24Regular" :size="14" />
-            </button>
-          </span>
         </div>
       </div>
     </ConsolePanel>
@@ -742,9 +944,48 @@ async function remove(card) {
 }
 
 .card-grid__item {
+  display: flex;
   position: relative;
   min-width: 0;
   cursor: pointer;
+}
+
+/* 与首页一致：同一行的卡片拉齐到该行最高的一张 */
+.card-grid__item :deep(.tool-card) {
+  width: 100%;
+  height: 100%;
+}
+
+.card-grid__drag {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 3;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.card-grid__item:hover .card-grid__drag {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .card-grid__drag {
+    opacity: 0.9;
+  }
+}
+
+.card-grid__item--ghost {
+  opacity: 0.4;
+}
+
+.card-grid__item--chosen {
+  z-index: 2;
+  box-shadow: var(--shadow-sm);
 }
 
 .card-grid__item--hidden {
@@ -793,6 +1034,33 @@ async function remove(card) {
 
 .card-row--hidden {
   opacity: 0.62;
+}
+
+.card-table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.drag-handle {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  color: var(--subtle-foreground);
+  cursor: grab;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.card-row--ghost {
+  opacity: 0.4;
+  background: var(--accent);
+}
+
+.card-row--chosen {
+  background: var(--muted);
 }
 
 .cell-main {
