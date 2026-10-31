@@ -1,5 +1,5 @@
 /**
- * 把卡片图标从后端同步到前端仓库：`/uploads/logos/<slug>.webp` → `public/uploads/logos/<slug>.webp`。
+ * 把卡片图标从后端同步到前端仓库：`/uploads/logos/*.webp` → `public/uploads/logos/*.webp`。
  *
  * 为什么要有这一步：
  * 站点的前提是"增强而非依赖"——接口挂了、或 Cloudflare 不通时，首页仍要完整可用（SW 缓存整站）。
@@ -19,8 +19,8 @@ import { dirname, resolve } from 'node:path'
 const ROOT = process.cwd()
 const API_BASE = process.env.SITE_API_BASE || 'http://127.0.0.1:8010'
 const TIMEOUT_MS = 15000
-const LOCAL_PREFIX = '/uploads/'
-const UPLOADS_DIR = resolve(ROOT, 'public', 'uploads')
+const LOCAL_PREFIX = '/uploads/logos/'
+const UPLOADS_DIR = resolve(ROOT, 'public', 'uploads', 'logos')
 
 async function main() {
   let cards
