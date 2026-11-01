@@ -3,14 +3,14 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { NTooltip } from 'naive-ui'
 import { RiBilibiliLine, RiTiktokFill, RiGithubFill, RiQqFill, RiRssFill } from '@remixicon/vue'
-import { useStats } from '../composables/useStats'
+import { useAboutStats } from '../composables/useStats'
 import { useLocalStats } from '../composables/useLocalStats.js'
 import { useFeedbackDrawer } from '../composables/useFeedbackDrawer.js'
 import { reduceMotion } from '../composables/useMotion.js'
 import { contributorsData, loadContributors } from '../composables/useSiteData.js'
 import { usePageOutline } from '../composables/usePageOutline.js'
 
-const { stats, fetchStats } = useStats()
+const { stats, fetchStats } = useAboutStats()
 const router = useRouter()
 const { openFeedbackDrawer } = useFeedbackDrawer()
 
@@ -127,7 +127,7 @@ onMounted(async () => {
   }
   /* 4. 请求 API（后台更新，收到新数据后自动重新激活数字增长动画） */
   try {
-    const res = await fetch('https://api.lonzov.top/u/api/bilibili')
+    const res = await fetch('/api/v1/bilibili')
     if (res.ok) {
       const d = await res.json()
       applyVideoData(d)
