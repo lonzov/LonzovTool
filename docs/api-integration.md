@@ -160,3 +160,12 @@ Service Worker 根本不注册。因此接后端之后，**V4 必须成为例行
 
 因此这两个面板读的都是自家接口，**取不到就留白**（统计沿用 localStorage 缓存），
 不升级为页面错误态。新增同类外部数据源时按此处理，不要在前端直接 `fetch` 第三方域名。
+
+## 九、人机验证的降级
+
+极验仍是主验证；只有服务端判定极验网络异常 / 5xx 时，才返回
+`403 captcha_fallback_required` 与一次性 `meta.fallback_token`。前端由
+`TurnstileFallback.vue` 显式渲染 Cloudflare Turnstile，把 `turnstile_token` +
+`fallback_token` 随原请求重发。**前端不得在未收到该错误时主动改用 Turnstile，
+也不得把失败当成功**；Turnstile 失败或 `503 captcha_unavailable` 一律展示错误并停止提交。
+字段与错误码正文见后端仓库 `docs/api.md`。

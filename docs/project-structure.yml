@@ -18,7 +18,8 @@
     DonateRecords.vue: 打赏记录表格，异步加载 JSON 动态渲染
     DarkFilterIcon.vue: 深色滤镜状态图标（月亮 + 可生长/回缩的描边斜杠），用 stroke-dashoffset 动画实现斜杠生长
     ExternalSiteView.vue: 站外站点 iframe 嵌入视图（工作站标签页内显示站外卡片内容）
-    FeedbackDrawer.vue: 建议反馈抽屉，站内自研表单（类型/标题/联系方式/页面/描述/截图/极验/草稿/蜜罐），提交后就地显示反馈编号
+    FeedbackDrawer.vue: 建议反馈抽屉，站内自研表单（类型/标题/联系方式/页面/描述/截图/极验与 Turnstile 降级/草稿/蜜罐），提交后就地显示反馈编号
+    TurnstileFallback.vue: 极验不可用时的 Cloudflare Turnstile 备用验证弹窗，只负责换 token，不做放行判断
     Footer.vue: 页脚组件，包含版权信息、运行时间、隐私政策入口
     HomeView.vue: 首页视图容器，集成搜索栏、工具网格、页脚
     IframeForm.vue: iframe 表单封装组件
@@ -170,6 +171,7 @@
     categoryIcons.js: 分类图标配置 + 工具卡片 logo 图标映射（getCategoryIcon / getToolIcon，tools.json 中非路径 logo 按图标名映射）
   constants:
     geetest.js: 极验 gt4 的公开配置（captcha_id 与脚本地址），captcha_key 只在服务端，绝不进前端
+    turnstile.js: Cloudflare Turnstile 的公开配置（site key 与显式渲染脚本地址），secret 只在服务端
   data:
     downloads.json: 下载页快照（构建时由 /api/v1/downloads 覆盖），含链接与 Markdown 正文
     donateRecords.json: 打赏记录数据（带哈希异步加载）

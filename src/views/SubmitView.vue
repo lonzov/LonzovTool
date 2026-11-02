@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { NForm, NFormItem, NIcon, NInput, NRadio, NRadioGroup, NSelect, NSwitch, useMessage } from 'naive-ui'
 import { ArrowUpload24Regular, Send16Regular } from '@vicons/fluent'
 import ToolCard from '../components/ToolCard.vue'
+import TurnstileFallback from '../components/TurnstileFallback.vue'
 import { cardsData } from '../composables/useSiteData.js'
 import { confirmDialog } from '../composables/useConfirm.js'
 import { GEETEST_CAPTCHA_ID, GEETEST_SCRIPT_URL } from '../constants/geetest.js'
@@ -60,6 +61,10 @@ let captchaInstance = null
 let validateResult = null
 /* 用户确认覆盖后要替换的记录 id；验证通过前先存在这里 */
 let pendingReplaceId = 0
+/* 极验不可用时服务端签发的降级票据；只用于换 Turnstile，不放行 */
+let fallbackTicket = ''
+const turnstileVisible = ref(false)
+const turnstileRef = ref(null)
 
 /* 分类复用首页卡片数据源：投稿只能落到既有分类，避免脏分类进审核队列。
    必须按名称去重——同名分类可能出现在多个父级菜单下，
@@ -279,7 +284,7 @@ async function onIconFileChange(event) {
   formRef.value?.restoreValidation()
 }
 
-function buildPayload(replaceId = 0) {
+function buildPayload(replaceId = 0, turnstileToken = '') {
   const data = new FormData()
   if (replaceId) data.append('replace_id', String(replaceId))
   data.append('title', form.title.trim())
@@ -295,7 +300,10 @@ function buildPayload(replaceId = 0) {
   } else if (iconFile.value) {
     data.append('icon_file', iconFile.value)
   }
-  if (validateResult) {
+  if (turnstileToken) {
+    data.append('turnstile_token', turnstileToken)
+    data.append('fallback_token', fallbackTicket)
+  } else if (validateResult) {
     data.append('lot_number', validateResult.lot_number || '')
     data.append('captcha_output', validateResult.captcha_output || '')
     data.append('pass_token', validateResult.pass_token || '')
@@ -334,9 +342,9 @@ async function handleSubmit() {
   }
 }
 
-async function performSubmit(replaceId = 0) {
+async function performSubmit(replaceId = 0, turnstileToken = '') {
   if (submitting.value) return
-  if (!validateResult) {
+  if (!validateResult && !turnstileToken) {
     // 没拿到验证结果就发请求，后端只会回 403；在这里拦住并说明原因
     formError.value = '请先完成人机验证再提交'
     return
@@ -345,7 +353,10 @@ async function performSubmit(replaceId = 0) {
   formError.value = ''
 
   try {
-    const response = await fetch(SUBMIT_URL, { method: 'POST', body: buildPayload(replaceId) })
+    const response = await fetch(SUBMIT_URL, {
+      method: 'POST',
+      body: buildPayload(replaceId, turnstileToken),
+    })
     const payload = await response.json().catch(() => null)
 
     if (!response.ok) {
@@ -365,9 +376,12 @@ async function performSubmit(replaceId = 0) {
           formError.value = '已取消，表单内容已保留'
           return
         }
-        // 409 发生在验证码校验之前，客户端手里的验证结果仍然有效，直接重发即可；
-        // 只有结果缺失（例如已过期）才重新唤起验证
+        // 409 发生在验证码校验之前，本轮凭证尚未被服务端消费，可以直接重发
         pendingReplaceId = error.meta?.existing_id || 0
+        if (turnstileToken) {
+          await performSubmit(pendingReplaceId, turnstileToken)
+          return
+        }
         if (validateResult) {
           await performSubmit(pendingReplaceId)
           return
@@ -383,14 +397,47 @@ async function performSubmit(replaceId = 0) {
         // 提示里承诺"草稿已保存"，就得当场落盘，不能等防抖那一拍
         saveDraft()
       }
+      if (error?.code === 'captcha_fallback_required') {
+        const ticket = error.meta?.fallback_token || ''
+        if (!ticket) {
+          formError.value = '备用验证不可用，请稍后重试'
+          return
+        }
+        fallbackTicket = ticket
+        turnstileVisible.value = true
+        formError.value = ''
+        return
+      }
+      if (error?.code === 'captcha_fallback_invalid') {
+        turnstileVisible.value = false
+        fallbackTicket = ''
+        validateResult = null
+        captchaInstance?.reset?.()
+        formError.value = error.message || '备用验证已失效，请重新提交'
+        return
+      }
+      if (error?.code === 'captcha_failed' && error.meta?.provider === 'turnstile') {
+        turnstileRef.value?.reset()
+        turnstileVisible.value = true
+        formError.value = error.message || '备用验证未通过，请重试'
+        return
+      }
+      if (error?.code === 'captcha_unavailable') {
+        turnstileVisible.value = false
+        formError.value = error.message || '暂时无法完成人机验证，请稍后重试'
+        return
+      }
       if (error?.code === 'captcha_failed') {
         validateResult = null
+        fallbackTicket = ''
         captchaInstance?.reset?.()
       }
       return
     }
 
     validateResult = null
+    fallbackTicket = ''
+    turnstileVisible.value = false
     pendingReplaceId = 0
     clearFields()
     message.success('提交成功，审核后会通过你留下的联系方式通知你', { duration: 6000 })
@@ -399,6 +446,16 @@ async function performSubmit(replaceId = 0) {
   } finally {
     submitting.value = false
   }
+}
+
+function onTurnstileSuccess(token) {
+  turnstileVisible.value = false
+  performSubmit(pendingReplaceId, token)
+}
+
+function closeTurnstile() {
+  turnstileVisible.value = false
+  fallbackTicket = ''
 }
 
 function clearFields() {
@@ -421,6 +478,8 @@ function clearFields() {
   formRef.value?.restoreValidation()
   formError.value = ''
   validateResult = null
+  fallbackTicket = ''
+  turnstileVisible.value = false
 }
 
 onMounted(() => {
@@ -601,6 +660,16 @@ onBeforeUnmount(() => {
         <li>不接受侵权、破解、含推广返利或与站点定位无关的网址。</li>
       </ul>
     </section>
+
+    <TurnstileFallback
+      ref="turnstileRef"
+      :show="turnstileVisible"
+      action="submission"
+      description="极验服务暂时不可用，请完成下方备用验证后继续提交。"
+      @update:show="turnstileVisible = $event"
+      @success="onTurnstileSuccess"
+      @close="closeTurnstile"
+    />
   </div>
 </template>
 

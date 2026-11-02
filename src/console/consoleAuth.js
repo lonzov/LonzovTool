@@ -89,15 +89,19 @@ function rememberSession(payload) {
  * 后者绝不能当成功处理 —— 那时没有任何会话，本地记住账号会让路由守卫直接放行。
  * challenge 由调用方留在组件内存里（等同「密码已通过」的凭证，不落盘）。
  */
-async function login(email, password, captcha = null) {
+async function login(email, password, captcha = null, fallback = null) {
   const address = (email || '').trim()
   if (!address || !password) {
     throw new ConsoleApiError('missing_credentials', '请填写邮箱与密码')
   }
 
-  // 人机验证的一次性凭证：服务端每次登录都要校验，缺了直接 403
+  // 人机验证的一次性凭证：服务端每次登录都要校验，缺了直接 403。
+  // 降级重试只带 Turnstile token 与服务端签发的票据，不再带已作废的极验结果。
   const body = { email: address, password }
-  if (captcha) {
+  if (fallback?.turnstileToken) {
+    body.turnstile_token = fallback.turnstileToken
+    body.fallback_token = fallback.fallbackToken || ''
+  } else if (captcha) {
     body.lot_number = captcha.lot_number
     body.captcha_output = captcha.captcha_output
     body.pass_token = captcha.pass_token

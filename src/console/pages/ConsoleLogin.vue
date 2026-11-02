@@ -7,6 +7,7 @@ import InputOtp from '../../components/ui/InputOtp.vue'
 import { ConsoleApiError, useConsoleAuth } from '../consoleAuth.js'
 import { useResendCountdown } from '../useResendCountdown.js'
 import { useGeetestChallenge } from '../../composables/useGeetestChallenge.js'
+import TurnstileFallback from '../../components/TurnstileFallback.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,8 +20,12 @@ const error = ref('')
 const submitting = ref(false)
 
 /* 人机验证每次登录都要过一遍，验证通过才真正发请求：
-   一次性凭证由极验自己的回调给，页面只负责把它塞进请求体 */
+   一次性凭证由极验自己的回调给，页面只负责把它塞进请求体。
+   极验不可用时服务端会回 captcha_fallback_required，此时改用 Turnstile。 */
 let captchaResult = null
+let fallbackTicket = ''
+const turnstileVisible = ref(false)
+const turnstileRef = ref(null)
 
 const {
   state: captchaState,
@@ -252,6 +257,8 @@ function startLogin() {
   if (!canSubmit.value) return
   error.value = ''
   captchaResult = null
+  fallbackTicket = ''
+  turnstileVisible.value = false
   if (captchaState.value === 'failed') {
     error.value = '人机验证组件加载失败，请刷新页面重试'
     return
@@ -261,12 +268,15 @@ function startLogin() {
   }
 }
 
-async function submitCredentials() {
+async function submitCredentials(turnstileToken = '') {
   if (!canSubmit.value) return
   error.value = ''
   submitting.value = true
   try {
-    const result = await login(email.value, password.value, captchaResult)
+    const fallback = turnstileToken
+      ? { turnstileToken, fallbackToken: fallbackTicket }
+      : null
+    const result = await login(email.value, password.value, captchaResult, fallback)
     if (result?.need2fa) {
       if (!result.challenge) {
         error.value = '验证码下发失败，请重新登录'
@@ -281,11 +291,38 @@ async function submitCredentials() {
       // 服务端给出等待时间才倒计时；拿不到就只展示文案，不做假倒计时
       if (e.retryAfterSeconds > 0) startLockout(e.retryAfterSeconds)
       error.value = e.retryAfterSeconds > 0 ? '' : e.message
-    } else if (e instanceof ConsoleApiError && e.code === 'captcha_failed') {
-      // 一次性凭证已经作废，重过一次验证；提示文案由服务端给，避免两处口径分叉
+    } else if (e instanceof ConsoleApiError && e.code === 'captcha_fallback_required') {
+      // 极验不可用：拿服务端签发的票据换 Turnstile，不把这次请求当失败
+      const ticket = e.meta?.fallback_token || ''
+      if (!ticket) {
+        error.value = '备用验证不可用，请稍后重试'
+        return
+      }
+      fallbackTicket = ticket
+      turnstileVisible.value = true
+      error.value = ''
+    } else if (e instanceof ConsoleApiError && e.code === 'captcha_fallback_invalid') {
+      turnstileVisible.value = false
+      fallbackTicket = ''
       resetCaptcha()
       captchaResult = null
+      error.value = e.message || '备用验证已失效，请重新登录'
+    } else if (e instanceof ConsoleApiError && e.code === 'captcha_failed') {
+      if (e.meta?.provider === 'turnstile') {
+        // Turnstile 失败后 token 已作废，留在弹窗里让用户重新完成
+        turnstileRef.value?.reset()
+        turnstileVisible.value = true
+        error.value = e.message || '备用验证未通过，请重试'
+        return
+      }
+      // 极验凭证已经作废，重过一次验证；提示文案由服务端给，避免两处口径分叉
+      resetCaptcha()
+      captchaResult = null
+      fallbackTicket = ''
       error.value = e.message || '人机验证未通过，请重试'
+    } else if (e instanceof ConsoleApiError && e.code === 'captcha_unavailable') {
+      turnstileVisible.value = false
+      error.value = e.message || '暂时无法完成人机验证，请稍后重试'
     } else if (e instanceof ConsoleApiError) {
       error.value = describeLoginFailure(e)
     } else {
@@ -294,6 +331,16 @@ async function submitCredentials() {
   } finally {
     submitting.value = false
   }
+}
+
+function onTurnstileSuccess(token) {
+  turnstileVisible.value = false
+  submitCredentials(token)
+}
+
+function closeTurnstile() {
+  turnstileVisible.value = false
+  fallbackTicket = ''
 }
 
 async function submitCode() {
@@ -523,6 +570,16 @@ watch(code, (val) => {
         </div>
       </NForm>
     </div>
+
+    <TurnstileFallback
+      ref="turnstileRef"
+      :show="turnstileVisible"
+      action="login"
+      description="极验服务暂时不可用，请完成下方备用验证后继续登录。"
+      @update:show="turnstileVisible = $event"
+      @success="onTurnstileSuccess"
+      @close="closeTurnstile"
+    />
   </div>
 </template>
 

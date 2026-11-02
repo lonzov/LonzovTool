@@ -21,6 +21,7 @@ import {
 import { useFeedbackDrawer } from '../composables/useFeedbackDrawer.js'
 import { confirmDialog } from '../composables/useConfirm.js'
 import { GEETEST_CAPTCHA_ID, GEETEST_SCRIPT_URL } from '../constants/geetest.js'
+import TurnstileFallback from './TurnstileFallback.vue'
 import { prepareFeedbackImage } from '../utils/iconUpload.js'
 
 const FEEDBACK_URL = '/api/v1/feedback'
@@ -121,6 +122,10 @@ const captchaState = ref('loading')
 
 let captchaInstance = null
 let validateResult = null
+/* 极验不可用时服务端签发的降级票据；只用于换 Turnstile，不放行 */
+let fallbackTicket = ''
+const turnstileVisible = ref(false)
+const turnstileRef = ref(null)
 let draftTimer = null
 let draftRestored = false
 let captchaSetupStarted = false
@@ -360,7 +365,7 @@ function fillCurrentPage() {
   formRef.value?.restoreValidation()
 }
 
-function buildPayload() {
+function buildPayload(turnstileToken = '') {
   const data = new FormData()
   data.append('kind', form.kind)
   data.append('title', form.title.trim())
@@ -372,10 +377,15 @@ function buildPayload() {
     // 服务端按 image1 / image2 / image3 顺序落库，命名必须与选择顺序一致
     data.append(`image${index + 1}`, image.file, image.file.name)
   })
-  data.append('lot_number', validateResult?.lot_number || '')
-  data.append('captcha_output', validateResult?.captcha_output || '')
-  data.append('pass_token', validateResult?.pass_token || '')
-  data.append('gen_time', validateResult?.gen_time || '')
+  if (turnstileToken) {
+    data.append('turnstile_token', turnstileToken)
+    data.append('fallback_token', fallbackTicket)
+  } else {
+    data.append('lot_number', validateResult?.lot_number || '')
+    data.append('captcha_output', validateResult?.captcha_output || '')
+    data.append('pass_token', validateResult?.pass_token || '')
+    data.append('gen_time', validateResult?.gen_time || '')
+  }
   return data
 }
 
@@ -425,9 +435,9 @@ async function handleSubmit() {
   }
 }
 
-async function performSubmit() {
+async function performSubmit(turnstileToken = '') {
   if (submitting.value) return
-  if (!validateResult) {
+  if (!validateResult && !turnstileToken) {
     // 没拿到验证结果就发请求，后端只会回 403；在这里拦住并说明原因
     formError.value = '请先完成人机验证再提交'
     return
@@ -436,18 +446,53 @@ async function performSubmit() {
   submitting.value = true
   formError.value = ''
   try {
-    const response = await fetch(FEEDBACK_URL, { method: 'POST', body: buildPayload() })
+    const response = await fetch(FEEDBACK_URL, {
+      method: 'POST',
+      body: buildPayload(turnstileToken),
+    })
     const payload = await response.json().catch(() => null)
 
     if (!response.ok) {
-      formError.value = readableError(payload?.error, response)
-      if (payload?.error?.code === 'captcha_failed') {
+      const error = payload?.error
+      formError.value = readableError(error, response)
+      if (error?.code === 'captcha_fallback_required') {
+        const ticket = error.meta?.fallback_token || ''
+        if (!ticket) {
+          formError.value = '备用验证不可用，请稍后重试'
+          return
+        }
+        fallbackTicket = ticket
+        turnstileVisible.value = true
+        formError.value = ''
+        return
+      }
+      if (error?.code === 'captcha_fallback_invalid') {
+        turnstileVisible.value = false
+        fallbackTicket = ''
         validateResult = null
+        captchaInstance?.reset?.()
+        return
+      }
+      if (error?.code === 'captcha_failed' && error.meta?.provider === 'turnstile') {
+        turnstileRef.value?.reset()
+        turnstileVisible.value = true
+        return
+      }
+      if (error?.code === 'captcha_unavailable') {
+        turnstileVisible.value = false
+        return
+      }
+      if (error?.code === 'captcha_failed') {
+        validateResult = null
+        fallbackTicket = ''
         captchaInstance?.reset?.()
       }
       return
     }
 
+    validateResult = null
+    fallbackTicket = ''
+    turnstileVisible.value = false
     resultId.value = Number(payload?.id) || 0
     clearDraft()
     resetForm()
@@ -458,6 +503,22 @@ async function performSubmit() {
     submitting.value = false
   }
 }
+
+function onTurnstileSuccess(token) {
+  turnstileVisible.value = false
+  performSubmit(token)
+}
+
+function closeTurnstile() {
+  turnstileVisible.value = false
+  fallbackTicket = ''
+}
+
+watch(showFeedbackDrawer, (show) => {
+  if (show) return
+  turnstileVisible.value = false
+  fallbackTicket = ''
+})
 
 function resetForm() {
   Object.assign(form, {
@@ -732,6 +793,16 @@ onBeforeUnmount(() => {
       </div>
     </NDrawerContent>
   </NDrawer>
+
+  <TurnstileFallback
+    ref="turnstileRef"
+    :show="turnstileVisible"
+    action="feedback"
+    description="极验服务暂时不可用，请完成下方备用验证后继续提交反馈。"
+    @update:show="turnstileVisible = $event"
+    @success="onTurnstileSuccess"
+    @close="closeTurnstile"
+  />
 </template>
 
 <style scoped>
