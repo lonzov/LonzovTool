@@ -138,8 +138,8 @@ function grantText(grant) {
 }
 
 function scopePlaceholder(codename) {
-  const target = codename === 'downloads.write' ? '下载页 slug' : '卡片分类'
-  return `${target}，留空表示全部，多个用逗号分隔`
+  if (codename === 'downloads.write') return '下载页 slug，留空表示全部，多个用逗号分隔'
+  return '卡片分类 ID 或唯一分类名；重名分类必须填 ID，留空表示全部'
 }
 
 function isSelf(item) {

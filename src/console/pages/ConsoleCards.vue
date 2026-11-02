@@ -39,7 +39,7 @@ const categories = ref([])
 const loading = ref(false)
 const errorText = ref('')
 const keyword = ref('')
-const categoryFilter = ref('')
+const categoryFilter = ref(null)
 const pendingSlug = ref('')
 /* 列表 / 模拟布局：后者用首页同一个卡片组件渲染，点击进入编辑而非跳转 */
 const viewMode = ref('list')
@@ -54,7 +54,7 @@ const form = ref({
   description: '',
   logo: '',
   link: '',
-  category: null,
+  category_id: null,
   hidden: false,
   openInNewTab: false,
 })
@@ -136,21 +136,14 @@ onBeforeUnmount(() => {
   setPendingLogo(null)
 })
 
-const categoryOptions = computed(() => {
-  const seen = new Set()
-  const options = []
-  for (const item of categories.value) {
-    if (seen.has(item.name)) continue
-    seen.add(item.name)
-    options.push({ label: item.name, value: item.name })
-  }
-  return options
-})
+const categoryOptions = computed(() =>
+  categories.value.map((item) => ({ label: item.name, value: item.id })),
+)
 
 const visibleCards = computed(() => {
   const text = keyword.value.trim().toLowerCase()
   return cards.value.filter((card) => {
-    if (categoryFilter.value && card.category !== categoryFilter.value) return false
+    if (categoryFilter.value && card.category_id !== categoryFilter.value) return false
     if (!text) return true
     return (
       card.title.toLowerCase().includes(text) ||
@@ -412,7 +405,7 @@ function openCreate() {
     description: '',
     logo: '',
     link: '',
-    category: categoryFilter.value || null,
+    category_id: categoryFilter.value || null,
     hidden: false,
     openInNewTab: false,
   }
@@ -426,7 +419,7 @@ function openEdit(card) {
     description: card.description,
     logo: card.logo,
     link: card.link,
-    category: card.category,
+    category_id: card.category_id,
     hidden: card.hidden,
     openInNewTab: card.open_in_new_tab,
   }
@@ -438,13 +431,13 @@ async function save() {
     description: form.value.description.trim(),
     logo: form.value.logo.trim(),
     link: form.value.link.trim(),
-    category: form.value.category,
+    category_id: form.value.category_id,
     hidden: form.value.hidden,
     open_in_new_tab: form.value.openInNewTab,
   }
   titleError.value = payload.title ? '' : '标题不能为空'
   linkError.value = payload.link ? '' : '链接不能为空'
-  categoryError.value = payload.category ? '' : '请选择分类'
+  categoryError.value = payload.category_id ? '' : '请选择分类'
   if (titleError.value || linkError.value || categoryError.value) return
   if (!(await ensureTrust())) return
 
@@ -779,7 +772,7 @@ async function remove(card) {
             :validation-status="categoryError ? 'error' : undefined"
             :feedback="categoryError || undefined"
           >
-            <NSelect v-model:value="form.category" :options="categoryOptions" placeholder="选择分类" />
+            <NSelect v-model:value="form.category_id" :options="categoryOptions" placeholder="选择分类" />
           </NFormItem>
           <div class="field--wide settings-block">
             <div class="setting-row">
