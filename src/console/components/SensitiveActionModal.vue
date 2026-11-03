@@ -75,8 +75,19 @@ async function loadOptions() {
     const payload = await consoleFetch(OPTIONS_URL)
     methods.value = Array.isArray(payload?.methods) ? payload.methods : []
     maskedEmail.value = payload?.masked_email || ''
-    method.value = methods.value[0] || ''
-    if (method.value === 'totp') nextTick(() => otpRef.value?.focus())
+    const emailCodeSent =
+      payload?.email_code_sent === true && methods.value.includes('email')
+    // 关掉弹窗再打开时，服务端会告诉这个邮箱是否已有待验证码；
+    // 有就直接回到邮箱验证码输入，并恢复冷却，不要求用户重发一封。
+    method.value = emailCodeSent ? 'email' : methods.value[0] || ''
+    codeSent.value = emailCodeSent
+    if (emailCodeSent) {
+      const wait = Number(payload?.email_resend_after) || 0
+      if (wait > 0) startCountdown(wait)
+      nextTick(() => otpRef.value?.focus())
+    } else if (method.value === 'totp') {
+      nextTick(() => otpRef.value?.focus())
+    }
   } catch (e) {
     error.value = e?.message || '读取验证方式失败，请稍后重试'
   }

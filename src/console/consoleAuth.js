@@ -121,6 +121,8 @@ async function login(email, password, captcha = null, fallback = null) {
       maskedEmail: typeof payload.masked_email === 'string' ? payload.masked_email : '',
       // 可用方式由服务端列出，具体选哪个在登录页完成
       methods: Array.isArray(payload.methods) ? payload.methods.filter((m) => typeof m === 'string') : [],
+      // 新挑战还没发信，但同一邮箱可能刚在另一台设备发过；用它恢复重发倒计时
+      emailResendAfter: Number(payload.email_resend_after) || 0,
     }
   }
 

@@ -120,6 +120,9 @@ const codeSentText = computed(() => {
   if (method.value === 'totp') return '打开身份验证器，输入当前显示的 6 位动态码'
   if (method.value === 'recovery') return '输入一枚恢复码（形如 abc12-def34）'
   if (method.value === 'email') {
+    if (!codeSent.value && resendSeconds.value > 0) {
+      return `发送验证码过于频繁，请 ${formatDuration(resendSeconds.value)} 后重试`
+    }
     if (!codeSent.value) return maskedEmail.value ? `验证码将发送至 ${maskedEmail.value}` : '验证码将发送至你的邮箱'
     return maskedEmail.value ? `验证码已发送至 ${maskedEmail.value}` : '验证码已发送至你的邮箱'
   }
@@ -190,14 +193,18 @@ function enterCodeStep(result) {
   codeSent.value = false
   // 只有一种方式时没有"选择"可言；两种都有就等用户点
   method.value = availableMethods.value.length === 1 ? availableMethods.value[0] : ''
-  if (method.value === 'email') sendCode()
   code.value = ''
   codeCheck.value = { status: '', message: '' }
   // 免验证是这台设备的一次性授权选择，每次进第二步都从「不勾选」开始
   rememberDevice.value = false
   error.value = ''
-  // 验证码刚发出去，重发按钮先按住一个冷却窗口
-  startResend()
+
+  // 服务端会把该邮箱仍在生效的发信冷却带过来；先恢复倒计时，避免进入验证码页
+  // 就立刻撞一次 429。没有冷却且只有邮箱一种方式时才自动发信。
+  const wait = Number(result.emailResendAfter) || 0
+  if (wait > 0) startResend(wait)
+  else resetResend()
+  if (method.value === 'email' && wait === 0) sendCode()
 }
 
 function backToCredentials(text) {
@@ -455,7 +462,15 @@ watch(code, (val) => {
                 >
                   <NIcon :component="ArrowClockwise24Regular" :size="13" />
                   <span>
-                    {{ sendingCode ? '发送中…' : resendSeconds > 0 ? `重新发送 ${resendSeconds}` : '发送验证码' }}
+                    {{
+                      sendingCode
+                        ? '发送中…'
+                        : resendSeconds > 0
+                          ? `${resendSeconds}s 后重试`
+                          : codeSent
+                            ? '重新发送'
+                            : '发送验证码'
+                    }}
                   </span>
                 </button>
               </div>
