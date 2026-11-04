@@ -1,7 +1,8 @@
 <script setup>
 import { onBeforeUnmount, ref, watch } from 'vue'
-import { NIcon, NSelect } from 'naive-ui'
+import { NSelect } from 'naive-ui'
 import { Add24Regular, Dismiss24Regular } from '@vicons/fluent'
+import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import { consoleFetch } from '../consoleRequest.js'
 
@@ -188,22 +189,23 @@ const actions = [
           :show-arrow="false"
           @search="scheduleSearch(index, $event)"
         />
-        <button
+        <AppButton
           class="rule-remove"
-          type="button"
-          aria-label="删除这条规则"
+          variant="text"
+          size="xs"
+          shape="rect"
+          icon-only
+          label="删除这条规则"
+          :icon="Dismiss24Regular"
           :disabled="draft.length === 1"
           @click="removeRule(index)"
-        >
-          <NIcon :component="Dismiss24Regular" :size="14" />
-        </button>
+        />
       </div>
     </div>
 
-    <button class="rule-add" type="button" @click="addRule">
-      <NIcon :component="Add24Regular" :size="14" />
+    <AppButton class="rule-add" variant="text" size="sm" :icon="Add24Regular" @click="addRule">
       添加规则
-    </button>
+    </AppButton>
 
     <p class="rule-hint">
       多条规则同时生效；下拉只列出最常出现的 7 个值，输入关键词可缩小范围。
@@ -225,34 +227,16 @@ const actions = [
   gap: 8px;
 }
 
-.rule-remove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease;
-}
-
 .rule-remove:hover:not(:disabled) {
-  background: var(--accent);
   color: var(--destructive);
 }
 
-.rule-remove:disabled {
-  opacity: 0.4;
-  cursor: default;
+.rule-add :deep(.app-btn__content) {
+  gap: 4px;
 }
 
 .rule-add {
-  display: inline-flex;
-  align-items: center;
+  height: auto;
   gap: 4px;
   margin-top: 12px;
   padding: 4px 10px;
@@ -262,8 +246,6 @@ const actions = [
   color: var(--muted-foreground);
   font-family: inherit;
   font-size: 0.78rem;
-  cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .rule-add:hover {

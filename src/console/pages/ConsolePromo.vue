@@ -8,6 +8,7 @@ import {
   DataBarVertical24Regular,
   Edit24Regular,
 } from '@vicons/fluent'
+import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { consoleFetch } from '../consoleRequest.js'
@@ -239,26 +240,34 @@ async function save() {
           </div>
 
           <div class="promo-actions">
-            <a
+            <AppButton
               v-if="item.event_id"
-              class="icon-btn"
+              variant="outline"
+              size="xs"
+              icon-only
+              label="查看埋点数据"
+              :icon="DataBarVertical24Regular"
               :href="analyticsUrl(item)"
               target="_blank"
               rel="noopener noreferrer"
-              title="查看该埋点近 30 天的数据"
-            >
-              <NIcon :component="DataBarVertical24Regular" :size="14" />
-            </a>
-            <span
+            />
+            <AppButton
               v-else
-              class="icon-btn icon-btn--disabled"
-              title="先在编辑里填写埋点标识，才能查看数据"
-            >
-              <NIcon :component="DataBarVertical24Regular" :size="14" />
-            </span>
-            <button class="icon-btn" type="button" title="编辑" @click="openEdit(item)">
-              <NIcon :component="Edit24Regular" :size="14" />
-            </button>
+              variant="outline"
+              size="xs"
+              icon-only
+              label="填写埋点标识后可查看数据"
+              :icon="DataBarVertical24Regular"
+              disabled
+            />
+            <AppButton
+              variant="outline"
+              size="xs"
+              icon-only
+              label="编辑"
+              :icon="Edit24Regular"
+              @click="openEdit(item)"
+            />
           </div>
         </div>
       </div>
@@ -456,34 +465,6 @@ async function save() {
   display: flex;
   align-items: center;
   gap: 2px;
-}
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-
-.icon-btn:hover {
-  color: var(--foreground);
-}
-
-.icon-btn--disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.icon-btn--disabled:hover {
-  color: var(--muted-foreground);
 }
 
 /* ===== 编辑器 ===== */

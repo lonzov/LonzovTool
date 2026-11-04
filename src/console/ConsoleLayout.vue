@@ -4,6 +4,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { NIcon, useMessage } from 'naive-ui'
 import { Warning24Regular } from '@vicons/fluent'
 import { useSidebarSectionProvider } from '../composables/useSidebarSection.js'
+import AppButton from '../components/ui/AppButton.vue'
 import ConsolePageHeader from './components/ConsolePageHeader.vue'
 import SensitiveActionModal from './components/SensitiveActionModal.vue'
 import { findConsoleNav, visibleConsoleNav } from './consoleNav.js'
@@ -94,9 +95,7 @@ useSidebarSectionProvider('console', () => ({
     <div v-if="mustChangePassword" class="password-banner" role="status">
       <NIcon :component="Warning24Regular" :size="15" class="password-banner-icon" />
       <span class="password-banner-text">当前是临时密码，请先修改密码</span>
-      <RouterLink class="app-btn app-btn--outline app-btn--sm" to="/console/account">
-        去修改
-      </RouterLink>
+      <AppButton variant="outline" size="sm" to="/console/account">去修改</AppButton>
     </div>
 
     <ConsolePageHeader
@@ -114,23 +113,16 @@ useSidebarSectionProvider('console', () => ({
           <span class="account-chip-name">{{ account.name }}</span>
           <span v-if="roleLabel" class="account-chip-role">{{ roleLabel }}</span>
         </RouterLink>
-        <button class="app-btn app-btn--text app-btn--sm" type="button" @click="handleLogout">
-          退出
-        </button>
+        <AppButton variant="text" size="sm" @click="handleLogout">退出</AppButton>
       </template>
     </ConsolePageHeader>
 
     <p v-if="!permissionsReady && checking" class="console-gate">正在校验会话…</p>
     <div v-else-if="!permissionsReady" class="console-gate">
       <p class="console-gate-text">{{ sessionError || '会话校验未完成' }}</p>
-      <button
-        class="app-btn app-btn--outline app-btn--sm"
-        type="button"
-        :disabled="checking"
-        @click="checkSession"
-      >
+      <AppButton variant="outline" size="sm" :disabled="checking" @click="checkSession">
         重试
-      </button>
+      </AppButton>
     </div>
     <p v-else-if="denied" class="console-gate">没有访问权限</p>
     <RouterView v-else />

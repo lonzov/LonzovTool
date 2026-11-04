@@ -8,6 +8,7 @@ import {
   History24Regular,
   Search16Regular,
 } from '@vicons/fluent'
+import AppButton from '../../components/ui/AppButton.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { consoleFetch } from '../consoleRequest.js'
 
@@ -169,15 +170,15 @@ onMounted(load)
         </template>
       </NInput>
 
-      <button
-        class="app-btn app-btn--outline app-btn--sm"
-        type="button"
+      <AppButton
+        variant="outline"
+        size="sm"
+        :icon="ArrowClockwise24Regular"
         :disabled="loading"
         @click="load"
       >
-        <NIcon :component="ArrowClockwise24Regular" :size="14" />
-        <span>刷新</span>
-      </button>
+        刷新
+      </AppButton>
     </div>
 
     <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
@@ -216,16 +217,16 @@ onMounted(load)
         </div>
 
         <div class="log-footer">
-          <button
+          <AppButton
             v-if="hasMore"
-            class="app-btn app-btn--outline app-btn--sm"
-            type="button"
+            variant="outline"
+            size="sm"
+            :icon="ChevronDown24Regular"
             :disabled="loadingMore"
             @click="loadMore"
           >
-            <NIcon :component="ChevronDown24Regular" :size="14" />
-            <span>{{ loadingMore ? '加载中…' : '加载更多' }}</span>
-          </button>
+            {{ loadingMore ? '加载中…' : '加载更多' }}
+          </AppButton>
           <span v-else class="log-end">已经到底了</span>
         </div>
       </div>

@@ -2,6 +2,7 @@
 import { h, ref, computed, toRef } from 'vue'
 import { NModal } from 'naive-ui'
 import { useHeightTransition } from '../../composables/useHeightTransition.js'
+import AppButton from './AppButton.vue'
 
 /**
  * 全站统一的模态框外壳。
@@ -153,17 +154,25 @@ const modalStyle = computed(() => ({
     <template #footer>
       <slot name="footer">
         <div v-if="actions" class="app-modal-actions">
-          <button
+          <AppButton
             v-for="(action, i) in actions"
             :key="i"
-            type="button"
-            class="app-btn"
-            :class="`app-btn--${action.variant || 'outline'}`"
-            :disabled="action.disabled"
+            :variant="
+              action.variant === 'fill' || action.variant === 'danger'
+                ? 'solid'
+                : action.variant || 'outline'
+            "
+            :tone="action.variant === 'danger' || action.tone === 'danger' ? 'danger' : 'default'"
+            :size="action.size || 'md'"
+            :icon="action.icon || null"
+            :icon-only="!!action.iconOnly"
+            :label="action.label || (action.iconOnly ? action.text : '')"
+            :loading="!!action.loading"
+            :disabled="!!action.disabled"
             @click="action.onClick"
           >
             {{ action.text }}
-          </button>
+          </AppButton>
         </div>
       </slot>
     </template>

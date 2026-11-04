@@ -125,6 +125,27 @@ const staticTokens = {
   // 胶囊与圆形：半径必然达到短边一半，平滑曲率在此会破形，用法见 main.css 的 .corner-round
   'radius-full': '9999px',
 
+  // 通用按钮的尺寸与形状。页面不再写死高度/内边距，换主题时只改这一组。
+  'button-height-xs': '26px',
+  'button-height-sm': '30px',
+  'button-height-md': '34px',
+  'button-height-lg': '38px',
+  'button-padding-x-xs': '10px',
+  'button-padding-x-sm': '14px',
+  'button-padding-x-md': '16px',
+  'button-padding-x-lg': '24px',
+  'button-font-size-xs': '12px',
+  'button-font-size-sm': '12px',
+  'button-font-size-md': '14px',
+  'button-font-size-lg': '15px',
+  'button-icon-size-xs': '14px',
+  'button-icon-size-sm': '14px',
+  'button-icon-size-md': '16px',
+  'button-icon-size-lg': '18px',
+  'button-gap': '6px',
+  'button-radius': 'var(--radius-full)',
+  'button-icon-radius': 'var(--radius-sm)',
+
   // 抽屉与弹窗遮罩：两套主题下都应为黑，不随主题变化。
   // mask-blur 是叠在 NModal 自带遮罩之上的毛玻璃层，比 mask 浅。
   mask: alpha(BLACK, 0.4),

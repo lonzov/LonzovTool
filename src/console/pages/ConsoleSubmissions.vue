@@ -9,6 +9,7 @@ import {
   DismissCircle24Regular,
   Open24Regular,
 } from '@vicons/fluent'
+import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
@@ -174,10 +175,15 @@ onMounted(async () => {
           {{ option.label }}
         </button>
       </div>
-      <button class="refresh-btn" type="button" :disabled="loading" @click="load()">
-        <NIcon :component="ArrowClockwise24Regular" :size="14" />
+      <AppButton
+        variant="outline"
+        size="sm"
+        :icon="ArrowClockwise24Regular"
+        :disabled="loading"
+        @click="load()"
+      >
         刷新
-      </button>
+      </AppButton>
     </div>
 
     <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
@@ -237,33 +243,37 @@ onMounted(async () => {
               maxlength="200"
               placeholder="备注（可选，写进审核记录）"
             />
-            <button
-              class="app-btn app-btn--fill app-btn--sm action-btn"
-              type="button"
+            <AppButton
+              class="action-btn"
+              variant="solid"
+              size="sm"
+              :icon="CheckmarkCircle24Regular"
               :disabled="pendingId === item.id"
               @click="review(item, 'approved')"
             >
-              <NIcon :component="CheckmarkCircle24Regular" :size="14" />
               通过
-            </button>
-            <button
-              class="app-btn app-btn--outline app-btn--sm action-btn"
-              type="button"
+            </AppButton>
+            <AppButton
+              class="action-btn"
+              variant="outline"
+              size="sm"
+              :icon="DismissCircle24Regular"
               :disabled="pendingId === item.id"
               @click="review(item, 'rejected')"
             >
-              <NIcon :component="DismissCircle24Regular" :size="14" />
               拒绝
-            </button>
-            <button
-              class="app-btn app-btn--danger app-btn--sm action-btn"
-              type="button"
+            </AppButton>
+            <AppButton
+              class="action-btn"
+              variant="solid"
+              tone="danger"
+              size="sm"
+              :icon="Delete24Regular"
               :disabled="pendingId === item.id"
               @click="remove(item)"
             >
-              <NIcon :component="Delete24Regular" :size="14" />
               删除
-            </button>
+            </AppButton>
           </div>
         </article>
       </div>
@@ -326,31 +336,6 @@ onMounted(async () => {
   color: var(--foreground);
   border-color: var(--border-strong);
   background: var(--accent);
-}
-
-.refresh-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  background: transparent;
-  color: var(--muted-foreground);
-  font-family: inherit;
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-
-.refresh-btn:hover:not(:disabled) {
-  color: var(--foreground);
-}
-
-.refresh-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
 }
 
 .submission-list {
@@ -519,7 +504,6 @@ onMounted(async () => {
 
 /* 三个动作按钮同高同宽（30px，与输入框一致），备注占剩余宽度 */
 .action-btn {
-  gap: 6px;
   flex-shrink: 0;
 }
 

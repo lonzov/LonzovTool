@@ -12,6 +12,7 @@ import {
   ReOrderDotsVertical16Regular,
 } from '@vicons/fluent'
 import { createConsoleSortable } from '../sortable.js'
+import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
@@ -236,19 +237,18 @@ onBeforeUnmount(() => {
   <div class="console-notices">
     <div class="notices-toolbar">
       <div class="toolbar-actions">
-        <button
-          class="app-btn app-btn--outline app-btn--sm"
-          type="button"
+        <AppButton
+          variant="outline"
+          size="sm"
+          :icon="ArrowClockwise24Regular"
           :disabled="loading"
           @click="load"
         >
-          <NIcon :component="ArrowClockwise24Regular" :size="14" />
-          <span class="btn-label">刷新</span>
-        </button>
-        <button class="app-btn app-btn--fill app-btn--sm" type="button" @click="openCreate">
-          <NIcon :component="Add24Regular" :size="14" />
-          <span class="btn-label">新建公告</span>
-        </button>
+          刷新
+        </AppButton>
+        <AppButton variant="solid" size="sm" :icon="Add24Regular" @click="openCreate">
+          新建公告
+        </AppButton>
       </div>
     </div>
 
@@ -293,18 +293,24 @@ onBeforeUnmount(() => {
             </div>
             <span class="cell-meta">{{ formatTime(item.date) }}</span>
             <span class="col-actions">
-              <button class="icon-btn" type="button" title="编辑" @click="openEdit(item)">
-                <NIcon :component="Edit24Regular" :size="14" />
-              </button>
-              <button
-                class="icon-btn icon-btn--danger"
-                type="button"
-                title="删除"
+              <AppButton
+                variant="outline"
+                size="xs"
+                icon-only
+                label="编辑"
+                :icon="Edit24Regular"
+                @click="openEdit(item)"
+              />
+              <AppButton
+                variant="outline"
+                tone="danger"
+                size="xs"
+                icon-only
+                label="删除"
+                :icon="Delete24Regular"
                 :disabled="pendingId === item.notice_id"
                 @click="remove(item)"
-              >
-                <NIcon :component="Delete24Regular" :size="14" />
-              </button>
+              />
             </span>
           </div>
         </div>
@@ -391,10 +397,6 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.toolbar-actions .app-btn {
-  gap: 6px;
 }
 
 .notice-table {
@@ -506,35 +508,6 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   justify-content: flex-end;
-}
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-
-.icon-btn:hover:not(:disabled) {
-  color: var(--foreground);
-}
-
-.icon-btn--danger:hover:not(:disabled) {
-  color: var(--destructive);
-  border-color: var(--destructive);
-}
-
-.icon-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
 }
 
 .inline-hint {

@@ -26,6 +26,7 @@ import {
   loadDonateRecords,
 } from '../../composables/useSiteData.js'
 import { useStats } from '../../composables/useStats.js'
+import AppButton from '../../components/ui/AppButton.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import StatCard from '../components/StatCard.vue'
 import TodoDrawer from '../components/TodoDrawer.vue'
@@ -563,17 +564,14 @@ onBeforeUnmount(() => {
           >
             自动滚动
           </button>
-          <button
-            class="log-icon-btn"
-            type="button"
-            :title="fullscreen ? '退出全屏（Esc）' : '全屏查看'"
+          <AppButton
+            variant="text"
+            size="xs"
+            icon-only
+            :label="fullscreen ? '退出全屏' : '全屏查看'"
+            :icon="fullscreen ? FullScreenMinimize24Regular : FullScreenMaximize24Regular"
             @click="fullscreen = !fullscreen"
-          >
-            <NIcon
-              :component="fullscreen ? FullScreenMinimize24Regular : FullScreenMaximize24Regular"
-              :size="14"
-            />
-          </button>
+          />
         </div>
       </template>
 
@@ -1119,25 +1117,6 @@ onBeforeUnmount(() => {
   color: var(--foreground);
   border-color: var(--border-strong);
   background: var(--accent);
-}
-
-.log-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-
-.log-icon-btn:hover {
-  color: var(--foreground);
 }
 
 .log-box {

@@ -1,8 +1,9 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NCheckbox, NForm, NIcon } from 'naive-ui'
+import { NCheckbox, NForm } from 'naive-ui'
 import { ArrowClockwise24Regular, ChevronLeft24Regular, Eye24Regular, EyeOff24Regular } from '@vicons/fluent'
+import AppButton from '../../components/ui/AppButton.vue'
 import InputOtp from '../../components/ui/InputOtp.vue'
 import { ConsoleApiError, useConsoleAuth } from '../consoleAuth.js'
 import { useResendCountdown } from '../useResendCountdown.js'
@@ -411,10 +412,16 @@ watch(code, (val) => {
 <template>
   <div class="console-login">
     <div class="login-stack">
-      <button v-if="isCodeStep" class="back-link" type="button" @click="backToCredentials('')">
-        <NIcon :component="ChevronLeft24Regular" :size="14" />
-        <span>返回上一步</span>
-      </button>
+      <AppButton
+        v-if="isCodeStep"
+        class="back-link"
+        variant="text"
+        size="xs"
+        :icon="ChevronLeft24Regular"
+        @click="backToCredentials('')"
+      >
+        返回上一步
+      </AppButton>
 
       <NForm class="login-card" label-placement="top" @submit.prevent="handleSubmit">
         <div class="card-header">
@@ -454,25 +461,24 @@ watch(code, (val) => {
             <div v-else-if="method === 'email'" class="field">
               <div class="code-label-row">
                 <span class="field-label">输入验证码</span>
-                <button
-                  class="app-btn app-btn--outline app-btn--rect resend-btn"
-                  type="button"
+                <AppButton
+                  variant="outline"
+                  size="xs"
+                  shape="rect"
+                  :icon="ArrowClockwise24Regular"
                   :disabled="!canSendCode"
                   @click="sendCode"
                 >
-                  <NIcon :component="ArrowClockwise24Regular" :size="13" />
-                  <span>
-                    {{
-                      sendingCode
-                        ? '发送中…'
-                        : resendSeconds > 0
-                          ? `${resendSeconds}s 后重试`
-                          : codeSent
-                            ? '重新发送'
-                            : '发送验证码'
-                    }}
-                  </span>
-                </button>
+                  {{
+                    sendingCode
+                      ? '发送中…'
+                      : resendSeconds > 0
+                        ? `${resendSeconds}s 后重试`
+                        : codeSent
+                          ? '重新发送'
+                          : '发送验证码'
+                  }}
+                </AppButton>
               </div>
               <InputOtp
                 ref="otpRef"
@@ -555,14 +561,15 @@ watch(code, (val) => {
                   :disabled="submitting"
                   @keyup.enter="handleSubmit"
                 />
-                <button
+                <AppButton
                   class="field-action"
-                  type="button"
-                  :aria-label="showPassword ? '隐藏密码' : '显示密码'"
+                  variant="text"
+                  size="xs"
+                  icon-only
+                  :label="showPassword ? '隐藏密码' : '显示密码'"
+                  :icon="showPassword ? EyeOff24Regular : Eye24Regular"
                   @click="showPassword = !showPassword"
-                >
-                  <NIcon :component="showPassword ? EyeOff24Regular : Eye24Regular" :size="16" />
-                </button>
+                />
               </div>
             </div>
           </template>
@@ -572,13 +579,15 @@ watch(code, (val) => {
         </div>
 
         <div class="card-footer">
-          <button
-            class="login-submit"
+          <AppButton
             type="submit"
+            variant="solid"
+            size="lg"
+            block
             :disabled="isCodeStep ? !canSubmitCode : !canSubmit"
           >
             {{ submitText }}
-          </button>
+          </AppButton>
           <p v-if="isCodeStep && method === 'email'" class="card-note">
             没收到？检查垃圾邮件，或稍等片刻后重新发送。
           </p>
@@ -611,23 +620,9 @@ watch(code, (val) => {
 }
 
 .back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
   margin-bottom: 10px;
-  padding: 0;
-  border: none;
-  background: transparent;
+  margin-left: calc(var(--button-padding-x-xs) * -1);
   color: var(--muted-foreground);
-  font-size: 0.78rem;
-  font-family: inherit;
-  line-height: 1.4;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.back-link:hover {
-  color: var(--foreground);
 }
 
 .login-card {
@@ -754,26 +749,6 @@ watch(code, (val) => {
   gap: 12px;
 }
 
-/* 重发按钮与「输入验证码」同一行：高度对齐文字行高（22px），行内密度才像 shadcn 那样紧凑 */
-.resend-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  height: 22px;
-  padding: 0 8px;
-  /* 圆角取 xs：sm 在 squircle 缩放后会接近胶囊 */
-  border-radius: var(--radius-xs);
-  border-color: var(--border-strong);
-  background: var(--muted);
-  color: var(--foreground);
-  font-size: 0.75rem;
-  line-height: 1;
-}
-
-.resend-btn:hover:not(:disabled) {
-  background: var(--accent);
-}
-
 .field-error {
   margin: 0;
   color: var(--destructive);
@@ -830,18 +805,9 @@ watch(code, (val) => {
 .field-action {
   position: absolute;
   right: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 24px;
   height: 24px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
   color: var(--subtle-foreground);
-  cursor: pointer;
-  transition: color 0.2s ease;
 }
 
 .field-action:hover {
@@ -880,37 +846,13 @@ watch(code, (val) => {
   transition: color 0.4s ease;
 }
 
-.login-submit {
-  width: 100%;
-  height: 36px;
-  border: none;
-  border-radius: var(--radius-md);
-  background: var(--primary);
-  color: var(--primary-foreground);
-  font-size: 0.86rem;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-
-.login-submit:hover:not(:disabled) {
-  opacity: 0.88;
-}
-
-.login-submit:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
 /* 紧凑是为桌面端的观感服务，触屏上把控件放大回可点尺寸 */
 @media (max-width: 560px) {
   .login-stack {
     margin-top: 2vh;
   }
 
-  .field-input,
-  .login-submit {
+  .field-input {
     height: 36px;
   }
 }

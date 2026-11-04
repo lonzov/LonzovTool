@@ -1,7 +1,8 @@
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
-import { NIcon, NInput } from 'naive-ui'
+import { NInput } from 'naive-ui'
 import { ArrowClockwise24Regular } from '@vicons/fluent'
+import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import InputOtp from '../../components/ui/InputOtp.vue'
 import { consoleFetch } from '../../console/consoleRequest.js'
@@ -223,15 +224,16 @@ const actions = computed(() => [
           :disabled="busy"
           @keyup.enter="submit"
         />
-        <button
-          class="app-btn app-btn--outline app-btn--rect send-btn"
-          type="button"
+        <AppButton
+          class="send-btn"
+          variant="outline"
+          shape="rect"
+          :icon="ArrowClockwise24Regular"
           :disabled="sending || remaining > 0"
           @click="sendCode"
         >
-          <NIcon :component="ArrowClockwise24Regular" :size="13" />
           {{ sending ? '发送中…' : remaining > 0 ? `${remaining}s` : codeSent ? '重新发送' : '发送' }}
-        </button>
+        </AppButton>
       </div>
       <p class="field-hint">
         {{ codeSent ? `验证码已发送至 ${maskedEmail || '你的邮箱'}` : `验证码将发送至 ${maskedEmail || '你的邮箱'}` }}
@@ -301,10 +303,6 @@ const actions = computed(() => [
 
 .send-btn {
   flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  height: 34px;
 }
 
 .field-label {

@@ -10,6 +10,7 @@
     index.js: 主题模块统一出口
   components:
     ui:
+      AppButton.vue: 通用按钮组件，variant/tone/size/shape/icon/loading/disabled/countdown-progress 统一由主题 token 驱动，支持 icon-only 与 RouterLink
       AppModal.vue: 全站统一的模态框外壳（宽度/紧凑高度/毛玻璃遮罩/页脚按钮），事件一律透传
       InputOtp.vue: 分格验证码输入（单隐藏输入 + 装饰槽位），对齐 shadcn 的 InputOTP 观感
     PromoCarousel.vue: 首页推广位轮播组件，滑片数据取自 promoData（接口下发，快照兜底），滑片支持站内外链接

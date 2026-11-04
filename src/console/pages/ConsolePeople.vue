@@ -13,6 +13,7 @@ import {
   ReOrderDotsVertical16Regular,
 } from '@vicons/fluent'
 import { createConsoleSortable } from '../sortable.js'
+import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ImageUploadField from '../components/ImageUploadField.vue'
 import { uploadMediaImage } from '../mediaUpload.js'
@@ -359,20 +360,18 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="toolbar-actions">
-        <button
-          class="app-btn app-btn--outline app-btn--sm refresh-btn"
-          type="button"
+        <AppButton
+          variant="outline"
+          size="sm"
+          :icon="ArrowClockwise24Regular"
           :disabled="loading"
-          aria-label="刷新"
           @click="load"
         >
-          <NIcon :component="ArrowClockwise24Regular" :size="14" />
-          <span class="btn-label">刷新</span>
-        </button>
-        <button class="app-btn app-btn--fill app-btn--sm" type="button" @click="openCreate">
-          <NIcon :component="Add24Regular" :size="14" />
-          <span class="btn-label">新增</span>
-        </button>
+          刷新
+        </AppButton>
+        <AppButton variant="solid" size="sm" :icon="Add24Regular" @click="openCreate">
+          新增
+        </AppButton>
       </div>
     </div>
 
@@ -459,18 +458,24 @@ onBeforeUnmount(() => {
             </template>
 
             <span class="col-actions">
-              <button class="icon-btn" type="button" title="编辑" @click="openEdit(row)">
-                <NIcon :component="Edit24Regular" :size="14" />
-              </button>
-              <button
-                class="icon-btn icon-btn--danger"
-                type="button"
-                title="删除"
+              <AppButton
+                variant="outline"
+                size="xs"
+                icon-only
+                label="编辑"
+                :icon="Edit24Regular"
+                @click="openEdit(row)"
+              />
+              <AppButton
+                variant="outline"
+                tone="danger"
+                size="xs"
+                icon-only
+                label="删除"
+                :icon="Delete24Regular"
                 :disabled="pendingId === row.id"
                 @click="remove(row)"
-              >
-                <NIcon :component="Delete24Regular" :size="14" />
-              </button>
+              />
             </span>
           </div>
         </div>
@@ -813,36 +818,6 @@ a.person-sub:hover {
   gap: 6px;
 }
 
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  background: transparent;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.icon-btn:hover:not(:disabled) {
-  background: var(--accent);
-  color: var(--foreground);
-}
-
-.icon-btn--danger:hover:not(:disabled) {
-  color: var(--destructive);
-}
-
-.icon-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
 .avatar-field {
   width: 100%;
 }
@@ -884,8 +859,7 @@ a.person-sub:hover {
     padding: 0 10px;
   }
 
-  .tab-label,
-  .refresh-btn .btn-label {
+  .tab-label {
     display: none;
   }
 

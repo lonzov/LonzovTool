@@ -146,40 +146,110 @@ button {
 }
 
 /* ===== 通用按钮 =====
-   fill（主操作，反色块）/ outline（次操作）/ text（弱操作）/ danger（危险），
-   外加 --sm 小一号。模态框页脚与页面级按钮共用这一套，避免各写一份。 */
+   AppButton 的样式底层。fill（主操作）/ outline（次操作）/ text（弱操作）/ danger（危险），
+   尺寸、内边距、图标大小全部走 --button-* token，页面只选语义。 */
 .app-btn {
-  height: 34px;
-  padding: 0 20px;
-  border-radius: var(--radius-full);
+  --app-btn-height: var(--button-height-md);
+  --app-btn-padding-x: var(--button-padding-x-md);
+  --app-btn-font-size: var(--button-font-size-md);
+  --app-btn-icon-size: var(--button-icon-size-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--button-gap);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  height: var(--app-btn-height);
+  padding: 0 var(--app-btn-padding-x);
+  border: none;
+  border-radius: var(--button-radius);
   corner-shape: round;
-  font-size: 14px;
-  font-weight: 500;
+  background: transparent;
+  color: var(--foreground);
   font-family: inherit;
+  font-size: var(--app-btn-font-size);
+  font-weight: 500;
+  line-height: 1;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
   white-space: nowrap;
   /* 同一个按钮样式也会用在 RouterLink 上，必须显式去掉链接下划线 */
   text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  border: none;
 }
 
-.app-btn:disabled {
-  opacity: 0.4;
+.app-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.app-btn:disabled,
+.app-btn[aria-busy='true'],
+.app-btn[aria-disabled='true'] {
+  opacity: 0.5;
   cursor: default;
 }
 
+.app-btn--xs {
+  --app-btn-height: var(--button-height-xs);
+  --app-btn-padding-x: var(--button-padding-x-xs);
+  --app-btn-font-size: var(--button-font-size-xs);
+  --app-btn-icon-size: var(--button-icon-size-xs);
+}
+
 .app-btn--sm {
-  height: 30px;
-  padding: 0 14px;
-  font-size: 12px;
+  --app-btn-height: var(--button-height-sm);
+  --app-btn-padding-x: var(--button-padding-x-sm);
+  --app-btn-font-size: var(--button-font-size-sm);
+  --app-btn-icon-size: var(--button-icon-size-sm);
+}
+
+.app-btn--lg {
+  --app-btn-height: var(--button-height-lg);
+  --app-btn-padding-x: var(--button-padding-x-lg);
+  --app-btn-font-size: var(--button-font-size-lg);
+  --app-btn-icon-size: var(--button-icon-size-lg);
+}
+
+.app-btn--icon-only {
+  width: var(--app-btn-height);
+  padding: 0;
+}
+
+.app-btn--block {
+  width: 100%;
+}
+
+.app-btn__content {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--button-gap);
+}
+
+.app-btn__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--app-btn-icon-size);
+  line-height: 0;
+}
+
+.app-btn__label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-btn--icon-end .app-btn__content {
+  flex-direction: row-reverse;
 }
 
 .app-btn--fill {
   background: var(--primary);
   color: var(--primary-foreground);
+  transition: opacity 0.2s ease;
 }
 
 .app-btn--fill:hover:not(:disabled) {
@@ -208,6 +278,20 @@ button {
   corner-shape: round;
 }
 
+.app-btn--icon-only.app-btn--rect {
+  border-radius: var(--button-icon-radius);
+}
+
+.app-btn--pill {
+  border-radius: var(--radius-full);
+  corner-shape: round;
+}
+
+.app-btn--circle {
+  border-radius: var(--radius-full);
+  corner-shape: round;
+}
+
 .app-btn--text {
   background: transparent;
   color: var(--foreground);
@@ -220,10 +304,142 @@ button {
 .app-btn--danger {
   background: var(--destructive);
   color: var(--destructive-foreground);
+  transition: opacity 0.2s ease;
 }
 
 .app-btn--danger:hover:not(:disabled) {
   opacity: 0.85;
+}
+
+.app-btn--danger-outline {
+  border: 1px solid var(--destructive);
+  background: var(--card);
+  color: var(--destructive);
+}
+
+.app-btn--danger-outline:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+}
+
+.app-btn--danger-text {
+  background: transparent;
+  color: var(--destructive);
+}
+
+.app-btn--danger-text:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
+}
+
+/* 倒计时：底层保持原变体的 50% 透明度，进度层从左往右铺开可点击色，文字用裁切层同步变色 */
+.app-btn--counting {
+  --app-btn-progress-bg: var(--primary);
+  --app-btn-progress-fg: var(--primary-foreground);
+  --app-btn-base-bg: var(--primary);
+  --app-btn-base-border: transparent;
+  position: relative;
+  overflow: hidden;
+  border-color: transparent;
+  background: transparent;
+}
+
+.app-btn--counting.app-btn--outline {
+  --app-btn-base-bg: var(--card);
+  --app-btn-base-border: var(--border);
+}
+
+.app-btn--counting.app-btn--text {
+  --app-btn-progress-bg: var(--accent);
+  --app-btn-progress-fg: var(--foreground);
+  --app-btn-base-bg: transparent;
+}
+
+.app-btn--counting.app-btn--danger {
+  --app-btn-progress-bg: var(--destructive);
+  --app-btn-progress-fg: var(--destructive-foreground);
+  --app-btn-base-bg: var(--destructive);
+}
+
+.app-btn--counting.app-btn--danger-outline {
+  --app-btn-progress-bg: var(--destructive);
+  --app-btn-progress-fg: var(--destructive-foreground);
+  --app-btn-base-bg: var(--card);
+  --app-btn-base-border: var(--destructive);
+}
+
+.app-btn--counting.app-btn--danger-text {
+  --app-btn-progress-bg: var(--destructive);
+  --app-btn-progress-fg: var(--destructive-foreground);
+  --app-btn-base-bg: transparent;
+}
+
+.app-btn--counting:disabled,
+.app-btn--counting[aria-disabled='true'] {
+  opacity: 1;
+  cursor: default;
+}
+
+.app-btn--counting .app-btn__content {
+  opacity: 0.5;
+}
+
+.app-btn--counting .app-btn__content--progress {
+  opacity: 1;
+}
+
+.app-btn__base {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border: 1px solid var(--app-btn-base-border, transparent);
+  border-radius: inherit;
+  background: var(--app-btn-base-bg, transparent);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.app-btn__progress {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: var(--app-btn-progress-bg);
+  transform: scaleX(var(--app-btn-progress, 0));
+  transform-origin: left center;
+  will-change: transform;
+}
+
+.app-btn__content--progress {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  color: var(--app-btn-progress-fg);
+  opacity: 1;
+  clip-path: inset(0 calc(100% - var(--app-btn-progress-pct, 0%)) 0 0);
+  will-change: clip-path;
+  pointer-events: none;
+}
+
+.app-btn__spinner {
+  width: var(--app-btn-icon-size);
+  height: var(--app-btn-icon-size);
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  corner-shape: round;
+  animation: app-btn-spin 0.7s linear infinite;
+}
+
+@keyframes app-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-btn__spinner {
+    animation-duration: 1.4s;
+  }
+
+
 }
 
 /* ===== 二次确认删除的红色态 =====

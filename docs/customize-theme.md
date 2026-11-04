@@ -39,9 +39,9 @@ token 生成的 CSS 由 `vite.config.js` 的 `injectThemeTokens` 插件以 `head
 
 ## 圆角
 
-六个档位 `--radius-xs|sm|md|lg|xl|full`（4 / 6 / 8 / 12 / 16 / 9999px）。
+七个档位 `--radius-xs|sm|md|lg|xl|2xl|full`（4 / 6 / 8 / 12 / 16 / 24 / 9999px）。
 
-全站默认走**平滑曲率圆角**（`corner-shape: squircle`）。支持它的浏览器里半径自动放大 1.75× 以保持视觉等效 —— 这个系数由项目里两处独立实现反推得到（模态框 16→28、Markdown 表格 12→20.4）。不支持的浏览器在解析阶段就丢弃该属性，自动回退到传统 1/4 圆角。
+全站默认走**平滑曲率圆角**（`corner-shape: squircle`）。支持它的浏览器里半径自动放大 1.75× 以保持视觉等效 —— 这个系数由项目里两处独立实现反推得到（模态框 24→42、Markdown 表格 12→20.4）。不支持的浏览器在解析阶段就丢弃该属性，自动回退到传统 1/4 圆角。
 
 ### 什么时候必须回退
 
@@ -58,7 +58,7 @@ token 生成的 CSS 由 `vite.config.js` 的 `injectThemeTokens` 插件以 `head
 统一用 `src/components/ui/AppModal.vue`，不要直接写 `<NModal preset="card">`。它接管了此前散落在各处的重复实现：
 
 - 宽度与紧凑高度 —— `max-width` / `max-height-offset`，内部按 640px 断点切紧凑模式（紧凑时固定 `calc(100vh - 120px)`）
-- 圆角 —— `.app-modal` class 配 `--radius-xl`，平滑曲率下自动放大，各处不用再写 `@supports`
+- 圆角 —— `.app-modal` class 配 `--radius-2xl`，平滑曲率下自动放大，各处不用再写 `@supports`
 - 毛玻璃遮罩 —— `blur-mask`。NModal 自带遮罩的 `background-color` 是写死在样式里的，改不了，所以额外叠一层（`--mask-blur` + `--z-blur-mask`）
 - 页脚按钮 —— `actions` 数组，变体 `fill` / `outline` / `text` / `danger`；特殊布局才用 `#footer` 插槽
 
@@ -66,9 +66,18 @@ token 生成的 CSS 由 `vite.config.js` 的 `injectThemeTokens` 插件以 `head
 
 ## 按钮
 
-通用按钮在 `src/assets/main.css` 的 `.app-btn`：基础 + `--sm`（小一号），变体 `--fill`（主操作，反色块）/ `--outline`（次操作）/ `--text`（弱操作）/ `--danger`（危险）。
+控制台与 `AppModal` 统一用 `src/components/ui/AppButton.vue`；公开站历史页面仍保留 `.app-btn` 类，后续逐步迁移。新页面不要再直接拼 `.app-btn`。
 
-模态框页脚由 `AppModal` 的 `actions` 渲染成这组类，页面级按钮直接复用同一套。页面特有的设计（关于页带位移阴影的 `.btn-solid`、隐私横幅反色块内部的变体）留在各自的 scoped 样式里 —— 那些是刻意的。
+- `variant`：`solid`（主操作）/ `outline`（次操作）/ `text`（弱操作）
+- `tone`：`default` / `danger`，与 `variant` 正交，`outline + danger` 这类组合不用另造变体
+- `size`：`xs`（26px）/ `sm`（30px）/ `md`（34px）/ `lg`（38px）；高度、内边距、字号、图标大小全部走 `--button-*` token
+- `shape`：`theme` / `pill` / `rect` / `circle`；默认由主题决定，`icon-only` 默认圆角矩形，但可以显式覆盖
+- `icon` / `icon-position` / `icon-only` / `label`：图标按钮只需要传 `icon` + `label`，`label` 会变成 `aria-label` 和 `title`
+- `disabled`：整体透明度降到 0.5，不改底色
+- `progress`：0–1；小于 1 时自动禁用，原变体颜色降到 50% 并在上面铺可点击色，进度从左向右填充，归 1 后恢复可点击。进度由调用方连续驱动（requestAnimationFrame），组件内部不建计时器；倒计时期间会锁定初始宽度，数字消失后才允许收缩
+- `loading` / `block` / `to` / `href`：带 loading 时自动禁用；`to` 渲染 `RouterLink`，`href` 渲染 `<a>`
+
+`.app-btn` 仍是组件的样式底层，只作为实现细节；模态框页脚由 `AppModal` 的 `actions` 统一渲染成 `AppButton`。页签、筛选 pill、分段切换属于另一类交互，不要强行用 `AppButton` 模拟，等后续的 Tabs/Segmented 组件统一。页面特有的设计（关于页带位移阴影的 `.btn-solid`、隐私横幅反色块内部的变体）留在各自的 scoped 样式里 —— 那些是刻意的。
 
 ## 硬编码的守卫
 
@@ -78,7 +87,7 @@ token 生成的 CSS 由 `vite.config.js` 的 `injectThemeTokens` 插件以 `head
 
 ## 非颜色 token
 
-`--duration-theme`（0.4s）、`--ease-theme`、`--shadow-sm|md|popover|drawer`，以及 z-index 契约 `--z-mobile-drawer|z-mobile-menu|z-blur-mask`（Naive 弹层从 2000 起自动递增，这几个刻意压在它之下）。
+`--duration-theme`（0.4s）、`--ease-theme`、`--shadow-sm|md|popover|drawer`、按钮的 `--button-height|padding-x|font-size|icon-size|gap|radius|icon-radius` 尺寸组，以及 z-index 契约 `--z-mobile-drawer|z-mobile-menu|z-blur-mask`（Naive 弹层从 2000 起自动递增，这几个刻意压在它之下）。
 
 ## 验收
 

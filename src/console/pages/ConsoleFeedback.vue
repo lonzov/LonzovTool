@@ -15,6 +15,7 @@ import {
   Filter24Regular,
   Image24Regular,
 } from '@vicons/fluent'
+import AppButton from '../../components/ui/AppButton.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import FeedbackFilterModal from '../components/FeedbackFilterModal.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
@@ -341,19 +342,25 @@ onMounted(async () => {
       </div>
 
       <div class="toolbar-actions">
-        <button
-          class="tool-btn"
+        <AppButton
+          variant="outline"
+          size="sm"
+          :icon="Filter24Regular"
           :class="{ 'tool-btn--on': rules.length }"
-          type="button"
           @click="filterOpen = true"
         >
-          <NIcon :component="Filter24Regular" :size="15" />
           筛选
           <span v-if="rules.length" class="tool-count">{{ rules.length }}</span>
-        </button>
-        <button class="tool-btn tool-btn--icon" type="button" title="刷新" :disabled="loading" @click="load()">
-          <NIcon :component="ArrowClockwise24Regular" :size="16" />
-        </button>
+        </AppButton>
+        <AppButton
+          variant="outline"
+          size="sm"
+          icon-only
+          label="刷新"
+          :icon="ArrowClockwise24Regular"
+          :disabled="loading"
+          @click="load()"
+        />
       </div>
     </div>
 
@@ -392,14 +399,14 @@ onMounted(async () => {
       </ul>
 
       <div v-if="hasMore" class="load-more-row">
-        <button
-          class="app-btn app-btn--outline app-btn--sm"
-          type="button"
+        <AppButton
+          variant="outline"
+          size="sm"
           :disabled="loadingMore"
           @click="load({ append: true })"
         >
           {{ loadingMore ? '加载中…' : '加载更多' }}
-        </button>
+        </AppButton>
       </div>
     </ConsolePanel>
 
@@ -476,29 +483,31 @@ onMounted(async () => {
             </div>
 
             <div class="form-actions">
-              <button class="app-btn app-btn--fill" type="button" :disabled="saving" @click="saveReview">
-                <NIcon :component="Checkmark24Regular" :size="16" />
+              <AppButton
+                variant="solid"
+                :icon="Checkmark24Regular"
+                :disabled="saving"
+                @click="saveReview"
+              >
                 {{ saving ? '保存中…' : '保存' }}
-              </button>
-              <button
+              </AppButton>
+              <AppButton
                 v-if="detail.item.status !== 'handled'"
-                class="app-btn app-btn--outline"
-                type="button"
+                variant="outline"
                 :disabled="pendingId === detail.item.id"
                 @click="markHandled(detail.item)"
               >
                 标记已处理
-              </button>
-              <button
+              </AppButton>
+              <AppButton
                 v-else
-                class="app-btn app-btn--outline"
-                type="button"
+                variant="outline"
+                :icon="ArrowUndo24Regular"
                 :disabled="reopening"
                 @click="reopen(detail.item)"
               >
-                <NIcon :component="ArrowUndo24Regular" :size="16" />
                 {{ reopening ? '处理中…' : '重新打开' }}
-              </button>
+              </AppButton>
             </div>
           </section>
 
@@ -512,14 +521,14 @@ onMounted(async () => {
                     {{ detail.item.contact }}
                   </a>
                   <span v-else>{{ detail.item.contact }}</span>
-                  <button
-                    class="meta-copy"
-                    type="button"
-                    title="复制"
+                  <AppButton
+                    variant="text"
+                    size="xs"
+                    icon-only
+                    label="复制"
+                    :icon="Copy24Regular"
                     @click="copyContact(detail.item.contact, $event.currentTarget)"
-                  >
-                    <NIcon :component="Copy24Regular" :size="13" />
-                  </button>
+                  />
                 </dd>
               </div>
               <div class="meta-row">
@@ -536,15 +545,16 @@ onMounted(async () => {
 
         <template #footer>
           <div class="detail-footer">
-            <button
-              class="app-btn app-btn--text app-btn--sm detail-delete"
-              type="button"
+            <AppButton
+              variant="text"
+              tone="danger"
+              size="sm"
+              :icon="Delete24Regular"
               :disabled="pendingId === detail.item.id"
               @click="remove(detail.item)"
             >
-              <NIcon :component="Delete24Regular" :size="14" />
               删除这条反馈
-            </button>
+            </AppButton>
           </div>
         </template>
       </NDrawerContent>
@@ -606,42 +616,15 @@ onMounted(async () => {
   gap: 8px;
 }
 
-.tool-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted-foreground);
-  font-family: inherit;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.tool-btn:hover:not(:disabled) {
-  border-color: var(--border-strong);
-  background: var(--accent);
-  color: var(--foreground);
-}
-
 .tool-btn--on {
   border-color: var(--border-strong);
   background: var(--accent);
   color: var(--foreground);
 }
 
-.tool-btn--icon {
-  width: 32px;
-  padding: 0;
-  justify-content: center;
-}
-
 .tool-count {
   min-width: 18px;
+  margin-left: 2px;
   padding: 0 5px;
   border-radius: var(--radius-full);
   corner-shape: round;
@@ -956,37 +939,10 @@ onMounted(async () => {
   text-decoration: underline;
 }
 
-.meta-copy {
-  display: inline-flex;
-  align-items: center;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--subtle-foreground);
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.meta-copy:hover {
-  color: var(--foreground);
-}
-
 .detail-footer {
   display: flex;
   justify-content: flex-start;
   padding: 12px 24px;
-}
-
-.detail-delete {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--subtle-foreground);
-  font-size: 0.8125rem;
-}
-
-.detail-delete:hover:not(:disabled) {
-  color: var(--destructive);
 }
 
 @media (width <= 640px) {

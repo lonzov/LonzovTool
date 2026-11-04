@@ -6,7 +6,6 @@ import {
   NCheckboxGroup,
   NForm,
   NFormItem,
-  NIcon,
   NInput,
   NSwitch,
   useMessage,
@@ -18,6 +17,7 @@ import {
   Key24Regular,
   People24Regular,
 } from '@vicons/fluent'
+import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { consoleFetch } from '../consoleRequest.js'
@@ -365,19 +365,24 @@ async function runReset() {
     <div class="accounts-toolbar">
       <span class="summary-text">{{ loading ? '读取中…' : `共 ${accounts.length} 个账号` }}</span>
       <div class="toolbar-actions">
-        <button class="app-btn app-btn--outline app-btn--sm" type="button" :disabled="loading" @click="load">
-          <NIcon :component="ArrowClockwise24Regular" :size="14" />
-          <span class="btn-label">刷新</span>
-        </button>
-        <button
-          class="app-btn app-btn--fill app-btn--sm"
-          type="button"
+        <AppButton
+          variant="outline"
+          size="sm"
+          :icon="ArrowClockwise24Regular"
+          :disabled="loading"
+          @click="load"
+        >
+          刷新
+        </AppButton>
+        <AppButton
+          variant="solid"
+          size="sm"
+          :icon="Add24Regular"
           :disabled="loading"
           @click="openCreate"
         >
-          <NIcon :component="Add24Regular" :size="14" />
-          <span class="btn-label">新建账号</span>
-        </button>
+          新建账号
+        </AppButton>
       </div>
     </div>
 
@@ -421,24 +426,24 @@ async function runReset() {
           </span>
           <span class="cell-time">{{ formatTime(item.last_login) }}</span>
           <span class="col-actions">
-            <button
-              class="icon-btn"
-              type="button"
-              title="编辑"
+            <AppButton
+              variant="outline"
+              size="xs"
+              icon-only
+              label="编辑"
+              :icon="Edit24Regular"
               :disabled="isSelf(item)"
               @click="openEdit(item)"
-            >
-              <NIcon :component="Edit24Regular" :size="14" />
-            </button>
-            <button
-              class="icon-btn"
-              type="button"
-              title="重置密码"
+            />
+            <AppButton
+              variant="outline"
+              size="xs"
+              icon-only
+              label="重置密码"
+              :icon="Key24Regular"
               :disabled="isSelf(item)"
               @click="openReset(item)"
-            >
-              <NIcon :component="Key24Regular" :size="14" />
-            </button>
+            />
           </span>
         </div>
       </div>
@@ -615,10 +620,6 @@ async function runReset() {
   gap: 8px;
 }
 
-.toolbar-actions .app-btn {
-  gap: 6px;
-}
-
 .account-table {
   display: flex;
   flex-direction: column;
@@ -752,30 +753,6 @@ async function runReset() {
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
-}
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-
-.icon-btn:hover:not(:disabled) {
-  color: var(--foreground);
-}
-
-.icon-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
 }
 
 .table-note {

@@ -7,6 +7,7 @@ import {
   ArrowCounterclockwise24Filled, Open16Filled, PaintBrush24Regular, CalendarWorkWeek24Regular,
   Database24Regular, Save24Regular, DocumentText24Regular, ShieldCheckmark24Regular,
 } from '@vicons/fluent'
+import AppButton from '../components/ui/AppButton.vue'
 import AppModal from '../components/ui/AppModal.vue'
 import { useTheme } from '../composables/useTheme'
 import { confirmDialog } from '../composables/useConfirm'
@@ -90,25 +91,41 @@ function onEmbedToggle(val) {
   }
 }
 
-/* ========== 开启站外嵌入：声明确认（5s 倒计时）========== */
-const embedEnableModal = ref({ show: false, countdown: 0 })
-let embedEnableTimer = null
+/* ========== 开启站外嵌入：声明确认（9s 倒计时）========== */
+const EMBED_ENABLE_SECONDS = 9
+const EMBED_ENABLE_MS = EMBED_ENABLE_SECONDS * 1000
+const embedEnableModal = ref({ show: false, countdown: 0, progress: 0 })
+let embedEnableRaf = null
+let embedEnableStartedAt = 0
 
-function openEmbedEnableModal() {
-  if (embedEnableTimer) clearInterval(embedEnableTimer)
-  embedEnableModal.value = { show: true, countdown: 9 }
-  embedEnableTimer = setInterval(() => {
-    if (embedEnableModal.value.countdown > 0) {
-      embedEnableModal.value.countdown--
-      if (embedEnableModal.value.countdown === 0 && embedEnableTimer) {
-        clearInterval(embedEnableTimer)
-        embedEnableTimer = null
-      }
-    }
-  }, 1000)
+function tickEmbedEnable() {
+  const elapsed = performance.now() - embedEnableStartedAt
+  const remaining = Math.max(0, EMBED_ENABLE_MS - elapsed)
+  const countdown = Math.ceil(remaining / 1000)
+  if (embedEnableModal.value.countdown !== countdown) {
+    embedEnableModal.value.countdown = countdown
+  }
+  embedEnableModal.value.progress = Math.min(1, elapsed / EMBED_ENABLE_MS)
+  if (embedEnableModal.value.progress < 1) {
+    embedEnableRaf = requestAnimationFrame(tickEmbedEnable)
+  } else {
+    embedEnableRaf = null
+  }
 }
 
-const embedEnableReady = computed(() => embedEnableModal.value.countdown <= 0)
+function openEmbedEnableModal() {
+  if (embedEnableRaf) cancelAnimationFrame(embedEnableRaf)
+  embedEnableStartedAt = performance.now()
+  embedEnableModal.value = {
+    show: true,
+    countdown: EMBED_ENABLE_SECONDS,
+    progress: 0,
+  }
+  embedEnableRaf = requestAnimationFrame(tickEmbedEnable)
+}
+
+const embedEnableReady = computed(() => embedEnableModal.value.progress >= 1)
+const embedEnableProgress = computed(() => embedEnableModal.value.progress)
 const embedConfirmLabel = computed(() =>
   embedEnableModal.value.countdown > 0
     ? `我已知晓 ${embedEnableModal.value.countdown}`
@@ -122,15 +139,15 @@ function confirmEmbedEnable() {
 }
 
 function closeEmbedEnableModal() {
-  if (embedEnableTimer) {
-    clearInterval(embedEnableTimer)
-    embedEnableTimer = null
+  if (embedEnableRaf) {
+    cancelAnimationFrame(embedEnableRaf)
+    embedEnableRaf = null
   }
   embedEnableModal.value.show = false
 }
 
 onBeforeUnmount(() => {
-  if (embedEnableTimer) clearInterval(embedEnableTimer)
+  if (embedEnableRaf) cancelAnimationFrame(embedEnableRaf)
 })
 
 /* ========== 关闭站外嵌入：选择是否清理标签页 ========== */
@@ -1091,13 +1108,9 @@ const embedCloseActions = [
       </div>
       <template #footer>
         <div class="app-modal-actions">
-          <button
-            class="app-btn app-btn--fill"
-            :disabled="!embedEnableReady"
-            @click="confirmEmbedEnable"
-          >
+          <AppButton variant="solid" :progress="embedEnableProgress" @click="confirmEmbedEnable">
             {{ embedConfirmLabel }}
-          </button>
+          </AppButton>
         </div>
       </template>
     </AppModal>

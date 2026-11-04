@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import {
   NConfigProvider,
   NButton,
@@ -15,6 +15,7 @@ import {
   lightTheme,
 } from 'naive-ui'
 import { Copy24Regular } from '@vicons/fluent'
+import AppButton from '../components/ui/AppButton.vue'
 import { neutral, highlight, destructive } from '../theme/palette'
 import { lightTokens, darkTokens, staticTokens } from '../theme/tokens'
 import { lightThemeOverrides, darkThemeOverrides } from '../theme/naive-theme'
@@ -155,6 +156,41 @@ const demoCascader = ref(null)
 const demoInput = ref('')
 const demoSwitch = ref(true)
 const demoCheckbox = ref(true)
+
+const DEMO_COUNTDOWN_SECONDS = 5
+const DEMO_COUNTDOWN_MS = DEMO_COUNTDOWN_SECONDS * 1000
+const demoCountdown = ref(DEMO_COUNTDOWN_SECONDS)
+const demoProgress = ref(0)
+const demoCountdownLabel = computed(() =>
+  demoCountdown.value > 0 ? `我已知晓 ${demoCountdown.value}` : '我已知晓',
+)
+let demoRaf = null
+let demoStartedAt = 0
+
+function tickDemoCountdown() {
+  const elapsed = performance.now() - demoStartedAt
+  const remaining = Math.max(0, DEMO_COUNTDOWN_MS - elapsed)
+  const countdown = Math.ceil(remaining / 1000)
+  if (demoCountdown.value !== countdown) demoCountdown.value = countdown
+  demoProgress.value = Math.min(1, elapsed / DEMO_COUNTDOWN_MS)
+  if (demoProgress.value < 1) {
+    demoRaf = requestAnimationFrame(tickDemoCountdown)
+  } else {
+    demoRaf = null
+  }
+}
+
+function startDemoCountdown() {
+  if (demoRaf) cancelAnimationFrame(demoRaf)
+  demoStartedAt = performance.now()
+  demoCountdown.value = DEMO_COUNTDOWN_SECONDS
+  demoProgress.value = 0
+  demoRaf = requestAnimationFrame(tickDemoCountdown)
+}
+
+onBeforeUnmount(() => {
+  if (demoRaf) cancelAnimationFrame(demoRaf)
+})
 
 const copied = ref('')
 let copyTimer = null
@@ -374,6 +410,36 @@ const neutralSwatches = computed(() => Object.entries(neutral))
                 <NButton>默认按钮</NButton>
                 <NButton type="primary">主要按钮</NButton>
                 <NButton quaternary>次要按钮</NButton>
+              </div>
+              <div class="demo-row">
+                <AppButton variant="solid">主操作</AppButton>
+                <AppButton variant="outline">次操作</AppButton>
+                <AppButton variant="text">弱操作</AppButton>
+                <AppButton variant="solid" tone="danger">危险</AppButton>
+              </div>
+              <div class="demo-row">
+                <AppButton variant="outline" size="xs" icon-only label="复制" :icon="Copy24Regular" />
+                <AppButton variant="outline" size="sm" :icon="Copy24Regular">复制</AppButton>
+                <AppButton variant="text" size="xs" icon-only label="复制" :icon="Copy24Regular" />
+              </div>
+              <div class="demo-row">
+                <AppButton variant="solid" disabled>置灰实心</AppButton>
+                <AppButton variant="outline" disabled>置灰描边</AppButton>
+                <AppButton variant="text" disabled>置灰文字</AppButton>
+              </div>
+              <div class="demo-row">
+                <AppButton variant="solid" :progress="0.5">倒计时 50%</AppButton>
+                <AppButton variant="solid" :progress="demoProgress">
+                  {{ demoCountdownLabel }}
+                </AppButton>
+                <AppButton variant="outline" size="sm" @click="startDemoCountdown">
+                  重播倒计时
+                </AppButton>
+              </div>
+              <div class="demo-row">
+                <AppButton class="demo-btn-radius" variant="solid">自定义圆角</AppButton>
+                <AppButton class="demo-btn-color" variant="solid">自定义颜色</AppButton>
+                <AppButton class="demo-btn-shadow" variant="outline">自定义阴影</AppButton>
               </div>
               <div class="demo-row">
                 <NInput v-model:value="demoInput" placeholder="输入框占位文字" style="max-width: 200px" />
@@ -717,5 +783,19 @@ const neutralSwatches = computed(() => Object.entries(neutral))
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+/* 直接覆盖组件 token / 语义色即可，不需要另写一套按钮 */
+.demo-btn-radius {
+  --button-radius: var(--radius-xs);
+}
+
+.demo-btn-color {
+  background: var(--highlight);
+  color: var(--highlight-foreground);
+}
+
+.demo-btn-shadow {
+  box-shadow: var(--shadow-md);
 }
 </style>

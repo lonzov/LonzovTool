@@ -11,6 +11,7 @@ import {
   Edit24Regular,
   Open24Regular,
 } from '@vicons/fluent'
+import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import ImageUploadField from '../components/ImageUploadField.vue'
@@ -246,24 +247,24 @@ onMounted(load)
 <template>
   <div class="console-downloads">
     <div class="downloads-toolbar">
-      <button
-        class="app-btn app-btn--outline app-btn--sm"
-        type="button"
+      <AppButton
+        variant="outline"
+        size="sm"
+        :icon="ArrowClockwise24Regular"
         :disabled="loading"
         @click="load"
       >
-        <NIcon :component="ArrowClockwise24Regular" :size="14" />
-        <span>刷新</span>
-      </button>
-      <button
+        刷新
+      </AppButton>
+      <AppButton
         v-if="canCreatePage"
-        class="app-btn app-btn--fill app-btn--sm"
-        type="button"
+        variant="solid"
+        size="sm"
+        :icon="Add24Regular"
         @click="openCreate"
       >
-        <NIcon :component="Add24Regular" :size="14" />
-        <span>新增</span>
-      </button>
+        新增
+      </AppButton>
     </div>
 
     <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
@@ -302,27 +303,34 @@ onMounted(load)
           </div>
 
           <span class="download-actions">
-            <a
-              class="icon-btn"
+            <AppButton
+              variant="outline"
+              size="xs"
+              icon-only
+              label="查看页面"
+              :icon="Open24Regular"
               :href="`/down/${page.slug}`"
               target="_blank"
               rel="noopener noreferrer"
-              title="查看页面"
-            >
-              <NIcon :component="Open24Regular" :size="14" />
-            </a>
-            <button class="icon-btn" type="button" title="编辑" @click="openEdit(page)">
-              <NIcon :component="Edit24Regular" :size="14" />
-            </button>
-            <button
-              class="icon-btn icon-btn--danger"
-              type="button"
-              title="删除"
+            />
+            <AppButton
+              variant="outline"
+              size="xs"
+              icon-only
+              label="编辑"
+              :icon="Edit24Regular"
+              @click="openEdit(page)"
+            />
+            <AppButton
+              variant="outline"
+              tone="danger"
+              size="xs"
+              icon-only
+              label="删除"
+              :icon="Delete24Regular"
               :disabled="pendingSlug === page.slug"
               @click="remove(page)"
-            >
-              <NIcon :component="Delete24Regular" :size="14" />
-            </button>
+            />
           </span>
         </div>
       </div>
@@ -438,19 +446,19 @@ onMounted(load)
               <NInput v-model:value="link.version" maxlength="32" placeholder="版本" />
               <NInput v-model:value="link.url" maxlength="512" placeholder="https://…" />
               <NInput v-model:value="link.password" maxlength="32" placeholder="提取码（可空）" />
-              <button
-                class="icon-btn icon-btn--danger"
-                type="button"
-                title="移除这一条"
+              <AppButton
+                variant="outline"
+                tone="danger"
+                size="xs"
+                icon-only
+                label="移除这一条"
+                :icon="Dismiss24Regular"
                 @click="removeLink(index)"
-              >
-                <NIcon :component="Dismiss24Regular" :size="14" />
-              </button>
+              />
             </div>
-            <button class="app-btn app-btn--outline app-btn--sm" type="button" @click="addLink">
-              <NIcon :component="Add24Regular" :size="13" />
-              <span>添加一条</span>
-            </button>
+            <AppButton variant="outline" size="sm" :icon="Add24Regular" @click="addLink">
+              添加一条
+            </AppButton>
             <p v-if="fieldErrors.links" class="field-error">{{ fieldErrors.links }}</p>
             <p class="field-hint">按填写顺序展示，最新的版本放最上面。</p>
           </div>
@@ -617,36 +625,6 @@ onMounted(load)
 .tag--muted {
   background: var(--muted);
   color: var(--muted-foreground);
-}
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  background: transparent;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.icon-btn:hover:not(:disabled) {
-  background: var(--accent);
-  color: var(--foreground);
-}
-
-.icon-btn--danger:hover:not(:disabled) {
-  color: var(--destructive);
-}
-
-.icon-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
 }
 
 .form-grid {

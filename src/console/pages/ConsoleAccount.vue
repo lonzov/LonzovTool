@@ -9,6 +9,7 @@ import {
   PersonCircle24Regular,
   SignOut24Regular,
 } from '@vicons/fluent'
+import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import InputOtp from '../../components/ui/InputOtp.vue'
 import SensitiveActionModal from '../components/SensitiveActionModal.vue'
@@ -479,13 +480,9 @@ async function runRevokeOthers() {
           </span>
         </div>
         <div class="row-action">
-          <button
-            class="app-btn app-btn--outline app-btn--sm app-btn--rect"
-            type="button"
-            @click="askVerify('password')"
-          >
+          <AppButton variant="text" size="sm" @click="askVerify('password')">
             修改密码
-          </button>
+          </AppButton>
         </div>
       </div>
 
@@ -526,13 +523,9 @@ async function runRevokeOthers() {
           <span class="row-desc">{{ recoveryGeneratedText }}</span>
         </div>
         <div class="row-action">
-          <button
-            class="app-btn app-btn--text app-btn--sm"
-            type="button"
-            @click="askVerify('recovery')"
-          >
+          <AppButton variant="text" size="sm" @click="askVerify('recovery')">
             重新生成
-          </button>
+          </AppButton>
         </div>
       </div>
     </section>
@@ -544,23 +537,23 @@ async function runRevokeOthers() {
           <h2 class="section-title">登录设备</h2>
         </div>
         <div class="section-head-extra">
-          <button
-            class="icon-btn"
-            type="button"
-            title="刷新"
+          <AppButton
+            variant="outline"
+            size="xs"
+            icon-only
+            label="刷新"
+            :icon="ArrowClockwise24Regular"
             :disabled="sessionsLoading"
             @click="loadSessions"
-          >
-            <NIcon :component="ArrowClockwise24Regular" :size="16" />
-          </button>
-          <button
-            class="app-btn app-btn--outline app-btn--sm"
-            type="button"
+          />
+          <AppButton
+            variant="outline"
+            size="sm"
             :disabled="revokingOthers || sessions.length < 2"
             @click="revokeOthers"
           >
             下线其他设备
-          </button>
+          </AppButton>
         </div>
         <p class="section-desc">看到不认识的设备就直接下线它</p>
       </header>
@@ -598,17 +591,19 @@ async function runRevokeOthers() {
             </div>
           </div>
 
-          <button
-            class="app-btn app-btn--outline app-btn--sm app-btn--rect device-action"
-            type="button"
-            :disabled="session.current || revokingId === session.id"
+          <AppButton
+            class="device-action"
+            variant="outline"
+            size="sm"
+            shape="rect"
+            :icon="SignOut24Regular"
             :aria-label="`下线 ${session.device.label}`"
+            :disabled="session.current || revokingId === session.id"
             :title="session.current ? '当前设备请用右上角「退出」结束' : `撤销该设备（原始 UA：${session.user_agent || '未知'}）`"
             @click="revoke(session)"
           >
-            <NIcon :component="SignOut24Regular" :size="14" />
-            <span class="btn-label">下线</span>
-          </button>
+            下线
+          </AppButton>
         </article>
       </div>
     </section>
@@ -673,13 +668,9 @@ async function runRevokeOthers() {
         <div class="totp-qr">
           <img v-if="totpQr" :src="totpQr" alt="动态口令二维码" width="168" height="168" />
           <code class="totp-secret">{{ totpSecret }}</code>
-          <button
-            class="app-btn app-btn--text app-btn--sm"
-            type="button"
-            @click="copyTextValue(totpSecret, $event.currentTarget)"
-          >
+          <AppButton variant="text" size="sm" @click="copyTextValue(totpSecret, $event.currentTarget)">
             复制密钥
-          </button>
+          </AppButton>
         </div>
         <NFormItem
           label="验证器显示的 6 位动态码"
@@ -703,13 +694,9 @@ async function runRevokeOthers() {
         <ul class="totp-code-list">
           <li v-for="code in totpCodes" :key="code">{{ code }}</li>
         </ul>
-        <button
-          class="app-btn app-btn--outline app-btn--sm"
-          type="button"
-          @click="downloadRecoveryCodes(totpCodes)"
-        >
+        <AppButton variant="outline" size="sm" @click="downloadRecoveryCodes(totpCodes)">
           下载恢复码
-        </button>
+        </AppButton>
       </div>
     </AppModal>
 
@@ -814,32 +801,6 @@ async function runRevokeOthers() {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  background: transparent;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease;
-}
-
-.icon-btn:hover:not(:disabled) {
-  background: var(--accent);
-  color: var(--foreground);
-}
-
-.icon-btn:disabled {
-  cursor: default;
-  opacity: 0.5;
 }
 
 /* 一行 = 左侧「标签 + 值」+ 行末操作；标签在上、值在下，值用与邮箱同级的前景色 */
@@ -1173,7 +1134,7 @@ async function runRevokeOthers() {
     margin-top: -1px;
   }
 
-  .device-action .btn-label {
+  .device-action :deep(.app-btn__label) {
     display: none;
   }
 }

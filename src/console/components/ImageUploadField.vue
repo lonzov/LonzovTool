@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { NIcon, useMessage } from 'naive-ui'
 import { ArrowUpload24Regular, Image24Regular } from '@vicons/fluent'
+import AppButton from '../../components/ui/AppButton.vue'
 
 /**
  * 图片选择与本地预览。选中后只留在本地，由调用方在保存时上传：
@@ -83,18 +84,17 @@ function clear() {
     </span>
     <div class="image-upload__body">
       <div class="image-upload__actions">
-        <button class="app-btn app-btn--outline app-btn--sm" type="button" @click="pick">
-          <NIcon :component="ArrowUpload24Regular" :size="13" />
-          <span>{{ label }}</span>
-        </button>
-        <button
+        <AppButton variant="outline" size="sm" :icon="ArrowUpload24Regular" @click="pick">
+          {{ label }}
+        </AppButton>
+        <AppButton
           v-if="modelValue || pendingFile"
-          class="app-btn app-btn--text app-btn--sm"
-          type="button"
+          variant="text"
+          size="sm"
           @click="clear"
         >
           移除
-        </button>
+        </AppButton>
         <input
           ref="input"
           class="image-upload__input"
