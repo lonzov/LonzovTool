@@ -19,7 +19,6 @@ import { useConsoleAuth } from '../consoleAuth.js'
 import { describeDevice } from '../deviceLabel.js'
 import { checkPasswordLength, checkPasswordRemote } from '../passwordStrength.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
-import { switchRailStyle } from '../../utils/switchRailStyle.js'
 
 const SESSIONS_URL = '/api/v1/console/sessions'
 const PASSWORD_URL = '/api/v1/console/password'
@@ -494,7 +493,6 @@ async function runRevokeOthers() {
         <div class="row-action">
           <NSwitch
             :value="masterSwitchOn"
-            :rail-style="switchRailStyle"
             :loading="masterSwitchPinging"
             @update:value="onMasterSwitch"
           />
@@ -509,11 +507,7 @@ async function runRevokeOthers() {
           </span>
         </div>
         <div class="row-action">
-          <NSwitch
-            :value="totpEnabled"
-            :rail-style="switchRailStyle"
-            @update:value="onTotpSwitch"
-          />
+          <NSwitch :value="totpEnabled" @update:value="onTotpSwitch" />
         </div>
       </div>
 

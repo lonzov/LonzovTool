@@ -44,6 +44,10 @@ const lightTokens = {
   primary: neutral[850],
   'primary-foreground': neutral[0],
 
+  // 开关轨道：两套主题一致，开启深灰、关闭浅灰
+  'switch-rail-on': neutral[700],
+  'switch-rail-off': neutral[400],
+
   // 强调色
   highlight: highlight.light,
   'highlight-foreground': neutral[1000],
@@ -90,6 +94,10 @@ const darkTokens = {
 
   primary: neutral[175],
   'primary-foreground': neutral[850],
+
+  // 和浅色模式保持一致：开启深灰、关闭浅灰
+  'switch-rail-on': neutral[700],
+  'switch-rail-off': neutral[400],
 
   highlight: highlight.dark,
   'highlight-foreground': neutral[1000],

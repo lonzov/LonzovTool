@@ -431,13 +431,11 @@ const baseOverrides = {
   },
 
   Switch: {
-    railColor: 'var(--border)',
-    railColorActive: 'var(--primary)',
+    railColor: 'var(--switch-rail-off)',
+    railColorActive: 'var(--switch-rail-on)',
     loadingColor: 'var(--muted-foreground)',
     // 用在轨道上的 #checked / #unchecked 文字。
-    // 项目里的开关轨道是写死的灰（见 FuhaoTool 的 rail-style：选中 #333、未选 #a0a0a0），
-    // 两套主题下都是深色底，所以这里的文字必须固定白 ——
-    // 用 --primary-foreground 会在深色下翻成 #1A1A1A，压在 #333 上对比度只有 1.4:1。
+    // 轨道固定为开启深灰、关闭浅灰，两套主题一致；文字仍用固定白。
     textColor: 'var(--on-solid)',
     // 图标画在白色滑块里（滑块色未覆盖，仍是 Naive 的 #FFF），不能用反色块的前景色
     iconColor: 'var(--muted-foreground)',

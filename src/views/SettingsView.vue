@@ -15,7 +15,6 @@ import { usePrivacyModal } from '../composables/usePrivacyModal'
 import { useWorkspaceSettings } from '../composables/useWorkspaceSettings'
 import { useWorkspace } from '../composables/useWorkspace'
 import { useMouseGlow } from '../composables/useMouseGlow'
-import { switchRailStyle } from '../utils/switchRailStyle.js'
 import { useMotion } from '../composables/useMotion'
 import { usePageOutline } from '../composables/usePageOutline.js'
 
@@ -790,7 +789,6 @@ const embedCloseActions = [
                 <NSwitch
                   :value="glowEnabled"
                   @update:value="onGlowToggle"
-                  :rail-style="switchRailStyle"
                   class="settings-switch"
                 />
               </div>
@@ -804,7 +802,6 @@ const embedCloseActions = [
                 <NSwitch
                   :value="reduceMotion"
                   @update:value="onReduceMotionToggle"
-                  :rail-style="switchRailStyle"
                   class="settings-switch"
                 />
               </div>
@@ -862,7 +859,6 @@ const embedCloseActions = [
                 <NSwitch
                   :value="embedEnabled"
                   @update:value="onEmbedToggle"
-                  :rail-style="switchRailStyle"
                   class="settings-switch"
                 />
               </div>
