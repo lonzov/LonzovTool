@@ -1,6 +1,6 @@
 <script setup>
-import { NButton, NIcon } from 'naive-ui'
 import { Copy24Regular } from '@vicons/fluent'
+import AppButton from '../ui/AppButton.vue'
 import { commandOutput, copyCommand } from '../../composables/useRawJsonEditor.js'
 import RawJsonCard from './RawJsonCard.vue'
 </script>
@@ -8,10 +8,9 @@ import RawJsonCard from './RawJsonCard.vue'
 <template>
   <RawJsonCard title="命令">
     <template #actions>
-      <NButton size="small" @click="copyCommand">
-        <template #icon><NIcon :component="Copy24Regular" :size="14" /></template>
+      <AppButton variant="outline" size="sm" :icon="Copy24Regular" @click="copyCommand">
         复制命令
-      </NButton>
+      </AppButton>
     </template>
 
     <div class="cmd-box">

@@ -19,6 +19,7 @@ import {
   Send24Regular,
 } from '@vicons/fluent'
 import { useFeedbackDrawer } from '../composables/useFeedbackDrawer.js'
+import AppButton from './ui/AppButton.vue'
 import { confirmDialog } from '../composables/useConfirm.js'
 import { GEETEST_CAPTCHA_ID, GEETEST_SCRIPT_URL } from '../constants/geetest.js'
 import TurnstileFallback from './TurnstileFallback.vue'
@@ -771,23 +772,17 @@ onBeforeUnmount(() => {
         </p>
 
         <div class="fb-actions">
-          <button
-            class="app-btn app-btn--text app-btn--sm"
-            type="button"
-            :disabled="submitting"
-            @click="clearAll"
-          >
+          <AppButton variant="outline" :disabled="submitting" @click="clearAll">
             清空
-          </button>
-          <button
-            class="app-btn app-btn--fill"
-            type="button"
+          </AppButton>
+          <AppButton
+            variant="solid"
+            :icon="Send24Regular"
             :disabled="submitting || imageBusy"
             @click="handleSubmit"
           >
-            <NIcon :component="Send24Regular" :size="16" />
             {{ submitting ? '提交中…' : '提交反馈' }}
-          </button>
+          </AppButton>
         </div>
       </NForm>
       </div>
@@ -1029,10 +1024,6 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
   gap: 10px;
   padding-top: 8px;
-}
-
-.fb-actions .app-btn--fill {
-  gap: 6px;
 }
 
 .fb-done {

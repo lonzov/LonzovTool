@@ -2,7 +2,6 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 import {
   NConfigProvider,
-  NButton,
   NInput,
   NSelect,
   NSwitch,
@@ -407,11 +406,6 @@ const neutralSwatches = computed(() => Object.entries(neutral))
             <h3>{{ mode === 'light' ? '浅色' : '深色' }}</h3>
             <div class="demo">
               <div class="demo-row">
-                <NButton>默认按钮</NButton>
-                <NButton type="primary">主要按钮</NButton>
-                <NButton quaternary>次要按钮</NButton>
-              </div>
-              <div class="demo-row">
                 <AppButton variant="solid">主操作</AppButton>
                 <AppButton variant="outline">次操作</AppButton>
                 <AppButton variant="text">弱操作</AppButton>
@@ -457,11 +451,13 @@ const neutralSwatches = computed(() => Object.entries(neutral))
               </div>
               <div class="demo-row">
                 <NTooltip>
-                  <template #trigger><NButton size="small">悬停看气泡</NButton></template>
+                  <template #trigger>
+                    <AppButton variant="outline" size="sm">悬停看气泡</AppButton>
+                  </template>
                   反色气泡
                 </NTooltip>
                 <NDropdown :options="dropdownOptions">
-                  <NButton size="small">下拉菜单</NButton>
+                  <AppButton variant="outline" size="sm">下拉菜单</AppButton>
                 </NDropdown>
               </div>
             </div>

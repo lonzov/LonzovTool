@@ -1,6 +1,7 @@
 <script setup>
-import { NButton, NIcon } from 'naive-ui'
+import { NIcon } from 'naive-ui'
 import { Add16Filled, Delete24Regular } from '@vicons/fluent'
+import AppButton from '../ui/AppButton.vue'
 import { addElement, clearAll } from '../../composables/useRawJsonEditor.js'
 
 defineProps({
@@ -16,10 +17,9 @@ defineProps({
         <NIcon :component="Add16Filled" :size="14" />
         <span>添加元素</span>
       </button>
-      <NButton size="tiny" quaternary @click="clearAll">
-        <template #icon><NIcon :component="Delete24Regular" :size="14" /></template>
+      <AppButton variant="text" size="xs" :icon="Delete24Regular" @click="clearAll">
         清空
-      </NButton>
+      </AppButton>
     </div>
 
     <slot />

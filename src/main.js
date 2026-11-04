@@ -7,7 +7,6 @@ import {
   NLayoutSider,
   NLayoutContent,
   NLayoutHeader,
-  NButton,
   NIcon,
   NDrawer,
   NDrawerContent,
@@ -50,7 +49,6 @@ export const createApp = ViteSSG(
     app.component('NLayoutSider', NLayoutSider)
     app.component('NLayoutContent', NLayoutContent)
     app.component('NLayoutHeader', NLayoutHeader)
-    app.component('NButton', NButton)
     app.component('NIcon', NIcon)
     app.component('NDrawer', NDrawer)
     app.component('NDrawerContent', NDrawerContent)

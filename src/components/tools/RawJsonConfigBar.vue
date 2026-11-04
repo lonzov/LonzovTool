@@ -1,9 +1,9 @@
 <script setup>
-import { NButton, NIcon } from 'naive-ui'
 import {
   ArrowImport24Regular, ArrowUndo24Regular, ArrowRedo24Regular,
   BookOpen48Regular, Color24Regular, LocalLanguage24Regular,
 } from '@vicons/fluent'
+import AppButton from '../ui/AppButton.vue'
 import {
   undoStack, redoStack, elementCount,
   undo, redo, openImport, loadExample, openColorTable,
@@ -20,31 +20,37 @@ import RawJsonListCard from './RawJsonListCard.vue'
   <!-- 工具栏 -->
   <div class="toolbar-row">
     <div class="toolbar-left">
-      <NButton quaternary size="small" @click="openImport">
-        <template #icon><NIcon :component="ArrowImport24Regular" /></template>
+      <AppButton variant="text" size="sm" :icon="ArrowImport24Regular" @click="openImport">
         导入
-      </NButton>
-      <NButton quaternary size="small" @click="loadExample">
-        <template #icon><NIcon :component="BookOpen48Regular" /></template>
+      </AppButton>
+      <AppButton variant="text" size="sm" :icon="BookOpen48Regular" @click="loadExample">
         示例
-      </NButton>
-      <NButton quaternary size="small" @click="openColorTable">
-        <template #icon><NIcon :component="Color24Regular" /></template>
+      </AppButton>
+      <AppButton variant="text" size="sm" :icon="Color24Regular" @click="openColorTable">
         颜色表
-      </NButton>
-      <NButton quaternary size="small" @click="openLangModal">
-        <template #icon><NIcon :component="LocalLanguage24Regular" /></template>
+      </AppButton>
+      <AppButton variant="text" size="sm" :icon="LocalLanguage24Regular" @click="openLangModal">
         语言包
         <span v-if="activePackName" class="toolbar-dot" :title="`当前语言包：${activePackName}`" />
-      </NButton>
-      <NButton quaternary size="small" :disabled="undoStack.length === 0" @click="undo">
-        <template #icon><NIcon :component="ArrowUndo24Regular" /></template>
+      </AppButton>
+      <AppButton
+        variant="text"
+        size="sm"
+        :icon="ArrowUndo24Regular"
+        :disabled="undoStack.length === 0"
+        @click="undo"
+      >
         撤销
-      </NButton>
-      <NButton quaternary size="small" :disabled="redoStack.length === 0" @click="redo">
-        <template #icon><NIcon :component="ArrowRedo24Regular" /></template>
+      </AppButton>
+      <AppButton
+        variant="text"
+        size="sm"
+        :icon="ArrowRedo24Regular"
+        :disabled="redoStack.length === 0"
+        @click="redo"
+      >
         重做
-      </NButton>
+      </AppButton>
     </div>
     <span class="toolbar-count">元素 <strong>{{ elementCount }}</strong></span>
   </div>
