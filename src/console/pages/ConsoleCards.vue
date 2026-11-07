@@ -1154,12 +1154,10 @@ async function remove(card) {
   padding: 8px 0;
   color: var(--subtle-foreground);
   font-size: 0.8rem;
-  text-align: center;
 }
 
 .inline-hint--error {
   color: var(--destructive);
-  text-align: left;
 }
 
 .editor-grid {
@@ -1367,10 +1365,28 @@ async function remove(card) {
    触发器在窄屏只有 96px，菜单按内容自适应宽度，选项文案不被省略号截断
    （与设置页「同步主题模式到外部网站」的处理一致） */
 .card-category-menu {
+  width: 380px !important;
+  max-width: calc(100vw - 32px);
   min-width: 0 !important;
 }
 
+.card-category-menu .n-cascader-menu {
+  min-width: 0;
+}
+
 .card-category-menu .n-cascader-option {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (width <= 480px) {
+  .card-category-menu {
+    width: calc(100vw - 32px) !important;
+  }
+
+  .card-category-menu .n-cascader-submenu {
+    width: calc((100vw - 48px) / 2) !important;
+  }
 }
 </style>

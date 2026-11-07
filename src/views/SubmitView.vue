@@ -571,6 +571,7 @@ onBeforeUnmount(() => {
               v-model:value="form.category"
               :options="categoryOptions"
               placeholder="选择首页已有的分类"
+              :menu-props="{ class: 'card-category-menu' }"
             />
           </NFormItem>
 
