@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { NIcon, useMessage } from 'naive-ui'
 import {
   ArrowClockwise24Regular,
+  ArrowUndo24Regular,
   CheckmarkCircle24Regular,
   Delete24Regular,
   DismissCircle24Regular,
@@ -104,9 +105,17 @@ async function review(item, status) {
     message.success(
       status === 'approved'
         ? updated.published
-          ? '已通过并上架到首页卡片'
+          ? updated.published_hidden
+            ? '已通过，卡片仍保持隐藏'
+            : '已通过并上架到首页卡片'
           : '已标记为通过'
-        : '已标记为拒绝',
+        : status === 'pending'
+          ? updated.published_hidden
+            ? '已恢复为待审核，卡片已隐藏'
+            : '已恢复为待审核'
+          : updated.published_hidden
+            ? '已标记为拒绝，卡片已隐藏'
+            : '已标记为拒绝',
     )
   } catch (e) {
     if (e?.code === 'unauthorized') {
@@ -163,13 +172,15 @@ onMounted(async () => {
 <template>
   <div class="console-submissions">
     <div class="submissions-toolbar">
-      <div class="filter-group">
+      <div class="tab-group" role="tablist">
         <button
           v-for="option in FILTERS"
           :key="option.label"
-          class="filter-pill"
-          :class="{ 'filter-pill--on': filter === option.value }"
+          class="tab-btn"
+          :class="{ 'tab-btn--on': filter === option.value }"
           type="button"
+          role="tab"
+          :aria-selected="filter === option.value"
           @click="filter = option.value"
         >
           {{ option.label }}
@@ -178,12 +189,12 @@ onMounted(async () => {
       <AppButton
         variant="outline"
         size="sm"
+        icon-only
+        label="刷新"
         :icon="ArrowClockwise24Regular"
         :disabled="loading"
         @click="load()"
-      >
-        刷新
-      </AppButton>
+      />
     </div>
 
     <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
@@ -233,6 +244,7 @@ onMounted(async () => {
 
           <div v-if="item.published" class="published-hint">
             已上架为卡片 <code>{{ item.published_slug }}</code>
+            <span v-if="item.published_hidden">（审核隐藏）</span>
           </div>
 
           <div class="submission-actions">
@@ -243,37 +255,76 @@ onMounted(async () => {
               maxlength="200"
               placeholder="备注（可选，写进审核记录）"
             />
-            <AppButton
-              class="action-btn"
-              variant="solid"
-              size="sm"
-              :icon="CheckmarkCircle24Regular"
-              :disabled="pendingId === item.id"
-              @click="review(item, 'approved')"
-            >
-              通过
-            </AppButton>
-            <AppButton
-              class="action-btn"
-              variant="outline"
-              size="sm"
-              :icon="DismissCircle24Regular"
-              :disabled="pendingId === item.id"
-              @click="review(item, 'rejected')"
-            >
-              拒绝
-            </AppButton>
-            <AppButton
-              class="action-btn"
-              variant="solid"
-              tone="danger"
-              size="sm"
-              :icon="Delete24Regular"
-              :disabled="pendingId === item.id"
-              @click="remove(item)"
-            >
-              删除
-            </AppButton>
+            <div class="action-buttons">
+              <template v-if="item.status === 'pending'">
+                <AppButton
+                  class="action-btn"
+                  variant="solid"
+                  size="sm"
+                  :icon="CheckmarkCircle24Regular"
+                  :disabled="pendingId === item.id"
+                  @click="review(item, 'approved')"
+                >
+                  通过
+                </AppButton>
+                <AppButton
+                  class="action-btn"
+                  variant="outline"
+                  size="sm"
+                  icon-only
+                  label="拒绝"
+                  :icon="DismissCircle24Regular"
+                  :disabled="pendingId === item.id"
+                  @click="review(item, 'rejected')"
+                />
+              </template>
+              <template v-else>
+                <AppButton
+                  class="action-btn"
+                  variant="solid"
+                  size="sm"
+                  label="恢复为待审核"
+                  :icon="ArrowUndo24Regular"
+                  :disabled="pendingId === item.id"
+                  @click="review(item, 'pending')"
+                >
+                  待审核
+                </AppButton>
+                <AppButton
+                  v-if="item.status === 'approved'"
+                  class="action-btn"
+                  variant="outline"
+                  size="sm"
+                  icon-only
+                  label="拒绝"
+                  :icon="DismissCircle24Regular"
+                  :disabled="pendingId === item.id"
+                  @click="review(item, 'rejected')"
+                />
+                <AppButton
+                  v-else
+                  class="action-btn"
+                  variant="outline"
+                  size="sm"
+                  icon-only
+                  label="通过"
+                  :icon="CheckmarkCircle24Regular"
+                  :disabled="pendingId === item.id"
+                  @click="review(item, 'approved')"
+                />
+              </template>
+              <AppButton
+                class="action-btn"
+                variant="solid"
+                tone="danger"
+                size="sm"
+                :icon="Delete24Regular"
+                :disabled="pendingId === item.id"
+                @click="remove(item)"
+              >
+                删除
+              </AppButton>
+            </div>
           </div>
         </article>
       </div>
@@ -309,33 +360,36 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 
-.filter-group {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+.tab-group {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--muted);
 }
 
-.filter-pill {
-  padding: 4px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  corner-shape: round;
+.tab-btn {
+  height: 28px;
+  padding: 0 12px;
+  border: none;
+  border-radius: calc(var(--radius-lg) - 3px);
   background: transparent;
   color: var(--muted-foreground);
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease;
 }
 
-.filter-pill:hover {
+.tab-btn:hover {
   color: var(--foreground);
 }
 
-.filter-pill--on {
+.tab-btn--on {
+  background: var(--card);
   color: var(--foreground);
-  border-color: var(--border-strong);
-  background: var(--accent);
+  box-shadow: var(--shadow-sm);
 }
 
 .submission-list {
@@ -502,7 +556,15 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 
-/* 三个动作按钮同高同宽（30px，与输入框一致），备注占剩余宽度 */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+/* 动作按钮同高，备注占剩余宽度 */
 .action-btn {
   flex-shrink: 0;
 }
@@ -577,5 +639,66 @@ onMounted(async () => {
 .status-pill--destructive {
   color: var(--destructive);
   background: color-mix(in srgb, var(--destructive) 12%, transparent);
+}
+
+@media (width <= 720px) {
+  .console-submissions {
+    gap: 12px;
+  }
+
+  .submissions-toolbar {
+    align-items: center;
+  }
+
+  .submission-card {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .submission-head {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 4px 10px;
+  }
+
+  .submission-icon {
+    grid-row: 1 / span 2;
+  }
+
+  .submission-title-block {
+    grid-column: 2;
+  }
+
+  .submission-time {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 0.7rem;
+  }
+
+  .submission-meta {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .submission-meta div {
+    display: grid;
+    grid-template-columns: 4.5em minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .submission-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .note-input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .action-buttons {
+    justify-content: flex-end;
+    margin-left: 0;
+  }
 }
 </style>
