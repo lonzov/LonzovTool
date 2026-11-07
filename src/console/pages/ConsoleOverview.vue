@@ -5,11 +5,13 @@ import { NIcon } from 'naive-ui'
 import {
   Alert24Regular,
   Apps24Regular,
+  ArrowDown24Regular,
   ArrowDown28Filled,
   ArrowDownload24Regular,
   ArrowUp28Filled,
   ChevronRight24Regular,
   DataTrending24Regular,
+  Filter24Regular,
   FullScreenMaximize24Regular,
   FullScreenMinimize24Regular,
   Globe24Regular,
@@ -27,6 +29,7 @@ import {
 } from '../../composables/useSiteData.js'
 import { useStats } from '../../composables/useStats.js'
 import AppButton from '../../components/ui/AppButton.vue'
+import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import StatCard from '../components/StatCard.vue'
 import TodoDrawer from '../components/TodoDrawer.vue'
@@ -315,6 +318,7 @@ const LOG_MAX_ROWS = 300
 const logRows = ref([])
 const logLevel = ref('all')
 const logError = ref('')
+const logFilterOpen = ref(false)
 const autoScroll = ref(true)
 const fullscreen = ref(false)
 const logBox = ref(null)
@@ -541,29 +545,28 @@ onBeforeUnmount(() => {
       :icon="History24Regular"
       title="管理日志"
       description="登录、内容增删改等管理操作，按时间正序"
+      to="/console/logs"
     >
       <template #extra>
         <div class="log-toolbar">
-          <button
-            v-for="option in LEVEL_FILTERS"
-            :key="option.value"
-            class="log-pill"
-            :class="{ 'log-pill--on': logLevel === option.value }"
-            type="button"
-            @click="logLevel = option.value"
-          >
-            {{ option.label }}
-          </button>
-          <RouterLink class="log-pill log-pill--link" to="/console/logs">全部日志</RouterLink>
-          <button
-            class="log-pill"
-            :class="{ 'log-pill--on': autoScroll }"
-            type="button"
-            :title="autoScroll ? '暂停自动滚动' : '恢复自动滚动'"
+          <AppButton
+            variant="text"
+            size="xs"
+            icon-only
+            :class="{ 'log-tool--on': logLevel !== 'all' }"
+            :label="logLevel === 'all' ? '筛选日志' : `筛选日志：${LEVEL_FILTERS.find((item) => item.value === logLevel)?.label}`"
+            :icon="Filter24Regular"
+            @click="logFilterOpen = true"
+          />
+          <AppButton
+            variant="text"
+            size="xs"
+            icon-only
+            :class="{ 'log-tool--on': autoScroll }"
+            :label="autoScroll ? '暂停自动滚动' : '恢复自动滚动'"
+            :icon="ArrowDown24Regular"
             @click="toggleAutoScroll"
-          >
-            自动滚动
-          </button>
+          />
           <AppButton
             variant="text"
             size="xs"
@@ -588,6 +591,28 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </ConsolePanel>
+
+    <AppModal
+      v-model:show="logFilterOpen"
+      title="筛选管理日志"
+      :max-width="420"
+      :actions="[{ text: '完成', variant: 'fill', onClick: () => (logFilterOpen = false) }]"
+    >
+      <div class="tab-group log-filter-options" role="tablist">
+        <button
+          v-for="option in LEVEL_FILTERS"
+          :key="option.value"
+          class="tab-btn"
+          :class="{ 'tab-btn--on': logLevel === option.value }"
+          type="button"
+          role="tab"
+          :aria-selected="logLevel === option.value"
+          @click="logLevel = option.value"
+        >
+          {{ option.label }}
+        </button>
+      </div>
+    </AppModal>
 
     <TodoDrawer
       v-model:show="todoOpen"
@@ -1084,6 +1109,48 @@ onBeforeUnmount(() => {
   align-items: center;
   flex-wrap: wrap;
   gap: 6px;
+  margin-left: auto;
+}
+
+.log-tool--on {
+  color: var(--foreground);
+  background: var(--accent);
+}
+
+.log-filter-options {
+  margin: 0;
+}
+
+.tab-group {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--muted);
+}
+
+.tab-btn {
+  height: 28px;
+  padding: 0 12px;
+  border: none;
+  border-radius: calc(var(--radius-lg) - 3px);
+  background: transparent;
+  color: var(--muted-foreground);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.tab-btn:hover {
+  color: var(--foreground);
+}
+
+.tab-btn--on {
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: var(--shadow-sm);
 }
 
 .log-pill {

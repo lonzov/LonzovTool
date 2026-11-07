@@ -1,5 +1,6 @@
 <script setup>
 import { NIcon } from 'naive-ui'
+import { RouterLink } from 'vue-router'
 
 defineProps({
   icon: {
@@ -14,6 +15,10 @@ defineProps({
     type: String,
     default: '',
   },
+  to: {
+    type: [String, Object],
+    default: null,
+  },
 })
 </script>
 
@@ -21,10 +26,15 @@ defineProps({
   <section class="console-panel">
     <div class="panel-head">
       <div class="panel-head-main">
-        <div class="panel-title-row">
+        <component
+          :is="to ? RouterLink : 'div'"
+          :to="to || undefined"
+          class="panel-title-row"
+          :class="{ 'panel-title-row--link': to }"
+        >
           <NIcon v-if="icon" :component="icon" :size="16" class="panel-icon" />
           <h2 class="panel-title">{{ title }}</h2>
-        </div>
+        </component>
         <p v-if="description" class="panel-desc">{{ description }}</p>
       </div>
       <div class="panel-head-extra">
@@ -71,6 +81,16 @@ defineProps({
   min-width: 0;
 }
 
+.panel-title-row--link {
+  width: fit-content;
+  color: inherit;
+  text-decoration: none;
+}
+
+.panel-title-row--link:hover .panel-title {
+  color: var(--muted-foreground);
+}
+
 .panel-icon {
   flex-shrink: 0;
   color: var(--muted-foreground);
@@ -95,10 +115,11 @@ defineProps({
 }
 
 .panel-head-extra {
-  flex-shrink: 0;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   min-height: 20px;
+  margin-left: auto;
 }
 
 /* 内容超过卡片可分配高度时在卡片内部滚动，标题行保持不动。
