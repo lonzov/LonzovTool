@@ -1,10 +1,10 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { NForm, NFormItem, NIcon, NInput, NRadio, NRadioGroup, NSelect, NSwitch, useMessage } from 'naive-ui'
+import { NForm, NFormItem, NIcon, NInput, NRadio, NRadioGroup, NCascader, NSwitch, useMessage } from 'naive-ui'
 import { ArrowUpload24Regular, Send16Regular } from '@vicons/fluent'
 import ToolCard from '../components/ToolCard.vue'
 import TurnstileFallback from '../components/TurnstileFallback.vue'
-import { cardsData } from '../composables/useSiteData.js'
+import { cardsData, parentMenusData } from '../composables/useSiteData.js'
 import { confirmDialog } from '../composables/useConfirm.js'
 import { GEETEST_CAPTCHA_ID, GEETEST_SCRIPT_URL } from '../constants/geetest.js'
 import { prepareIcon } from '../utils/iconUpload.js'
@@ -67,18 +67,36 @@ const turnstileVisible = ref(false)
 const turnstileRef = ref(null)
 
 /* 分类复用首页卡片数据源：投稿只能落到既有分类，避免脏分类进审核队列。
-   必须按名称去重——同名分类可能出现在多个父级菜单下，
-   NSelect 以 value 作 key，重复 value 会让下拉项重复渲染。 */
+   同名分类可能挂在不同的父级菜单下，按侧边栏的层级拆成一级/二级，
+   值优先用分类 id；旧快照还没有 id 时退回名称，提交接口仍能兼容。 */
 const categoryOptions = computed(() => {
-  const seen = new Set()
-  const options = []
+  const parents = parentMenusData.value?.parentMenus || []
+  const groups = new Map()
+  const standalone = []
+
   for (const category of cardsData.value.categories || []) {
-    if (seen.has(category.name)) continue
-    seen.add(category.name)
-    options.push({ label: category.name, value: category.name })
+    const option = { label: category.name, value: category.id ?? category.name }
+    if (!category.parentMenuId) {
+      standalone.push(option)
+      continue
+    }
+    if (!groups.has(category.parentMenuId)) {
+      const parent = parents.find((item) => item.id === category.parentMenuId)
+      groups.set(category.parentMenuId, {
+        label: parent?.name || category.parentMenuId,
+        value: `parent-${category.parentMenuId}`,
+        children: [],
+      })
+    }
+    groups.get(category.parentMenuId).children.push(option)
   }
-  return options
+
+  return [...parents.map((parent) => groups.get(parent.id)).filter(Boolean), ...standalone]
 })
+
+const categoryLeaves = computed(() =>
+  categoryOptions.value.flatMap((item) => item.children || [item]),
+)
 
 const previewLogo = computed(() => {
   if (form.iconMode === 'file') return iconFilePreview.value || DEFAULT_ICON
@@ -232,17 +250,28 @@ function restoreDraft() {
     if (value === undefined || value === null) continue
     if (typeof form[key] === 'boolean') {
       form[key] = Boolean(value)
-    } else if (typeof value === 'string') {
+    } else if (typeof value === 'string' || (key === 'category' && typeof value === 'number')) {
       form[key] = value
     }
   }
 
-  // 分类可能在草稿保存后被删掉，恢复时校验一次，避免留下无效取值
-  if (form.category && !categoryOptions.value.some((item) => item.value === form.category)) {
-    form.category = null
+  // 旧草稿存的是分类名，新草稿存 id；两种都归一到当前选项值
+  if (form.category != null) {
+    const selected = categoryLeaves.value.find((item) => item.value === form.category)
+    if (!selected) {
+      form.category =
+        categoryLeaves.value.find((item) => item.label === form.category)?.value ?? null
+    }
   }
   if (form.iconMode !== 'file') form.iconMode = 'url'
 }
+
+// 运行时同步到带 id 的分类后，把按名称恢复的旧草稿重新归一到 id
+watch(categoryLeaves, (leaves) => {
+  if (form.category == null) return
+  if (leaves.some((item) => item.value === form.category)) return
+  form.category = leaves.find((item) => item.label === form.category)?.value ?? null
+})
 
 watch(form, scheduleSave, { deep: true })
 
@@ -290,7 +319,11 @@ function buildPayload(replaceId = 0, turnstileToken = '') {
   data.append('title', form.title.trim())
   data.append('link', form.link.trim())
   data.append('summary', form.summary.trim())
-  data.append('category', form.category || '')
+  const selectedCategory = categoryLeaves.value.find((item) => item.value === form.category)
+  data.append('category', selectedCategory?.label || '')
+  if (selectedCategory && typeof selectedCategory.value === 'number') {
+    data.append('category_id', String(selectedCategory.value))
+  }
   data.append('detail', form.detail.trim())
   data.append('contact', form.contact.trim())
   data.append('is_core_developer', form.isCoreDeveloper ? 'true' : 'false')
@@ -534,7 +567,7 @@ onBeforeUnmount(() => {
           </NFormItem>
 
           <NFormItem label="分类" path="category">
-            <NSelect
+            <NCascader
               v-model:value="form.category"
               :options="categoryOptions"
               placeholder="选择首页已有的分类"

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NForm, NFormItem, NIcon, NInput, NSelect, NSwitch, useMessage } from 'naive-ui'
+import { NCascader, NForm, NFormItem, NIcon, NInput, NSwitch, useMessage } from 'naive-ui'
 import {
   Add24Regular,
   Apps24Regular,
@@ -137,9 +137,26 @@ onBeforeUnmount(() => {
   setPendingLogo(null)
 })
 
-const categoryOptions = computed(() =>
-  categories.value.map((item) => ({ label: item.name, value: item.id })),
-)
+const categoryCascaderOptions = computed(() => {
+  const groups = new Map()
+  const standalone = []
+  for (const item of categories.value) {
+    const option = { label: item.name, value: item.id }
+    if (!item.parent_menu_id) {
+      standalone.push(option)
+      continue
+    }
+    if (!groups.has(item.parent_menu_id)) {
+      groups.set(item.parent_menu_id, {
+        label: item.parent_menu_name || item.parent_menu_id,
+        value: `parent-${item.parent_menu_id}`,
+        children: [],
+      })
+    }
+    groups.get(item.parent_menu_id).children.push(option)
+  }
+  return [...groups.values(), ...standalone]
+})
 
 const visibleCards = computed(() => {
   const text = keyword.value.trim().toLowerCase()
@@ -546,13 +563,12 @@ async function remove(card) {
     <div class="cards-toolbar">
       <div class="toolbar-filters">
         <NInput v-model:value="keyword" clearable placeholder="搜索标题 / 链接 / slug" class="search-input" />
-        <NSelect
+        <NCascader
           v-model:value="categoryFilter"
-          :options="categoryOptions"
+          :options="categoryCascaderOptions"
           clearable
           placeholder="全部分类"
           class="category-select"
-          :consistent-menu-width="false"
           :menu-props="{ class: 'card-category-menu' }"
         />
         <span class="summary-text">{{ summaryText }}</span>
@@ -783,7 +799,12 @@ async function remove(card) {
             :validation-status="categoryError ? 'error' : undefined"
             :feedback="categoryError || undefined"
           >
-            <NSelect v-model:value="form.category_id" :options="categoryOptions" placeholder="选择分类" />
+            <NCascader
+              v-model:value="form.category_id"
+              :options="categoryCascaderOptions"
+              placeholder="选择分类"
+              :menu-props="{ class: 'card-category-menu' }"
+            />
           </NFormItem>
           <div class="field--wide settings-block">
             <div class="setting-row">
@@ -1349,7 +1370,7 @@ async function remove(card) {
   min-width: 0 !important;
 }
 
-.card-category-menu .n-base-select-option__content {
+.card-category-menu .n-cascader-option {
   white-space: nowrap;
 }
 </style>
