@@ -25,6 +25,9 @@
     HomeView.vue: 首页视图容器，集成搜索栏、工具网格、页脚
     IframeForm.vue: iframe 表单封装组件
     MarkdownRenderer.vue: 共享 Markdown 渲染组件，封装 markdown-it（含标题锚点 id）、链接拦截、统一内容样式
+    AnnouncementMarkdown.vue: 弹窗公告的 Markdown 渲染，禁用原始 HTML，外链/图片走协议白名单
+    AnnouncementModal.vue: 弹窗公告的展示与按钮行为，两种倒计时、关闭规则与预览模式
+    AnnouncementHost.vue: 站点启动后拉取弹窗公告，按本地条件与关闭记录筛选后只展示一条
     OfflineDiagnostic.vue: 离线诊断页，ping 检测区分服务端异常/网络断开
     NoticeBar.vue: 公告通知栏，多公告自动轮播（悬停/离屏/展开时暂停）与高度自适应，右端方形按钮触发器展开查看全部列表（行点链接新开/无链接切换，未读红点按已读记录隐藏）
     PrivacyBanner.vue: 隐私横幅与隐私偏好弹窗，管理必要服务/数据统计/回放统计的同意选项
@@ -36,7 +39,6 @@
     ToolGrid.vue: 工具网格布局，管理分类展示与视线引导
     ToolLoading.vue: 异步组件加载动画（旋转圆圈 + 加载文字），复用文档页加载样式
     UpdateDialog.vue: SW 更新确认弹窗，照搬 Cookie 弹窗样式
-    SurveyModal.vue: 调研问卷邀请弹窗
     ShareModal.vue: 分享海报模态框，Canvas 渲染海报含标题/简介/Logo/二维码，支持复制链接与保存图片
     WorkspaceView.vue: 工作站视图容器，管理多标签页，含站外 iframe 标签（/embed/ 目录，域名白名单校验），标签页同步为侧边栏分类栏
     StatsInfoBar.vue: 访问统计信息栏，显示统计起始日、更新时间与数据来源
@@ -121,6 +123,7 @@
     pages/ConsoleCards.vue: 卡片管理页，列表与模拟布局两种视图、增删改与显隐，分类内可拖动排序（两种视图一致），模拟布局的卡片与首页一样按行拉齐高度，图标保存时上传
     pages/ConsoleLogin.vue: 控制台登录页，邮箱 + 密码登录，账号开启两步验证时切到验证码步骤，仅拥有控制台权限的账号可进入
     pages/ConsoleNotices.vue: 公告管理页，列表、增删改，时间用日期选择器录入
+    pages/ConsoleAnnouncements.vue: 弹窗公告管理页，列表拖动排序、条件/按钮/关闭规则编辑与线上同款预览
     pages/ConsoleDownloads.vue: 下载页管理页，列表含下载量，编辑链接、版本与 Markdown 正文，封面保存时上传
     pages/ConsoleLogs.vue: 管理日志页，按级别筛选与关键词检索，向更早记录翻页，行内展示操作者/动作/对象/IP
     pages/ConsolePeople.vue: 共建者与打赏名单的维护页，两个列表同页切换；共建者可拖动排序且头像保存时上传，打赏按时间倒序
@@ -130,6 +133,7 @@
     pages/ConsoleFeedback.vue: 反馈处理页，状态筛选与增量翻页，详情含截图看大图，可标记已处理与删除，支持 ?id= 直接展开指定反馈
   composables:
     honorBrowserNotice.js: 荣耀浏览器提示，建议用户更换标准浏览器（按需加载）
+    useAnnouncement.js: 弹窗公告的访客分桶、本地条件判断与关闭记忆
     useConfirm.js: 全局确认弹窗状态，confirmDialog() 返回 Promise 供任意模块（含 composable）调用
     usePageOutline.js: 页面章节大纲，采集页面内的章节标题（文档标题 / 设置分区等）发布给侧边栏并跟随滚动高亮
     useFeedbackDrawer.js: 建议反馈抽屉的开关状态共享，供侧边栏菜单与关于页 CTA 唤起

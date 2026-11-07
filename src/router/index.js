@@ -156,6 +156,7 @@ const ConsoleLayout = () => import('../console/ConsoleLayout.vue')
 const ConsoleOverview = () => import('../console/pages/ConsoleOverview.vue')
 const ConsoleCards = () => import('../console/pages/ConsoleCards.vue')
 const ConsoleNotices = () => import('../console/pages/ConsoleNotices.vue')
+const ConsoleAnnouncements = () => import('../console/pages/ConsoleAnnouncements.vue')
 const ConsolePromo = () => import('../console/pages/ConsolePromo.vue')
 const ConsolePeople = () => import('../console/pages/ConsolePeople.vue')
 const ConsoleDownloads = () => import('../console/pages/ConsoleDownloads.vue')
@@ -352,6 +353,15 @@ export const routes = [
         component: ConsoleNotices,
         meta: {
           title: '公告管理 - 控制台 - 小舟工具箱',
+          permission: 'notices.write',
+        },
+      },
+      {
+        path: 'announcements',
+        name: 'console-announcements',
+        component: ConsoleAnnouncements,
+        meta: {
+          title: '弹窗公告 - 控制台 - 小舟工具箱',
           permission: 'notices.write',
         },
       },

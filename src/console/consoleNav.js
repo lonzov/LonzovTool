@@ -42,6 +42,14 @@ export const CONSOLE_NAV = [
     permission: 'notices.write',
   },
   {
+    key: '/console/announcements',
+    label: '弹窗公告',
+    icon: MegaphoneLoud24Regular,
+    title: '弹窗公告',
+    description: '进入站点时展示的公告弹窗，支持条件、按钮和关闭规则',
+    permission: 'notices.write',
+  },
+  {
     key: '/console/promo',
     label: '推广位',
     icon: Speaker224Regular,

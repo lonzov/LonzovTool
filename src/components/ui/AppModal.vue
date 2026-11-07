@@ -23,6 +23,7 @@ const props = defineProps({
   maxHeightOffset: { type: Number, default: 48 },
   closable: { type: Boolean, default: true },
   maskClosable: { type: Boolean, default: true },
+  closeOnEsc: { type: Boolean, default: true },
   /** 默认跟随 NModal（true=打开即聚焦），显式传 false 可关闭 */
   autoFocus: { type: Boolean, default: true },
   contentScrollable: { type: Boolean, default: false },
@@ -136,6 +137,7 @@ const modalStyle = computed(() => ({
     :bordered="bordered"
     :closable="closable"
     :mask-closable="maskClosable"
+    :close-on-esc="closeOnEsc"
     :auto-focus="autoFocus"
     :content-scrollable="contentScrollable"
     @update:show="emit('update:show', $event)"

@@ -111,6 +111,7 @@ export default {
     function applyConsent(analyticsEnabled, replayEnabled) {
       localStorage.setItem(STORAGE_KEY, `1,${analyticsEnabled ? 1 : 0},${replayEnabled ? 1 : 0}`)
       localStorage.setItem(NOTICE_KEY, NOTICE_VERSION)
+      window.dispatchEvent(new CustomEvent('privacy-consent-changed'))
       showBanner.value = false
       showUpdateBanner.value = false
       showCookieModal.value = false
