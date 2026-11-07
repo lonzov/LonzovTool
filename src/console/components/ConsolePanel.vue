@@ -37,7 +37,7 @@ defineProps({
         </component>
         <p v-if="description" class="panel-desc">{{ description }}</p>
       </div>
-      <div class="panel-head-extra">
+      <div v-if="$slots.extra" class="panel-head-extra">
         <slot name="extra" />
       </div>
     </div>

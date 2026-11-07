@@ -332,9 +332,11 @@ onMounted(async () => {
         <button
           v-for="tab in TABS"
           :key="tab.label"
-          class="tab"
-          :class="{ 'tab--on': status === tab.value }"
+          class="tab-btn"
+          :class="{ 'tab-btn--on': status === tab.value }"
           type="button"
+          role="tab"
+          :aria-selected="status === tab.value"
           @click="status = tab.value"
         >
           {{ tab.label }}
@@ -581,30 +583,32 @@ onMounted(async () => {
 
 .tab-group {
   display: inline-flex;
+  gap: 2px;
   padding: 3px;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--muted);
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
-.tab {
-  padding: 5px 14px;
+.tab-btn {
+  height: 28px;
+  padding: 0 12px;
   border: none;
-  border-radius: calc(var(--radius-md) - 3px);
+  border-radius: calc(var(--radius-lg) - 3px);
   background: transparent;
   color: var(--muted-foreground);
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   cursor: pointer;
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
-.tab:hover {
+.tab-btn:hover {
   color: var(--foreground);
 }
 
-.tab--on {
+.tab-btn--on {
   background: var(--card);
   color: var(--foreground);
   box-shadow: var(--shadow-sm);

@@ -213,6 +213,24 @@ useSidebarSectionProvider('console', () => ({
   transition: color 0.4s ease;
 }
 
+@media (width <= 560px) {
+  .account-chip {
+    gap: 4px;
+    padding: 3px 8px;
+  }
+
+  .account-chip-role {
+    display: none;
+  }
+
+  .account-chip-name {
+    max-width: 8em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .console-gate {
   display: flex;
   align-items: center;

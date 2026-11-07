@@ -1164,14 +1164,6 @@ onBeforeUnmount(() => {
 }
 
 @media (width <= 640px) {
-  .announcements-toolbar {
-    justify-content: stretch;
-  }
-
-  .announcements-toolbar .app-btn {
-    flex: 1 1 0;
-  }
-
   .block-head {
     flex-direction: column;
     align-items: stretch;

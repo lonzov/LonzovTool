@@ -570,6 +570,7 @@ onBeforeUnmount(() => {
             <NCascader
               v-model:value="form.category"
               :options="categoryOptions"
+              placement="bottom-end"
               placeholder="选择首页已有的分类"
               :menu-props="{ class: 'card-category-menu' }"
             />

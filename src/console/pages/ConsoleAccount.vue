@@ -1063,7 +1063,7 @@ async function runRevokeOthers() {
 
 .inline-hint {
   margin: 0;
-  padding: 14px 0;
+  padding: 8px 0;
   color: var(--subtle-foreground);
   font-size: 0.8rem;
 }

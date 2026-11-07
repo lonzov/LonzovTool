@@ -95,4 +95,30 @@ defineProps({
     font-size: 13px;
   }
 }
+
+@media (max-width: 560px) {
+  .console-title-row {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .console-title-main {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .console-title {
+    overflow: hidden;
+    font-size: 19px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .console-title-extra {
+    flex-shrink: 0;
+    gap: 4px;
+    margin-left: auto;
+  }
+}
 </style>

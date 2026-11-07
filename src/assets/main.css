@@ -526,3 +526,16 @@ button {
 .glow-border.glow-active::before {
   opacity: 1;
 }
+
+/* 控制台列表的统一空态/提示：小号、弱层级、左对齐，页面无需重复定义 */
+.inline-hint {
+  margin: 0;
+  padding: 8px 0;
+  color: var(--subtle-foreground);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.inline-hint--error {
+  color: var(--destructive);
+}

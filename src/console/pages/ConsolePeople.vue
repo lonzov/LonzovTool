@@ -644,7 +644,7 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 30px;
+  height: 28px;
   padding: 0 12px;
   border: none;
   border-radius: calc(var(--radius-lg) - 3px);

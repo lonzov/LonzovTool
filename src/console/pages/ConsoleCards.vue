@@ -566,6 +566,7 @@ async function remove(card) {
         <NCascader
           v-model:value="categoryFilter"
           :options="categoryCascaderOptions"
+          placement="bottom-end"
           clearable
           placeholder="全部分类"
           class="category-select"
@@ -802,6 +803,7 @@ async function remove(card) {
             <NCascader
               v-model:value="form.category_id"
               :options="categoryCascaderOptions"
+              placement="bottom-end"
               placeholder="选择分类"
               :menu-props="{ class: 'card-category-menu' }"
             />
@@ -872,7 +874,9 @@ async function remove(card) {
 .toolbar-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
+  margin-left: auto;
 }
 
 .view-switch {
@@ -1354,6 +1358,10 @@ async function remove(card) {
     gap: 8px;
   }
 
+  .toolbar-actions .view-switch {
+    margin-right: auto;
+  }
+
   .toolbar-actions .app-btn {
     padding: 0 12px;
   }
@@ -1362,31 +1370,21 @@ async function remove(card) {
 
 <style>
 /* 下拉菜单被 teleport 到 body，只能走非 scoped 样式。
-   触发器在窄屏只有 96px，菜单按内容自适应宽度，选项文案不被省略号截断
-   （与设置页「同步主题模式到外部网站」的处理一致） */
+   分类名不长，单列 130px 足够；两列加起来约 260px，避免整块菜单空出大片区域 */
 .card-category-menu {
-  width: 380px !important;
+  width: auto !important;
   max-width: calc(100vw - 32px);
   min-width: 0 !important;
 }
 
-.card-category-menu .n-cascader-menu {
-  min-width: 0;
+.card-category-menu .n-cascader-submenu {
+  width: 130px !important;
+  min-width: 130px !important;
 }
 
 .card-category-menu .n-cascader-option {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-@media (width <= 480px) {
-  .card-category-menu {
-    width: calc(100vw - 32px) !important;
-  }
-
-  .card-category-menu .n-cascader-submenu {
-    width: calc((100vw - 48px) / 2) !important;
-  }
 }
 </style>

@@ -515,12 +515,10 @@ onBeforeUnmount(() => {
   padding: 8px 0;
   color: var(--subtle-foreground);
   font-size: 0.8rem;
-  text-align: center;
 }
 
 .inline-hint--error {
   color: var(--destructive);
-  text-align: left;
 }
 
 .date-input {

@@ -173,12 +173,12 @@ onMounted(load)
       <AppButton
         variant="outline"
         size="sm"
+        icon-only
+        label="刷新"
         :icon="ArrowClockwise24Regular"
         :disabled="loading"
         @click="load"
-      >
-        刷新
-      </AppButton>
+      />
     </div>
 
     <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
@@ -285,6 +285,12 @@ onMounted(load)
 .logs-search {
   width: 260px;
   max-width: 100%;
+  height: 36px;
+}
+
+.logs-search :deep(.n-input__border),
+.logs-search :deep(.n-input__state-border) {
+  border-radius: var(--radius-lg);
 }
 
 .logs-toolbar > .app-btn {
