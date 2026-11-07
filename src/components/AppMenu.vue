@@ -338,21 +338,25 @@ export default {
     },
     // 页面模块交出的分类栏内容（文档目录 / 工作站标签页 / 控制台目录等）
     buildSectionOptions(section) {
-      return section.items.map((item) => {
-        const option = {
-          key: item.key,
-          label: this.renderSectionLabel(item),
-        }
-        // 图标优先级：页面模块自带（控制台目录 / 章节图标）> 工具卡片 logo（工作站标签页）> 章节图标。
-        // 页面交出的图标随响应式数据传递会被包成代理，渲染前取回原始组件定义
-        const icon = item.icon
-          ? this.renderIcon(markRaw(toRaw(item.icon)))
-          : item.logo
-            ? makeLogoIcon(item.logo, 18)
-            : this.renderIcon(markRaw(NumberSymbol24Filled))
-        if (icon) option.icon = icon
-        return option
-      })
+      return section.items.map((item) => this.buildSectionOption(item))
+    },
+    buildSectionOption(item) {
+      const option = {
+        key: item.key,
+        label: this.renderSectionLabel(item),
+      }
+      // 图标优先级：页面模块自带（控制台目录 / 章节图标）> 工具卡片 logo（工作站标签页）> 章节图标。
+      // 页面交出的图标随响应式数据传递会被包成代理，渲染前取回原始组件定义
+      const icon = item.icon
+        ? this.renderIcon(markRaw(toRaw(item.icon)))
+        : item.logo
+          ? makeLogoIcon(item.logo, 18)
+          : this.renderIcon(markRaw(NumberSymbol24Filled))
+      if (icon) option.icon = icon
+      if (Array.isArray(item.children) && item.children.length > 0) {
+        option.children = item.children.map((child) => this.buildSectionOption(child))
+      }
+      return option
     },
     renderSectionLabel(item) {
       const indent = item.level > 1 ? (item.level - 1) * SECTION_LEVEL_INDENT : 0

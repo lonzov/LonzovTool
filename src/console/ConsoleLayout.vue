@@ -28,9 +28,7 @@ const {
 const checking = ref(true)
 const sessionError = ref('')
 
-const navItems = computed(() =>
-  visibleConsoleNav(can).map(({ key, label, icon }) => ({ key, label, icon })),
-)
+const navItems = computed(() => visibleConsoleNav(can))
 const current = computed(() => findConsoleNav(route.path))
 // 目录里没权限的项不渲染，直接在地址栏输进来的同样拦下：权限未就绪前不能判定，等 /me 回来
 const denied = computed(() => {
@@ -85,7 +83,7 @@ useSidebarSectionProvider('console', () => ({
   items: navItems.value,
   selectedKey: current.value.key,
   onSelect: (key) => {
-    if (key !== route.path) router.push(key)
+    if (key.startsWith('/') && key !== route.path) router.push(key)
   },
 }))
 </script>
