@@ -56,6 +56,11 @@ const props = defineProps({
     type: Number,
     default: 1,
   },
+  /** 倒计时按钮右侧的独立秒数；0 或未传时不显示 */
+  countdown: {
+    type: Number,
+    default: null,
+  },
   block: {
     type: Boolean,
     default: false,
@@ -78,10 +83,29 @@ const emit = defineEmits(['click'])
 const attrs = useAttrs()
 const rootEl = ref(null)
 const lockedMinWidth = ref(null)
+const hadCountdown = ref(false)
 
 function measureCountdownWidth() {
+  if (lockedMinWidth.value) return
   const el = rootEl.value?.$el || rootEl.value
-  if (el instanceof HTMLElement) lockedMinWidth.value = el.offsetWidth
+  if (!(el instanceof HTMLElement)) return
+  // 用布局宽度而不是 getBoundingClientRect：后者会把模态框入场/缩放动画的 transform 算进去
+  const width = Number.parseFloat(getComputedStyle(el).width)
+  if (!(width > 0)) return
+
+  // 倒计时数字不参与按钮宽度：用带数字时的宽度减去数字槽位，得到纯文字状态的宽度
+  const number = el.querySelector('.app-btn__countdown')
+  if (number) {
+    const numberStyle = getComputedStyle(number)
+    const slotWidth =
+      (Number.parseFloat(numberStyle.width) || 0) +
+      (Number.parseFloat(numberStyle.marginLeft) || 0)
+    lockedMinWidth.value = Math.max(0, width - slotWidth)
+    hadCountdown.value = true
+    return
+  }
+
+  lockedMinWidth.value = width
 }
 
 const tag = computed(() => {
@@ -96,6 +120,10 @@ const progressValue = computed(() => {
   return Math.min(1, Math.max(0, props.progress))
 })
 const isCountingDown = computed(() => progressValue.value < 1)
+const countdownValue = computed(() => {
+  const value = Number(props.countdown)
+  return Number.isFinite(value) && value > 0 ? Math.ceil(value) : null
+})
 const isInactive = computed(() => props.disabled || props.loading || isCountingDown.value)
 
 const resolvedShape = computed(() => {
@@ -122,6 +150,7 @@ const classes = computed(() => [
   props.iconOnly ? 'app-btn--icon-only' : '',
   props.block ? 'app-btn--block' : '',
   isCountingDown.value ? 'app-btn--counting' : '',
+  hadCountdown.value ? 'app-btn--countdown' : '',
   resolvedShape.value === 'pill' ? 'app-btn--pill' : '',
   resolvedShape.value === 'rect' ? 'app-btn--rect' : '',
   resolvedShape.value === 'circle' ? 'app-btn--circle' : '',
@@ -135,7 +164,7 @@ const progressStyle = computed(() => {
     '--app-btn-progress': progressValue.value,
     '--app-btn-progress-pct': `${progressValue.value * 100}%`,
   }
-  if (isCountingDown.value && lockedMinWidth.value) {
+  if ((isCountingDown.value || hadCountdown.value) && lockedMinWidth.value) {
     style.minWidth = `${lockedMinWidth.value}px`
   }
   return style
@@ -144,9 +173,13 @@ const progressStyle = computed(() => {
 watch(isCountingDown, (counting) => {
   if (counting) {
     nextTick(measureCountdownWidth)
-  } else {
+  } else if (!hadCountdown.value) {
     lockedMinWidth.value = null
   }
+})
+
+watch(countdownValue, (value) => {
+  if (value !== null && !lockedMinWidth.value) nextTick(measureCountdownWidth)
 })
 
 watch(progressValue, () => {
@@ -156,7 +189,7 @@ watch(progressValue, () => {
 })
 
 onMounted(() => {
-  if (isCountingDown.value) nextTick(measureCountdownWidth)
+  if (isCountingDown.value || countdownValue.value !== null) nextTick(measureCountdownWidth)
 })
 
 function handleClick(event) {
@@ -200,7 +233,14 @@ if (import.meta.env.DEV && props.iconOnly && !props.label) {
           <NIcon v-if="icon" :component="icon" size="1em" />
         </slot>
       </span>
-      <span v-if="!iconOnly" class="app-btn__label"><slot /></span>
+      <span v-if="!iconOnly" class="app-btn__label">
+        <slot />
+        <Transition name="app-btn-countdown">
+          <span v-if="countdownValue !== null" class="app-btn__countdown">
+            {{ countdownValue }}
+          </span>
+        </Transition>
+      </span>
     </span>
     <span
       v-if="isCountingDown"
@@ -213,7 +253,14 @@ if (import.meta.env.DEV && props.iconOnly && !props.label) {
           <NIcon v-if="icon" :component="icon" size="1em" />
         </slot>
       </span>
-      <span v-if="!iconOnly" class="app-btn__label"><slot /></span>
+      <span v-if="!iconOnly" class="app-btn__label">
+        <slot />
+        <Transition name="app-btn-countdown">
+          <span v-if="countdownValue !== null" class="app-btn__countdown">
+            {{ countdownValue }}
+          </span>
+        </Transition>
+      </span>
     </span>
   </component>
 </template>

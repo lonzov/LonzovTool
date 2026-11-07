@@ -39,14 +39,34 @@ const locked = computed(() => {
   return Math.ceil((openedAt.value + minSeconds.value * 1000 - nowMs.value) / 1000) > 0
 })
 
+function cappedButtonSeconds(button) {
+  return Math.max(0, Math.min(Number(button?.disabled_seconds) || 0, 5))
+}
+
+const countdownDuration = computed(() =>
+  Math.max(
+    minSeconds.value,
+    ...(props.announcement?.buttons || []).map((button) => cappedButtonSeconds(button)),
+  ),
+)
+function tick() {
+  const end = openedAt.value + countdownDuration.value * 1000
+  const current = Date.now()
+  if (current >= end) {
+    nowMs.value = end
+    stopTimer()
+    return
+  }
+  nowMs.value = current
+}
+
 function startTimer() {
   stopTimer()
   openedAt.value = Date.now()
-  nowMs.value = Date.now()
-  timer = setInterval(() => {
-    nowMs.value = Date.now()
-    if (!locked.value && !props.preview) stopTimer()
-  }, 200)
+  nowMs.value = openedAt.value
+  if (countdownDuration.value <= 0) return
+  // 只按 100ms 采样；帧间插值交给 CSS transition，高刷屏也能保持原生平滑
+  timer = setInterval(tick, 100)
 }
 
 function stopTimer() {
@@ -72,21 +92,37 @@ watch(
 
 onBeforeUnmount(stopTimer)
 
+function buttonSeconds(button) {
+  // 弹窗最小显示时间同样作用于每个按钮，避免关闭入口还在倒计时、跳转按钮却先可用
+  return Math.max(cappedButtonSeconds(button), minSeconds.value)
+}
+
+function buttonProgress(button) {
+  if (props.preview) return 1
+  const seconds = buttonSeconds(button)
+  if (!seconds) return 1
+  return Math.min(1, Math.max(0, (nowMs.value - openedAt.value) / (seconds * 1000)))
+}
+
 function buttonRemaining(button) {
   if (props.preview) return 0
-  const seconds = Math.max(0, Math.min(Number(button?.disabled_seconds) || 0, 5))
+  const seconds = buttonSeconds(button)
+  if (!seconds) return 0
   return Math.max(0, Math.ceil((openedAt.value + seconds * 1000 - nowMs.value) / 1000))
 }
 
-function buttonDisabled(button) {
-  if (props.preview) return false
+function closeButtonLocked(button) {
   const isCloseAction = button?.action === 'close' || button?.action === 'dismiss'
-  return buttonRemaining(button) > 0 || (isCloseAction && locked.value)
+  return !props.preview && isCloseAction && locked.value
+}
+
+function closeButtonProgress() {
+  if (props.preview || !minSeconds.value) return 1
+  return Math.min(1, Math.max(0, (nowMs.value - openedAt.value) / (minSeconds.value * 1000)))
 }
 
 function buttonText(button) {
-  const remaining = buttonRemaining(button)
-  return remaining > 0 ? `${button.label} (${remaining}s)` : button.label
+  return button.label
 }
 
 function requestClose() {
@@ -110,7 +146,7 @@ function beforeClose() {
 }
 
 function handleButton(button) {
-  if (!button || buttonDisabled(button)) return
+  if (!button || buttonProgress(button) < 1 || closeButtonLocked(button)) return
   if (props.preview) {
     emit('close')
     return
@@ -160,7 +196,9 @@ function handleButton(button) {
           :variant="button.variant || 'outline'"
           :tone="button.tone || 'default'"
           :size="button.size || 'md'"
-          :disabled="buttonDisabled(button)"
+          :progress="buttonProgress(button)"
+          :countdown="buttonRemaining(button)"
+          :disabled="closeButtonLocked(button)"
           @click="handleButton(button)"
         >
           {{ buttonText(button) }}
@@ -168,10 +206,11 @@ function handleButton(button) {
         <AppButton
           v-if="fallbackVisible"
           variant="outline"
-          :disabled="locked"
+          :progress="closeButtonProgress()"
+          :countdown="lockRemaining"
           @click="requestClose"
         >
-          关闭{{ lockRemaining > 0 ? ` (${lockRemaining}s)` : '' }}
+          关闭
         </AppButton>
       </div>
     </template>
@@ -204,7 +243,7 @@ function handleButton(button) {
   }
 
   .announcement-actions :deep(.app-btn) {
-    flex: 1 1 auto;
+    flex: 1 1 0;
   }
 }
 </style>

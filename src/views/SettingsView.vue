@@ -94,8 +94,13 @@ function onEmbedToggle(val) {
 const EMBED_ENABLE_SECONDS = 9
 const EMBED_ENABLE_MS = EMBED_ENABLE_SECONDS * 1000
 const embedEnableModal = ref({ show: false, countdown: 0, progress: 0 })
-let embedEnableRaf = null
+let embedEnableTimer = null
 let embedEnableStartedAt = 0
+
+function stopEmbedEnableCountdown() {
+  if (embedEnableTimer) clearInterval(embedEnableTimer)
+  embedEnableTimer = null
+}
 
 function tickEmbedEnable() {
   const elapsed = performance.now() - embedEnableStartedAt
@@ -105,31 +110,23 @@ function tickEmbedEnable() {
     embedEnableModal.value.countdown = countdown
   }
   embedEnableModal.value.progress = Math.min(1, elapsed / EMBED_ENABLE_MS)
-  if (embedEnableModal.value.progress < 1) {
-    embedEnableRaf = requestAnimationFrame(tickEmbedEnable)
-  } else {
-    embedEnableRaf = null
-  }
+  if (embedEnableModal.value.progress >= 1) stopEmbedEnableCountdown()
 }
 
 function openEmbedEnableModal() {
-  if (embedEnableRaf) cancelAnimationFrame(embedEnableRaf)
+  stopEmbedEnableCountdown()
   embedEnableStartedAt = performance.now()
   embedEnableModal.value = {
     show: true,
     countdown: EMBED_ENABLE_SECONDS,
     progress: 0,
   }
-  embedEnableRaf = requestAnimationFrame(tickEmbedEnable)
+  // 100ms 采样，CSS transition 负责帧间插值
+  embedEnableTimer = setInterval(tickEmbedEnable, 100)
 }
 
 const embedEnableReady = computed(() => embedEnableModal.value.progress >= 1)
 const embedEnableProgress = computed(() => embedEnableModal.value.progress)
-const embedConfirmLabel = computed(() =>
-  embedEnableModal.value.countdown > 0
-    ? `我已知晓 ${embedEnableModal.value.countdown}`
-    : '我已知晓',
-)
 
 function confirmEmbedEnable() {
   if (!embedEnableReady.value) return
@@ -138,16 +135,11 @@ function confirmEmbedEnable() {
 }
 
 function closeEmbedEnableModal() {
-  if (embedEnableRaf) {
-    cancelAnimationFrame(embedEnableRaf)
-    embedEnableRaf = null
-  }
+  stopEmbedEnableCountdown()
   embedEnableModal.value.show = false
 }
 
-onBeforeUnmount(() => {
-  if (embedEnableRaf) cancelAnimationFrame(embedEnableRaf)
-})
+onBeforeUnmount(stopEmbedEnableCountdown)
 
 /* ========== 关闭站外嵌入：选择是否清理标签页 ========== */
 const embedCloseModal = ref({ show: false })
@@ -1104,8 +1096,13 @@ const embedCloseActions = [
       </div>
       <template #footer>
         <div class="app-modal-actions">
-          <AppButton variant="solid" :progress="embedEnableProgress" @click="confirmEmbedEnable">
-            {{ embedConfirmLabel }}
+          <AppButton
+            variant="solid"
+            :progress="embedEnableProgress"
+            :countdown="embedEnableModal.countdown"
+            @click="confirmEmbedEnable"
+          >
+            我已知晓
           </AppButton>
         </div>
       </template>

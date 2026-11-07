@@ -160,11 +160,13 @@ const DEMO_COUNTDOWN_SECONDS = 5
 const DEMO_COUNTDOWN_MS = DEMO_COUNTDOWN_SECONDS * 1000
 const demoCountdown = ref(DEMO_COUNTDOWN_SECONDS)
 const demoProgress = ref(0)
-const demoCountdownLabel = computed(() =>
-  demoCountdown.value > 0 ? `我已知晓 ${demoCountdown.value}` : '我已知晓',
-)
-let demoRaf = null
+let demoTimer = null
 let demoStartedAt = 0
+
+function stopDemoCountdown() {
+  if (demoTimer) clearInterval(demoTimer)
+  demoTimer = null
+}
 
 function tickDemoCountdown() {
   const elapsed = performance.now() - demoStartedAt
@@ -172,24 +174,19 @@ function tickDemoCountdown() {
   const countdown = Math.ceil(remaining / 1000)
   if (demoCountdown.value !== countdown) demoCountdown.value = countdown
   demoProgress.value = Math.min(1, elapsed / DEMO_COUNTDOWN_MS)
-  if (demoProgress.value < 1) {
-    demoRaf = requestAnimationFrame(tickDemoCountdown)
-  } else {
-    demoRaf = null
-  }
+  if (demoProgress.value >= 1) stopDemoCountdown()
 }
 
 function startDemoCountdown() {
-  if (demoRaf) cancelAnimationFrame(demoRaf)
+  stopDemoCountdown()
   demoStartedAt = performance.now()
   demoCountdown.value = DEMO_COUNTDOWN_SECONDS
   demoProgress.value = 0
-  demoRaf = requestAnimationFrame(tickDemoCountdown)
+  // 100ms 采样，帧间插值由按钮的 CSS transition 完成
+  demoTimer = setInterval(tickDemoCountdown, 100)
 }
 
-onBeforeUnmount(() => {
-  if (demoRaf) cancelAnimationFrame(demoRaf)
-})
+onBeforeUnmount(stopDemoCountdown)
 
 const copied = ref('')
 let copyTimer = null
@@ -423,8 +420,8 @@ const neutralSwatches = computed(() => Object.entries(neutral))
               </div>
               <div class="demo-row">
                 <AppButton variant="solid" :progress="0.5">倒计时 50%</AppButton>
-                <AppButton variant="solid" :progress="demoProgress">
-                  {{ demoCountdownLabel }}
+                <AppButton variant="solid" :progress="demoProgress" :countdown="demoCountdown">
+                  我已知晓
                 </AppButton>
                 <AppButton variant="outline" size="sm" @click="startDemoCountdown">
                   重播倒计时
