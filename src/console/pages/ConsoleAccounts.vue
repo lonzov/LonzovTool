@@ -408,6 +408,13 @@ async function runReset() {
         </div>
         <div v-for="item in accounts" :key="item.id" class="account-row">
           <span class="cell-email">
+            <span
+              class="status-dot"
+              :class="`status-dot--${statusOf(item).tone}`"
+              role="img"
+              :aria-label="statusOf(item).text"
+              :title="statusOf(item).text"
+            />
             {{ item.email }}
             <span v-if="isSelf(item)" class="self-tag">当前账号</span>
           </span>
@@ -748,6 +755,27 @@ async function runReset() {
   border-color: color-mix(in srgb, var(--destructive) 28%, transparent);
 }
 
+.status-dot {
+  display: none;
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  corner-shape: round;
+}
+
+.status-dot--success {
+  background: var(--success);
+}
+
+.status-dot--warning {
+  background: var(--warning);
+}
+
+.status-dot--destructive {
+  background: var(--destructive);
+}
+
 .col-actions {
   display: flex;
   align-items: center;
@@ -768,12 +796,10 @@ async function runReset() {
   padding: 8px 0;
   color: var(--subtle-foreground);
   font-size: 0.8rem;
-  text-align: center;
 }
 
 .inline-hint--error {
   color: var(--destructive);
-  text-align: left;
 }
 
 /* ===== 编辑器 ===== */
@@ -938,13 +964,16 @@ async function runReset() {
   }
 
   .account-row > .cell-status {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    display: none;
   }
 
   .account-row > .cell-tags {
     grid-column: 1 / -1;
-    grid-row: 3;
+    grid-row: 2;
+  }
+
+  .status-dot {
+    display: inline-block;
   }
 }
 </style>
