@@ -465,6 +465,11 @@ async function save() {
   display: flex;
   align-items: center;
   gap: 2px;
+  flex-shrink: 0;
+}
+
+.promo-actions .app-btn {
+  flex-shrink: 0;
 }
 
 /* ===== 编辑器 ===== */
@@ -530,23 +535,25 @@ async function save() {
   padding: 8px 0;
   color: var(--subtle-foreground);
   font-size: 0.8rem;
-  text-align: center;
 }
 
 .inline-hint--error {
   color: var(--destructive);
-  text-align: left;
 }
 
 /* 竖屏手机：图占满一行，文案与操作另起一行，避免文字列被压成一两个字宽 */
 @media (width <= 520px) {
   .promo-row {
-    grid-template-columns: minmax(0, 1fr) 32px;
+    grid-template-columns: minmax(0, 1fr) auto;
     row-gap: 8px;
   }
 
   .promo-thumb {
     grid-column: 1 / -1;
+  }
+
+  .promo-actions {
+    justify-content: flex-end;
   }
 
   .promo-meta {
