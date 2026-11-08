@@ -145,7 +145,19 @@ export default {
       { immediate: true, deep: true },
     )
 
-    const activeKey = ref('home')
+    // 固定栏只高亮真正属于该路由的入口；未知路由与控制台（使用下半分类栏）返回 null，
+    // 避免切页后残留上一页的焦点
+    function activeKeyForPath(path) {
+      if (path === '/') return 'home'
+      if (path.startsWith('/docs')) return 'about'
+      if (path.startsWith('/donate')) return 'donate'
+      if (path.startsWith('/submit')) return 'submit'
+      if (path.startsWith('/c/') || path.startsWith('/embed/')) return 'workspace'
+      if (path.startsWith('/settings') || path.startsWith('/changelog')) return 'settings'
+      return null
+    }
+
+    const activeKey = ref(activeKeyForPath(route.path))
     const showShareModal = ref(false)
     const mobileMenuOpen = ref(false)
     const isMobile = ref(typeof window !== 'undefined' ? window.innerWidth < 771 : false)
@@ -165,6 +177,30 @@ export default {
     const fakeTitleTransition = ref('opacity 0.15s ease')
     let pendingCategoryIndex = null // 待处理的分类索引
     const desktopScrollbar = ref(null) // 桌面端 NScrollbar 实例引用
+    const sidebarScrollbar = ref(null) // 桌面侧边栏 NScrollbar 实例引用
+    const mobileSidebar = ref(null) // 移动端侧边栏 AppMenu 实例引用
+    // 侧边栏滚动位置只保留在当前页面生命周期里：切页、开关抽屉都恢复，刷新网页才归零
+    let sidebarScrollTop = 0
+
+    function handleSidebarScroll(event) {
+      const target = event?.target
+      if (target) sidebarScrollTop = target.scrollTop || 0
+    }
+
+    function restoreSidebarScroll() {
+      const desktop = sidebarScrollbar.value?.scrollbarInstRef?.containerRef
+      if (desktop) desktop.scrollTop = sidebarScrollTop
+      const mobile = mobileSidebar.value?.$el
+      if (mobile) mobile.scrollTop = sidebarScrollTop
+    }
+
+    function scheduleSidebarRestore() {
+      nextTick(() => {
+        restoreSidebarScroll()
+        // 抽屉内容可能在过渡动画开始后才挂载，再补一次
+        setTimeout(restoreSidebarScroll, 60)
+      })
+    }
 
     // 两端都不是 window：桌面端是 NScrollbar 内部容器，移动端因 html/body/#app 均为 height:100%
     // 导致 html 不滚动，溢出全部落在 body 上。浏览器的原生滚动恢复只认 window，两端都碰不到
@@ -229,6 +265,7 @@ export default {
         setTimeout(() => {
           fakeTitleOpacity.value = 1
         }, 109)
+        scheduleSidebarRestore()
       } else {
         // 关闭时：立即从 1 变为 0
         fakeTitleOpacity.value = 0
@@ -240,6 +277,7 @@ export default {
       if (!isMobile.value) {
         mobileMenuOpen.value = false
       }
+      scheduleSidebarRestore()
     }
 
     async function handleMenuNavigate(key) {
@@ -258,12 +296,12 @@ export default {
       }
       if (key === 'about') {
         router.push('/docs')
-        activeKey.value = 'home'
+        activeKey.value = 'about'
         return
       }
       if (key === 'submit') {
         router.push('/submit')
-        activeKey.value = 'home'
+        activeKey.value = 'submit'
         return
       }
       if (key === 'donate') {
@@ -373,41 +411,33 @@ export default {
 
     function handleRouteChange() {
       const path = router.currentRoute.value.path
-      // 等新页面 DOM 更新完再回顶：立即滚会让用户看到"旧页面一边滚动一边被换掉"
-      nextTick(smoothScrollToTop)
+      activeKey.value = activeKeyForPath(path)
+      // 等新页面 DOM 更新完再回顶：立即滚会让用户看到"旧页面一边滚动一边被换掉"。
+      // 侧边栏滚动位置不受路由影响，重绘后恢复原位置。
+      nextTick(() => {
+        smoothScrollToTop()
+        restoreSidebarScroll()
+      })
 
-      if (path === '/') {
-        activeKey.value = 'home'
-        // 如果有待处理的分类索引，等待页面切换动画完成后再执行
-        if (pendingCategoryIndex !== null) {
-          const index = pendingCategoryIndex
-          pendingCategoryIndex = null
-          // 等回顶动画走完再滚向目标分类，否则两段滚动互相打架。
-          // 减少动态效果下回顶是瞬间到位的，不必再等
-          setTimeout(() => {
-            triggerCategoryDimEffect(index)
-            scrollToCategory(index)
-          }, reduceMotion.value ? 0 : 450)
-        }
-      } else if (path.startsWith('/docs')) {
-        activeKey.value = 'about'
-      } else if (path.startsWith('/donate')) {
-        activeKey.value = 'donate'
-      } else if (path.startsWith('/submit')) {
-        activeKey.value = 'submit'
-      } else if (path.startsWith('/c/') || path.startsWith('/embed/')) {
-        activeKey.value = 'workspace'
-      } else if (path.startsWith('/settings')) {
-        activeKey.value = 'settings'
-      } else if (path.startsWith('/changelog')) {
-        activeKey.value = 'settings'
+      if (path === '/' && pendingCategoryIndex !== null) {
+        const index = pendingCategoryIndex
+        pendingCategoryIndex = null
+        // 等回顶动画走完再滚向目标分类，否则两段滚动互相打架。
+        // 减少动态效果下回顶是瞬间到位的，不必再等
+        setTimeout(() => {
+          triggerCategoryDimEffect(index)
+          scrollToCategory(index)
+        }, reduceMotion.value ? 0 : 450)
       }
     }
 
     router.afterEach(handleRouteChange)
     onBeforeUnmount(cancelScrollToTop)
     // 站点动态数据的运行时刷新。必须挂载后发起，不能在 setup 顶层（见 useSiteData 的说明）
-    onMounted(startSiteDataSync)
+    onMounted(() => {
+      startSiteDataSync()
+      scheduleSidebarRestore()
+    })
 
     const isHome = computed(() => router.currentRoute.value.path === '/')
     const isWorkspaceRoute = computed(() =>
@@ -441,6 +471,9 @@ export default {
       fakeTitleOpacity,
       fakeTitleTransition,
       desktopScrollbar,
+      sidebarScrollbar,
+      mobileSidebar,
+      handleSidebarScroll,
       isHome,
       isWorkspaceRoute,
       skipPageTransition,
@@ -537,7 +570,11 @@ export default {
               margin: '0 auto 0px auto',
             }"
           ></div>
-          <NScrollbar :style="{ flex: 1, minHeight: 0 }">
+          <NScrollbar
+            ref="sidebarScrollbar"
+            :style="{ flex: 1, minHeight: 0 }"
+            @scroll="handleSidebarScroll"
+          >
             <AppMenu
               v-model:value="activeKey"
               @navigate="handleMenuNavigate"
@@ -784,12 +821,14 @@ export default {
               }"
             ></div>
             <AppMenu
+              ref="mobileSidebar"
               v-model:value="activeKey"
               @update:value="mobileMenuOpen = false"
               @navigate="handleMenuNavigate"
               @feedback="handleMenuFeedback"
               @section="handleMenuSection"
               style="flex: 1; overflow-y: auto"
+              @scroll="handleSidebarScroll"
             />
             <div :style="{ padding: '0 14px 16px 14px', background: 'var(--background)' }">
               <div

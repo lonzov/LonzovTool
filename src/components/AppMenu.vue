@@ -152,6 +152,11 @@ export default {
     sectionExpandedKeys() {
       return this.expandedKeys.filter((key) => key !== MORE_KEY)
     },
+    // 上半固定栏只按路由高亮：设置、关于、工作站等自身有固定入口的页面，
+    // 允许上方当前页 + 下方当前段落各保留一处焦点；控制台等无固定入口的路由由 value=null 处理
+    fixedValue() {
+      return this.value
+    },
     // 分类栏选中态：由页面模块给出；回落首页分类时沿用外部的固定栏选中项
     sectionValue() {
       if (!this.activeSection) return this.value
@@ -424,7 +429,7 @@ export default {
   render() {
     return h('div', { class: 'app-menu' }, [
       h(NMenu, {
-        value: this.value,
+        value: this.fixedValue,
         'onUpdate:value': this.handleUpdateValue,
         expandedKeys: this.fixedExpandedKeys,
         'onUpdate:expandedKeys': this.handleFixedExpandedKeys,
