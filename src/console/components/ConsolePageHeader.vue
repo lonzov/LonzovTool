@@ -34,7 +34,7 @@ defineProps({
 
 <style scoped>
 .console-page-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.875rem;
 }
 
 .console-title-row {
