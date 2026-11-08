@@ -374,7 +374,7 @@ async function save() {
     await load()
   } catch (catchError) {
     if (gotUnauthorized(catchError)) return
-    editor.value.error = catchError?.message || '保存失败，请稍后重试'
+    message.error(catchError?.message || '保存失败，请稍后重试')
   } finally {
     saving.value = false
   }

@@ -60,7 +60,6 @@ async function checkSession() {
     }
     // 网络或服务端问题不等于登录失效，不能因此把人踢下线
     sessionError.value = e?.message || '会话校验失败，请稍后重试'
-    message.error(sessionError.value)
   } finally {
     checking.value = false
   }

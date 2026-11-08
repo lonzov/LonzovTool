@@ -42,7 +42,7 @@ let sortable = null
 const contentError = ref('')
 const dateError = ref('')
 
-const editor = ref({ show: false, editing: false, noticeId: 0, error: '' })
+const editor = ref({ show: false, editing: false, noticeId: 0 })
 const form = ref({ content: '', link: '', dateAt: null })
 const editorSaving = ref(false)
 
@@ -150,12 +150,12 @@ async function handleDragEnd(event) {
 }
 
 function openCreate() {
-  editor.value = { show: true, editing: false, noticeId: 0, error: '' }
+  editor.value = { show: true, editing: false, noticeId: 0 }
   form.value = { content: '', link: '', dateAt: Date.now() }
 }
 
 function openEdit(item) {
-  editor.value = { show: true, editing: true, noticeId: item.notice_id, error: '' }
+  editor.value = { show: true, editing: true, noticeId: item.notice_id }
   form.value = {
     content: item.content,
     link: item.link,
@@ -178,7 +178,6 @@ async function save() {
   }
 
   editorSaving.value = true
-  editor.value.error = ''
   try {
     if (editor.value.editing) {
       await consoleFetch(`${NOTICES_URL}/${editor.value.noticeId}`, {
@@ -196,7 +195,7 @@ async function save() {
     editor.value.show = false
   } catch (e) {
     if (gotUnauthorized(e)) return
-    editor.value.error = e?.message || '保存失败，请稍后重试'
+    message.error(e?.message || '保存失败，请稍后重试')
   } finally {
     editorSaving.value = false
     await load()
@@ -371,7 +370,6 @@ onBeforeUnmount(() => {
         <p class="field-hint">
           时间决定站上显示的"多久以前"；顺序在列表里拖拽调整，新公告默认排在末尾。
         </p>
-        <p v-if="editor.error" class="editor-error">{{ editor.error }}</p>
       </NForm>
     </AppModal>
   </div>
@@ -532,12 +530,6 @@ onBeforeUnmount(() => {
   color: var(--subtle-foreground);
   font-size: 0.72rem;
   line-height: 1.5;
-}
-
-.editor-error {
-  margin: 6px 0 0;
-  color: var(--destructive);
-  font-size: 0.8rem;
 }
 
 @media (width <= 720px) {

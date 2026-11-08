@@ -36,7 +36,6 @@ const { ensureTrust } = useSensitiveTrust()
 
 const passwordModal = ref(false)
 const passwordForm = ref({ next: '' })
-const passwordError = ref('')
 const passwordSaving = ref(false)
 
 const totpEnabled = computed(() => account.value?.totpEnabled === true)
@@ -66,7 +65,6 @@ function onVerified(token) {
   else if (action === 'recovery') runRecoveryRegenerate()
   else if (action === 'password') {
     passwordForm.value = { next: '' }
-    passwordError.value = ''
     passwordSubmitted.value = false
     passwordServerCheck.value = { status: '', message: '' }
     passwordModal.value = true
@@ -87,7 +85,6 @@ const totpQr = ref('')
 const totpCode = ref('')
 const totpCodes = ref([])
 const totpCheck = ref({ status: '', message: '' })
-const totpError = ref('')
 const totpBusy = ref(false)
 
 const recoveryModal = ref(false)
@@ -100,7 +97,6 @@ function resetTotpWizard() {
   totpCode.value = ''
   totpCodes.value = []
   totpCheck.value = { status: '', message: '' }
-  totpError.value = ''
 }
 
 function closeTotpModal() {
@@ -128,7 +124,7 @@ async function startTotpSetup() {
       }
     }
   } catch (e) {
-    totpError.value = e?.message || '获取密钥失败，请稍后重试'
+    message.error(e?.message || '获取密钥失败，请稍后重试')
   } finally {
     totpBusy.value = false
   }
@@ -137,7 +133,6 @@ async function startTotpSetup() {
 async function confirmTotp() {
   if (!/^\d{6}$/.test(totpCode.value) || totpBusy.value) return
   totpBusy.value = true
-  totpError.value = ''
   try {
     const payload = await consoleFetch(TOTP_VERIFY_URL, {
       method: 'POST',
@@ -318,7 +313,6 @@ async function loadSessions() {
 onMounted(loadSessions)
 
 async function changePassword() {
-  passwordError.value = ''
   passwordSubmitted.value = true
   passwordServerCheck.value = { status: '', message: '' }
   if (!passwordForm.value.next) return
@@ -356,7 +350,7 @@ async function changePassword() {
     if (e?.code === 'password_unchanged') {
       passwordServerCheck.value = { status: 'error', message: e.message || '新密码不能与当前密码相同' }
     } else {
-      passwordError.value = e?.message || '修改失败，请稍后重试'
+      message.error(e?.message || '修改失败，请稍后重试')
     }
   } finally {
     passwordSaving.value = false
@@ -634,7 +628,6 @@ async function runRevokeOthers() {
             placeholder="至少 8 位，建议混合大小写、数字与符号"
           />
         </NFormItem>
-        <p v-if="passwordError" class="form-error">{{ passwordError }}</p>
       </NForm>
     </AppModal>
 
@@ -683,7 +676,6 @@ async function runRevokeOthers() {
             :disabled="totpBusy"
           />
         </NFormItem>
-        <p v-if="totpError" class="form-error">{{ totpError }}</p>
       </NForm>
 
       <div v-else class="totp-codes">
@@ -1051,12 +1043,6 @@ async function runRevokeOthers() {
   color: var(--subtle-foreground);
   font-size: 0.74rem;
   line-height: 1.6;
-}
-
-.form-error {
-  margin: 0 0 10px;
-  color: var(--destructive);
-  font-size: 0.78rem;
 }
 
 /* 文字按钮自带内边距，右侧负回去与表单内容的右边缘对齐 */

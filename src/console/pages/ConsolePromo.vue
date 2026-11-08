@@ -204,7 +204,7 @@ async function save() {
     message.success('已保存')
   } catch (e) {
     if (gotUnauthorized(e)) return
-    editor.value.error = e?.message || '保存失败，请稍后重试'
+    message.error(e?.message || '保存失败，请稍后重试')
   } finally {
     saving.value = false
   }

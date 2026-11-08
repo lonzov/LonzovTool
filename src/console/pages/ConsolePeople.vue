@@ -61,7 +61,7 @@ const reordering = ref(false)
 const listEl = ref(null)
 let sortable = null
 
-const editor = ref({ show: false, kind: 'contributors', editing: false, id: 0, error: '' })
+const editor = ref({ show: false, kind: 'contributors', editing: false, id: 0 })
 const contributorForm = ref({ name: '', avatar: '', link: '', qq: '' })
 // 选中的头像先留在本地，保存时再上传（上传属于写操作，要跟保存一起过身份确认）
 const pendingAvatar = ref(null)
@@ -197,7 +197,7 @@ function openCreate() {
   } else {
     donationForm.value = { dateAt: Date.now(), name: '', amount: '', note: '', link: '' }
   }
-  editor.value = { show: true, kind: tab.value, editing: false, id: 0, error: '' }
+  editor.value = { show: true, kind: tab.value, editing: false, id: 0 }
 }
 
 function openEdit(row) {
@@ -219,7 +219,7 @@ function openEdit(row) {
       link: row.link || '',
     }
   }
-  editor.value = { show: true, kind: tab.value, editing: true, id: row.id, error: '' }
+  editor.value = { show: true, kind: tab.value, editing: true, id: row.id }
 }
 
 function validate() {
@@ -253,7 +253,6 @@ async function save() {
 
   const kind = editor.value.kind
   editorSaving.value = true
-  editor.value.error = ''
   if (kind === 'contributors' && pendingAvatar.value) {
     try {
       // 上传损坏或尺寸不合规时这里就会失败，下面的写入不应发生
@@ -262,7 +261,7 @@ async function save() {
       pendingAvatar.value = null
     } catch (e) {
       if (gotUnauthorized(e)) return
-      editor.value.error = e?.message || '头像上传失败，请稍后重试'
+      message.error(e?.message || '头像上传失败，请稍后重试')
       editorSaving.value = false
       return
     }
@@ -296,7 +295,7 @@ async function save() {
     editor.value.show = false
   } catch (e) {
     if (gotUnauthorized(e)) return
-    editor.value.error = e?.message || '保存失败，请稍后重试'
+    message.error(e?.message || '保存失败，请稍后重试')
   } finally {
     editorSaving.value = false
     await load()
@@ -550,7 +549,6 @@ onBeforeUnmount(() => {
         <p class="field-hint">
           QQ 只用于服务端抓取头像与人工核对：公开接口与站点产物都不会带上它，列表里也只露前三位与后两位。
         </p>
-        <p v-if="editor.error" class="editor-error">{{ editor.error }}</p>
       </NForm>
 
       <NForm v-else label-placement="top" @keydown.enter="submitOnEnter($event, save)">
@@ -613,7 +611,6 @@ onBeforeUnmount(() => {
         <p class="field-hint">
           列表按时间从新到旧自动排序，改时间会改变它出现的位置；金额不做数字解析，写什么就展示什么。
         </p>
-        <p v-if="editor.error" class="editor-error">{{ editor.error }}</p>
       </NForm>
     </AppModal>
   </div>
@@ -842,8 +839,7 @@ a.person-sub:hover {
   line-height: 1.6;
 }
 
-.field-error,
-.editor-error {
+.field-error {
   margin: 6px 0 0;
   color: var(--destructive);
   font-size: 0.78rem;

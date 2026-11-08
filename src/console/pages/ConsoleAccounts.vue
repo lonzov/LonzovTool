@@ -51,7 +51,7 @@ const form = ref({
 })
 const editorSaving = ref(false)
 
-const reset = ref({ show: false, id: 0, email: '', password: '', error: '', saving: false })
+const reset = ref({ show: false, id: 0, email: '', password: '', saving: false })
 /* 停用账号、重置他人密码都属于敏感操作：先过一次身份确认再执行 */
 const { ensureTrust } = useSensitiveTrust()
 
@@ -314,7 +314,7 @@ async function runSave() {
     if (e?.code === 'email_taken') {
       emailFieldError.value = { status: 'error', message: e.message || '该邮箱已被使用' }
     } else {
-      editor.value.error = e?.message || '保存失败，请稍后重试'
+      message.error(e?.message || '保存失败，请稍后重试')
     }
   } finally {
     editorSaving.value = false
@@ -323,7 +323,7 @@ async function runSave() {
 }
 
 function openReset(item) {
-  reset.value = { show: true, id: item.id, email: item.email, password: '', error: '', saving: false }
+  reset.value = { show: true, id: item.id, email: item.email, password: '', saving: false }
   resetSubmitted.value = false
   resetServerCheck.value = { status: '', message: '' }
 }
@@ -343,7 +343,6 @@ async function runReset() {
     return
   }
   reset.value.saving = true
-  reset.value.error = ''
   try {
     await consoleFetch(`${ACCOUNTS_URL}/${reset.value.id}/password`, {
       method: 'POST',
@@ -354,7 +353,7 @@ async function runReset() {
     await load()
   } catch (e) {
     if (gotUnauthorized(e)) return
-    reset.value.error = e?.message || '重置失败，请稍后重试'
+    message.error(e?.message || '重置失败，请稍后重试')
   } finally {
     reset.value.saving = false
   }
@@ -592,7 +591,6 @@ async function runReset() {
             placeholder="至少满足服务端的密码强度要求"
           />
         </NFormItem>
-        <p v-if="reset.error" class="editor-error">{{ reset.error }}</p>
       </NForm>
     </AppModal>
 

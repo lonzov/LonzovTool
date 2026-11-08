@@ -1,6 +1,6 @@
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
-import { NInput } from 'naive-ui'
+import { NInput, useMessage } from 'naive-ui'
 import { ArrowClockwise24Regular } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
@@ -26,6 +26,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:show', 'verified'])
+const message = useMessage()
 
 const OPTIONS_URL = '/api/v1/console/verify/options'
 const SEND_URL = '/api/v1/console/verify/email/send'
@@ -45,7 +46,6 @@ const code = ref('')
 const codeSent = ref(false)
 const sending = ref(false)
 const busy = ref(false)
-const error = ref('')
 const check = ref({ status: '', message: '' })
 const otpRef = ref(null)
 const { remaining, start: startCountdown, reset: resetCountdown } = useResendCountdown()
@@ -67,7 +67,6 @@ function reset() {
   codeSent.value = false
   sending.value = false
   busy.value = false
-  error.value = ''
   check.value = { status: '', message: '' }
   resetCountdown()
 }
@@ -91,7 +90,7 @@ async function loadOptions() {
       nextTick(() => otpRef.value?.focus())
     }
   } catch (e) {
-    error.value = e?.message || '读取验证方式失败，请稍后重试'
+    message.error(e?.message || '读取验证方式失败，请稍后重试')
   }
 }
 
@@ -111,14 +110,12 @@ function choose(next) {
   code.value = ''
   password.value = ''
   check.value = { status: '', message: '' }
-  error.value = ''
   if (next === 'totp') nextTick(() => otpRef.value?.focus())
 }
 
 async function sendCode() {
   if (sending.value || remaining.value > 0) return
   sending.value = true
-  error.value = ''
   try {
     await consoleFetch(SEND_URL, { method: 'POST' })
     codeSent.value = true
@@ -128,7 +125,7 @@ async function sendCode() {
     if (e?.code === 'resend_too_soon' || e?.code === 'rate_limited') {
       if (e.retryAfterSeconds > 0) startCountdown(e.retryAfterSeconds)
     }
-    error.value = e?.message || '验证码发送失败，请稍后重试'
+    message.error(e?.message || '验证码发送失败，请稍后重试')
   } finally {
     sending.value = false
   }
@@ -137,7 +134,6 @@ async function sendCode() {
 async function submit() {
   if (!canSubmit.value) return
   busy.value = true
-  error.value = ''
   check.value = { status: '', message: '' }
   try {
     const credential = method.value === 'password' ? password.value : code.value.trim()
@@ -155,7 +151,7 @@ async function submit() {
         nextTick(() => otpRef.value?.focus())
       }
     } else {
-      error.value = e?.message || '验证失败，请稍后重试'
+      message.error(e?.message || '验证失败，请稍后重试')
     }
   } finally {
     busy.value = false
@@ -255,7 +251,6 @@ const actions = computed(() => [
     </div>
 
     <p v-if="check.message" class="field-error">{{ check.message }}</p>
-    <p v-if="error" class="form-error">{{ error }}</p>
     </div>
   </AppModal>
 </template>
@@ -326,9 +321,4 @@ const actions = computed(() => [
   font-size: 0.78rem;
 }
 
-.form-error {
-  margin: 10px 0 0;
-  color: var(--destructive);
-  font-size: 0.78rem;
-}
 </style>

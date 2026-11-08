@@ -38,7 +38,7 @@ const loading = ref(false)
 const errorText = ref('')
 const pendingSlug = ref('')
 
-const editor = ref({ show: false, editing: false, slug: '', error: '' })
+const editor = ref({ show: false, editing: false, slug: '' })
 const form = ref(emptyForm())
 const fieldErrors = ref({})
 const saving = ref(false)
@@ -96,7 +96,7 @@ function openCreate() {
   pendingIcon.value = null
   form.value = emptyForm()
   form.value.links = [emptyLink()]
-  editor.value = { show: true, editing: false, slug: '', error: '' }
+  editor.value = { show: true, editing: false, slug: '' }
 }
 
 function openEdit(page) {
@@ -116,7 +116,7 @@ function openEdit(page) {
     hidden: !!page.hidden,
     links: (page.links || []).map((link) => ({ ...link })),
   }
-  editor.value = { show: true, editing: true, slug: page.slug, error: '' }
+  editor.value = { show: true, editing: true, slug: page.slug }
 }
 
 function emptyLink() {
@@ -163,7 +163,6 @@ async function save() {
   if (!(await ensureTrust())) return
 
   saving.value = true
-  editor.value.error = ''
   if (pendingIcon.value) {
     try {
       const media = await uploadMediaImage('download', pendingIcon.value)
@@ -171,7 +170,7 @@ async function save() {
       pendingIcon.value = null
     } catch (e) {
       if (gotUnauthorized(e)) return
-      editor.value.error = e?.message || '封面上传失败，请稍后重试'
+      message.error(e?.message || '封面上传失败，请稍后重试')
       saving.value = false
       return
     }
@@ -208,7 +207,7 @@ async function save() {
     editor.value.show = false
   } catch (e) {
     if (gotUnauthorized(e)) return
-    editor.value.error = e?.message || '保存失败，请稍后重试'
+    message.error(e?.message || '保存失败，请稍后重试')
   } finally {
     saving.value = false
     await load()
@@ -484,7 +483,6 @@ onMounted(load)
           </div>
         </NFormItem>
 
-        <p v-if="editor.error" class="editor-error">{{ editor.error }}</p>
       </NForm>
     </AppModal>
   </div>
@@ -667,12 +665,6 @@ onMounted(load)
   margin: 2px 0 0;
   color: var(--destructive);
   font-size: 0.74rem;
-}
-
-.editor-error {
-  margin: 6px 0 0;
-  color: var(--destructive);
-  font-size: 0.78rem;
 }
 
 .switch-field {

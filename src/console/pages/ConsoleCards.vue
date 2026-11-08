@@ -504,7 +504,7 @@ async function save() {
       router.replace({ path: '/console/login', query: { redirect: route.fullPath } })
       return
     }
-    editor.value.error = e?.message || '保存失败，请稍后重试'
+    message.error(e?.message || '保存失败，请稍后重试')
   } finally {
     editorSaving.value = false
     await load()
