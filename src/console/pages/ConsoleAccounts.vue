@@ -19,6 +19,7 @@ import {
 } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
+import { submitOnEnter } from '../enterSubmit.js'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { consoleFetch } from '../consoleRequest.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
@@ -476,7 +477,7 @@ async function runReset() {
       ]"
       content-scrollable
     >
-      <NForm label-placement="top">
+      <NForm label-placement="top" @keydown.enter="submitOnEnter($event, save)">
         <NFormItem
           v-if="editor.mode === 'create'"
           label="邮箱"
@@ -573,7 +574,7 @@ async function runReset() {
         },
       ]"
     >
-      <NForm label-placement="top">
+      <NForm label-placement="top" @keydown.enter="submitOnEnter($event, submitReset)">
         <p class="form-note">
           为 <span class="mono">{{ reset.email }}</span> 设置一次性密码：该账号已登录的设备全部退出，
           本人下次登录后必须先修改密码。

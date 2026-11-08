@@ -15,6 +15,7 @@ import { createConsoleSortable } from '../sortable.js'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import { submitOnEnter } from '../enterSubmit.js'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
@@ -328,7 +329,7 @@ onBeforeUnmount(() => {
       ]"
       content-scrollable
     >
-      <NForm label-placement="top">
+      <NForm label-placement="top" @keydown.enter="submitOnEnter($event, save)">
         <NFormItem
           label="内容"
           required

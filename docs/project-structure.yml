@@ -101,6 +101,7 @@
     ConsoleLayout.vue: 控制台外壳，页面标题取自 consoleNav，并把控制台目录挂到侧边栏分类栏，右上角为账号与退出，按权限隐藏目录项并拦下无权限路由，临时密码时顶部常驻提示条
     consoleAuth.js: 控制台会话状态（账号邮箱、角色、权限清单与临时密码标记），登录、退出与会话校验，凭证为后端下发的 HttpOnly Cookie
     consoleRequest.js: 控制台请求与错误映射（服务端信封 → 状态码 → 网络/超时），写操作回填 CSRF 头，不依赖 Vue
+    enterSubmit.js: 控制台表单的 Enter 提交判定，跳过输入法组合、文本域及非文本控件
     consoleNav.js: 控制台目录配置，按业务分组并作为侧边栏分类栏与页面标题的唯一来源；分组可展开，权限过滤后空组隐藏
     usePermissions.js: 控制台权限判定（can/permissions/account），由壳层 provide 给子页面，口径与服务端一致
     deviceLabel.js: 把 User-Agent 压成「浏览器 · 系统」一句人话，供登录设备列表展示

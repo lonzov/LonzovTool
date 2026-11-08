@@ -18,6 +18,7 @@ import {
 import { createConsoleSortable } from '../sortable.js'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
+import { submitOnEnter } from '../enterSubmit.js'
 import ToolCard from '../../components/ToolCard.vue'
 import ToolLogo from '../../components/ToolLogo.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
@@ -730,7 +731,7 @@ async function remove(card) {
       ]"
       content-scrollable
     >
-      <NForm label-placement="top">
+      <NForm label-placement="top" @keydown.enter="submitOnEnter($event, save)">
         <div class="editor-grid">
           <NFormItem
             class="field--wide"

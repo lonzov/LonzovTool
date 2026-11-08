@@ -14,6 +14,7 @@ import AppModal from '../../components/ui/AppModal.vue'
 import InputOtp from '../../components/ui/InputOtp.vue'
 import SensitiveActionModal from '../components/SensitiveActionModal.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
+import { submitOnEnter } from '../enterSubmit.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useConsoleAuth } from '../consoleAuth.js'
 import { describeDevice } from '../deviceLabel.js'
@@ -618,7 +619,7 @@ async function runRevokeOthers() {
         },
       ]"
     >
-      <NForm label-placement="top">
+      <NForm label-placement="top" @keydown.enter="submitOnEnter($event, changePassword)">
         <NFormItem
           label="新密码"
           :validation-status="passwordFieldStatus"
@@ -658,7 +659,11 @@ async function runRevokeOthers() {
           : [{ text: '我已保存', variant: 'fill', onClick: closeTotpModal }]
       "
     >
-      <NForm v-if="totpStep === 'scan'" label-placement="top">
+      <NForm
+        v-if="totpStep === 'scan'"
+        label-placement="top"
+        @keydown.enter="submitOnEnter($event, confirmTotp)"
+      >
         <div class="totp-qr">
           <img v-if="totpQr" :src="totpQr" alt="动态口令二维码" width="168" height="168" />
           <code class="totp-secret">{{ totpSecret }}</code>

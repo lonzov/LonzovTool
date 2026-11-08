@@ -11,6 +11,7 @@ import {
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import { submitOnEnter } from '../enterSubmit.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
 import { preparePromoImage } from '../../utils/iconUpload.js'
@@ -284,7 +285,7 @@ async function save() {
       ]"
       content-scrollable
     >
-      <NForm label-placement="top">
+      <NForm label-placement="top" @keydown.enter="submitOnEnter($event, save)">
         <NFormItem label="推广图">
           <div
             class="image-drop"

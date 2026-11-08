@@ -27,6 +27,7 @@ import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import AnnouncementModal from '../../components/AnnouncementModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import { submitOnEnter } from '../enterSubmit.js'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
@@ -519,7 +520,11 @@ onBeforeUnmount(() => {
       ]"
       content-scrollable
     >
-      <NForm label-placement="top" class="editor-form">
+      <NForm
+        label-placement="top"
+        class="editor-form"
+        @keydown.enter="submitOnEnter($event, save)"
+      >
         <div v-if="editor.error" class="editor-error" role="alert">{{ editor.error }}</div>
 
         <NTabs v-model:value="editorTab" type="line" animated class="editor-tabs">

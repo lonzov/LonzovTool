@@ -6,6 +6,7 @@ import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import InputOtp from '../../components/ui/InputOtp.vue'
 import { consoleFetch } from '../../console/consoleRequest.js'
+import { submitOnEnter } from '../enterSubmit.js'
 import { useResendCountdown } from '../../console/useResendCountdown.js'
 
 /**
@@ -183,6 +184,7 @@ const actions = computed(() => [
     :actions="actions"
     @update:show="emit('update:show', $event)"
   >
+    <div class="verify-body" @keydown.enter="submitOnEnter($event, submit)">
     <!-- 只有一种方式时不显示切换器，避免"只有一个选项还要点一下" -->
     <div v-if="!onlyOne" class="method-tabs" role="tablist">
       <button
@@ -211,7 +213,7 @@ const actions = computed(() => [
         autocomplete="current-password"
         placeholder="请输入当前密码"
         :disabled="busy"
-        @keyup.enter="submit"
+        @keydown.enter="submitOnEnter($event, submit)"
       />
     </div>
 
@@ -222,7 +224,7 @@ const actions = computed(() => [
           maxlength="6"
           placeholder="6 位验证码"
           :disabled="busy"
-          @keyup.enter="submit"
+          @keydown.enter="submitOnEnter($event, submit)"
         />
         <AppButton
           class="send-btn"
@@ -247,12 +249,14 @@ const actions = computed(() => [
         :status="check.status"
         :autofocus="false"
         :disabled="busy"
+        @keydown.enter="submitOnEnter($event, submit)"
       />
       <p class="field-hint">打开手机上的身份验证器 App，输入它当前显示的 6 位动态码</p>
     </div>
 
     <p v-if="check.message" class="field-error">{{ check.message }}</p>
     <p v-if="error" class="form-error">{{ error }}</p>
+    </div>
   </AppModal>
 </template>
 

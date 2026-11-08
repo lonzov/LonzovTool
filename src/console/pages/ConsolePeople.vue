@@ -19,6 +19,7 @@ import ImageUploadField from '../components/ImageUploadField.vue'
 import { uploadMediaImage } from '../mediaUpload.js'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
+import { submitOnEnter } from '../enterSubmit.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
 
@@ -498,7 +499,11 @@ onBeforeUnmount(() => {
       ]"
       content-scrollable
     >
-      <NForm v-if="editor.kind === 'contributors'" label-placement="top">
+      <NForm
+        v-if="editor.kind === 'contributors'"
+        label-placement="top"
+        @keydown.enter="submitOnEnter($event, save)"
+      >
         <NFormItem
           label="昵称"
           required
@@ -548,7 +553,7 @@ onBeforeUnmount(() => {
         <p v-if="editor.error" class="editor-error">{{ editor.error }}</p>
       </NForm>
 
-      <NForm v-else label-placement="top">
+      <NForm v-else label-placement="top" @keydown.enter="submitOnEnter($event, save)">
         <NFormItem
           label="时间"
           required

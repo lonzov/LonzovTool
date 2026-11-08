@@ -15,6 +15,7 @@ import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import ImageUploadField from '../components/ImageUploadField.vue'
+import { submitOnEnter } from '../enterSubmit.js'
 import { uploadMediaImage } from '../mediaUpload.js'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
@@ -352,7 +353,7 @@ onMounted(load)
       ]"
       content-scrollable
     >
-      <NForm label-placement="top">
+      <NForm label-placement="top" @keydown.enter="submitOnEnter($event, save)">
         <div class="form-grid">
           <NFormItem
             label="名称"
