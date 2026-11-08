@@ -176,6 +176,7 @@ function handleButton(button) {
     :closable="closeConfig.show_close_button !== false"
     :mask-closable="closeConfig.mask_closable !== false"
     :close-on-esc="closeConfig.mask_closable !== false"
+    content-scrollable
     :before-close="beforeClose"
     class="announcement-modal"
     @update:show="(value) => !value && requestClose()"

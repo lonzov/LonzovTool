@@ -1,6 +1,6 @@
 <script setup>
-import { h, ref, computed, toRef } from 'vue'
-import { NModal } from 'naive-ui'
+import { h, ref, computed, toRef, onBeforeUnmount } from 'vue'
+import { NModal, NScrollbar } from 'naive-ui'
 import { useHeightTransition } from '../../composables/useHeightTransition.js'
 import AppButton from './AppButton.vue'
 
@@ -90,6 +90,21 @@ const isCompact = getCompactRef()
 // 两层都由本组件持有，调用方只需加 animated 属性。
 const animWrap = ref(null)
 const animInner = ref(null)
+const scrollbarActive = ref(false)
+let scrollbarHideTimer = null
+
+function handleModalScroll() {
+  scrollbarActive.value = true
+  if (scrollbarHideTimer) clearTimeout(scrollbarHideTimer)
+  scrollbarHideTimer = setTimeout(() => {
+    scrollbarActive.value = false
+    scrollbarHideTimer = null
+  }, 700)
+}
+
+onBeforeUnmount(() => {
+  if (scrollbarHideTimer) clearTimeout(scrollbarHideTimer)
+})
 useHeightTransition({ show: toRef(props, 'show'), inner: animInner, wrap: animWrap })
 
 // @close 的返回值决定 Naive 是否真的关闭，必须原样传回去
@@ -130,7 +145,7 @@ const modalStyle = computed(() => ({
     v-bind="$attrs"
     :show="show"
     preset="card"
-    class="app-modal"
+    :class="['app-modal', contentScrollable ? 'app-modal--scrollable' : '']"
     :title="headTitle"
     :style="modalStyle"
     :segmented="segmented"
@@ -139,7 +154,6 @@ const modalStyle = computed(() => ({
     :mask-closable="maskClosable"
     :close-on-esc="closeOnEsc"
     :auto-focus="autoFocus"
-    :content-scrollable="contentScrollable"
     @update:show="emit('update:show', $event)"
     @close="handleClose"
     @esc="emit('esc')"
@@ -148,9 +162,27 @@ const modalStyle = computed(() => ({
   >
     <div v-if="animated" ref="animWrap" class="app-modal-anim">
       <div ref="animInner">
-        <slot />
+        <NScrollbar
+          v-if="contentScrollable"
+          class="app-modal-scroll"
+          :class="{ 'app-modal-scroll--active': scrollbarActive }"
+          trigger="none"
+          @scroll="handleModalScroll"
+        >
+          <div class="app-modal-scroll-content"><slot /></div>
+        </NScrollbar>
+        <slot v-else />
       </div>
     </div>
+    <NScrollbar
+      v-else-if="contentScrollable"
+      class="app-modal-scroll"
+      :class="{ 'app-modal-scroll--active': scrollbarActive }"
+      trigger="none"
+      @scroll="handleModalScroll"
+    >
+      <div class="app-modal-scroll-content"><slot /></div>
+    </NScrollbar>
     <slot v-else />
 
     <template #footer>
@@ -186,6 +218,50 @@ const modalStyle = computed(() => ({
    半径走 token，平滑曲率下自动放大，不需要各处再写 @supports */
 .app-modal {
   border-radius: var(--radius-2xl);
+}
+
+/* 自己管理滚动，避免 NModal/NCard 的 content-scrollable 在组件边界传 VNode 插槽时反复告警 */
+/* 滚动容器铺满卡片内容区，内边距移到滚动内容里，滚动条轨道才能贴住模态框边缘 */
+.app-modal--scrollable > .n-card-content {
+  padding: 0;
+}
+
+.app-modal--scrollable.n-card--content-segmented > .n-card-content {
+  padding-top: 0;
+}
+
+.app-modal-scroll {
+  width: 100%;
+  max-height: calc(100vh - 208px);
+}
+
+.app-modal-scroll .n-scrollbar {
+  max-height: inherit;
+}
+
+@media (width <= 640px) {
+  /* 紧凑模态框本身会多留 120px 上下边距，内容高度要同步让出头/尾空间 */
+  .app-modal-scroll {
+    max-height: calc(100vh - 280px);
+  }
+}
+
+.app-modal-scroll-content {
+  padding: 0 var(--n-padding-left, 24px) var(--n-padding-bottom, 20px);
+}
+
+.app-modal--scrollable.n-card--content-segmented .app-modal-scroll-content {
+  padding-top: var(--n-padding-bottom, 20px);
+}
+
+.app-modal-scroll .n-scrollbar-rail__scrollbar {
+  opacity: 0;
+  transition: opacity 160ms var(--n-bezier, ease);
+}
+
+.app-modal-scroll:hover .n-scrollbar-rail__scrollbar,
+.app-modal-scroll--active .n-scrollbar-rail__scrollbar {
+  opacity: 1;
 }
 
 /* 高度过渡容器：外层高度由 useHeightTransition 接管，内层高度自适应 */
