@@ -417,9 +417,19 @@ const neutralSwatches = computed(() => Object.entries(neutral))
                 <AppButton variant="solid" disabled>置灰实心</AppButton>
                 <AppButton variant="outline" disabled>置灰描边</AppButton>
                 <AppButton variant="text" disabled>置灰文字</AppButton>
+                <AppButton variant="solid" tone="danger" disabled>置灰危险</AppButton>
+                <AppButton variant="outline" tone="danger" disabled>置灰危险描边</AppButton>
+                <AppButton variant="text" tone="danger" disabled>置灰危险文字</AppButton>
               </div>
               <div class="demo-row">
                 <AppButton variant="solid" :progress="0.5">倒计时 50%</AppButton>
+                <AppButton variant="outline" :progress="0.5">次操作倒计时</AppButton>
+                <AppButton variant="text" :progress="0.5">弱操作倒计时</AppButton>
+                <AppButton variant="solid" tone="danger" :progress="0.5">危险倒计时</AppButton>
+                <AppButton variant="outline" tone="danger" :progress="0.5">危险描边倒计时</AppButton>
+                <AppButton variant="text" tone="danger" :progress="0.5">危险文字倒计时</AppButton>
+              </div>
+              <div class="demo-row">
                 <AppButton variant="solid" :progress="demoProgress" :countdown="demoCountdown">
                   我已知晓
                 </AppButton>

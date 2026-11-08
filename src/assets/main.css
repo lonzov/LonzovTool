@@ -153,6 +153,7 @@ button {
   --app-btn-padding-x: var(--button-padding-x-md);
   --app-btn-font-size: var(--button-font-size-md);
   --app-btn-icon-size: var(--button-icon-size-md);
+  --app-btn-disabled-opacity: 0.5;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -185,7 +186,7 @@ button {
 .app-btn:disabled,
 .app-btn[aria-busy='true'],
 .app-btn[aria-disabled='true'] {
-  opacity: 0.5;
+  opacity: var(--app-btn-disabled-opacity);
   cursor: default;
 }
 
@@ -365,12 +366,14 @@ button {
 }
 
 .app-btn--counting.app-btn--outline {
+  --app-btn-progress-bg: var(--muted);
+  --app-btn-progress-fg: var(--foreground);
   --app-btn-base-bg: var(--card);
   --app-btn-base-border: var(--border);
 }
 
 .app-btn--counting.app-btn--text {
-  --app-btn-progress-bg: var(--accent);
+  --app-btn-progress-bg: var(--muted);
   --app-btn-progress-fg: var(--foreground);
   --app-btn-base-bg: transparent;
 }
@@ -382,8 +385,8 @@ button {
 }
 
 .app-btn--counting.app-btn--danger-outline {
-  --app-btn-progress-bg: var(--destructive);
-  --app-btn-progress-fg: var(--destructive-foreground);
+  --app-btn-progress-bg: color-mix(in srgb, var(--destructive) 16%, var(--card));
+  --app-btn-progress-fg: var(--destructive);
   --app-btn-base-bg: var(--card);
   --app-btn-base-border: var(--destructive);
 }
@@ -411,11 +414,25 @@ button {
 }
 
 .app-btn--counting .app-btn__content {
-  opacity: 0.5;
+  z-index: 3;
+  opacity: var(--app-btn-disabled-opacity);
 }
 
 .app-btn--counting .app-btn__content--progress {
+  z-index: 4;
   opacity: 1;
+}
+
+/* 进度层会盖住底层描边，单独在上层补一圈，避免描边按钮填充后边框缺角 */
+.app-btn--counting::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border: 1px solid var(--app-btn-base-border, transparent);
+  border-radius: inherit;
+  corner-shape: round;
+  pointer-events: none;
 }
 
 .app-btn__base {
@@ -425,7 +442,7 @@ button {
   border: 1px solid var(--app-btn-base-border, transparent);
   border-radius: inherit;
   background: var(--app-btn-base-bg, transparent);
-  opacity: 0.5;
+  opacity: var(--app-btn-disabled-opacity);
   pointer-events: none;
 }
 
