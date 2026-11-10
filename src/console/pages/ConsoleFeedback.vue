@@ -14,21 +14,27 @@ import {
   Delete24Regular,
   Filter24Regular,
   Image24Regular,
+  Mail24Regular,
+  Settings24Regular,
 } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import FeedbackFilterModal from '../components/FeedbackFilterModal.vue'
+import NotificationComposeModal from '../components/NotificationComposeModal.vue'
+import NotificationSettingsDrawer from '../components/NotificationSettingsDrawer.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { copyText } from '../../utils/clipboard.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
 import { openImageLightbox } from '../useImageLightbox.js'
 import { useIsMobile } from '../../composables/useIsMobile.js'
+import { usePermissions } from '../usePermissions.js'
 
 /* 访客反馈的处理队列。
    列表只做预览：一眼看清"是什么事、什么状态、要不要现在处理"；
    优先级与备注的编辑全部发生在详情抽屉里，列表不承载任何输入控件。 */
 const { ensureTrust } = useSensitiveTrust()
+const { can } = usePermissions()
 
 const LIST_URL = '/api/v1/console/feedback'
 const PAGE_SIZE = 50
@@ -83,6 +89,26 @@ const detail = ref({ show: false, item: null })
 const form = ref({ priority: 'normal', note: '' })
 const saving = ref(false)
 const reopening = ref(false)
+const notifyLoadingId = ref(0)
+const settingsOpen = ref(false)
+const notify = ref({
+  show: false,
+  item: null,
+  event: 'feedback_handled',
+  title: '发送反馈通知',
+  templateLabel: '',
+  contact: '',
+  recipient: '',
+  subject: '',
+  body: '',
+  sending: false,
+})
+
+const NOTIFICATION_LABEL = {
+  email: '已发邮件',
+  manual: '已人工通知',
+  failed: '通知失败',
+}
 
 const emptyText = computed(() => (loading.value ? '读取中…' : '没有符合条件的反馈'))
 
@@ -258,6 +284,63 @@ async function markHandled(item) {
   }
 }
 
+function notificationText(item) {
+  return NOTIFICATION_LABEL[item?.notification_status] || '未通知'
+}
+
+async function openNotify(item, event) {
+  notifyLoadingId.value = item.id
+  try {
+    const params = new URLSearchParams({ event })
+    const preview = await consoleFetch(
+      `/api/v1/console/notifications/feedback/${item.id}?${params.toString()}`,
+    )
+    notify.value = {
+      show: true,
+      item,
+      event,
+      title: event === 'feedback_unresolved' ? '发送“无法处理”通知' : '发送“已处理”通知',
+      templateLabel: preview?.label || '',
+      contact: preview?.contact || item.contact || '',
+      recipient: preview?.recipient || '',
+      subject: preview?.subject || '',
+      body: preview?.body || '',
+      sending: false,
+    }
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    message.error(e?.message || '读取通知模板失败，请稍后重试')
+  } finally {
+    notifyLoadingId.value = 0
+  }
+}
+
+async function sendNotify(payload) {
+  const item = notify.value.item
+  if (!item) return
+  notify.value.sending = true
+  try {
+    const updated = await consoleFetch(
+      `/api/v1/console/notifications/feedback/${item.id}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ ...payload, event: notify.value.event }),
+      },
+    )
+    Object.assign(item, updated)
+    notify.value.show = false
+    message.success(
+      payload.channel === 'manual' ? '已标记为人工通知' : '通知邮件已发送',
+    )
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    if (e?.code === 'notification_failed') item.notification_status = 'failed'
+    message.error(e?.message || '发送失败，请稍后重试')
+  } finally {
+    notify.value.sending = false
+  }
+}
+
 async function remove(item) {
   const confirmed = await confirmDialog({
     title: '删除反馈',
@@ -344,6 +427,15 @@ onMounted(async () => {
       </div>
 
       <div class="toolbar-actions">
+        <AppButton
+          v-if="can('accounts.manage')"
+          variant="outline"
+          size="sm"
+          :icon="Settings24Regular"
+          @click="settingsOpen = true"
+        >
+          通知设置
+        </AppButton>
         <AppButton
           variant="outline"
           size="sm"
@@ -513,6 +605,49 @@ onMounted(async () => {
             </div>
           </section>
 
+          <section v-if="detail.item.status === 'handled'" class="detail-section">
+            <h3 class="section-title">通知访客</h3>
+            <p class="notify-hint">
+              处理完成后不会自动发信；确认文案后再发送。非邮箱联系方式可复制正文，人工联系后标记即可。
+            </p>
+            <div class="notify-row">
+              <span
+                class="notify-state"
+                :class="{
+                  'notify-state--sent': detail.item.notification_status === 'email',
+                  'notify-state--manual': detail.item.notification_status === 'manual',
+                  'notify-state--failed': detail.item.notification_status === 'failed',
+                }"
+              >
+                {{ notificationText(detail.item) }}
+              </span>
+              <span v-if="detail.item.notified_by" class="notify-by">
+                {{ detail.item.notified_by }}
+              </span>
+              <div class="notify-actions">
+                <AppButton
+                  variant="outline"
+                  size="sm"
+                  :icon="Mail24Regular"
+                  :disabled="notifyLoadingId === detail.item.id"
+                  :loading="notifyLoadingId === detail.item.id"
+                  @click="openNotify(detail.item, 'feedback_handled')"
+                >
+                  已处理通知
+                </AppButton>
+                <AppButton
+                  variant="outline"
+                  size="sm"
+                  :icon="Mail24Regular"
+                  :disabled="notifyLoadingId === detail.item.id"
+                  @click="openNotify(detail.item, 'feedback_unresolved')"
+                >
+                  无法处理通知
+                </AppButton>
+              </div>
+            </div>
+          </section>
+
           <section class="detail-section">
             <h3 class="section-title">访客信息</h3>
             <dl class="detail-meta">
@@ -561,6 +696,23 @@ onMounted(async () => {
         </template>
       </NDrawerContent>
     </NDrawer>
+
+    <NotificationComposeModal
+      v-model:show="notify.show"
+      :title="notify.title"
+      :template-label="notify.templateLabel"
+      :contact="notify.contact"
+      :recipient="notify.recipient"
+      :subject="notify.subject"
+      :body="notify.body"
+      :sending="notify.sending"
+      @submit="sendNotify"
+    />
+
+    <NotificationSettingsDrawer
+      v-model:show="settingsOpen"
+      default-tab="feedback_handled"
+    />
   </div>
 </template>
 
@@ -618,6 +770,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .tool-btn--on {
@@ -902,6 +1055,58 @@ onMounted(async () => {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 4px;
+}
+
+.notify-hint {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.notify-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.notify-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.notify-state {
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  corner-shape: round;
+  color: var(--muted-foreground);
+  font-size: 0.74rem;
+  line-height: 1.7;
+}
+
+.notify-state--sent {
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+  color: var(--success);
+}
+
+.notify-state--manual {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  color: var(--primary);
+}
+
+.notify-state--failed {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+  color: var(--danger);
+}
+
+.notify-by {
+  color: var(--subtle-foreground);
+  font-size: 0.74rem;
 }
 
 .detail-meta {

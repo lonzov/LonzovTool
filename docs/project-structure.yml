@@ -108,6 +108,7 @@
     useIsMobile.js: 窄屏断点判定（matchMedia，771px），抽屉与浮窗按它切铺满/定宽
     components/SensitiveActionModal.vue: 敏感操作的身份确认模态框，按服务端给出的方式校验并换一次性凭证
     components/NotificationComposeModal.vue: 审核/反馈结果通知的撰写弹窗，可改收件人、主题、正文并标记人工通知
+    components/NotificationSettingsDrawer.vue: 通知设置抽屉，维护结果通知邮件模板与飞书通知模式
     switchRailStyle.js: 特殊符号页开关的参考轨道配色（开启深灰、关闭浅灰），全局 NSwitch 已由主题映射
     useImageLightbox.js: 截图灯箱，按需加载 Viewer.js（仅控制台使用）
     components/FeedbackFilterModal.vue: 反馈筛选规则编辑器，字段+匹配方式+动态搜索取值
@@ -132,7 +133,6 @@
     pages/ConsoleOverview.vue: 控制台概览页，待办数量卡（抽屉展开明细）、站点指标、访问统计、提交预览、Uptime 与管理日志
     pages/ConsoleSubmissions.vue: 网址提交审核页，待审队列与通过/拒绝，支持 ?id= 定位并高亮指定提交
     pages/ConsoleFeedback.vue: 反馈处理页，状态筛选与增量翻页，详情含截图看大图，可标记已处理与删除，支持 ?id= 直接展开指定反馈
-    pages/ConsoleNotifications.vue: 通知设置页，维护投稿通过/拒绝与反馈已处理/无法处理四份邮件模板，并配置飞书待办提醒的即时/摘要模式
   composables:
     honorBrowserNotice.js: 荣耀浏览器提示，建议用户更换标准浏览器（按需加载）
     useAnnouncement.js: 弹窗公告的访客分桶、本地条件判断与关闭记忆

@@ -8,18 +8,24 @@ import {
   CheckmarkCircle24Regular,
   Delete24Regular,
   DismissCircle24Regular,
+  Mail24Regular,
   Open24Regular,
+  Settings24Regular,
 } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
+import NotificationComposeModal from '../components/NotificationComposeModal.vue'
+import NotificationSettingsDrawer from '../components/NotificationSettingsDrawer.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
+import { usePermissions } from '../usePermissions.js'
 
 /* 待审核队列。概览里的卡片只是预览，审核动作全部落在这个页面：
    概览的「查看」会带 ?id= 跳过来，这里定位并高亮那一条。 */
 const { ensureTrust } = useSensitiveTrust()
+const { can } = usePermissions()
 
 const route = useRoute()
 const router = useRouter()
@@ -39,6 +45,19 @@ const errorText = ref('')
 const highlightId = ref(0)
 const notes = ref({})
 const pendingId = ref(0)
+const notifyLoadingId = ref(0)
+const settingsOpen = ref(false)
+const notify = ref({
+  show: false,
+  item: null,
+  title: '发送审核结果通知',
+  templateLabel: '',
+  contact: '',
+  recipient: '',
+  subject: '',
+  body: '',
+  sending: false,
+})
 /* 长文本走模态框查看：列表里只留摘要，避免一屏被一段说明撑爆 */
 const detailModal = ref({ show: false, title: '', body: '' })
 
@@ -130,6 +149,70 @@ async function review(item, status) {
   }
 }
 
+const NOTIFICATION_LABEL = {
+  email: '已发邮件',
+  manual: '已人工通知',
+  failed: '通知失败',
+}
+
+function notificationText(item) {
+  return NOTIFICATION_LABEL[item.notification_status] || '未通知'
+}
+
+async function openNotify(item) {
+  notifyLoadingId.value = item.id
+  try {
+    const preview = await consoleFetch(
+      `/api/v1/console/notifications/submissions/${item.id}`,
+    )
+    notify.value = {
+      show: true,
+      item,
+      title: '发送审核结果通知',
+      templateLabel: preview?.label || '',
+      contact: preview?.contact || item.contact || '',
+      recipient: preview?.recipient || '',
+      subject: preview?.subject || '',
+      body: preview?.body || '',
+      sending: false,
+    }
+  } catch (e) {
+    if (e?.code === 'unauthorized') {
+      router.replace({ path: '/console/login', query: { redirect: route.fullPath } })
+      return
+    }
+    message.error(e?.message || '读取通知模板失败，请稍后重试')
+  } finally {
+    notifyLoadingId.value = 0
+  }
+}
+
+async function sendNotify(payload) {
+  const item = notify.value.item
+  if (!item) return
+  notify.value.sending = true
+  try {
+    const updated = await consoleFetch(
+      `/api/v1/console/notifications/submissions/${item.id}`,
+      { method: 'POST', body: JSON.stringify(payload) },
+    )
+    Object.assign(item, updated)
+    notify.value.show = false
+    message.success(
+      payload.channel === 'manual' ? '已标记为人工通知' : '通知邮件已发送',
+    )
+  } catch (e) {
+    if (e?.code === 'unauthorized') {
+      router.replace({ path: '/console/login', query: { redirect: route.fullPath } })
+      return
+    }
+    if (e?.code === 'notification_failed') item.notification_status = 'failed'
+    message.error(e?.message || '发送失败，请稍后重试')
+  } finally {
+    notify.value.sending = false
+  }
+}
+
 async function remove(item) {
   const confirmed = await confirmDialog({
     title: '删除提交',
@@ -186,15 +269,26 @@ onMounted(async () => {
           {{ option.label }}
         </button>
       </div>
-      <AppButton
-        variant="outline"
-        size="sm"
-        icon-only
-        label="刷新"
-        :icon="ArrowClockwise24Regular"
-        :disabled="loading"
-        @click="load()"
-      />
+      <div class="toolbar-actions">
+        <AppButton
+          v-if="can('accounts.manage')"
+          variant="outline"
+          size="sm"
+          :icon="Settings24Regular"
+          @click="settingsOpen = true"
+        >
+          通知设置
+        </AppButton>
+        <AppButton
+          variant="outline"
+          size="sm"
+          icon-only
+          label="刷新"
+          :icon="ArrowClockwise24Regular"
+          :disabled="loading"
+          @click="load()"
+        />
+      </div>
     </div>
 
     <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
@@ -245,6 +339,32 @@ onMounted(async () => {
           <div v-if="item.published" class="published-hint">
             已上架为卡片 <code>{{ item.published_slug }}</code>
             <span v-if="item.published_hidden">（审核隐藏）</span>
+          </div>
+
+          <div v-if="item.status !== 'pending'" class="notify-row">
+            <span
+              class="notify-state"
+              :class="{
+                'notify-state--sent': item.notification_status === 'email',
+                'notify-state--manual': item.notification_status === 'manual',
+                'notify-state--failed': item.notification_status === 'failed',
+              }"
+            >
+              {{ notificationText(item) }}
+            </span>
+            <span v-if="item.notified_by" class="notify-by">
+              {{ item.notified_by }}
+            </span>
+            <AppButton
+              variant="outline"
+              size="sm"
+              :icon="Mail24Regular"
+              :disabled="notifyLoadingId === item.id || pendingId === item.id"
+              :loading="notifyLoadingId === item.id"
+              @click="openNotify(item)"
+            >
+              发送通知
+            </AppButton>
           </div>
 
           <div class="submission-actions">
@@ -340,6 +460,23 @@ onMounted(async () => {
       <!-- 纯文本渲染：内容来自访客，按 HTML 解释等于开 XSS 口子 -->
       <p class="detail-body">{{ detailModal.body || '—' }}</p>
     </AppModal>
+
+    <NotificationComposeModal
+      v-model:show="notify.show"
+      :title="notify.title"
+      :template-label="notify.templateLabel"
+      :contact="notify.contact"
+      :recipient="notify.recipient"
+      :subject="notify.subject"
+      :body="notify.body"
+      :sending="notify.sending"
+      @submit="sendNotify"
+    />
+
+    <NotificationSettingsDrawer
+      v-model:show="settingsOpen"
+      default-tab="submission_approved"
+    />
   </div>
 </template>
 
@@ -357,6 +494,13 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -537,6 +681,43 @@ onMounted(async () => {
 
 .published-hint code {
   font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+}
+
+.notify-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.notify-state {
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  corner-shape: round;
+  color: var(--muted-foreground);
+  font-size: 0.74rem;
+  line-height: 1.7;
+}
+
+.notify-state--sent {
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+  color: var(--success);
+}
+
+.notify-state--manual {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+  color: var(--primary);
+}
+
+.notify-state--failed {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+  color: var(--danger);
+}
+
+.notify-by {
+  color: var(--subtle-foreground);
+  font-size: 0.74rem;
 }
 
 /* 滚动交给 AppModal 的 content-scrollable 统一处理，这里只负责排版 */
