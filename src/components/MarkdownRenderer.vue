@@ -321,9 +321,7 @@ onUnmounted(() => {
 
 <style>
 /* ===== 超链接下划线样式（unscoped，避免 scoped :deep 提优先级压过子挂载组件） ===== */
-.md-content a,
-.md-content .trigger-feedback,
-.md-content .trigger-url-tj {
+.md-content a {
   color: var(--foreground);
   text-decoration: none;
   position: relative;
@@ -334,9 +332,7 @@ onUnmounted(() => {
   background: none;
 }
 
-.md-content a::before,
-.md-content .trigger-feedback::before,
-.md-content .trigger-url-tj::before {
+.md-content a::before {
   content: '';
   display: block;
   position: absolute;
@@ -355,9 +351,7 @@ onUnmounted(() => {
   z-index: 2;
 }
 
-.md-content a::after,
-.md-content .trigger-feedback::after,
-.md-content .trigger-url-tj::after {
+.md-content a::after {
   content: '';
   display: block;
   position: absolute;
@@ -372,15 +366,11 @@ onUnmounted(() => {
   z-index: 3;
 }
 
-.md-content a:hover::before,
-.md-content .trigger-feedback:hover::before,
-.md-content .trigger-url-tj:hover::before {
+.md-content a:hover::before {
   opacity: 0;
 }
 
-.md-content a:hover::after,
-.md-content .trigger-feedback:hover::after,
-.md-content .trigger-url-tj:hover::after {
+.md-content a:hover::after {
   opacity: 1;
 }
 

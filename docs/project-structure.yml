@@ -23,7 +23,6 @@
     TurnstileFallback.vue: 极验不可用时的 Cloudflare Turnstile 备用验证弹窗，只负责换 token，不做放行判断
     Footer.vue: 页脚组件，包含版权信息、运行时间、隐私政策入口
     HomeView.vue: 首页视图容器，集成搜索栏、工具网格、页脚
-    IframeForm.vue: iframe 表单封装组件
     MarkdownRenderer.vue: 共享 Markdown 渲染组件，封装 markdown-it（含标题锚点 id）、链接拦截、统一内容样式
     AnnouncementMarkdown.vue: 弹窗公告的 Markdown 渲染，禁用原始 HTML，外链/图片走协议白名单
     AnnouncementModal.vue: 弹窗公告的展示与按钮行为，两种倒计时、关闭规则与预览模式
@@ -108,6 +107,7 @@
     passwordStrength.js: 密码位数预检（下限与服务端一致），其余强度规则由服务端在提交时判定
     useIsMobile.js: 窄屏断点判定（matchMedia，771px），抽屉与浮窗按它切铺满/定宽
     components/SensitiveActionModal.vue: 敏感操作的身份确认模态框，按服务端给出的方式校验并换一次性凭证
+    components/NotificationComposeModal.vue: 审核/反馈结果通知的撰写弹窗，可改收件人、主题、正文并标记人工通知
     switchRailStyle.js: 特殊符号页开关的参考轨道配色（开启深灰、关闭浅灰），全局 NSwitch 已由主题映射
     useImageLightbox.js: 截图灯箱，按需加载 Viewer.js（仅控制台使用）
     components/FeedbackFilterModal.vue: 反馈筛选规则编辑器，字段+匹配方式+动态搜索取值
@@ -132,6 +132,7 @@
     pages/ConsoleOverview.vue: 控制台概览页，待办数量卡（抽屉展开明细）、站点指标、访问统计、提交预览、Uptime 与管理日志
     pages/ConsoleSubmissions.vue: 网址提交审核页，待审队列与通过/拒绝，支持 ?id= 定位并高亮指定提交
     pages/ConsoleFeedback.vue: 反馈处理页，状态筛选与增量翻页，详情含截图看大图，可标记已处理与删除，支持 ?id= 直接展开指定反馈
+    pages/ConsoleNotifications.vue: 通知设置页，维护投稿通过/拒绝与反馈已处理/无法处理四份邮件模板，并配置飞书待办提醒的即时/摘要模式
   composables:
     honorBrowserNotice.js: 荣耀浏览器提示，建议用户更换标准浏览器（按需加载）
     useAnnouncement.js: 弹窗公告的访客分桶、本地条件判断与关闭记忆
@@ -195,7 +196,6 @@
     privacy.md: 隐私政策
     promotion.md: 推广合作说明页面
     third-party.md: 第三方组件与许可声明页
-    url-tj.md: 网址提交页面
   vendor:
     mcfc:
       mcfc.js: Minecraft 格式化代码渲染库（MIT），用于 T显编辑器 § 颜色代码渲染

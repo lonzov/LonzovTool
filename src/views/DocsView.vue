@@ -4,7 +4,6 @@ import { createApp } from 'vue'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 import AboutView from './AboutView.vue'
 import NotFoundView from './NotFoundView.vue'
-import IframeForm from '../components/IframeForm.vue'
 import DonateCard from '../components/DonateCard.vue'
 import DonateRecords from '../components/DonateRecords.vue'
 import StatsInfoBar from '../components/StatsInfoBar.vue'
@@ -48,7 +47,6 @@ const docMap = {
   '': '../docs/index.md',
   '/': '../docs/index.md',
   introduction: '../docs/introduction.md',
-  'url-tj': '../docs/url-tj.md',
   promotion: '../docs/promotion.md',
   privacy: '../docs/privacy.md',
   donate: '../docs/donate.md',
@@ -67,18 +65,6 @@ function mountComponentsToPlaceholders() {
   componentApps.length = 0
 
   nextTick(() => {
-    // iframe-form 占位符
-    const iframePlaceholders = document.querySelectorAll('.iframe-form-placeholder')
-    iframePlaceholders.forEach(placeholder => {
-      const id = placeholder.dataset.formId
-      const src = placeholder.dataset.formSrc
-      const height = parseInt(placeholder.dataset.formHeight) || 600
-
-      const app = createApp(IframeForm, { src, height, id })
-      app.mount(placeholder)
-      componentApps.push(app)
-    })
-
     // donate-card 占位符
     const donatePlaceholders = document.querySelectorAll('.donate-card-placeholder')
     donatePlaceholders.forEach(placeholder => {
@@ -126,17 +112,8 @@ async function loadDoc(name) {
     }
     const raw = await loader()
 
-    // 替换组件标记为占位符
-    let result = raw.replace(
-      /<iframe-form\s+src="([^"]+)"(?:\s+height="(\d+)")?(?:\s+key="([^"]+)")?\s*\/>/g,
-      (match, src, height, key) => {
-        const id = key || `form-${src.replace(/[^a-zA-Z0-9]/g, '_')}`
-        return `<div class="iframe-form-placeholder" data-form-src="${src}" data-form-height="${height || 600}" data-form-id="${id}"></div>`
-      }
-    )
-
     // 替换 donate-card 组件标记
-    result = result.replace(
+    let result = raw.replace(
       /<donate-card\s*\/>/g,
       '<div class="donate-card-placeholder"></div>'
     )
