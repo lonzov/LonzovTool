@@ -55,6 +55,14 @@ const form = reactive({
 
 const submitting = ref(false)
 const formError = ref('')
+
+watch(formError, (text) => {
+  if (!text) return
+  if (text.includes('已取消')) message.info(text)
+  else if (text.includes('正在加载')) message.warning(text)
+  else message.error(text)
+  formError.value = ''
+})
 /* 验证组件的生命周期状态：showCaptcha 在未 ready 时调用不会有任何反应，
    所以必须自己跟踪，否则用户点了按钮看起来像"没响应" */
 const captchaState = ref('loading')
@@ -685,11 +693,6 @@ onBeforeUnmount(() => {
           aria-hidden="true"
         />
 
-        <p v-if="formError" class="form-error">{{ formError }}</p>
-        <p v-else-if="captchaState === 'failed'" class="form-error">
-          人机验证组件加载失败，请检查网络后刷新重试
-        </p>
-
         <div class="form-footer">
           <button class="app-btn app-btn--fill" type="button" :disabled="submitting" @click="handleSubmit">
             <NIcon :component="Send16Regular" :size="16" />
@@ -870,12 +873,6 @@ onBeforeUnmount(() => {
   height: 1px;
   opacity: 0;
   pointer-events: none;
-}
-
-.form-error {
-  margin: 0;
-  color: var(--destructive);
-  font-size: 0.8rem;
 }
 
 .form-footer {

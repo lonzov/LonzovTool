@@ -10,6 +10,7 @@ import {
   NInput,
   NRadio,
   NRadioGroup,
+  useMessage,
 } from 'naive-ui'
 import {
   CheckmarkCircle24Regular,
@@ -91,6 +92,7 @@ const route = useRoute()
 const { showFeedbackDrawer } = useFeedbackDrawer()
 
 const formRef = ref(null)
+const message = useMessage()
 const imageInput = ref(null)
 const images = ref([])
 
@@ -108,6 +110,14 @@ const mode = ref('form')
 const resultId = ref(0)
 const submitting = ref(false)
 const formError = ref('')
+
+watch(formError, (text) => {
+  if (!text) return
+  if (text.includes('已取消')) message.info(text)
+  else if (text.includes('正在加载')) message.warning(text)
+  else message.error(text)
+  formError.value = ''
+})
 const imageError = ref('')
 const imageBusy = ref(false)
 const dragActive = ref(false)
@@ -765,11 +775,6 @@ onBeforeUnmount(() => {
           autocomplete="off"
           aria-hidden="true"
         />
-
-        <p v-if="formError" class="fb-error">{{ formError }}</p>
-        <p v-else-if="captchaState === 'failed'" class="fb-error">
-          人机验证组件加载失败，请检查网络后关闭抽屉重试
-        </p>
 
         <div class="fb-actions">
           <AppButton variant="outline" :disabled="submitting" @click="clearAll">
