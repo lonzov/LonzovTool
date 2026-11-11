@@ -33,6 +33,8 @@ const DRAFT_DELAY_MS = 400
 const message = useMessage()
 
 const formRef = ref(null)
+const categoryItemRef = ref(null)
+const categoryError = ref('')
 const fileInput = ref(null)
 const iconFile = ref(null)
 const iconFilePreview = ref('')
@@ -98,6 +100,18 @@ const categoryLeaves = computed(() =>
   categoryOptions.value.flatMap((item) => item.children || [item]),
 )
 
+function validateCategory() {
+  const selected = categoryLeaves.value.find((item) => item.value === form.category)
+  categoryError.value = selected ? '' : '请选择分类'
+  return !!selected
+}
+
+function onCategoryChange(value) {
+  form.category = value
+  categoryError.value = ''
+  nextTick(() => categoryItemRef.value?.restoreValidation())
+}
+
 const previewLogo = computed(() => {
   if (form.iconMode === 'file') return iconFilePreview.value || DEFAULT_ICON
   return form.iconUrl.trim() || DEFAULT_ICON
@@ -111,7 +125,6 @@ const rules = {
     trigger: ['input', 'blur'],
   },
   summary: { required: true, message: '请填写卡片介绍', trigger: ['input', 'blur'] },
-  category: { required: true, message: '请选择分类', trigger: ['change', 'blur'] },
   contact: { required: true, message: '请填写联系方式', trigger: ['input', 'blur'] },
   iconUrl: {
     validator(_rule, value) {
@@ -347,6 +360,14 @@ function buildPayload(replaceId = 0, turnstileToken = '') {
 
 async function handleSubmit() {
   formError.value = ''
+  if (!validateCategory()) {
+    formError.value = '请选择分类'
+    await nextTick()
+    document
+      .querySelector('.n-form-item-feedback--error')
+      ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    return
+  }
   try {
     await formRef.value?.validate()
   } catch (errors) {
@@ -566,13 +587,20 @@ onBeforeUnmount(() => {
             />
           </NFormItem>
 
-          <NFormItem label="分类" path="category">
+          <NFormItem
+            ref="categoryItemRef"
+            label="分类"
+            path="category"
+            :validation-status="categoryError ? 'error' : undefined"
+            :feedback="categoryError || undefined"
+          >
             <NCascader
               v-model:value="form.category"
               :options="categoryOptions"
-              placement="bottom-end"
+              placement="bottom-start"
               placeholder="选择首页已有的分类"
               :menu-props="{ class: 'card-category-menu' }"
+              @update:value="onCategoryChange"
             />
           </NFormItem>
 

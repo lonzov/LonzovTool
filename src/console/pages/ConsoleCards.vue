@@ -567,7 +567,7 @@ async function remove(card) {
         <NCascader
           v-model:value="categoryFilter"
           :options="categoryCascaderOptions"
-          placement="bottom-end"
+          placement="bottom-start"
           clearable
           placeholder="全部分类"
           class="category-select"
@@ -804,9 +804,10 @@ async function remove(card) {
             <NCascader
               v-model:value="form.category_id"
               :options="categoryCascaderOptions"
-              placement="bottom-end"
+              placement="bottom-start"
               placeholder="选择分类"
               :menu-props="{ class: 'card-category-menu' }"
+              @update:value="categoryError = ''"
             />
           </NFormItem>
           <div class="field--wide settings-block">
@@ -1366,26 +1367,5 @@ async function remove(card) {
   .toolbar-actions .app-btn {
     padding: 0 12px;
   }
-}
-</style>
-
-<style>
-/* 下拉菜单被 teleport 到 body，只能走非 scoped 样式。
-   分类名不长，单列 130px 足够；两列加起来约 260px，避免整块菜单空出大片区域 */
-.card-category-menu {
-  width: auto !important;
-  max-width: calc(100vw - 32px);
-  min-width: 0 !important;
-}
-
-.card-category-menu .n-cascader-submenu {
-  width: 130px !important;
-  min-width: 130px !important;
-}
-
-.card-category-menu .n-cascader-option {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 </style>
