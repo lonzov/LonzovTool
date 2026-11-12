@@ -409,6 +409,9 @@ function readableError(error, response) {
     const text = error.message || '提交过于频繁，请稍后再试'
     return seconds > 0 ? `${text}（请在 ${seconds} 秒后重试）` : text
   }
+  if (error.code === 'ip_banned') {
+    return '你已被封禁，如有疑问请联系站长'
+  }
   if (error.code === 'captcha_failed') {
     return error.message || '人机验证未通过，请重新完成验证后再提交'
   }

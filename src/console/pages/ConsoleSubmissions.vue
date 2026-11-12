@@ -11,9 +11,11 @@ import {
   Mail24Regular,
   Open24Regular,
   Settings24Regular,
+  ShieldProhibited24Regular,
 } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
+import IpBanDrawer from '../components/IpBanDrawer.vue'
 import NotificationComposeModal from '../components/NotificationComposeModal.vue'
 import NotificationSettingsDrawer from '../components/NotificationSettingsDrawer.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
@@ -47,6 +49,7 @@ const notes = ref({})
 const pendingId = ref(0)
 const notifyLoadingId = ref(0)
 const settingsOpen = ref(false)
+const banOpen = ref(false)
 const notify = ref({
   show: false,
   item: null,
@@ -274,11 +277,20 @@ onMounted(async () => {
           v-if="can('accounts.manage')"
           variant="outline"
           size="sm"
+          icon-only
+          label="通知设置"
           :icon="Settings24Regular"
           @click="settingsOpen = true"
-        >
-          通知设置
-        </AppButton>
+        />
+        <AppButton
+          v-if="can('accounts.manage')"
+          variant="outline"
+          size="sm"
+          icon-only
+          label="IP 封禁"
+          :icon="ShieldProhibited24Regular"
+          @click="banOpen = true"
+        />
         <AppButton
           variant="outline"
           size="sm"
@@ -320,7 +332,10 @@ onMounted(async () => {
                 <NIcon :component="Open24Regular" :size="12" />
               </a>
             </div>
-            <span class="submission-time">{{ new Date(item.created_at * 1000).toLocaleString() }}</span>
+            <div class="submission-side">
+              <span class="submission-time">{{ new Date(item.created_at * 1000).toLocaleString() }}</span>
+              <span class="submission-ip">{{ item.source_ip || 'IP 未知' }}</span>
+            </div>
           </div>
 
           <dl class="submission-meta">
@@ -391,12 +406,12 @@ onMounted(async () => {
                   class="action-btn"
                   variant="outline"
                   size="sm"
-                  icon-only
-                  label="拒绝"
                   :icon="DismissCircle24Regular"
                   :disabled="pendingId === item.id"
                   @click="review(item, 'rejected')"
-                />
+                >
+                  拒绝
+                </AppButton>
               </template>
               <template v-else>
                 <AppButton
@@ -415,23 +430,23 @@ onMounted(async () => {
                   class="action-btn"
                   variant="outline"
                   size="sm"
-                  icon-only
-                  label="拒绝"
                   :icon="DismissCircle24Regular"
                   :disabled="pendingId === item.id"
                   @click="review(item, 'rejected')"
-                />
+                >
+                  拒绝
+                </AppButton>
                 <AppButton
                   v-else
                   class="action-btn"
                   variant="outline"
                   size="sm"
-                  icon-only
-                  label="通过"
                   :icon="CheckmarkCircle24Regular"
                   :disabled="pendingId === item.id"
                   @click="review(item, 'approved')"
-                />
+                >
+                  通过
+                </AppButton>
               </template>
               <AppButton
                 class="action-btn"
@@ -477,6 +492,8 @@ onMounted(async () => {
       v-model:show="settingsOpen"
       default-tab="submission_approved"
     />
+
+    <IpBanDrawer v-model:show="banOpen" />
   </div>
 </template>
 
@@ -617,6 +634,21 @@ onMounted(async () => {
   flex-shrink: 0;
   color: var(--subtle-foreground);
   font-size: 0.74rem;
+}
+
+.submission-side {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.submission-ip {
+  color: var(--subtle-foreground);
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.7rem;
+  overflow-wrap: anywhere;
 }
 
 .submission-meta {
@@ -850,10 +882,10 @@ onMounted(async () => {
     grid-column: 2;
   }
 
-  .submission-time {
+  .submission-side {
     grid-column: 2;
     grid-row: 2;
-    font-size: 0.7rem;
+    align-items: flex-start;
   }
 
   .submission-meta {
@@ -875,11 +907,13 @@ onMounted(async () => {
   .note-input {
     width: 100%;
     min-width: 0;
+    flex: 0 0 30px;
   }
 
   .action-buttons {
     justify-content: flex-end;
     margin-left: 0;
+    flex-wrap: nowrap;
   }
 }
 </style>

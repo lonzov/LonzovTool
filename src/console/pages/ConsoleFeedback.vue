@@ -16,10 +16,12 @@ import {
   Image24Regular,
   Mail24Regular,
   Settings24Regular,
+  ShieldProhibited24Regular,
 } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import FeedbackFilterModal from '../components/FeedbackFilterModal.vue'
+import IpBanDrawer from '../components/IpBanDrawer.vue'
 import NotificationComposeModal from '../components/NotificationComposeModal.vue'
 import NotificationSettingsDrawer from '../components/NotificationSettingsDrawer.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
@@ -91,6 +93,7 @@ const saving = ref(false)
 const reopening = ref(false)
 const notifyLoadingId = ref(0)
 const settingsOpen = ref(false)
+const banOpen = ref(false)
 const notify = ref({
   show: false,
   item: null,
@@ -431,11 +434,20 @@ onMounted(async () => {
           v-if="can('accounts.manage')"
           variant="outline"
           size="sm"
+          icon-only
+          label="通知设置"
           :icon="Settings24Regular"
           @click="settingsOpen = true"
-        >
-          通知设置
-        </AppButton>
+        />
+        <AppButton
+          v-if="can('accounts.manage')"
+          variant="outline"
+          size="sm"
+          icon-only
+          label="IP 封禁"
+          :icon="ShieldProhibited24Regular"
+          @click="banOpen = true"
+        />
         <AppButton
           variant="outline"
           size="sm"
@@ -480,6 +492,7 @@ onMounted(async () => {
               <span class="issue-excerpt">{{ excerpt(item) }}</span>
               <span class="issue-meta">
                 #{{ item.id }} · {{ relativeTime(item.created_at) }} · {{ statusOf(item).text }}
+                <template v-if="item.created_ip"> · {{ item.created_ip }}</template>
                 <template v-if="item.note"> · 已备注</template>
               </span>
             </span>
@@ -672,6 +685,10 @@ onMounted(async () => {
                 <dt>页面</dt>
                 <dd>{{ detail.item.page_path || '未填写' }}</dd>
               </div>
+              <div class="meta-row">
+                <dt>来源 IP</dt>
+                <dd class="meta-code">{{ detail.item.created_ip || '未知' }}</dd>
+              </div>
               <div v-if="detail.item.handled_by" class="meta-row">
                 <dt>处理人</dt>
                 <dd>{{ detail.item.handled_by }} · {{ fullTime(detail.item.handled_at) }}</dd>
@@ -713,6 +730,8 @@ onMounted(async () => {
       v-model:show="settingsOpen"
       default-tab="feedback_handled"
     />
+
+    <IpBanDrawer v-model:show="banOpen" />
   </div>
 </template>
 
@@ -1137,6 +1156,11 @@ onMounted(async () => {
   min-width: 0;
   color: var(--foreground);
   overflow-wrap: anywhere;
+}
+
+.meta-code {
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.8125rem;
 }
 
 .meta-link {

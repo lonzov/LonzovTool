@@ -454,6 +454,11 @@ async function performSubmit(replaceId = 0, turnstileToken = '') {
         return
       }
 
+      if (error?.code === 'ip_banned') {
+        formError.value = '你已被封禁，如有疑问请联系站长'
+        return
+      }
+
       formError.value = error?.message || '提交失败，请稍后重试'
       if (error?.code === 'rate_limited') {
         // 提示里承诺"草稿已保存"，就得当场落盘，不能等防抖那一拍

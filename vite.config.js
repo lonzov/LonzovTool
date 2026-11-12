@@ -70,8 +70,22 @@ export default defineConfig({
   // preview 的 host/port/proxy 默认继承 server，配这一处即可同时覆盖 pnpm dev 与 pnpm preview。
   server: {
     proxy: {
-      '/api': { target: 'http://127.0.0.1:8010', changeOrigin: true },
-      '/uploads': { target: 'http://127.0.0.1:8010', changeOrigin: true },
+      '/api': {
+        target: 'http://127.0.0.1:8010',
+        changeOrigin: true,
+        // 只补 X-Forwarded-For，不用 xfwd：xfwd 还会写 X-Forwarded-Host，
+        // Django 开启 USE_X_FORWARDED_HOST 后会拿局域网 IP 去撞 ALLOWED_HOSTS。
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            const remote = req.socket?.remoteAddress
+            if (remote) proxyReq.setHeader('X-Forwarded-For', remote)
+          })
+        },
+      },
+      '/uploads': {
+        target: 'http://127.0.0.1:8010',
+        changeOrigin: true,
+      },
     },
   },
   ssgOptions: {
