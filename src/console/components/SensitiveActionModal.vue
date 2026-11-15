@@ -8,6 +8,7 @@ import InputOtp from '../../components/ui/InputOtp.vue'
 import { consoleFetch } from '../../console/consoleRequest.js'
 import { submitOnEnter } from '../enterSubmit.js'
 import { useResendCountdown } from '../../console/useResendCountdown.js'
+import { authenticationCredentialJSON, prepareRequestOptions } from '../webauthn.js'
 
 /**
  * 敏感操作的身份确认。
@@ -36,6 +37,7 @@ const METHOD_LABEL = {
   password: '密码',
   email: '邮箱验证码',
   totp: '动态口令',
+  passkey: '通行密钥',
 }
 
 const methods = ref([])
@@ -47,6 +49,8 @@ const codeSent = ref(false)
 const sending = ref(false)
 const busy = ref(false)
 const check = ref({ status: '', message: '' })
+const passkeyToken = ref('')
+const passkeyOptions = ref(null)
 const otpRef = ref(null)
 const { remaining, start: startCountdown, reset: resetCountdown } = useResendCountdown()
 
@@ -54,7 +58,7 @@ const onlyOne = computed(() => methods.value.length <= 1)
 const canSubmit = computed(() => {
   if (busy.value || !method.value) return false
   if (method.value === 'password') return password.value.length > 0
-  if (method.value === 'totp') return /^\d{6}$/.test(code.value)
+  if (method.value === 'passkey') return !!passkeyOptions.value
   return /^\d{6}$/.test(code.value)
 })
 
@@ -68,6 +72,8 @@ function reset() {
   sending.value = false
   busy.value = false
   check.value = { status: '', message: '' }
+  passkeyToken.value = ''
+  passkeyOptions.value = null
   resetCountdown()
 }
 
@@ -76,6 +82,8 @@ async function loadOptions() {
     const payload = await consoleFetch(OPTIONS_URL)
     methods.value = Array.isArray(payload?.methods) ? payload.methods : []
     maskedEmail.value = payload?.masked_email || ''
+    passkeyToken.value = payload?.passkey_token || ''
+    passkeyOptions.value = payload?.passkey_options || null
     const emailCodeSent =
       payload?.email_code_sent === true && methods.value.includes('email')
     // 关掉弹窗再打开时，服务端会告诉这个邮箱是否已有待验证码；
@@ -136,15 +144,31 @@ async function submit() {
   busy.value = true
   check.value = { status: '', message: '' }
   try {
-    const credential = method.value === 'password' ? password.value : code.value.trim()
+    let credential = method.value === 'password' ? password.value : code.value.trim()
+    let token = ''
+    if (method.value === 'passkey') {
+      if (!window.PublicKeyCredential || !navigator.credentials) {
+        throw new Error('passkey_unsupported')
+      }
+      const assertion = await navigator.credentials.get({
+        publicKey: prepareRequestOptions(passkeyOptions.value),
+      })
+      if (!assertion) throw new Error('passkey_cancelled')
+      credential = JSON.stringify(authenticationCredentialJSON(assertion))
+      token = passkeyToken.value
+    }
     const payload = await consoleFetch(VERIFY_URL, {
       method: 'POST',
-      body: JSON.stringify({ method: method.value, credential }),
+      body: JSON.stringify({ method: method.value, credential, token }),
     })
     emit('verified', payload?.token || '')
     emit('update:show', false)
   } catch (e) {
-    if (e?.code === 'invalid_code' || e?.code === 'totp_invalid' || e?.code === 'current_password_incorrect') {
+    if (e?.message === 'passkey_unsupported') {
+      message.error('当前设备不支持通行密钥')
+    } else if (e?.name === 'NotAllowedError' || e?.message === 'passkey_cancelled') {
+      message.warning('通行密钥验证已取消')
+    } else if (e?.code === 'invalid_code' || e?.code === 'totp_invalid' || e?.code === 'current_password_incorrect') {
       check.value = { status: 'error', message: e.message || '验证不通过' }
       if (method.value !== 'password') {
         code.value = ''
@@ -248,6 +272,12 @@ const actions = computed(() => [
         @keydown.enter="submitOnEnter($event, submit)"
       />
       <p class="field-hint">打开手机上的身份验证器 App，输入它当前显示的 6 位动态码</p>
+    </div>
+
+    <div v-else-if="method === 'passkey'" class="field">
+      <p class="field-hint">
+        点击下方确认后，使用此设备上的指纹、面容或系统 PIN 完成身份验证。
+      </p>
     </div>
 
     <p v-if="check.message" class="field-error">{{ check.message }}</p>

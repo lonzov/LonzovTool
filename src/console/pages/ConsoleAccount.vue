@@ -20,6 +20,7 @@ import { useConsoleAuth } from '../consoleAuth.js'
 import { describeDevice } from '../deviceLabel.js'
 import { checkPasswordLength, checkPasswordRemote } from '../passwordStrength.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
+import { prepareCreationOptions, registrationCredentialJSON } from '../webauthn.js'
 
 const SESSIONS_URL = '/api/v1/console/sessions'
 const PASSWORD_URL = '/api/v1/console/password'
@@ -27,6 +28,7 @@ const TOTP_SETUP_URL = '/api/v1/console/2fa/totp/setup'
 const TOTP_VERIFY_URL = '/api/v1/console/2fa/totp/verify'
 const TOTP_DISABLE_URL = '/api/v1/console/2fa/totp/disable'
 const TOTP_RECOVERY_URL = '/api/v1/console/2fa/totp/recovery'
+const PASSKEYS_URL = '/api/v1/console/2fa/passkeys'
 
 const route = useRoute()
 const router = useRouter()
@@ -45,14 +47,106 @@ const recoveryGeneratedText = computed(() => {
   return `生成于 ${new Date(stamp * 1000).toLocaleString('zh-CN')}`
 })
 
+/* ===== 通行密钥 ===== */
+const passkeys = ref([])
+const passkeysLoading = ref(false)
+const passkeyBusy = ref(false)
+const passkeyModal = ref(false)
+const passkeySupported = computed(
+  () => typeof window !== 'undefined' && !!window.PublicKeyCredential,
+)
+
+function openPasskeyModal() {
+  passkeyModal.value = true
+  loadPasskeys()
+}
+
+async function loadPasskeys() {
+  passkeysLoading.value = true
+  try {
+    const payload = await consoleFetch(PASSKEYS_URL)
+    passkeys.value = Array.isArray(payload?.items) ? payload.items : []
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    message.error(e?.message || '读取通行密钥失败，请稍后重试')
+  } finally {
+    passkeysLoading.value = false
+  }
+}
+
+async function startPasskeyRegistration() {
+  if (!passkeySupported.value) {
+    message.error('当前浏览器不支持通行密钥')
+    return
+  }
+  passkeyBusy.value = true
+  try {
+    const options = await consoleFetch(`${PASSKEYS_URL}/options`, {
+      method: 'POST',
+      headers: authHeaders(),
+    })
+    const credential = await navigator.credentials.create({
+      publicKey: prepareCreationOptions(options.public_key),
+    })
+    if (!credential) throw new Error('empty credential')
+    const device = describeDevice(navigator.userAgent)
+    const payload = await consoleFetch(PASSKEYS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: options.token,
+        credential: registrationCredentialJSON(credential),
+        name: device.label || '通行密钥',
+      }),
+    })
+    pendingVerifyToken.value = ''
+    passkeys.value = Array.isArray(payload?.items) ? payload.items : []
+    await refreshAccount()
+    message.success('通行密钥已添加')
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    if (e?.name === 'NotAllowedError') {
+      message.warning('已取消添加通行密钥')
+    } else if (e?.name === 'NotSupportedError') {
+      message.error('当前设备不支持通行密钥')
+    } else {
+      message.error(e?.message || '添加通行密钥失败，请稍后重试')
+    }
+  } finally {
+    passkeyBusy.value = false
+  }
+}
+
+async function removePasskey(id) {
+  if (!id) return
+  passkeyBusy.value = true
+  try {
+    const payload = await consoleFetch(`${PASSKEYS_URL}/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    })
+    pendingVerifyToken.value = ''
+    passkeys.value = Array.isArray(payload?.items) ? payload.items : []
+    await refreshAccount()
+    message.success('已移除通行密钥')
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    message.error(e?.message || '移除通行密钥失败，请稍后重试')
+  } finally {
+    passkeyBusy.value = false
+  }
+}
+
 /* ===== 敏感操作的身份确认 ===== */
 const sensitiveModal = ref(false)
 const pendingAction = ref('')
 const pendingVerifyToken = ref('')
+const pendingPasskeyId = ref(0)
 
-function askVerify(action) {
+function askVerify(action, passkeyId = 0) {
   pendingAction.value = action
   pendingVerifyToken.value = ''
+  pendingPasskeyId.value = passkeyId
   sensitiveModal.value = true
 }
 
@@ -63,6 +157,8 @@ function onVerified(token) {
   if (action === 'totp-enable') startTotpSetup()
   else if (action === 'totp-disable') runTotpDisable()
   else if (action === 'recovery') runRecoveryRegenerate()
+  else if (action === 'passkey-add') startPasskeyRegistration()
+  else if (action === 'passkey-delete') removePasskey(pendingPasskeyId.value)
   else if (action === 'password') {
     passwordForm.value = { next: '' }
     passwordSubmitted.value = false
@@ -310,7 +406,10 @@ async function loadSessions() {
   }
 }
 
-onMounted(loadSessions)
+onMounted(() => {
+  loadSessions()
+  loadPasskeys()
+})
 
 async function changePassword() {
   passwordSubmitted.value = true
@@ -517,6 +616,24 @@ async function runRevokeOthers() {
           </AppButton>
         </div>
       </div>
+
+      <div class="section-row">
+        <div class="row-main">
+          <span class="row-title">通行密钥</span>
+          <span class="row-desc">
+            {{
+              passkeys.length
+                ? `已添加 ${passkeys.length} 枚，可在管理中查看或移除`
+                : '使用指纹、面容或设备 PIN 登录'
+            }}
+          </span>
+        </div>
+        <div class="row-action">
+          <AppButton variant="outline" size="sm" @click="openPasskeyModal">
+            管理
+          </AppButton>
+        </div>
+      </div>
     </section>
 
     <section class="account-section">
@@ -691,6 +808,63 @@ async function runRevokeOthers() {
       </div>
     </AppModal>
 
+    <AppModal
+      v-model:show="passkeyModal"
+      title="通行密钥"
+      description="使用指纹、面容或设备 PIN 登录；添加后可在登录与敏感操作时使用"
+      :max-width="520"
+      :auto-focus="false"
+      :actions="[{ text: '关闭', variant: 'outline', onClick: () => (passkeyModal = false) }]"
+    >
+      <div class="passkey-manage">
+        <div class="passkey-manage-head">
+          <p class="passkey-manage-hint">
+            已添加 {{ passkeys.length }} 枚通行密钥
+          </p>
+          <AppButton
+            variant="solid"
+            size="sm"
+            :disabled="!passkeySupported || passkeyBusy"
+            :loading="passkeyBusy"
+            @click="askVerify('passkey-add')"
+          >
+            添加通行密钥
+          </AppButton>
+        </div>
+
+        <p v-if="passkeysLoading" class="passkey-empty">读取中…</p>
+        <p v-else-if="!passkeys.length" class="passkey-empty">
+          还没有添加通行密钥。添加后，登录时可使用此设备的指纹、面容或 PIN 完成验证。
+        </p>
+        <ul v-else class="passkey-list">
+          <li v-for="passkey in passkeys" :key="passkey.id" class="passkey-item">
+            <div class="passkey-item-main">
+              <span class="passkey-item-name">{{ passkey.name || '通行密钥' }}</span>
+              <span class="passkey-item-meta">
+                添加于 {{ formatTime(passkey.created_at) }}
+                <template v-if="passkey.last_used_at">
+                  · 最近使用 {{ formatTime(passkey.last_used_at) }}
+                </template>
+              </span>
+            </div>
+            <AppButton
+              variant="text"
+              tone="danger"
+              size="sm"
+              :disabled="passkeyBusy"
+              @click="askVerify('passkey-delete', passkey.id)"
+            >
+              移除
+            </AppButton>
+          </li>
+        </ul>
+
+        <p v-if="!passkeySupported" class="passkey-warning">
+          当前浏览器不支持通行密钥，请使用最新版 Chrome、Edge、Safari 或 Firefox。
+        </p>
+      </div>
+    </AppModal>
+
     <SensitiveActionModal v-model:show="sensitiveModal" @verified="onVerified" />
 
     <AppModal
@@ -837,6 +1011,83 @@ async function runRevokeOthers() {
   font-size: 0.8rem;
   line-height: 1.45;
   transition: color 0.4s ease;
+}
+
+.passkey-manage {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.passkey-manage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.passkey-manage-hint {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.passkey-empty {
+  margin: 0;
+  padding: 18px 14px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--subtle-foreground);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.passkey-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.passkey-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+}
+
+.passkey-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.passkey-item-name {
+  color: var(--foreground);
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.passkey-item-meta {
+  color: var(--subtle-foreground);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.passkey-warning {
+  margin: 0;
+  color: var(--destructive);
+  font-size: 0.78rem;
+  line-height: 1.5;
 }
 
 .row-value {
@@ -1121,6 +1372,17 @@ async function runRevokeOthers() {
 
   .device-action :deep(.app-btn__label) {
     display: none;
+  }
+}
+
+@media (width <= 560px) {
+  .passkey-manage-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .passkey-item {
+    align-items: flex-start;
   }
 }
 </style>

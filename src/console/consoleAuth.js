@@ -18,6 +18,8 @@ const ACCOUNT_KEY = 'console_account'
 const LOGIN_URL = '/api/v1/console/login'
 const LOGIN_2FA_URL = '/api/v1/console/login/2fa'
 const LOGIN_2FA_RESEND_URL = '/api/v1/console/login/2fa/resend'
+const LOGIN_2FA_PASSKEY_OPTIONS_URL = '/api/v1/console/login/2fa/passkey/options'
+const LOGIN_2FA_PASSKEY_URL = '/api/v1/console/login/2fa/passkey'
 const ME_URL = '/api/v1/console/me'
 const LOGOUT_URL = '/api/v1/console/logout'
 
@@ -32,6 +34,7 @@ function normalizeAccount(info) {
     roles: Array.isArray(info.roles) ? info.roles.filter((role) => typeof role === 'string') : [],
     totpEnabled: info.totp_enabled === true,
     totpRecoveryGeneratedAt: Number(info.totp_recovery_generated_at) || 0,
+    passkeyCount: Number(info.passkey_count) || 0,
   }
 }
 
@@ -168,6 +171,27 @@ async function resendTwoFactorCode(challenge) {
   })
 }
 
+async function passkeyLoginOptions(challenge) {
+  if (!challenge) {
+    throw new ConsoleApiError('challenge_invalid', '验证已失效，请重新登录')
+  }
+  return consoleFetch(LOGIN_2FA_PASSKEY_OPTIONS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ challenge }),
+  })
+}
+
+async function submitPasskey(challenge, token, credential, remember = false) {
+  const payload = await consoleFetch(LOGIN_2FA_PASSKEY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ challenge, token, credential, remember: remember === true }),
+  })
+  rememberSession(payload)
+  return payload
+}
+
 /** 进入控制台或改完密码后向服务端确认会话、刷新权限与临时密码标记 */
 async function verify() {
   const payload = await consoleFetch(ME_URL)
@@ -194,6 +218,8 @@ export function useConsoleAuth() {
     login,
     submitTwoFactor,
     resendTwoFactorCode,
+    passkeyLoginOptions,
+    submitPasskey,
     verify,
     logout,
   }

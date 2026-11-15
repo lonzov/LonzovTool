@@ -100,13 +100,14 @@
     ConsoleLayout.vue: 控制台外壳，页面标题取自 consoleNav，并把控制台目录挂到侧边栏分类栏，右上角为账号与退出，按权限隐藏目录项并拦下无权限路由，临时密码时顶部常驻提示条
     consoleAuth.js: 控制台会话状态（账号邮箱、角色、权限清单与临时密码标记），登录、退出与会话校验，凭证为后端下发的 HttpOnly Cookie
     consoleRequest.js: 控制台请求与错误映射（服务端信封 → 状态码 → 网络/超时），写操作回填 CSRF 头，不依赖 Vue
+    webauthn.js: 通行密钥的 WebAuthn 选项解码与浏览器凭证 JSON 序列化
     enterSubmit.js: 控制台表单的 Enter 提交判定，跳过输入法组合、文本域及非文本控件
     consoleNav.js: 控制台目录配置，按业务分组并作为侧边栏分类栏与页面标题的唯一来源；分组可展开，权限过滤后空组隐藏
     usePermissions.js: 控制台权限判定（can/permissions/account），由壳层 provide 给子页面，口径与服务端一致
     deviceLabel.js: 把 User-Agent 压成「浏览器 · 系统」一句人话，供登录设备列表展示
     passwordStrength.js: 密码位数预检（下限与服务端一致），其余强度规则由服务端在提交时判定
     useIsMobile.js: 窄屏断点判定（matchMedia，771px），抽屉与浮窗按它切铺满/定宽
-    components/SensitiveActionModal.vue: 敏感操作的身份确认模态框，按服务端给出的方式校验并换一次性凭证
+    components/SensitiveActionModal.vue: 敏感操作的身份确认模态框，按服务端给出的方式校验并换一次性凭证，支持密码、邮箱验证码、动态口令与通行密钥
     components/NotificationComposeModal.vue: 审核/反馈结果通知的撰写弹窗，可改收件人、主题、正文并标记人工通知
     components/NotificationSettingsDrawer.vue: 通知设置抽屉，维护结果通知邮件模板与飞书通知模式
     components/IpBanDrawer.vue: IP 封禁抽屉，查看、添加和解除提交入口的 IP/CIDR/范围规则
@@ -121,10 +122,10 @@
     components/ConsolePanel.vue: 控制台面板卡外壳（图标 + 标题 + 说明 + 内容区）
     components/StatCard.vue: 控制台指标卡（图标 + 标签 + 数值 + 说明）
     components/TodoDrawer.vue: 待办抽屉，列出待审核提交与待处理反馈并跳转到对应页面
-    pages/ConsoleAccount.vue: 我的账号页，账号信息、改密码、邮箱两步验证开关与登录设备列表（撤销会话）
+    pages/ConsoleAccount.vue: 我的账号页，账号信息、改密码、邮箱两步验证开关、通行密钥与登录设备列表（撤销会话）
     pages/ConsoleAccounts.vue: 账号管理页，账号列表与新建/编辑/重置密码，编辑角色与单点授权范围
     pages/ConsoleCards.vue: 卡片管理页，列表与模拟布局两种视图、增删改与显隐，分类内可拖动排序（两种视图一致），模拟布局的卡片与首页一样按行拉齐高度，图标保存时上传
-    pages/ConsoleLogin.vue: 控制台登录页，邮箱 + 密码登录，账号开启两步验证时切到验证码步骤，仅拥有控制台权限的账号可进入
+    pages/ConsoleLogin.vue: 控制台登录页，邮箱 + 密码登录，账号开启两步验证时切到验证码或通行密钥步骤，仅拥有控制台权限的账号可进入
     pages/ConsoleNotices.vue: 公告管理页，列表、增删改，时间用日期选择器录入
     pages/ConsoleAnnouncements.vue: 弹窗公告管理页，列表拖动排序、条件/按钮/关闭规则编辑与线上同款预览
     pages/ConsoleDownloads.vue: 下载页管理页，列表含下载量，编辑链接、版本与 Markdown 正文，封面保存时上传

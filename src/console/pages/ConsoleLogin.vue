@@ -9,10 +9,12 @@ import { ConsoleApiError, useConsoleAuth } from '../consoleAuth.js'
 import { useResendCountdown } from '../useResendCountdown.js'
 import { useGeetestChallenge } from '../../composables/useGeetestChallenge.js'
 import TurnstileFallback from '../../components/TurnstileFallback.vue'
+import { authenticationCredentialJSON, prepareRequestOptions } from '../webauthn.js'
 
 const route = useRoute()
 const router = useRouter()
-const { login, submitTwoFactor, resendTwoFactorCode } = useConsoleAuth()
+const { login, submitTwoFactor, resendTwoFactorCode, passkeyLoginOptions, submitPasskey } =
+  useConsoleAuth()
 
 const email = ref('')
 const password = ref('')
@@ -63,14 +65,23 @@ const METHOD_LABEL = {
   totp: '身份验证器',
   email: '邮箱验证码',
   recovery: '恢复码',
+  passkey: '通行密钥',
+}
+
+function methodDescription(item) {
+  if (item === 'totp') return '用手机上的身份验证器 App'
+  if (item === 'passkey') return '使用指纹、面容或设备 PIN'
+  if (item === 'recovery') return '使用保存的恢复码'
+  return '发送 6 位验证码到邮箱'
 }
 
 const availableMethods = computed(() =>
-  methods.value.filter((item) => item === 'totp' || item === 'email'),
+  methods.value.filter((item) => item === 'totp' || item === 'email' || item === 'passkey'),
 )
-/* 只剩一种方式时不用选，直接进入该方式；两种都有才让用户点 */
+/* 只剩一种方式时不用选，直接进入该方式；多种方式才让用户点 */
 const needMethodChoice = computed(() => !method.value && availableMethods.value.length > 1)
 const isRecovery = computed(() => method.value === 'recovery')
+const isPasskey = computed(() => method.value === 'passkey')
 const canSendCode = computed(
   () => !sendingCode.value && resendSeconds.value === 0 && !!challenge.value,
 )
@@ -110,6 +121,7 @@ const canSubmit = computed(
 )
 const canSubmitCode = computed(() => {
   if (submitting.value || !method.value) return false
+  if (isPasskey.value) return true
   if (isRecovery.value) return code.value.trim().length >= 8
   return /^\d{6}$/.test(code.value)
 })
@@ -120,6 +132,7 @@ const ATTEMPTS_WARN_AT = 5
 const codeSentText = computed(() => {
   if (method.value === 'totp') return '打开身份验证器，输入当前显示的 6 位动态码'
   if (method.value === 'recovery') return '输入一枚恢复码（形如 abc12-def34）'
+  if (method.value === 'passkey') return '使用此设备上的指纹、面容或系统 PIN 完成验证'
   if (method.value === 'email') {
     if (!codeSent.value && resendSeconds.value > 0) {
       return `发送验证码过于频繁，请 ${formatDuration(resendSeconds.value)} 后重试`
@@ -353,6 +366,10 @@ function closeTurnstile() {
 
 async function submitCode() {
   if (!canSubmitCode.value) return
+  if (isPasskey.value) {
+    await loginWithPasskey()
+    return
+  }
   codeCheck.value = { status: '', message: '' }
   submitting.value = true
   try {
@@ -360,6 +377,45 @@ async function submitCode() {
     router.replace(resolveRedirect())
   } catch (e) {
     handleCodeFailure(e)
+  } finally {
+    submitting.value = false
+  }
+}
+
+async function loginWithPasskey() {
+  if (!window.PublicKeyCredential || !navigator.credentials) {
+    error.value = '当前浏览器不支持通行密钥，请换一种验证方式'
+    return
+  }
+  submitting.value = true
+  error.value = ''
+  try {
+    const options = await passkeyLoginOptions(challenge.value)
+    const credential = await navigator.credentials.get({
+      publicKey: prepareRequestOptions(options.public_key),
+    })
+    if (!credential) throw new Error('empty credential')
+    await submitPasskey(
+      challenge.value,
+      options.token,
+      authenticationCredentialJSON(credential),
+      rememberDevice.value,
+    )
+    router.replace(resolveRedirect())
+  } catch (e) {
+    if (e instanceof ConsoleApiError) {
+      if (e.code === 'challenge_invalid' || e.code === 'passkey_challenge_invalid') {
+        backToCredentials(e.message || '验证已失效，请重新登录')
+      } else {
+        error.value = e.message || '通行密钥验证失败，请重试'
+      }
+    } else if (e?.name === 'NotAllowedError') {
+      error.value = '通行密钥验证已取消，请重试'
+    } else if (e?.name === 'NotSupportedError') {
+      error.value = '当前设备不支持通行密钥，请换一种验证方式'
+    } else {
+      error.value = '通行密钥验证失败，请重试'
+    }
   } finally {
     submitting.value = false
   }
@@ -444,9 +500,7 @@ watch(code, (val) => {
                 @click="chooseMethod(item)"
               >
                 <span class="method-name">{{ METHOD_LABEL[item] }}</span>
-                <span class="method-desc">
-                  {{ item === 'totp' ? '用手机上的身份验证器 App' : '发送 6 位验证码到邮箱' }}
-                </span>
+                <span class="method-desc">{{ methodDescription(item) }}</span>
               </button>
               <button
                 class="method-link"
@@ -503,6 +557,12 @@ watch(code, (val) => {
               <button class="method-link" type="button" :disabled="submitting" @click="chooseMethod('email')">
                 改用邮箱验证码
               </button>
+            </div>
+
+            <div v-else-if="method === 'passkey'" class="field">
+              <p class="passkey-note">
+                点击下方「验证」，然后使用此设备上的指纹、面容或系统 PIN 完成身份验证。
+              </p>
             </div>
 
             <div v-else-if="method === 'recovery'" class="field">
@@ -718,6 +778,13 @@ watch(code, (val) => {
 .method-desc {
   color: var(--muted-foreground);
   font-size: 0.78rem;
+}
+
+.passkey-note {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+  line-height: 1.6;
 }
 
 .method-link {
