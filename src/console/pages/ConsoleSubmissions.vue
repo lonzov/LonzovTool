@@ -116,6 +116,7 @@ async function scrollToHighlight() {
 }
 
 async function review(item, status) {
+  if (!(await ensureTrust())) return
   pendingId.value = item.id
   try {
     const updated = await consoleFetch(`/api/v1/console/submissions/${item.id}/review`, {

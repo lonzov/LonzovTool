@@ -18,7 +18,10 @@ defineProps({
 </script>
 
 <template>
-  <header class="console-page-header">
+  <header
+    class="console-page-header"
+    :class="{ 'console-page-header--title-only': !description }"
+  >
     <div class="console-title-row">
       <div class="console-title-main">
         <NIcon v-if="icon" :component="icon" class="console-title-icon" />
@@ -35,6 +38,10 @@ defineProps({
 <style scoped>
 .console-page-header {
   margin-bottom: 0.875rem;
+}
+
+.console-page-header--title-only {
+  margin-bottom: 1.2rem;
 }
 
 .console-title-row {

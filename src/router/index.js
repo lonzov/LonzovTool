@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { History24Regular, Image24Regular, People24Regular } from '@vicons/fluent'
 
 import HomeView from '../components/HomeView.vue'
 import OfflineDiagnostic from '../components/OfflineDiagnostic.vue'
@@ -165,6 +166,8 @@ const ConsoleSubmissions = () => import('../console/pages/ConsoleSubmissions.vue
 const ConsoleFeedback = () => import('../console/pages/ConsoleFeedback.vue')
 const ConsoleAccounts = () => import('../console/pages/ConsoleAccounts.vue')
 const ConsoleAccount = () => import('../console/pages/ConsoleAccount.vue')
+const ConsoleSystem = () => import('../console/pages/ConsoleSystem.vue')
+const ConsoleSystemAssets = () => import('../console/pages/ConsoleSystemAssets.vue')
 const ConsoleLogin = () => import('../console/pages/ConsoleLogin.vue')
 const DevOptionsView = () => import('../views/DevOptionsView.vue')
 
@@ -393,15 +396,6 @@ export const routes = [
         },
       },
       {
-        path: 'logs',
-        name: 'console-logs',
-        component: ConsoleLogs,
-        meta: {
-          title: '管理日志 - 控制台 - 小舟工具箱',
-          permission: 'logs.read',
-        },
-      },
-      {
         path: 'submissions',
         name: 'console-submissions',
         component: ConsoleSubmissions,
@@ -420,21 +414,62 @@ export const routes = [
         },
       },
       {
-        path: 'accounts',
-        name: 'console-accounts',
-        component: ConsoleAccounts,
-        meta: {
-          title: '账号管理 - 控制台 - 小舟工具箱',
-          permission: 'accounts.manage',
-        },
-      },
-      {
         path: 'account',
         name: 'console-account',
         component: ConsoleAccount,
         meta: {
           title: '我的账号 - 控制台 - 小舟工具箱',
         },
+      },
+      {
+        path: 'system',
+        component: ConsoleSystem,
+        meta: {
+          title: '系统设置 - 控制台 - 小舟工具箱',
+          permission: 'system.manage',
+        },
+        children: [
+          {
+            path: '',
+            redirect: { name: 'console-system-assets' },
+          },
+          {
+            path: 'assets',
+            name: 'console-system-assets',
+            component: ConsoleSystemAssets,
+            meta: {
+              title: '图片资产 - 系统设置 - 控制台 - 小舟工具箱',
+              headerTitle: '图片资产',
+              headerDescription: '',
+              headerIcon: Image24Regular,
+              permission: 'system.manage',
+            },
+          },
+          {
+            path: 'accounts',
+            name: 'console-system-accounts',
+            component: ConsoleAccounts,
+            meta: {
+              title: '账号管理 - 系统设置 - 控制台 - 小舟工具箱',
+              headerTitle: '账号管理',
+              headerDescription: '',
+              headerIcon: People24Regular,
+              permission: 'accounts.manage',
+            },
+          },
+          {
+            path: 'logs',
+            name: 'console-system-logs',
+            component: ConsoleLogs,
+            meta: {
+              title: '管理日志 - 系统设置 - 控制台 - 小舟工具箱',
+              headerTitle: '管理日志',
+              headerDescription: '',
+              headerIcon: History24Regular,
+              permission: 'logs.read',
+            },
+          },
+        ],
       },
     ],
   },

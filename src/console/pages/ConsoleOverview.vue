@@ -545,7 +545,7 @@ onBeforeUnmount(() => {
       :icon="History24Regular"
       title="管理日志"
       description="登录、内容增删改等管理操作，按时间正序"
-      to="/console/logs"
+      to="/console/system/logs"
     >
       <template #extra>
         <div class="log-toolbar">

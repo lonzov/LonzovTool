@@ -29,7 +29,16 @@ const checking = ref(true)
 const sessionError = ref('')
 
 const navItems = computed(() => visibleConsoleNav(can))
-const current = computed(() => findConsoleNav(route.path))
+const current = computed(() => {
+  const item = findConsoleNav(route.path)
+  return {
+    ...item,
+    icon: route.meta.headerIcon || item.icon,
+    title: route.meta.headerTitle || item.title,
+    description:
+      route.meta.headerDescription === undefined ? item.description : route.meta.headerDescription,
+  }
+})
 // 目录里没权限的项不渲染，直接在地址栏输进来的同样拦下：权限未就绪前不能判定，等 /me 回来
 const denied = computed(() => {
   const required = route.meta.permission

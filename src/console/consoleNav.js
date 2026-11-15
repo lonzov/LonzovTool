@@ -6,13 +6,12 @@ import {
   Clipboard24Regular,
   DataPie24Regular,
   Database24Regular,
-  History24Regular,
   Home24Regular,
   MegaphoneLoud24Regular,
-  People24Regular,
   PeopleCommunity24Regular,
   PersonCircle24Regular,
   Send24Regular,
+  Settings24Regular,
   Speaker224Regular,
 } from '@vicons/fluent'
 
@@ -118,27 +117,19 @@ export const CONSOLE_NAV = [
     ],
   },
   {
-    key: '/console/accounts',
-    label: '账号管理',
-    icon: People24Regular,
-    title: '账号管理',
-    description: '控制台账号、角色与单点授权，停用与改权在下次请求即刻生效',
-    permission: 'accounts.manage',
-  },
-  {
-    key: '/console/logs',
-    label: '管理日志',
-    icon: History24Regular,
-    title: '管理日志',
-    description: '登录、内容增删改与账号变更的完整记录，可检索与翻页',
-    permission: 'logs.read',
-  },
-  {
     key: '/console/account',
     label: '我的账号',
     icon: PersonCircle24Regular,
     title: '我的账号',
     description: '修改密码与查看登录设备，撤销不再使用的会话',
+  },
+  {
+    key: '/console/system',
+    label: '系统设置',
+    icon: Settings24Regular,
+    title: '系统设置',
+    description: '系统级维护与存储清理',
+    permission: 'system.manage',
   },
 ]
 
@@ -153,6 +144,8 @@ export function findConsoleNav(path) {
   function find(items) {
     for (const item of items) {
       if (item.key === normalized) return item
+      // 根路径 /console 不能按前缀吞掉所有子页；其余一级路由下面允许有子页面
+      if (item.key !== '/console' && normalized.startsWith(`${item.key}/`)) return item
       if (item.children) {
         const child = find(item.children)
         if (child) return child
