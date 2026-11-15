@@ -1,6 +1,6 @@
 <script setup>
 import { onBeforeUnmount, ref, watch } from 'vue'
-import { NSelect } from 'naive-ui'
+import { NInput, NSelect } from 'naive-ui'
 import { Add24Regular, Dismiss24Regular } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
@@ -19,12 +19,32 @@ const FACET_LIMIT = 7
 const SEARCH_DEBOUNCE_MS = 200
 
 const FIELD_OPTIONS = [
-  { label: '联系方式', value: 'email' },
-  { label: '页面路径', value: 'path' },
   { label: '类型', value: 'kind' },
+  { label: '标题', value: 'title' },
+  { label: '内容', value: 'content' },
+  { label: '优先级', value: 'priority' },
+  { label: '页面路径', value: 'path' },
+  { label: 'IP', value: 'ip' },
+  { label: '联系方式', value: 'email' },
+  { label: '通知', value: 'notification' },
 ]
 
 const OP_OPTIONS = {
+  title: [
+    { label: '等于', value: 'eq' },
+    { label: '包含', value: 'contains' },
+    { label: '开头是', value: 'prefix' },
+    { label: '正则', value: 'regex' },
+  ],
+  content: [
+    { label: '等于', value: 'eq' },
+    { label: '包含', value: 'contains' },
+    { label: '开头是', value: 'prefix' },
+    { label: '正则', value: 'regex' },
+  ],
+  priority: [{ label: '等于', value: 'eq' }],
+  notification: [{ label: '等于', value: 'eq' }],
+  ip: [{ label: '匹配', value: 'eq' }],
   email: [
     { label: '等于', value: 'eq' },
     { label: '包含', value: 'contains' },
@@ -37,6 +57,27 @@ const OP_OPTIONS = {
   ],
   kind: [{ label: '等于', value: 'eq' }],
 }
+
+const PRIORITY_OPTIONS = [
+  { label: '一般', value: 'normal' },
+  { label: '注意', value: 'attention' },
+  { label: '紧急', value: 'urgent' },
+  { label: '重复', value: 'duplicate' },
+]
+
+const NOTIFICATION_OPTIONS = [
+  { label: '未发', value: 'none' },
+  { label: '已发', value: 'sent' },
+  { label: '无法通知', value: 'unavailable' },
+]
+
+const FIXED_OPTIONS = {
+  priority: PRIORITY_OPTIONS,
+  notification: NOTIFICATION_OPTIONS,
+}
+
+const FACET_FIELDS = new Set(['email', 'path', 'kind'])
+const FREE_TEXT_FIELDS = new Set(['title', 'content', 'ip'])
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -74,11 +115,29 @@ function describe(option) {
   return option.count > 0 ? `${option.label}（${option.count}）` : option.label
 }
 
+function isFreeTextField(field) {
+  return FREE_TEXT_FIELDS.has(field)
+}
+
+function isFacetField(field) {
+  return FACET_FIELDS.has(field)
+}
+
+function valuePlaceholder(rule) {
+  if (rule.field === 'ip') return 'IP、CIDR 或起止范围'
+  if (rule.op === 'regex') return '输入正则表达式'
+  return rule.field === 'content' ? '输入内容关键词' : '输入标题关键词'
+}
+
 async function loadFacets(index, keyword) {
   const rule = draft.value[index]
   if (!rule) return
   const state = facets.value[index]
   if (!state) return
+  if (!isFacetField(rule.field)) {
+    state.options = []
+    return
+  }
 
   state.loading = true
   try {
@@ -176,7 +235,24 @@ const actions = [
           :options="OP_OPTIONS[rule.field]"
           size="small"
         />
+        <NInput
+          v-if="isFreeTextField(rule.field)"
+          v-model:value="rule.value"
+          class="rule-value"
+          size="small"
+          maxlength="200"
+          :placeholder="valuePlaceholder(rule)"
+        />
         <NSelect
+          v-else-if="FIXED_OPTIONS[rule.field]"
+          v-model:value="rule.value"
+          class="rule-value"
+          :options="FIXED_OPTIONS[rule.field]"
+          size="small"
+          placeholder="选择..."
+        />
+        <NSelect
+          v-else
           class="rule-value"
           v-model:value="rule.value"
           :options="facets[index]?.options || []"
@@ -208,7 +284,7 @@ const actions = [
     </AppButton>
 
     <p class="rule-hint">
-      多条规则同时生效；下拉只列出最常出现的 7 个值，输入关键词可缩小范围。
+      多条规则同时生效；标题和内容支持正则；IP 支持单地址、CIDR 和起止范围；下拉字段只列出最常出现的 7 个值，输入关键词可缩小范围。
     </p>
   </AppModal>
 </template>

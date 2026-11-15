@@ -110,6 +110,15 @@ html[data-motion='reduced'] .app-modal-blur {
   display: none !important;
 }
 
+/* 抽屉内的下拉菜单由 Naive 挂到 body，默认层级低于抽屉 */
+.feedback-priority-menu {
+  z-index: 2200 !important;
+}
+
+.notify-template-menu {
+  z-index: 2400 !important;
+}
+
 /* ===== 页面动画的过渡类（仅用于覆盖全局 transition） ===== */
 .page-enter-active,
 .page-leave-active {

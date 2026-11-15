@@ -164,7 +164,10 @@ const rules = {
       trigger: ['input', 'blur'],
     },
   ],
-  detail: { required: true, message: '请描述一下发生了什么', trigger: ['input', 'blur'] },
+  detail: [
+    { required: true, message: '请描述一下发生了什么', trigger: ['input', 'blur'] },
+    { min: 15, message: '详细描述至少 15 个字', trigger: ['input', 'blur'] },
+  ],
 }
 
 /* ===== 极验 =====
@@ -698,6 +701,7 @@ onBeforeUnmount(() => {
               v-model:value="form.detail"
               type="textarea"
               :autosize="{ minRows: 3, maxRows: 8 }"
+              minlength="15"
               maxlength="2000"
               show-count
               :placeholder="detailPlaceholder"

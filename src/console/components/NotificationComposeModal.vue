@@ -1,15 +1,15 @@
 <script setup>
-import { computed, reactive, watch } from 'vue'
-import { NInput, useMessage } from 'naive-ui'
-import { Copy24Regular } from '@vicons/fluent'
+import { computed, reactive, ref, watch } from 'vue'
+import { NInput, NSelect, useMessage } from 'naive-ui'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
-import { copyText } from '../../utils/clipboard.js'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
   title: { type: String, default: '发送通知' },
   templateLabel: { type: String, default: '' },
+  templates: { type: Array, default: () => [] },
+  defaultEvent: { type: String, default: '' },
   contact: { type: String, default: '' },
   recipient: { type: String, default: '' },
   subject: { type: String, default: '' },
@@ -21,18 +21,42 @@ const emit = defineEmits(['update:show', 'submit'])
 const message = useMessage()
 
 const form = reactive({ recipient: '', subject: '', body: '' })
+const selectedEvent = ref('')
 
 const contactIsEmail = computed(() => (props.contact || '').includes('@'))
+const templateOptions = computed(() =>
+  props.templates.map((item) => ({ label: item.label || item.event, value: item.event })),
+)
 
 watch(
   () => props.show,
   (show) => {
     if (!show) return
-    form.recipient = props.recipient || ''
-    form.subject = props.subject || ''
-    form.body = props.body || ''
+    selectedEvent.value = props.defaultEvent || props.templates[0]?.event || ''
+    applyTemplate()
   },
 )
+
+watch(selectedEvent, () => {
+  if (props.show) applyTemplate()
+})
+
+function applyTemplate() {
+  const template = props.templates.find((item) => item.event === selectedEvent.value)
+  if (template) {
+    form.recipient = template.recipient || ''
+    form.subject = template.subject || ''
+    form.body = template.body || ''
+    return
+  }
+  form.recipient = props.recipient || ''
+  form.subject = props.subject || ''
+  form.body = props.body || ''
+}
+
+function fillQqEmail() {
+  form.recipient = `${(props.contact || '').trim()}@qq.com`
+}
 
 function close() {
   if (props.sending) return
@@ -62,21 +86,12 @@ function submitEmail() {
     recipient,
     subject: form.subject.trim(),
     body: form.body,
+    event: selectedEvent.value || undefined,
   })
 }
 
 function submitManual() {
-  emit('submit', { channel: 'manual' })
-}
-
-async function copyBody() {
-  if (!form.body.trim()) {
-    message.error('正文为空，没有可复制的内容')
-    return
-  }
-  const ok = await copyText(form.body)
-  if (ok) message.success('已复制正文')
-  else message.error('复制失败，请手动选中')
+  emit('submit', { channel: 'manual', event: selectedEvent.value || undefined })
 }
 </script>
 
@@ -85,18 +100,33 @@ async function copyBody() {
     :show="show"
     :title="title"
     :max-width="620"
+    :z-index="2300"
     :auto-focus="false"
     content-scrollable
     :before-close="() => !sending"
     @update:show="emit('update:show', $event)"
   >
     <div class="notify-form">
-      <p v-if="templateLabel" class="template-hint">使用模板：{{ templateLabel }}</p>
+      <label v-if="templateOptions.length" class="field">
+        <span class="field-label">使用模板</span>
+        <NSelect
+          v-model:value="selectedEvent"
+          :options="templateOptions"
+          :menu-props="{ class: 'notify-template-menu' }"
+        />
+      </label>
+      <p v-else-if="templateLabel" class="template-hint">使用模板：{{ templateLabel }}</p>
       <p v-if="contact" class="contact-hint">
         原联系方式：<strong>{{ contact }}</strong>
-        <template v-if="!contactIsEmail">
-          （不是邮箱，可在下方手动补全，例如 QQ 号补成 <code>123456@qq.com</code>）
-        </template>
+        <AppButton
+          v-if="!contactIsEmail"
+          class="contact-fill"
+          variant="text"
+          size="xs"
+          @click="fillQqEmail"
+        >
+          补全QQ邮箱
+        </AppButton>
       </p>
 
       <label class="field">
@@ -130,24 +160,11 @@ async function copyBody() {
           :disabled="sending"
         />
       </label>
-
-      <p class="manual-hint">
-        对方只留了 QQ / 微信等联系方式时，可复制文案后自行联系，并在下方标记“已人工通知”。
-      </p>
     </div>
 
     <template #footer>
       <div class="notify-footer">
         <div class="footer-left">
-          <AppButton
-            variant="text"
-            size="sm"
-            :icon="Copy24Regular"
-            :disabled="sending"
-            @click="copyBody"
-          >
-            复制正文
-          </AppButton>
           <AppButton
             variant="text"
             size="sm"
@@ -184,8 +201,7 @@ async function copyBody() {
 }
 
 .template-hint,
-.contact-hint,
-.manual-hint {
+.contact-hint {
   margin: 0;
   color: var(--muted-foreground);
   font-size: 0.8125rem;
@@ -197,11 +213,8 @@ async function copyBody() {
   font-weight: 600;
 }
 
-.contact-hint code {
-  padding: 1px 4px;
-  border-radius: var(--radius-sm);
-  background: var(--muted);
-  color: var(--foreground);
+.contact-fill {
+  margin-left: 6px;
 }
 
 .field {
@@ -221,29 +234,21 @@ async function copyBody() {
   justify-content: space-between;
   gap: 12px;
   width: 100%;
+  min-width: 0;
+  flex-wrap: nowrap;
 }
 
 .footer-main {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .footer-left {
   display: flex;
   align-items: center;
   gap: 4px;
-  flex-wrap: wrap;
-}
-
-@media (max-width: 560px) {
-  .notify-footer {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .footer-main {
-    justify-content: flex-end;
-  }
+  min-width: 0;
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NDrawer, NDrawerContent, NIcon, NInput, NSelect, useMessage } from 'naive-ui'
 import {
@@ -15,6 +15,8 @@ import {
   Filter24Regular,
   Image24Regular,
   Mail24Regular,
+  MailProhibited24Regular,
+  Search24Regular,
   Settings24Regular,
   ShieldProhibited24Regular,
 } from '@vicons/fluent'
@@ -86,20 +88,23 @@ const pendingId = ref(0)
 /** 已应用的筛选规则 */
 const rules = ref([])
 const filterOpen = ref(false)
+const search = ref('')
+let searchTimer = 0
 
 const detail = ref({ show: false, item: null })
 const form = ref({ priority: 'normal', note: '' })
 const saving = ref(false)
 const reopening = ref(false)
 const notifyLoadingId = ref(0)
+const unavailableLoadingId = ref(0)
 const settingsOpen = ref(false)
 const banOpen = ref(false)
 const notify = ref({
   show: false,
   item: null,
-  event: 'feedback_handled',
   title: '发送反馈通知',
-  templateLabel: '',
+  templates: [],
+  defaultEvent: 'feedback_handled',
   contact: '',
   recipient: '',
   subject: '',
@@ -108,9 +113,9 @@ const notify = ref({
 })
 
 const NOTIFICATION_LABEL = {
-  email: '已发邮件',
-  manual: '已人工通知',
-  failed: '通知失败',
+  email: '已发',
+  manual: '已发',
+  failed: '无法通知',
 }
 
 const emptyText = computed(() => (loading.value ? '读取中…' : '没有符合条件的反馈'))
@@ -193,6 +198,8 @@ async function load({ append = false } = {}) {
       limit: String(PAGE_SIZE),
     })
     if (status.value) params.set('status', status.value)
+    const keyword = search.value.trim()
+    if (keyword) params.set('q', keyword)
     for (const rule of rules.value) {
       params.append('filter', `${rule.field}:${rule.op}:${rule.value}`)
     }
@@ -288,26 +295,40 @@ async function markHandled(item) {
 }
 
 function notificationText(item) {
-  return NOTIFICATION_LABEL[item?.notification_status] || '未通知'
+  return NOTIFICATION_LABEL[item?.notification_status] || '未发'
 }
 
-async function openNotify(item, event) {
+async function openNotify(item) {
   notifyLoadingId.value = item.id
   try {
-    const params = new URLSearchParams({ event })
-    const preview = await consoleFetch(
-      `/api/v1/console/notifications/feedback/${item.id}?${params.toString()}`,
+    const events = ['feedback_handled', 'feedback_unresolved']
+    const previews = await Promise.all(
+      events.map((event) =>
+        consoleFetch(
+          `/api/v1/console/notifications/feedback/${item.id}?event=${event}`,
+        ),
+      ),
     )
+    const templates = previews
+      .filter(Boolean)
+      .map((preview) => ({
+        event: preview.event,
+        label: preview.label,
+        recipient: preview.recipient || '',
+        subject: preview.subject || '',
+        body: preview.body || '',
+      }))
+    const first = templates[0]
     notify.value = {
       show: true,
       item,
-      event,
-      title: event === 'feedback_unresolved' ? '发送“无法处理”通知' : '发送“已处理”通知',
-      templateLabel: preview?.label || '',
-      contact: preview?.contact || item.contact || '',
-      recipient: preview?.recipient || '',
-      subject: preview?.subject || '',
-      body: preview?.body || '',
+      title: '发送反馈通知',
+      templates,
+      defaultEvent: 'feedback_handled',
+      contact: item.contact || '',
+      recipient: first?.recipient || '',
+      subject: first?.subject || '',
+      body: first?.body || '',
       sending: false,
     }
   } catch (e) {
@@ -327,7 +348,7 @@ async function sendNotify(payload) {
       `/api/v1/console/notifications/feedback/${item.id}`,
       {
         method: 'POST',
-        body: JSON.stringify({ ...payload, event: notify.value.event }),
+        body: JSON.stringify(payload),
       },
     )
     Object.assign(item, updated)
@@ -341,6 +362,26 @@ async function sendNotify(payload) {
     message.error(e?.message || '发送失败，请稍后重试')
   } finally {
     notify.value.sending = false
+  }
+}
+
+async function markUnavailable(item) {
+  unavailableLoadingId.value = item.id
+  try {
+    const updated = await consoleFetch(
+      `/api/v1/console/notifications/feedback/${item.id}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ channel: 'unavailable' }),
+      },
+    )
+    Object.assign(item, updated)
+    message.success('已标记为无法通知')
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    message.error(e?.message || '标记失败，请稍后重试')
+  } finally {
+    unavailableLoadingId.value = 0
   }
 }
 
@@ -405,6 +446,11 @@ async function focusRequested() {
 }
 
 watch(status, () => load())
+watch(search, () => {
+  window.clearTimeout(searchTimer)
+  searchTimer = window.setTimeout(() => load(), 300)
+})
+onBeforeUnmount(() => window.clearTimeout(searchTimer))
 onMounted(async () => {
   await load()
   await focusRequested()
@@ -430,6 +476,29 @@ onMounted(async () => {
       </div>
 
       <div class="toolbar-actions">
+        <div class="feedback-search">
+          <NInput
+            v-model:value="search"
+            size="small"
+            round
+            clearable
+            placeholder="搜索"
+          >
+            <template #prefix>
+              <NIcon :component="Search24Regular" :size="14" />
+            </template>
+          </NInput>
+        </div>
+        <AppButton
+          variant="outline"
+          size="sm"
+          :icon="Filter24Regular"
+          :class="{ 'tool-btn--on': rules.length }"
+          @click="filterOpen = true"
+        >
+          筛选
+          <span v-if="rules.length" class="tool-count">{{ rules.length }}</span>
+        </AppButton>
         <AppButton
           v-if="can('accounts.manage')"
           variant="outline"
@@ -448,16 +517,6 @@ onMounted(async () => {
           :icon="ShieldProhibited24Regular"
           @click="banOpen = true"
         />
-        <AppButton
-          variant="outline"
-          size="sm"
-          :icon="Filter24Regular"
-          :class="{ 'tool-btn--on': rules.length }"
-          @click="filterOpen = true"
-        >
-          筛选
-          <span v-if="rules.length" class="tool-count">{{ rules.length }}</span>
-        </AppButton>
         <AppButton
           variant="outline"
           size="sm"
@@ -574,7 +633,11 @@ onMounted(async () => {
 
             <div class="form-field">
               <span class="form-label">优先级</span>
-              <NSelect v-model:value="form.priority" :options="PRIORITY_OPTIONS" />
+              <NSelect
+                v-model:value="form.priority"
+                :options="PRIORITY_OPTIONS"
+                :menu-props="{ class: 'feedback-priority-menu' }"
+              />
             </div>
 
             <div class="form-field">
@@ -621,14 +684,13 @@ onMounted(async () => {
           <section v-if="detail.item.status === 'handled'" class="detail-section">
             <h3 class="section-title">通知访客</h3>
             <p class="notify-hint">
-              处理完成后不会自动发信；确认文案后再发送。非邮箱联系方式可复制正文，人工联系后标记即可。
+              处理完成后不会自动发信；确认文案后再发送。
             </p>
             <div class="notify-row">
               <span
                 class="notify-state"
                 :class="{
-                  'notify-state--sent': detail.item.notification_status === 'email',
-                  'notify-state--manual': detail.item.notification_status === 'manual',
+                  'notify-state--sent': ['email', 'manual'].includes(detail.item.notification_status),
                   'notify-state--failed': detail.item.notification_status === 'failed',
                 }"
               >
@@ -644,18 +706,19 @@ onMounted(async () => {
                   :icon="Mail24Regular"
                   :disabled="notifyLoadingId === detail.item.id"
                   :loading="notifyLoadingId === detail.item.id"
-                  @click="openNotify(detail.item, 'feedback_handled')"
+                  @click="openNotify(detail.item)"
                 >
-                  已处理通知
+                  发送通知
                 </AppButton>
                 <AppButton
                   variant="outline"
                   size="sm"
-                  :icon="Mail24Regular"
-                  :disabled="notifyLoadingId === detail.item.id"
-                  @click="openNotify(detail.item, 'feedback_unresolved')"
+                  :icon="MailProhibited24Regular"
+                  :disabled="unavailableLoadingId === detail.item.id"
+                  :loading="unavailableLoadingId === detail.item.id"
+                  @click="markUnavailable(detail.item)"
                 >
-                  无法处理通知
+                  标记无法通知
                 </AppButton>
               </div>
             </div>
@@ -717,7 +780,8 @@ onMounted(async () => {
     <NotificationComposeModal
       v-model:show="notify.show"
       :title="notify.title"
-      :template-label="notify.templateLabel"
+      :templates="notify.templates"
+      :default-event="notify.defaultEvent"
       :contact="notify.contact"
       :recipient="notify.recipient"
       :subject="notify.subject"
@@ -789,7 +853,26 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.feedback-search {
+  flex: 1 1 220px;
+  min-width: 0;
+  max-width: 320px;
+}
+
+.feedback-search :deep(.n-input),
+.feedback-search :deep(.n-input__border),
+.feedback-search :deep(.n-input__state-border) {
+  width: 100%;
+  border-radius: var(--radius-full);
+  corner-shape: round;
+}
+
+.toolbar-actions :deep(.app-btn) {
+  flex: 0 0 auto;
 }
 
 .tool-btn--on {
@@ -1113,11 +1196,6 @@ onMounted(async () => {
   color: var(--success);
 }
 
-.notify-state--manual {
-  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
-  color: var(--primary);
-}
-
 .notify-state--failed {
   border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
   color: var(--danger);
@@ -1179,6 +1257,30 @@ onMounted(async () => {
 }
 
 @media (width <= 640px) {
+  .feedback-toolbar {
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .toolbar-actions {
+    flex: 1 1 100%;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  .feedback-search {
+    flex: 1 1 auto;
+    max-width: none;
+  }
+
+  .feedback-search :deep(.n-input) {
+    height: 30px;
+  }
+
+  .toolbar-actions :deep(.app-btn) {
+    flex: 0 0 auto;
+  }
+
   .issue-row {
     padding: 14px 4px;
     gap: 10px;

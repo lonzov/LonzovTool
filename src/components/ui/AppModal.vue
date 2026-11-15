@@ -55,15 +55,21 @@ const props = defineProps({
   actions: { type: Array, default: null },
   /** 标题下方的说明文字，渲染在头部而不是内容区 */
   description: { type: String, default: '' },
-  /**
-   * 关闭前置守卫。返回 `false` 可拦截本次关闭（Naive 认这个协议：
+  /** 关闭前置守卫。返回 `false` 可拦截本次关闭（Naive 认这个协议：
    * `Promise.resolve(onClose()).then(v => { if (v === false) return; ... })`）。
    * 不能用 `@close` 代替 —— Vue 的 emit 不把监听器的返回值传回来。
    */
   beforeClose: { type: Function, default: null },
+  /** 数值层级；遮罩层自动低 10，保证同在抽屉之上时仍能盖住内容 */
+  zIndex: { type: [Number, String], default: 2000 },
 })
 
 const emit = defineEmits(['update:show', 'close', 'esc', 'after-enter', 'after-leave'])
+
+const modalZIndex = computed(() => {
+  const value = Number(props.zIndex)
+  return Number.isFinite(value) ? value : 2000
+})
 
 // 本组件是多根（Teleport + NModal），$attrs 不会自动继承，显式转交给 NModal，
 // 这样调用方仍能传 :z-index / :to 这类没在 props 里列举的 NModal 原生属性。
@@ -134,16 +140,17 @@ const modalStyle = computed(() => ({
 
 <template>
   <!-- 毛玻璃遮罩：NModal 自带遮罩的 background-color 是写死的，改不了，
-       所以额外叠一层。挂到 body 上，层级压在移动端汉堡(1950)之上、NModal(≥2000)之下 -->
+       所以额外叠一层。遮罩层级始终比模态框低 10，能盖住抽屉又不会盖住弹窗本身 -->
   <Teleport to="body">
     <Transition name="app-modal-blur">
-      <div v-if="show && blurMask" class="app-modal-blur" />
+      <div v-if="show && blurMask" class="app-modal-blur" :style="{ zIndex: modalZIndex - 10 }" />
     </Transition>
   </Teleport>
 
   <NModal
     v-bind="$attrs"
     :show="show"
+    :z-index="modalZIndex"
     preset="card"
     :class="['app-modal', contentScrollable ? 'app-modal--scrollable' : '']"
     :title="headTitle"
