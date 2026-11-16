@@ -292,7 +292,7 @@ onMounted(load)
           <span>{{ formatTime(run.finished_at || run.started_at) }}</span>
           <span>{{ run.trigger === 'auto' ? '自动' : '手动' }}</span>
           <span :class="`history-status history-status--${run.status}`">
-            {{ run.status === 'success' ? '成功' : run.status === 'failed' ? '失败' : '执行中' }}
+            {{ run.status === 'success' ? '成功' : run.status === 'failed' ? '失败' : run.status === 'interrupted' ? '已中断' : '执行中' }}
           </span>
           <span class="history-detail">
             删除 {{ run.deleted }} 个 · 释放 {{ formatBytes(run.freed_bytes) }}
@@ -384,6 +384,10 @@ onMounted(load)
 
 .history-status--running {
   color: var(--muted-foreground);
+}
+
+.history-status--interrupted {
+  color: var(--warning);
 }
 
 .history-detail {
