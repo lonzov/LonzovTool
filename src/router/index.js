@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { History24Regular, Image24Regular, People24Regular } from '@vicons/fluent'
+import { Clock24Regular, History24Regular, Image24Regular, People24Regular } from '@vicons/fluent'
 
 import HomeView from '../components/HomeView.vue'
 import OfflineDiagnostic from '../components/OfflineDiagnostic.vue'
@@ -168,6 +168,7 @@ const ConsoleAccounts = () => import('../console/pages/ConsoleAccounts.vue')
 const ConsoleAccount = () => import('../console/pages/ConsoleAccount.vue')
 const ConsoleSystem = () => import('../console/pages/ConsoleSystem.vue')
 const ConsoleSystemAssets = () => import('../console/pages/ConsoleSystemAssets.vue')
+const ConsoleSystemTasks = () => import('../console/pages/ConsoleSystemTasks.vue')
 const ConsoleLogin = () => import('../console/pages/ConsoleLogin.vue')
 const DevOptionsView = () => import('../views/DevOptionsView.vue')
 
@@ -442,6 +443,18 @@ export const routes = [
               headerTitle: '图片资产',
               headerDescription: '',
               headerIcon: Image24Regular,
+              permission: 'system.manage',
+            },
+          },
+          {
+            path: 'tasks',
+            name: 'console-system-tasks',
+            component: ConsoleSystemTasks,
+            meta: {
+              title: '定时任务 - 系统设置 - 控制台 - 小舟工具箱',
+              headerTitle: '定时任务',
+              headerDescription: '',
+              headerIcon: Clock24Regular,
               permission: 'system.manage',
             },
           },

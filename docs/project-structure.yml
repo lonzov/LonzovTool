@@ -124,7 +124,8 @@
     components/TodoDrawer.vue: 待办抽屉，列出待审核提交与待处理反馈并跳转到对应页面
     pages/ConsoleAccount.vue: 我的账号页，账号信息、改密码、邮箱两步验证开关、通行密钥与登录设备列表（撤销会话）
     pages/ConsoleSystem.vue: 系统设置页，向全站侧边栏下半区注册设置目录与“返回控制台”入口
-    pages/ConsoleSystemAssets.vue: 系统设置图片资产页，孤儿图片预览与手动清理、自动清理配置与执行历史
+    pages/ConsoleSystemAssets.vue: 系统设置图片资产页，孤儿图片预览与手动清理
+    pages/ConsoleSystemTasks.vue: 系统设置定时任务页，任务列表、启停与调度编辑、执行记录与手动触发
     pages/ConsoleAccounts.vue: 系统设置·账号管理页，账号列表与新建/编辑/重置密码，编辑角色与单点授权范围
     pages/ConsoleCards.vue: 卡片管理页，列表与模拟布局两种视图、增删改与显隐，分类内可拖动排序（两种视图一致），模拟布局的卡片与首页一样按行拉齐高度，图标保存时上传
     pages/ConsoleLogin.vue: 控制台登录页，邮箱 + 密码登录，账号开启两步验证时切到验证码或通行密钥步骤，仅拥有控制台权限的账号可进入

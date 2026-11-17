@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import {
   ArrowCircleLeft48Regular,
+  Clock24Regular,
   History24Regular,
   Image24Regular,
   People24Regular,
@@ -26,6 +27,11 @@ const sections = computed(() => [
           key: '/console/system/assets',
           label: '图片资产',
           icon: Image24Regular,
+        },
+        {
+          key: '/console/system/tasks',
+          label: '定时任务',
+          icon: Clock24Regular,
         },
       ]
     : []),
