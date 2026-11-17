@@ -729,7 +729,7 @@ export default {
         </span>
       </button>
 
-      <div style="padding: 12px 24px 24px">
+      <div style="padding: 12px 16px 24px">
         <!-- 非官方站点红色横幅：置于主内容区域顶部，不可关闭（no-close） -->
         <div v-if="isUnofficial" class="unofficial-domain-banner">你正在访问的是非<a
       class="official-link"
