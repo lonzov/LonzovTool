@@ -35,6 +35,7 @@ const INTERVAL_OPTIONS = [
 const STATUS_LABELS = {
   queued: '排队中',
   running: '执行中',
+  cancelled: '已取消',
   success: '成功',
   failed: '失败',
   interrupted: '已中断',
@@ -693,7 +694,8 @@ onMounted(load)
 }
 
 .task-status--interrupted,
-.task-status--queued {
+.task-status--queued,
+.task-status--cancelled {
   color: var(--warning);
   background: color-mix(in srgb, var(--warning) 12%, transparent);
 }
