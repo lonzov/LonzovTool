@@ -583,6 +583,7 @@ async function remove(card) {
           clearable
           placeholder="全部分类"
           class="category-select"
+          check-strategy="child"
           :menu-props="{ class: 'card-category-menu' }"
         />
         <span class="summary-text">{{ summaryText }}</span>
@@ -830,6 +831,7 @@ async function remove(card) {
               :options="categoryCascaderOptions"
               placement="bottom-start"
               placeholder="选择分类"
+              check-strategy="child"
               :menu-props="{ class: 'card-category-menu' }"
               @update:value="categoryError = ''"
             />

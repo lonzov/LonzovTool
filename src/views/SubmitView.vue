@@ -612,6 +612,7 @@ onBeforeUnmount(() => {
               :options="categoryOptions"
               placement="bottom-start"
               placeholder="选择首页已有的分类"
+              check-strategy="child"
               :menu-props="{ class: 'card-category-menu' }"
               @update:value="onCategoryChange"
             />
