@@ -1283,8 +1283,83 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 720px) {
+  .console-overview {
+    gap: 12px;
+  }
+
   .metric-row {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  /* 待办是首页的首要动作：横条置顶，四项指标压成 2×2 */
+  .todo-card {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-areas:
+      'head value arrow'
+      'hint value arrow';
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .todo-card-head {
+    grid-area: head;
+  }
+
+  .todo-card-value {
+    display: flex;
+    grid-area: value;
+    align-self: stretch;
+    align-items: center;
+    justify-self: end;
+    margin-top: 0;
+    font-size: 1.6rem;
+    line-height: 1;
+  }
+
+  .todo-card-hint {
+    grid-area: hint;
+    overflow: hidden;
+    margin-top: 2px;
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .todo-card-arrow {
+    position: static;
+    grid-area: arrow;
+    align-self: center;
+  }
+
+  .panel-columns {
+    gap: 12px;
+  }
+
+  .console-overview :deep(.console-panel) {
+    padding: 12px 14px 14px;
+    border-radius: var(--radius-lg);
+  }
+
+  .console-overview :deep(.panel-head) {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .console-overview :deep(.panel-desc) {
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  .traffic-grid {
+    gap: 8px;
+  }
+
+  .traffic-cell {
+    padding: 9px 10px;
   }
 
   /* 窄屏只保留「标题 + 状态」，时间与操作列让位 */

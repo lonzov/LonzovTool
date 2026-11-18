@@ -81,4 +81,38 @@ defineProps({
   margin-top: 4px;
   transition: color 0.4s ease;
 }
+
+@media (max-width: 720px) {
+  .stat-card {
+    padding: 12px 13px;
+    border-radius: var(--radius-lg);
+  }
+
+  .stat-head {
+    gap: 5px;
+  }
+
+  .stat-icon {
+    font-size: 14px;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+  }
+
+  .stat-value {
+    margin-top: 6px;
+    font-size: 1.3rem;
+    line-height: 1.2;
+  }
+
+  .stat-hint {
+    overflow: hidden;
+    margin-top: 2px;
+    font-size: 0.68rem;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
 </style>
