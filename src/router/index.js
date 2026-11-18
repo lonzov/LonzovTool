@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { Clock24Regular, History24Regular, Image24Regular, People24Regular } from '@vicons/fluent'
+import { Clock24Regular, History24Regular, Image24Regular, People24Regular, Settings24Regular } from '@vicons/fluent'
 
 import HomeView from '../components/HomeView.vue'
 import OfflineDiagnostic from '../components/OfflineDiagnostic.vue'
@@ -169,6 +169,7 @@ const ConsoleAccount = () => import('../console/pages/ConsoleAccount.vue')
 const ConsoleSystem = () => import('../console/pages/ConsoleSystem.vue')
 const ConsoleSystemAssets = () => import('../console/pages/ConsoleSystemAssets.vue')
 const ConsoleSystemTasks = () => import('../console/pages/ConsoleSystemTasks.vue')
+const ConsoleSystemSettings = () => import('../console/pages/ConsoleSystemSettings.vue')
 const ConsoleLogin = () => import('../console/pages/ConsoleLogin.vue')
 const DevOptionsView = () => import('../views/DevOptionsView.vue')
 
@@ -432,7 +433,19 @@ export const routes = [
         children: [
           {
             path: '',
-            redirect: { name: 'console-system-assets' },
+            redirect: { name: 'console-system-settings' },
+          },
+          {
+            path: 'settings',
+            name: 'console-system-settings',
+            component: ConsoleSystemSettings,
+            meta: {
+              title: '系统设置 - 控制台 - 小舟工具箱',
+              headerTitle: '系统设置',
+              headerDescription: '',
+              headerIcon: Settings24Regular,
+              permission: 'system.manage',
+            },
           },
           {
             path: 'assets',
@@ -656,3 +669,4 @@ export function createRouterInstance() {
 // vite-ssg 在 SSR 构建时使用 createMemoryHistory，不依赖此实例
 const router = typeof window !== 'undefined' ? createRouterInstance() : null
 export { router }
+

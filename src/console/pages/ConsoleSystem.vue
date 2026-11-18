@@ -7,6 +7,7 @@ import {
   History24Regular,
   Image24Regular,
   People24Regular,
+  Settings24Regular,
 } from '@vicons/fluent'
 import { useSidebarSectionProvider } from '../../composables/useSidebarSection.js'
 import { usePermissions } from '../usePermissions.js'
@@ -23,6 +24,11 @@ const sections = computed(() => [
   },
   ...(can('system.manage')
     ? [
+        {
+          key: '/console/system/settings',
+          label: '系统设置',
+          icon: Settings24Regular,
+        },
         {
           key: '/console/system/assets',
           label: '图片资产',
