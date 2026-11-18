@@ -1,5 +1,5 @@
 ﻿src:
-  App.vue: 根组件，包含桌面/移动端双布局、主题配置、NScrollbar 滚动容器
+  App.vue: 根组件，包含桌面/移动端双布局（移动端抽屉顶栏）、主题配置、NScrollbar 滚动容器
   main.js: 应用入口，全局注册组件、@vueuse/head 插件注册、scrollRestoration 禁用、预渲染路由过滤（控制台不预渲染）
   assets:
     main.css: 全局基础样式、全站过渡动画、NProgress 与通用工具类
@@ -14,7 +14,7 @@
       AppModal.vue: 全站统一的模态框外壳（宽度/紧凑高度/毛玻璃遮罩/页脚按钮），事件一律透传
       InputOtp.vue: 分格验证码输入（单隐藏输入 + 装饰槽位），对齐 shadcn 的 InputOTP 观感
     PromoCarousel.vue: 首页推广位轮播组件，滑片数据取自 promoData（接口下发，快照兜底），滑片支持站内外链接
-    AppMenu.vue: 侧边栏导航菜单，分固定栏与分类栏两段，分类栏内容由页面模块接管（未接管时回落首页工具分类）、换源时交叉淡入淡出，含 PWA 安装入口
+    AppMenu.vue: 侧边栏导航菜单，分固定栏与分类栏两段，分类栏内容由页面模块接管（未接管时回落首页工具分类）、换源时交叉淡入淡出，分类栏分组随当前页自动展开并高亮，含 PWA 安装入口
     DonateCard.vue: 打赏收款码卡片，含三平台切换 + 爱发电按钮
     DonateRecords.vue: 打赏记录表格，异步加载 JSON 动态渲染
     DarkFilterIcon.vue: 深色滤镜状态图标（月亮 + 可生长/回缩的描边斜杠），用 stroke-dashoffset 动画实现斜杠生长
@@ -97,12 +97,12 @@
           HaspermissionModal.vue: haspermission 编辑器弹窗
           CoordinateCalcModal.vue: 坐标自动计算弹窗，输入起终点坐标自动生成 x,y,z,dx,dy,dz 参数
   console:
-    ConsoleLayout.vue: 控制台外壳，页面标题取自 consoleNav，并把控制台目录挂到侧边栏分类栏，右上角为账号与退出，按权限隐藏目录项并拦下无权限路由，临时密码时顶部常驻提示条
+    ConsoleLayout.vue: 控制台外壳，页面标题取自 consoleNav，并把控制台目录挂到侧边栏分类栏，右上角为账号与退出，按权限隐藏目录项并拦下无权限路由，系统设置分组默认落到第一个有权限的子页，临时密码时顶部常驻提示条
     consoleAuth.js: 控制台会话状态（账号邮箱、角色、权限清单与临时密码标记），登录、退出与会话校验，凭证为后端下发的 HttpOnly Cookie
-    consoleRequest.js: 控制台请求与错误映射（服务端信封 → 状态码 → 网络/超时），写操作回填 CSRF 头，不依赖 Vue
+    consoleRequest.js: 控制台请求与错误映射（服务端信封 → 状态码 → 网络/超时），写操作回填 CSRF 头，识别 410 代次淘汰并接出身份确认恢复钩子，不依赖 Vue
     webauthn.js: 通行密钥的 WebAuthn 选项解码与浏览器凭证 JSON 序列化
     enterSubmit.js: 控制台表单的 Enter 提交判定，跳过输入法组合、文本域及非文本控件
-    consoleNav.js: 控制台目录配置，按业务分组并作为侧边栏分类栏与页面标题的唯一来源；分组可展开，权限过滤后空组隐藏
+    consoleNav.js: 控制台目录配置，按业务分组并作为侧边栏分类栏与页面标题的唯一来源；分组可展开、按子权限过滤后空组隐藏，并提供分组默认落地子页的统一计算
     usePermissions.js: 控制台权限判定（can/permissions/account），由壳层 provide 给子页面，口径与服务端一致
     deviceLabel.js: 把 User-Agent 压成「浏览器 · 系统」一句人话，供登录设备列表展示
     passwordStrength.js: 密码位数预检（下限与服务端一致），其余强度规则由服务端在提交时判定
@@ -111,10 +111,9 @@
     components/NotificationComposeModal.vue: 审核/反馈结果通知的撰写弹窗，可改收件人、主题、正文并标记人工通知
     components/NotificationSettingsDrawer.vue: 通知设置抽屉，维护结果通知邮件模板与飞书通知模式
     components/IpBanDrawer.vue: IP 封禁抽屉，查看、添加和解除提交入口的 IP/CIDR/范围规则
-    switchRailStyle.js: 特殊符号页开关的参考轨道配色（开启深灰、关闭浅灰），全局 NSwitch 已由主题映射
     useImageLightbox.js: 截图灯箱，按需加载 Viewer.js（仅控制台使用）
     components/FeedbackFilterModal.vue: 反馈筛选规则编辑器，字段+匹配方式+动态搜索取值
-    useSensitiveTrust.js: 敏感操作的短时信任，3 小时窗口内不再重复弹身份确认
+    useSensitiveTrust.js: 敏感操作的短时信任，3 小时窗口内不再重复弹身份确认；并发调用共享同一次确认，服务端要求重验时清信任并重开确认弹窗
     useResendCountdown.js: 邮件验证码重发的 60 秒冷却倒计时，登录两步验证与账号页开关共用
     components/ConsolePageHeader.vue: 控制台页面标题区（图标 + 标题 + 说明 + 右侧附加区）
     components/ImageUploadField.vue: 图片选择与本地预览，选中后只留在本地，由调用方在保存时上传
@@ -158,9 +157,10 @@
     useRawJsonLang.js: T显编辑器语言包状态与 localforage(IndexedDB) 持久化（模块级单例）
     useRawJsonSimulator.js: T显编辑器预览模拟器状态与 localStorage 持久化（模块级单例）
     useRawJsonRenderMode.js: T显编辑器渲染模式（游戏 / JSON）状态与 localStorage 持久化（模块级单例）
-    useSiteData.js: 站点动态数据的唯一入口，构建期快照 ref、卡片反查/域名白名单派生函数与运行时低频同步
+    useClientOutdated.js: 接口代次淘汰的识别与处置，提示当前页面过期并触发一次更新检查（不强制刷新）
+    useSiteData.js: 站点动态数据的唯一入口，构建期快照 ref、卡片反查/域名白名单派生函数与运行时低频同步；同步可取消并识别 410 与 min_supported
     useSidebarSection.js: 侧边栏分类栏的动态内容注册表，页面模块挂载期接管分类栏，未接管时回落首页分类
-    useSWUpdate.js: Service Worker 更新检测与版本比较组合式函数
+    useSWUpdate.js: Service Worker 更新检测与版本比较组合式函数，并提供无组件上下文可用的手动检查更新入口
     useStats.js: 访问统计状态管理组合式函数（模块级单例，数据经后端代理 Umami 下发，含内存/localsStorage双层缓存）
     useHeightTransition.js: 内容高度变化时的容器高度过渡（ResizeObserver 驱动，弹窗用）
     useTheme.js: 主题状态管理组合式函数
@@ -208,7 +208,7 @@
       mcfc.css: MCFC 渲染库样式
       LICENSE: MCFC 库 MIT 许可证
   router:
-    index.js: Vue Router 路由配置，包含 NProgress 集成、SEO meta 映射与 @vueuse/head 动态更新
+    index.js: Vue Router 路由配置，包含 NProgress 集成、SEO meta 映射、控制台登录回跳参数的同源校验与 @vueuse/head 动态更新
   views:
     AboutView.vue: 关于页面，展示项目信息与统计数据，各章节作为侧边栏章节
     ChangelogView.vue: 更新日志页面，运行时拉取 changelog.md 交 MarkdownRenderer 渲染
@@ -221,7 +221,7 @@
     DevPaletteView.vue: 设计规范调色板页（仅开发环境注册），展示色阶、语义 token、对比度与 Naive 组件渲染
     DevMarkdownView.vue: Markdown 排版预览页（仅开发环境注册），留存排版基线供后续重构对照
 public:
-  sw.js: Service Worker，手写实现 StaleWhileRevalidate 缓存优先 + 离线诊断回退 + 消息协议
+  sw.js: Service Worker，手写实现 StaleWhileRevalidate 缓存优先 + 离线诊断回退 + 消息协议，CACHE_VERSION 驱动更新提示
   promo/: 首页推广素材目录，SW 对该目录不缓存
   changelog.md: 更新日志，按三级版本号分章节，SW 运行时不缓存，供更新弹窗与更新日志页读取
   manifest.json: Web App Manifest，PWA 配置

@@ -1,5 +1,7 @@
+import { markClientOutdated } from '../composables/useClientOutdated.js'
+
 /**
- * 控制台请求层：不依赖 Vue，可脱离组件单独验证错误映射。
+ * 控制台请求层：不依赖组件上下文，可脱离 Vue 组件单独验证错误映射。
  *
  * 同源自动带 Cookie，写操作回填 double-submit CSRF 头。
  */
@@ -13,6 +15,7 @@ const STATUS_CODES = {
   401: 'unauthorized',
   403: 'forbidden',
   404: 'not_found',
+  410: 'endpoint_retired',
   429: 'rate_limited',
 }
 
@@ -39,10 +42,30 @@ export function setUnauthorizedHandler(handler) {
   unauthorizedHandler = handler
 }
 
+/**
+ * 服务端要求/判定身份确认失效时的回调，由 useSensitiveTrust 注册：
+ * 恢复动作是清掉本地信任并重新打开身份确认弹窗，而不是只弹一条普通错误。
+ */
+let verificationHandler = null
+
+export function setVerificationRequiredHandler(handler) {
+  verificationHandler = typeof handler === 'function' ? handler : null
+}
+
+const VERIFY_CODES = new Set(['verify_required', 'verify_invalid'])
+/** 确认身份自身的请求不参与恢复：失败要留在弹窗里展示，不能反过来再开一次弹窗 */
+const VERIFY_PATH_PREFIX = '/api/v1/console/verify'
+
 function readCookie(name) {
   if (typeof document === 'undefined' || !document.cookie) return ''
   const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`))
-  return match ? decodeURIComponent(match[1]) : ''
+  if (!match) return ''
+  try {
+    return decodeURIComponent(match[1])
+  } catch {
+    // 同域其它应用可能写入畸形值；返回空串，交给服务端按 csrf_failed 给出可读错误
+    return ''
+  }
 }
 
 function parseRetryAfter(response) {
@@ -84,7 +107,9 @@ export async function consoleFetch(path, options = {}) {
   if (!response.ok) {
     const code = payload?.error?.code || STATUS_CODES[response.status] || 'server_error'
     const message = payload?.error?.message || '服务暂时不可用，请稍后重试'
+    if (code === 'endpoint_retired') markClientOutdated('console_request')
     if (code === 'unauthorized') unauthorizedHandler?.()
+    if (VERIFY_CODES.has(code) && !path.startsWith(VERIFY_PATH_PREFIX)) verificationHandler?.(code)
     throw new ConsoleApiError(
       code,
       message,

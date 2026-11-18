@@ -111,6 +111,26 @@ async function handleUpdate(reg) {
   reg.waiting.postMessage({ type: 'GET_VERSION' }, [mc.port2])
 }
 
+/**
+ * 主动触发一次更新检查，供接口代次淘汰（410 / min_supported）这类没有组件上下文的
+ * 场景调用：已有 waiting SW 直接走既有弹窗流程，否则让浏览器重新拉取 sw.js。
+ * 只提示与准备，不刷新页面。
+ */
+export async function checkForAppUpdate() {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
+  try {
+    const reg = await navigator.serviceWorker.getRegistration('/')
+    if (!reg) return
+    if (reg.waiting && navigator.serviceWorker.controller) {
+      handleUpdate(reg)
+      return
+    }
+    await reg.update()
+  } catch (e) {
+    console.warn('[SW] Manual update check failed:', e)
+  }
+}
+
 export function useSWUpdate() {
   async function initSW() {
     if (!('serviceWorker' in navigator)) return
@@ -179,5 +199,5 @@ export function useSWUpdate() {
     pendingRegistration = null
   }
 
-  return { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, forceUpdate, silentUpdated, initSW, applyUpdate, deferUpdate }
+  return { showUpdateModal, popupTitle, popupContent, popupVersionInfo, popupNewVersion, popupButtons, forceUpdate, silentUpdated, initSW, applyUpdate, deferUpdate, checkForAppUpdate }
 }

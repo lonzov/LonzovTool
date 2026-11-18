@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, watch, defineAsyncComponent, h } from 'vue'
 import { NTooltip, useMessage } from 'naive-ui'
 import { useSWUpdate, loadMarkdown } from '../composables/useSWUpdate'
@@ -133,19 +133,19 @@ function getBtnClass(btn) {
   font-weight: 700;
   line-height: 1.3;
   letter-spacing: 0.04em;
-  color: var(--n-text-color);
+  color: var(--foreground);
   margin: 0 0 8px 0;
 }
 
 .guide-text {
   font-size: 14px;
   line-height: 1.6;
-  color: color-mix(in srgb, var(--n-text-color) 78%, transparent);
+  color: color-mix(in srgb, var(--foreground) 78%, transparent);
   margin: 0 0 16px 0;
 }
 
 .guide-text :deep(.guide-link) {
-  color: var(--n-text-color);
+  color: var(--foreground);
   text-decoration: none;
   position: relative;
   padding-bottom: 2px;
@@ -163,7 +163,7 @@ function getBtnClass(btn) {
   bottom: 5px;
   height: 1px;
   background-image: repeating-linear-gradient(to right,
-      color-mix(in srgb, var(--n-text-color), transparent 30%) 0 4px,
+      color-mix(in srgb, var(--foreground), transparent 30%) 0 4px,
       transparent 4px 8px);
   background-repeat: repeat-x;
   background-size: 8px 1px;
@@ -180,7 +180,7 @@ function getBtnClass(btn) {
   right: 0;
   bottom: 5px;
   height: 1px;
-  background-color: var(--n-text-color);
+  background-color: var(--foreground);
   opacity: 0;
   transition: opacity 0.3s;
   pointer-events: none;
@@ -197,7 +197,7 @@ function getBtnClass(btn) {
 .changelog-label {
   font-size: 15px;
   font-weight: 600;
-  color: var(--n-text-color);
+  color: var(--foreground);
   margin: 0 0 8px 0;
 }
 

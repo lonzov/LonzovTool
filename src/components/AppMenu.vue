@@ -14,15 +14,26 @@ const EXPANDED_KEYS_KEY = 'sidebar_expanded_keys'
 const MORE_KEY = 'more'
 const MORE_SEEDED_KEY = 'sidebar_more_seeded'
 
-// 文档目录的层级缩进步长
+// 分类栏的层级缩进步长
 const SECTION_LEVEL_INDENT = 14
 
 const MENU_STYLE = {
   marginTop: '8px',
-  '--n-bezier': 'cubic-bezier(0.4, 0, 0.2, 1)',
-  '--n-bezier-ease-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
-  '--n-bezier-ease-in': 'cubic-bezier(0.4, 0, 0.2, 1)',
-  '--n-bezier-ease-in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
+}
+
+/**
+ * 从菜单选项里找出选中项的所有祖先分组 key（由浅到深），用于自动展开当前页所在分组。
+ * 选项结构与 NMenu options 一致：children 为可展开分组。
+ */
+function findAncestorKeys(options, key) {
+  for (const option of options) {
+    if (option.key === key) return []
+    if (Array.isArray(option.children) && option.children.length > 0) {
+      const trail = findAncestorKeys(option.children, key)
+      if (trail) return [option.key, ...trail]
+    }
+  }
+  return null
 }
 
 function loadExpandedKeys() {
@@ -141,6 +152,8 @@ export default {
       fixedOptions: [],
       sectionOptions: [],
       expandedKeys: [],
+      // 已按哪个选中项自动展开过：数据刷新重建选项时不打扰用户手动收起的决定
+      expandedForKey: '',
       isDark: typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') === 'dark' : true,
     }
   },
@@ -172,13 +185,18 @@ export default {
     this.initMenuOptions()
     // 优先恢复上次的展开状态，无记录时取 parentMenus.json 的默认展开配置
     this.expandedKeys = resolveExpandedKeys(this.defaultExpandedKeys)
+    // 恢复后再按当前选中页补齐所在分组，避免展开状态被默认值覆盖
+    this.ensureSectionExpanded()
     this.observeTheme()
 
     // 选项是挂载时构建的副本，而接口刷新会整体替换快照、页面模块也可能中途接管分类栏，需要跟着重建。
     // 展开状态保持不动：那是用户当下的操作结果，不该被数据刷新覆盖。
     this.$watch(
       () => [cardsData.value, parentMenusData.value, this.activeSection],
-      () => this.initMenuOptions(),
+      () => {
+        this.initMenuOptions()
+        this.ensureSectionExpanded()
+      },
     )
   },
   beforeUnmount() {
@@ -190,6 +208,10 @@ export default {
     // 安装完成后隐藏按钮
     isInstalled() {
       this.initMenuOptions()
+    },
+    // 当前页落在分组内时自动展开该分组（用户手动收起后，只有再切换子页才会重新展开）
+    sectionValue() {
+      this.ensureSectionExpanded()
     },
   },
   methods: {
@@ -419,6 +441,20 @@ export default {
       this.expandedKeys = [...new Set(keys)]
       saveExpandedKeys(this.expandedKeys)
     },
+    // 当前页位于某个分组内时把祖先分组并入展开状态，跨页进入子页不必先手动展开。
+    // 只在选中项变化时展开一次：选项因数据刷新重建时保留用户手动收起的结果。
+    ensureSectionExpanded() {
+      const selected = this.sectionValue
+      if (!selected || selected === this.expandedForKey) return
+      const ancestors = findAncestorKeys(this.sectionOptions, selected)
+      if (!ancestors) return
+      this.expandedForKey = selected
+      if (!ancestors.length) return
+      const current = new Set(this.sectionExpandedKeys)
+      const missing = ancestors.filter((key) => !current.has(key))
+      if (!missing.length) return
+      this.updateExpandedKeys([...this.fixedExpandedKeys, ...current, ...missing])
+    },
     handleFixedExpandedKeys(keys) {
       this.updateExpandedKeys([...keys, ...this.sectionExpandedKeys])
     },
@@ -468,6 +504,12 @@ export default {
 <style>
 .app-menu-section {
   position: relative;
+}
+
+/* 分组内子项选中时给分组标题加底色：Naive 只映射了 child-active 的前景/图标色，
+   没有对应的底色变量，这里用同一套叠层 token 补齐（不写死颜色） */
+.app-menu .n-menu-item-content--child-active::before {
+  background-color: var(--accent);
 }
 
 .menu-section-enter-active,

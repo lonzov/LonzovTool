@@ -228,6 +228,7 @@ async function remove(page) {
   try {
     await consoleFetch(`${URL}/${encodeURIComponent(page.slug)}`, { method: 'DELETE' })
     message.success('已删除')
+    if (editor.value.editing && editor.value.slug === page.slug) editor.value.show = false
   } catch (e) {
     if (gotUnauthorized(e)) return
     message.error(e?.message || '删除失败，请稍后重试')
@@ -267,12 +268,11 @@ onMounted(load)
       </AppButton>
     </div>
 
-    <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
+    <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
     <ConsolePanel
       :icon="ArrowDownload24Regular"
-      title="下载页"
-      description="首页侧边栏「下载」里的每个页面；正文支持 Markdown，保存后站点最多 1 分钟跟进"
+      title="下载页列表"
     >
       <template #extra>
         <span class="count-tag">共 {{ pages.length }} 页 · {{ formatCount(totalDownloads) }} 次下载</span>
@@ -320,16 +320,6 @@ onMounted(load)
               label="编辑"
               :icon="Edit24Regular"
               @click="openEdit(page)"
-            />
-            <AppButton
-              variant="outline"
-              tone="danger"
-              size="xs"
-              icon-only
-              label="删除"
-              :icon="Delete24Regular"
-              :disabled="pendingSlug === page.slug"
-              @click="remove(page)"
             />
           </span>
         </div>
@@ -447,8 +437,8 @@ onMounted(load)
               <NInput v-model:value="link.url" maxlength="512" placeholder="https://…" />
               <NInput v-model:value="link.password" maxlength="32" placeholder="提取码（可空）" />
               <AppButton
+                class="row-delete"
                 variant="outline"
-                tone="danger"
                 size="xs"
                 icon-only
                 label="移除这一条"
@@ -479,7 +469,21 @@ onMounted(load)
         <NFormItem label="隐藏">
           <div class="switch-field">
             <NSwitch v-model:value="form.hidden" />
-            <span class="field-hint">隐藏后公开接口不返回，直接访问 /down/{{ form.slug || '…' }} 仍可打开</span>
+            <span class="field-hint">隐藏后不会出现在下载页入口，直接访问链接仍可打开</span>
+          </div>
+        </NFormItem>
+
+        <NFormItem v-if="editor.editing" label="删除">
+          <div class="switch-field">
+            <AppButton
+              variant="outline"
+              :icon="Delete24Regular"
+              :disabled="saving || pendingSlug === editor.slug"
+              @click="remove({ name: form.name, slug: editor.slug })"
+            >
+              删除这个下载页
+            </AppButton>
+            <span class="field-hint">删除后页面与版本链接一并移除，且不可恢复。</span>
           </div>
         </NFormItem>
 
@@ -517,7 +521,7 @@ onMounted(load)
 
 .download-row {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) 170px 88px;
+  grid-template-columns: 40px minmax(0, 1fr) 170px 112px;
   align-items: center;
   gap: 12px;
   padding: 12px 0;
@@ -572,7 +576,7 @@ onMounted(load)
 .download-version {
   flex-shrink: 0;
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -596,14 +600,14 @@ onMounted(load)
   overflow: hidden;
   color: var(--muted-foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .download-count {
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -611,7 +615,13 @@ onMounted(load)
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 2px;
+  gap: 6px;
+}
+
+/* 列表内删除只保留中性外观，危险色推迟到确认弹窗 */
+.row-delete:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--destructive) 45%, var(--border));
+  color: var(--destructive);
 }
 
 .tag {
@@ -619,7 +629,7 @@ onMounted(load)
   padding: 1px 6px;
   border-radius: var(--radius-full);
   corner-shape: round;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
 }
 
 .tag--muted {
@@ -649,7 +659,7 @@ onMounted(load)
 
 .link-row {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr) 120px 26px;
+  grid-template-columns: 96px minmax(0, 1fr) 120px 32px;
   align-items: center;
   gap: 6px;
 }
@@ -657,14 +667,14 @@ onMounted(load)
 .field-hint {
   margin: 0;
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.5;
 }
 
 .field-error {
   margin: 2px 0 0;
   color: var(--destructive);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
 }
 
 .switch-field {
@@ -698,7 +708,7 @@ onMounted(load)
   }
 
   .link-row {
-    grid-template-columns: 80px minmax(0, 1fr) 26px;
+    grid-template-columns: 80px minmax(0, 1fr) 32px;
   }
 
   .link-row > :nth-child(3) {

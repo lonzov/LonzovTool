@@ -10,7 +10,6 @@ import { consoleFetch } from '../consoleRequest.js'
 
 const ORPHANS_URL = '/api/v1/console/system/assets/orphans'
 const PRUNE_URL = '/api/v1/console/system/assets/orphans/prune'
-const TASK_RUN_URL = (id) => `/api/v1/console/system/tasks/runs/${id}`
 
 const KIND_LABELS = {
   card_logo: '卡片图标',
@@ -54,45 +53,39 @@ async function load() {
   }
 }
 
-async function waitForRun(runId) {
-  for (let i = 0; i < 20; i += 1) {
-    const run = await consoleFetch(TASK_RUN_URL(runId))
-    if (['success', 'failed', 'interrupted', 'timed_out'].includes(run.status)) {
-      return run
-    }
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-  }
-  return null
-}
-
 async function askPrune() {
   if (!ready.value || pruning.value) return
-  const confirmed = await confirmDialog({
-    title: '清理孤儿图片',
-    message: `将永久删除 ${ready.value} 个已解绑超过 ${graceHours.value} 小时的图片资产，此操作不可撤销。`,
-    confirmText: '继续',
-    danger: true,
-  })
-  if (!confirmed) return
-  await runPrune()
-}
-
-async function runPrune() {
-  if (pruning.value) return
   pruning.value = true
   try {
-    const started = await consoleFetch(PRUNE_URL, { method: 'POST' })
-    const run = await waitForRun(started.run_id)
-    if (!run) {
-      message.info('清理已提交，执行完成后刷新页面查看结果')
-    } else if (run.status === 'success') {
-      const result = run.result || {}
-      message.success(
-        `已清理 ${result.deleted || 0} 个孤儿文件，释放 ${formatBytes(result.freed_bytes)}`,
+    // 先按当前引用状态预演一次：确认框里的数量与真正会跳过的资产都以服务端为准
+    const preview = await consoleFetch(`${PRUNE_URL}?dry_run=true`, { method: 'POST' })
+    const deletable = Number(preview?.deleted) || 0
+    const skipped = Number(preview?.skipped_referenced) || 0
+    if (!deletable) {
+      await load()
+      message.info(
+        skipped > 0 ? '可清理的资产仍被引用，已全部跳过' : '当前没有可清理的孤儿文件',
       )
-    } else {
-      message.error(run.error || '清理失败，请稍后重试')
+      return
     }
+    const skipText = skipped > 0 ? `，另有 ${skipped} 个仍被引用会跳过` : ''
+    const confirmed = await confirmDialog({
+      title: '清理孤儿图片',
+      message: `将永久删除 ${deletable} 个已解绑超过 ${graceHours.value} 小时的图片资产${skipText}，此操作不可撤销。`,
+      confirmText: '继续',
+      danger: true,
+    })
+    if (!confirmed) return
+
+    const result = await consoleFetch(PRUNE_URL, { method: 'POST' })
+    const deleted = Number(result?.deleted) || 0
+    const skippedAfter = Number(result?.skipped_referenced) || 0
+    const remaining = Number(result?.remaining) || 0
+    message.success(
+      `已清理 ${deleted} 个孤儿文件，释放 ${formatBytes(result?.freed_bytes)}`,
+    )
+    if (skippedAfter > 0) message.info(`跳过 ${skippedAfter} 个仍被引用的资产`)
+    if (remaining > 0) message.info(`还有 ${remaining} 个待清理，可稍后再次执行`)
     await load()
   } catch (e) {
     if (gotUnauthorized(e)) return
@@ -230,7 +223,7 @@ onMounted(load)
 
 .orphan-stat-note {
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 
 .orphan-empty {
@@ -281,7 +274,7 @@ onMounted(load)
   padding: 8px 12px;
   border-top: 1px solid var(--border);
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
 }
 
 @media (width <= 640px) {

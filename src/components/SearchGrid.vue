@@ -1,4 +1,4 @@
-<script>
+﻿<script>
 import { h, ref, watch, nextTick } from 'vue'
 import { useMessage } from 'naive-ui'
 import { cardsData } from '../composables/useSiteData.js'
@@ -30,7 +30,7 @@ export default {
             backgroundColor: 'var(--card)',
             border: '1px solid var(--border-strong)',
             borderRadius: 'var(--radius-xs)',
-            boxShadow: 'var(--n-box-shadow)',
+            boxShadow: 'var(--shadow-popover)',
           },
         },
         [

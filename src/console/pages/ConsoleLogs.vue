@@ -1,5 +1,5 @@
-<script setup>
-import { computed, onMounted, ref } from 'vue'
+﻿<script setup>
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NIcon, NInput, NInputNumber, useMessage } from 'naive-ui'
 import {
@@ -116,6 +116,16 @@ function clearSearch() {
   load()
 }
 
+function clearFilters() {
+  level.value = 'all'
+  keyword.value = ''
+  load()
+}
+
+onBeforeUnmount(() => {
+  if (searchTimer) clearTimeout(searchTimer)
+})
+
 function pad(value) {
   return String(value).padStart(2, '0')
 }
@@ -176,6 +186,22 @@ function openRetention() {
 
 async function saveRetention() {
   if (retentionSaving.value) return
+  const infoDays = Number(retentionForm.value.retentionDays)
+  const warnDays = Number(retentionForm.value.warnRetentionDays)
+  const maxRows = Number(retentionForm.value.maxRows)
+  // 服务端会拒绝越界值；这里先拦一次，避免把用户输入原样送上去再看一条 400
+  if (!Number.isFinite(infoDays) || infoDays < 1) {
+    message.error('信息级日志至少保留 1 天')
+    return
+  }
+  if (!Number.isFinite(warnDays) || warnDays < 90) {
+    message.error('警告与错误日志至少保留 90 天')
+    return
+  }
+  if (!Number.isFinite(maxRows) || maxRows < 100) {
+    message.error('最大日志条数至少 100 条')
+    return
+  }
   retentionSaving.value = true
   try {
     const payload = await consoleFetch(RETENTION_URL, {
@@ -227,7 +253,7 @@ onMounted(load)
         class="logs-search"
         clearable
         maxlength="64"
-        placeholder="搜操作者、动作、对象、详情或 IP"
+        placeholder="搜索日志"
         @update:value="onSearchInput"
         @clear="clearSearch"
       >
@@ -258,13 +284,9 @@ onMounted(load)
       </div>
     </div>
 
-    <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
+    <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
-    <ConsolePanel
-      :icon="History24Regular"
-      title="管理日志"
-      description="登录、内容增删改、账号与权限变更都在这里；按时间倒序，越新越靠上"
-    >
+    <ConsolePanel :icon="History24Regular" title="日志记录">
       <template #extra>
         <span class="count-tag">
           {{ hasFilter ? '筛选结果' : '最近记录' }} · 已载入 {{ rows.length }} 条
@@ -272,11 +294,31 @@ onMounted(load)
       </template>
 
       <p v-if="loading && !rows.length" class="inline-hint">读取中…</p>
-      <p v-else-if="!rows.length" class="inline-hint">
-        {{ hasFilter ? '没有匹配的记录，换个关键词或级别试试' : '还没有日志' }}
-      </p>
+      <div v-else-if="!rows.length && !errorText" class="empty-state">
+        <p>{{ hasFilter ? '没有匹配的记录' : '还没有日志' }}</p>
+        <div class="empty-actions">
+          <AppButton
+            v-if="hasFilter"
+            variant="outline"
+            size="sm"
+            @click="clearFilters"
+          >
+            清除筛选
+          </AppButton>
+          <AppButton variant="outline" size="sm" :disabled="loading" @click="load">
+            刷新
+          </AppButton>
+        </div>
+      </div>
 
-      <div v-else class="log-rows">
+      <div v-else-if="rows.length" class="log-rows">
+        <div class="log-row log-row--head">
+          <span>时间</span>
+          <span>级别</span>
+          <span>动作</span>
+          <span>操作者与对象</span>
+          <span>来源 IP</span>
+        </div>
         <div v-for="row in rows" :key="row.id" class="log-row">
           <span class="log-time" :title="formatTitle(row.created_at)">
             {{ formatTime(row.created_at) }}
@@ -312,19 +354,19 @@ onMounted(load)
     <AppModal
       v-model:show="retentionVisible"
       title="日志留存设置"
-      description="按日志级别分别设置保留天数，另有总行数兜底"
+      description="按级别设置保留天数；超出总条数时只清理信息级记录，警告与错误记录不会因条数上限被删除"
       :max-width="520"
       :z-index="2200"
       :auto-focus="false"
     >
       <div class="retention-body">
-        <p v-if="retentionError" class="inline-hint inline-hint--error">
+        <p v-if="retentionError" class="inline-hint inline-hint--error" role="alert">
           {{ retentionError }}
         </p>
         <div class="retention-row">
           <div class="retention-label">
-            <span>普通日志保留</span>
-            <p>信息级日志的保留天数</p>
+            <span>信息级日志保留</span>
+            <p>最少 1 天，到期后才会被清理</p>
           </div>
           <div class="retention-control">
             <NInputNumber
@@ -338,13 +380,13 @@ onMounted(load)
         </div>
         <div class="retention-row">
           <div class="retention-label">
-            <span>警告/错误日志保留</span>
-            <p>低频高价值日志的保留天数</p>
+            <span>警告 / 错误日志保留</span>
+            <p>最少 90 天，且不会因条数上限被提前清理</p>
           </div>
           <div class="retention-control">
             <NInputNumber
               v-model:value="retentionForm.warnRetentionDays"
-              :min="1"
+              :min="90"
               :max="3650"
               :disabled="retentionLoading || retentionSaving"
             />
@@ -354,7 +396,7 @@ onMounted(load)
         <div class="retention-row">
           <div class="retention-label">
             <span>最大日志条数</span>
-            <p>超过后从最旧记录开始清理</p>
+            <p>所有级别合计；超出时从最旧的信息级记录开始清理</p>
           </div>
           <div class="retention-control">
             <NInputNumber
@@ -459,6 +501,30 @@ onMounted(load)
   margin-left: auto;
 }
 
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--subtle-foreground);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
 .count-tag {
   color: var(--subtle-foreground);
   font-size: 0.75rem;
@@ -472,11 +538,21 @@ onMounted(load)
 
 .log-row {
   display: grid;
-  grid-template-columns: 128px 52px 168px minmax(0, 1fr) 112px;
+  grid-template-columns: 118px 52px minmax(220px, 1.1fr) minmax(0, 1.6fr) 104px;
   align-items: baseline;
   gap: 12px;
   padding: 9px 0;
   border-bottom: 1px solid var(--border);
+}
+
+.log-row--head {
+  padding: 0 0 8px;
+  color: var(--subtle-foreground);
+  font-size: 0.75rem;
+}
+
+.log-row--head > span:last-child {
+  text-align: right;
 }
 
 .log-row:last-of-type {
@@ -485,7 +561,7 @@ onMounted(load)
 
 .log-time {
   color: var(--muted-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -495,7 +571,7 @@ onMounted(load)
   padding: 1px 7px;
   border-radius: var(--radius-full);
   corner-shape: round;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   line-height: 1.5;
 }
 
@@ -515,12 +591,16 @@ onMounted(load)
 }
 
 .log-action {
+  display: -webkit-box;
   overflow: hidden;
   color: var(--foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
-  font-size: 0.74rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .log-content {
@@ -554,14 +634,14 @@ onMounted(load)
   margin: 0;
   overflow: hidden;
   color: var(--muted-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .log-ip {
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
   text-align: right;
   white-space: nowrap;
@@ -575,7 +655,7 @@ onMounted(load)
 
 .log-end {
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
 }
 
 .retention-body {
@@ -629,6 +709,10 @@ onMounted(load)
 }
 
 @media (width <= 900px) {
+  .log-row--head {
+    display: none;
+  }
+
   .log-row {
     grid-template-columns: 104px 52px minmax(0, 1fr);
     row-gap: 2px;

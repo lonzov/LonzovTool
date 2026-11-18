@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import {
   ArrowCircleLeft48Regular,
@@ -10,11 +10,27 @@ import {
   Settings24Regular,
 } from '@vicons/fluent'
 import { useSidebarSectionProvider } from '../../composables/useSidebarSection.js'
+import { firstAccessibleConsoleChild } from '../consoleNav.js'
 import { usePermissions } from '../usePermissions.js'
 
 const route = useRoute()
 const router = useRouter()
 const { can } = usePermissions()
+
+// 父级不再带权限，精确路径本身没有页面：落地到当前账号能进的第一个子页。
+// 权限上下文由 ConsoleLayout 在权限就绪后才挂载，这里读到的 can 已是最终结果。
+function isSystemRoot(path) {
+  return (path || '').replace(/\/+$/, '') === '/console/system'
+}
+
+watch(
+  () => route.path,
+  (path) => {
+    if (!isSystemRoot(path)) return
+    router.replace(firstAccessibleConsoleChild('/console/system', can) || '/console')
+  },
+  { immediate: true },
+)
 
 const sections = computed(() => [
   {

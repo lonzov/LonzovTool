@@ -257,7 +257,7 @@ watch(
         </nav>
 
         <section class="settings-main">
-          <p v-if="errorText" class="page-error">{{ errorText }}</p>
+          <p v-if="errorText" class="page-error" role="alert">{{ errorText }}</p>
 
           <template v-if="isFeishu">
             <h3 class="main-title">飞书通知</h3>

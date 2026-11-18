@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import {
@@ -156,7 +156,7 @@ watch(
           </AppButton>
         </section>
 
-        <p v-if="errorText" class="ban-error">{{ errorText }}</p>
+        <p v-if="errorText" class="ban-error" role="alert">{{ errorText }}</p>
         <p v-else-if="loading" class="ban-empty">读取中…</p>
         <p v-else-if="!items.length" class="ban-empty">还没有封禁规则</p>
         <ul v-else class="ban-list">
@@ -171,8 +171,8 @@ watch(
               </span>
             </div>
             <AppButton
+              class="row-delete"
               variant="text"
-              tone="danger"
               size="sm"
               icon-only
               label="解除封禁"
@@ -242,6 +242,11 @@ watch(
   list-style: none;
 }
 
+/* 列表内解除封禁保持中性，悬停才提示危险色；不可逆确认在弹窗里 */
+.row-delete:hover:not(:disabled) {
+  color: var(--destructive);
+}
+
 .ban-row {
   display: flex;
   align-items: flex-start;
@@ -271,7 +276,7 @@ watch(
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--muted-foreground);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 .ban-note {
@@ -282,7 +287,7 @@ watch(
 
 .ban-meta {
   color: var(--subtle-foreground);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 @media (max-width: 720px) {

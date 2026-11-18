@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -236,7 +236,7 @@ function openEdit(item) {
       min_seconds: 0,
       remember: 'hours',
       hours: 12,
-      ...(item.close || {}),
+      ...item.close,
     },
   }
 }
@@ -437,12 +437,12 @@ onBeforeUnmount(() => {
       </AppButton>
     </div>
 
-    <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
+    <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
     <ConsolePanel
       :icon="MegaphoneLoud24Regular"
       title="弹窗公告列表"
-      description="按优先级从高到低展示；按住行首拖动即可调整顺序"
+      description="按优先级从高到低展示；新公告默认排在末尾"
     >
       <p v-if="!items.length" class="inline-hint">
         {{ loading ? '读取中…' : '还没有弹窗公告，新建一条试试' }}
@@ -492,8 +492,8 @@ onBeforeUnmount(() => {
                 @click="openEdit(item)"
               />
               <AppButton
+                class="row-delete"
                 variant="outline"
-                tone="danger"
                 size="xs"
                 icon-only
                 label="删除"
@@ -598,7 +598,7 @@ onBeforeUnmount(() => {
               <div class="rule-row">
                 <div>
                   <div class="rule-title">暂时隐藏</div>
-                  <div class="rule-desc">隐藏后公开接口不再返回，但配置和关闭记录保留。</div>
+                  <div class="rule-desc">隐藏后访客不再看到这条公告，配置和关闭记录仍保留。</div>
                 </div>
                 <NSwitch v-model:value="form.hidden" />
               </div>
@@ -610,7 +610,7 @@ onBeforeUnmount(() => {
               <div class="block-head">
                 <div>
                   <h3>筛选访客</h3>
-                  <p>多个条件全部满足才展示；概率条件由服务端分桶，客户端条件读取本机统计。</p>
+                  <p>多个条件全部满足才展示。</p>
                 </div>
                 <AppButton
                   variant="outline"
@@ -636,7 +636,6 @@ onBeforeUnmount(() => {
                   <span class="card-index">条件 {{ index + 1 }}</span>
                   <AppButton
                     variant="text"
-                    tone="danger"
                     size="xs"
                     icon-only
                     label="删除条件"
@@ -714,7 +713,6 @@ onBeforeUnmount(() => {
                   <span class="card-index">按钮 {{ index + 1 }}</span>
                   <AppButton
                     variant="text"
-                    tone="danger"
                     size="xs"
                     icon-only
                     label="删除按钮"
@@ -912,7 +910,7 @@ onBeforeUnmount(() => {
 .cell-sub {
   overflow: hidden;
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -927,7 +925,7 @@ onBeforeUnmount(() => {
 .cell-time {
   overflow: hidden;
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -939,7 +937,7 @@ onBeforeUnmount(() => {
   padding: 1px 8px;
   border-radius: var(--radius-full);
   corner-shape: round;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   line-height: 1.6;
 }
 
@@ -957,6 +955,12 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: flex-end;
   gap: 6px;
+}
+
+/* 列表内删除只保留中性外观，危险色推迟到确认弹窗 */
+.row-delete:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--destructive) 45%, var(--border));
+  color: var(--destructive);
 }
 
 .editor-form {
@@ -1062,7 +1066,7 @@ onBeforeUnmount(() => {
 .rule-desc {
   margin-top: 3px;
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   line-height: 1.6;
 }
 
@@ -1103,7 +1107,7 @@ onBeforeUnmount(() => {
 .field-note {
   margin: 0;
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   line-height: 1.6;
 }
 

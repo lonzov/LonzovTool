@@ -109,7 +109,7 @@ defineProps({
   .stat-hint {
     overflow: hidden;
     margin-top: 2px;
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     line-height: 1.35;
     text-overflow: ellipsis;
     white-space: nowrap;

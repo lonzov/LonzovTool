@@ -293,7 +293,7 @@ function open(item) {
   padding: 0 7px;
   border-radius: var(--radius-full);
   corner-shape: round;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   line-height: 18px;
   white-space: nowrap;
 }
@@ -316,7 +316,7 @@ function open(item) {
 .todo-time {
   flex-shrink: 0;
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
   transition: color 0.4s ease;
 }

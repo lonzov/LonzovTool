@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -332,9 +332,6 @@ onMounted(load)
               >
                 {{ task.enabled ? '已启用' : '已停用' }}
               </button>
-              <span :class="`task-status task-status--${task.last_status || 'off'}`">
-                {{ statusLabel(task.last_status) }}
-              </span>
             </div>
           </div>
 
@@ -570,7 +567,7 @@ onMounted(load)
   padding: 9px 16px;
   color: var(--subtle-foreground);
   background: var(--accent);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 
 .task-row {
@@ -607,7 +604,7 @@ onMounted(load)
 .task-label {
   display: none;
   color: var(--subtle-foreground);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 .task-primary {
@@ -618,7 +615,7 @@ onMounted(load)
 
 .task-sub {
   color: var(--subtle-foreground);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -677,7 +674,7 @@ onMounted(load)
   corner-shape: round;
   background: var(--accent);
   color: var(--muted-foreground);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -800,26 +797,26 @@ onMounted(load)
 
 .run-time {
   color: var(--foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
 
 .run-meta {
   color: var(--subtle-foreground);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 .run-summary {
   margin: 6px 0 0;
   color: var(--muted-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   line-height: 1.45;
 }
 
 .run-error {
   margin: 6px 0 0;
   color: var(--destructive);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   line-height: 1.45;
 }
 
@@ -870,10 +867,6 @@ onMounted(load)
   }
 
   .task-cell--status {
-    display: none;
-  }
-
-  .task-last-status {
     display: none;
   }
 

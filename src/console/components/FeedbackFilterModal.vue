@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { onBeforeUnmount, ref, watch } from 'vue'
 import { NInput, NSelect } from 'naive-ui'
 import { Add24Regular, Dismiss24Regular } from '@vicons/fluent'
@@ -298,7 +298,7 @@ const actions = [
 
 .rule-row {
   display: grid;
-  grid-template-columns: 118px 96px minmax(0, 1fr) 28px;
+  grid-template-columns: 118px 96px minmax(0, 1fr) 32px;
   align-items: center;
   gap: 8px;
 }
@@ -333,13 +333,13 @@ const actions = [
 .rule-hint {
   margin: 10px 0 0;
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   line-height: 1.6;
 }
 
 @media (width <= 640px) {
   .rule-row {
-    grid-template-columns: 1fr 1fr 28px;
+    grid-template-columns: 1fr 1fr 32px;
   }
 
   .rule-value {

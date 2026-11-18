@@ -1535,7 +1535,7 @@ html[data-motion='reduced'] .collapse-leave-active {
 
 .import-modal-body strong {
   font-weight: 600;
-  color: var(--n-text-color);
+  color: var(--foreground);
 }
 
 .import-rejected {
@@ -1584,7 +1584,7 @@ html[data-motion='reduced'] .collapse-leave-active {
 
 .embed-enable-modal-body strong {
   font-weight: 600;
-  color: var(--n-text-color);
+  color: var(--foreground);
 }
 
 .embed-close-hint {
@@ -1663,19 +1663,21 @@ html[data-motion='reduced'] .collapse-leave-active {
   white-space: nowrap !important;
 }
 
-.settings-select .n-base-selection {
-  --n-border: 1px solid var(--border) !important;
-  --n-border-hover: 1px solid var(--border) !important;
-  --n-border-focus: 1px solid var(--border) !important;
-  --n-border-active: 1px solid var(--border) !important;
-  --n-box-shadow-focus: none !important;
-  --n-box-shadow-active: none !important;
+/* 与站内输入框统一：细边框、无聚焦阴影。直接作用在 Naive 渲染的边框层上，
+   不覆盖 --n-border / --n-box-shadow 这类内部变量 */
+.settings-select .n-base-selection__border,
+.settings-select .n-base-selection__state-border {
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
 }
 
 /* 仅加宽"主题写入 URL 参数"下拉的面板（触发器宽度不变） */
 .settings-select-menu-wide {
   min-width: 0 !important;
-  --n-option-padding: 0 0px;
+}
+
+.settings-select-menu-wide .n-base-select-option {
+  padding: 0;
 }
 
 /* 小屏下保持下拉菜单宽度 */

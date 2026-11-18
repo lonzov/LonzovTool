@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NDrawer, NDrawerContent, NIcon, NInput, NSelect, useMessage } from 'naive-ui'
@@ -119,6 +119,10 @@ const NOTIFICATION_LABEL = {
 }
 
 const emptyText = computed(() => (loading.value ? '读取中…' : '没有符合条件的反馈'))
+
+function notifySent(item) {
+  return item?.notification_status === 'email'
+}
 
 const drawerStyle = computed(() => ({
   background: 'var(--background)',
@@ -358,6 +362,21 @@ async function sendNotify(payload) {
     )
   } catch (e) {
     if (gotUnauthorized(e)) return
+    if (e?.code === 'rate_limited') {
+      const retry = Number(e?.meta?.retry_after ?? e?.retryAfterSeconds ?? 0)
+      message.warning(
+        retry > 0
+          ? `发送过于频繁，请 ${Math.max(1, Math.ceil(retry / 60))} 分钟后重试`
+          : '发送过于频繁，请稍后重试',
+      )
+      return
+    }
+    if (e?.code === 'duplicate_notification') {
+      notify.value.show = false
+      message.warning('这条通知刚发过，60 秒内不能重复发送')
+      await load()
+      return
+    }
     if (e?.code === 'notification_failed') item.notification_status = 'failed'
     message.error(e?.message || '发送失败，请稍后重试')
   } finally {
@@ -529,10 +548,20 @@ onMounted(async () => {
       </div>
     </div>
 
-    <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
+    <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
     <ConsolePanel :icon="ChatHelp24Regular" :title="`反馈列表（${items.length}）`">
-      <p v-if="!items.length" class="inline-hint">{{ emptyText }}</p>
+      <div v-if="!items.length" class="empty-state">
+        <p>{{ emptyText }}</p>
+        <div class="empty-actions">
+          <AppButton v-if="status" variant="outline" size="sm" @click="status = ''">
+            查看全部状态
+          </AppButton>
+          <AppButton variant="outline" size="sm" :disabled="loading" @click="load()">
+            刷新
+          </AppButton>
+        </div>
+      </div>
 
       <ul v-else class="issue-list">
         <li v-for="item in items" :key="item.id">
@@ -701,14 +730,15 @@ onMounted(async () => {
               </span>
               <div class="notify-actions">
                 <AppButton
+                  v-if="can('notifications.send')"
                   variant="outline"
                   size="sm"
                   :icon="Mail24Regular"
-                  :disabled="notifyLoadingId === detail.item.id"
+                  :disabled="notifySent(detail.item) || notifyLoadingId === detail.item.id"
                   :loading="notifyLoadingId === detail.item.id"
                   @click="openNotify(detail.item)"
                 >
-                  发送通知
+                  {{ notifySent(detail.item) ? '已发送' : '发送邮件' }}
                 </AppButton>
                 <AppButton
                   variant="outline"
@@ -764,7 +794,6 @@ onMounted(async () => {
           <div class="detail-footer">
             <AppButton
               variant="text"
-              tone="danger"
               size="sm"
               :icon="Delete24Regular"
               :disabled="pendingId === detail.item.id"
@@ -875,6 +904,31 @@ onMounted(async () => {
   flex: 0 0 auto;
 }
 
+/* 空态只占一行说明的高度，并把可执行入口放在下面，避免整页只剩一块空白 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--subtle-foreground);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
 .tool-btn--on {
   border-color: var(--border-strong);
   background: var(--accent);
@@ -889,7 +943,7 @@ onMounted(async () => {
   corner-shape: round;
   background: var(--primary);
   color: var(--primary-foreground);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   line-height: 18px;
   text-align: center;
 }
@@ -1187,7 +1241,7 @@ onMounted(async () => {
   border-radius: var(--radius-full);
   corner-shape: round;
   color: var(--muted-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   line-height: 1.7;
 }
 
@@ -1203,7 +1257,7 @@ onMounted(async () => {
 
 .notify-by {
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
 }
 
 .detail-meta {

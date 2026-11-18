@@ -304,13 +304,11 @@ onUnmounted(() => unsubGlow(handleGlow))
   --n-column-width: 126px !important;
 }
 
-/* 级联选择器 focus 状态不变 */
-.dl-version-cascader .n-base-selection {
-  --n-border: 1px solid var(--border) !important;
-  --n-border-hover: 1px solid var(--border) !important;
-  --n-border-focus: 1px solid var(--border) !important;
-  --n-border-active: 1px solid var(--border) !important;
-  --n-box-shadow-focus: none !important;
-  --n-box-shadow-active: none !important;
+/* 级联选择器 focus 状态不变：细边框、无焦点阴影，直接作用在 Naive 渲染的边框层上，
+   不覆盖 --n-border / --n-box-shadow 这类内部变量 */
+.dl-version-cascader .n-base-selection__border,
+.dl-version-cascader .n-base-selection__state-border {
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
 }
 </style>

@@ -252,12 +252,12 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
+    <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
     <ConsolePanel
       :icon="MegaphoneLoud24Regular"
       title="公告列表"
-      description="按住行首把手拖动即可调整顺序，松手即保存"
+      description="按列表顺序显示在站内公告栏"
     >
       <p v-if="!notices.length" class="inline-hint">{{ emptyText }}</p>
 
@@ -302,8 +302,8 @@ onBeforeUnmount(() => {
                 @click="openEdit(item)"
               />
               <AppButton
+                class="row-delete"
                 variant="outline"
-                tone="danger"
                 size="xs"
                 icon-only
                 label="删除"
@@ -368,7 +368,7 @@ onBeforeUnmount(() => {
           />
         </NFormItem>
         <p class="field-hint">
-          时间决定站上显示的"多久以前"；顺序在列表里拖拽调整，新公告默认排在末尾。
+          时间决定站上显示的“多久以前”；新公告默认排在末尾。
         </p>
       </NForm>
     </AppModal>
@@ -424,7 +424,7 @@ onBeforeUnmount(() => {
 
 .notice-row--head {
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   padding-bottom: 8px;
 }
 
@@ -485,7 +485,7 @@ onBeforeUnmount(() => {
   gap: 3px;
   overflow: hidden;
   color: var(--muted-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -509,6 +509,12 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
 }
 
+/* 列表内删除只保留中性外观，危险色推迟到确认弹窗 */
+.row-delete:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--destructive) 45%, var(--border));
+  color: var(--destructive);
+}
+
 .inline-hint {
   margin: 0;
   padding: 8px 0;
@@ -528,19 +534,42 @@ onBeforeUnmount(() => {
 .field-hint {
   margin: 0 0 4px;
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.5;
 }
 
 @media (width <= 720px) {
-  .notice-row {
-    grid-template-columns: 22px minmax(0, 1fr) 88px;
+  /* 表头在窄屏两列排不下会折成多行，每行自带时间与操作，直接隐藏 */
+  .notice-row--head {
+    display: none;
   }
 
-  /* 窄屏把宽度让给内容：几时发布在行内信息密度最低，完整时间仍在编辑框里 */
-  .notice-row > .cell-meta,
-  .notice-row--head > span:nth-child(3) {
-    display: none;
+  .notice-row {
+    grid-template-areas:
+      'drag content actions'
+      'drag time time';
+    grid-template-columns: 22px minmax(0, 1fr) 88px;
+    row-gap: 4px;
+  }
+
+  .notice-row > .drag-handle {
+    grid-area: drag;
+    align-self: center;
+  }
+
+  .notice-row > .cell-text {
+    grid-area: content;
+  }
+
+  /* 发布时间是判断公告新旧的关键信息，窄屏也保留；表头隐藏后用次要行呈现 */
+  .notice-row > .cell-meta {
+    display: block;
+    grid-area: time;
+  }
+
+  .notice-row > .col-actions {
+    grid-area: actions;
+    align-self: center;
   }
 }
 </style>

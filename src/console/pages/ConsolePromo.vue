@@ -213,7 +213,7 @@ async function save() {
 
 <template>
   <div class="console-promo">
-    <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
+    <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
     <ConsolePanel :icon="AppsListDetail24Regular" title="槽位明细">
       <p v-if="!items.length" class="inline-hint">{{ emptyText }}</p>
@@ -290,7 +290,11 @@ async function save() {
           <div
             class="image-drop"
             :class="{ 'image-drop--active': dragging }"
+            role="button"
+            tabindex="0"
             @click="pickImage"
+            @keydown.enter.prevent="pickImage"
+            @keydown.space.prevent="pickImage"
             @dragover.prevent="dragging = true"
             @dragleave.prevent="dragging = false"
             @drop.prevent="onDrop"
@@ -310,7 +314,7 @@ async function save() {
         </NFormItem>
 
         <p class="form-note">
-          上传后服务端统一转 WebP、宽压到 1200 以内；也可以直接填外链地址。
+          建议使用 1200×400 左右的横图；也可以直接填外链地址。
         </p>
 
         <NFormItem label="图片地址">
@@ -349,7 +353,7 @@ async function save() {
           <NSwitch v-model:value="form.hidden" />
         </NFormItem>
 
-        <p v-if="editor.error" class="editor-error">{{ editor.error }}</p>
+        <p v-if="editor.error" class="editor-error" role="alert">{{ editor.error }}</p>
       </NForm>
     </AppModal>
   </div>
@@ -403,7 +407,7 @@ async function save() {
 
 .promo-thumb__empty {
   color: var(--subtle-foreground);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 .promo-main {
@@ -429,7 +433,7 @@ async function save() {
   padding: 1px 8px;
   border-radius: var(--radius-full);
   corner-shape: round;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   transition: color 0.4s ease;
 }
 
@@ -457,7 +461,7 @@ async function save() {
   gap: 4px;
   overflow: hidden;
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -465,7 +469,7 @@ async function save() {
 .promo-actions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -497,6 +501,11 @@ async function save() {
   background: var(--accent);
 }
 
+.image-drop:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
 .image-drop img {
   width: 100%;
   height: 100%;
@@ -521,7 +530,7 @@ async function save() {
 .form-note {
   margin: -4px 0 16px;
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   line-height: 1.6;
 }
 

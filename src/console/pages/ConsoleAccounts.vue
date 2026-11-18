@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { onMounted, ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -386,12 +386,12 @@ async function runReset() {
       </div>
     </div>
 
-    <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
+    <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
     <ConsolePanel
       :icon="People24Regular"
       title="账号列表"
-      description="角色决定权限点集合，单点授权在角色之外追加或收窄范围"
+      description="角色决定账号可访问的功能，单点授权在角色之外单独追加"
     >
       <p v-if="!accounts.length" class="inline-hint">
         {{ loading ? '读取中…' : '还没有可管理的账号' }}
@@ -456,7 +456,7 @@ async function runReset() {
       </div>
 
       <p class="table-note">
-        自己的账号不在这里修改：停用、改权与重置密码都需要另一名管理员操作，跳过这一步也过不了服务端校验。
+        自己的账号不在这里修改：停用、改权与重置密码都需要另一名管理员操作。
       </p>
     </ConsolePanel>
 
@@ -554,7 +554,7 @@ async function runReset() {
           <NSwitch v-model:value="form.disabled" />
         </div>
 
-        <p v-if="editor.error" class="editor-error">{{ editor.error }}</p>
+        <p v-if="editor.error" class="editor-error" role="alert">{{ editor.error }}</p>
       </NForm>
     </AppModal>
 
@@ -633,7 +633,7 @@ async function runReset() {
 
 .account-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.8fr) minmax(0, 1.5fr) 78px 116px 64px;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.8fr) minmax(0, 1.5fr) 78px 116px 72px;
   align-items: center;
   gap: 12px;
   padding: 10px 0;
@@ -648,7 +648,7 @@ async function runReset() {
 .account-row--head {
   padding-top: 0;
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   transition: color 0.4s ease;
 }
 
@@ -670,7 +670,7 @@ async function runReset() {
   corner-shape: round;
   background: var(--accent);
   color: var(--subtle-foreground);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   transition: color 0.4s ease, background-color 0.4s ease;
 }
 
@@ -695,7 +695,7 @@ async function runReset() {
   border-radius: var(--radius-full);
   corner-shape: round;
   color: var(--foreground);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   white-space: nowrap;
   transition: color 0.4s ease, border-color 0.4s ease;
 }
@@ -706,14 +706,14 @@ async function runReset() {
   corner-shape: round;
   background: var(--accent);
   color: var(--subtle-foreground);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   white-space: nowrap;
   transition: color 0.4s ease, background-color 0.4s ease;
 }
 
 .cell-muted {
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   transition: color 0.4s ease;
 }
 
@@ -731,7 +731,7 @@ async function runReset() {
   border: 1px solid transparent;
   border-radius: var(--radius-full);
   corner-shape: round;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   white-space: nowrap;
   transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
 }
@@ -785,7 +785,7 @@ async function runReset() {
 .table-note {
   margin: 10px 0 0;
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.6;
   transition: color 0.4s ease;
 }
@@ -812,7 +812,7 @@ async function runReset() {
 .form-note {
   margin: -4px 0 16px;
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   line-height: 1.6;
 }
 
@@ -843,12 +843,12 @@ async function runReset() {
   margin-left: 6px;
   color: var(--subtle-foreground);
   font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
 }
 
 .role-desc {
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.5;
 }
 
@@ -890,7 +890,7 @@ async function runReset() {
   margin-left: 6px;
   color: var(--subtle-foreground);
   font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
 }
 
 .grant-scope {
@@ -924,7 +924,7 @@ async function runReset() {
 
 .setting-desc {
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.5;
 }
 
@@ -934,45 +934,53 @@ async function runReset() {
   font-size: 0.8rem;
 }
 
-/* 窄屏：邮箱与操作各占一行，显式列（显示名、最后登录）让位给可见内容 */
-/* 窄屏把表格折成卡片：邮箱与操作同排，状态独占一行，标签整行铺开 */
+/* 窄屏把表格折成卡片：邮箱与操作同排，状态与最后登录各自保留，标签整行铺开。
+   状态用文字胶囊表达，颜色只作辅助，不再退化成一个纯色圆点。 */
 @media (width <= 720px) {
   .account-row--head {
     display: none;
   }
 
   .account-row {
+    grid-template-areas:
+      'email actions'
+      'status time'
+      'tags tags';
     grid-template-columns: minmax(0, 1fr) auto;
     row-gap: 8px;
     padding: 12px 0;
   }
 
-  .account-row > .cell-name,
-  .account-row > .cell-time {
+  .account-row > .cell-name {
     display: none;
   }
 
   .account-row > .cell-email {
-    grid-column: 1;
-    grid-row: 1;
+    grid-area: email;
   }
 
   .account-row > .col-actions {
-    grid-column: 2;
-    grid-row: 1;
+    grid-area: actions;
   }
 
   .account-row > .cell-status {
-    display: none;
+    display: flex;
+    grid-area: status;
+    align-items: center;
+  }
+
+  .account-row > .cell-time {
+    display: block;
+    grid-area: time;
+    text-align: right;
   }
 
   .account-row > .cell-tags {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    grid-area: tags;
   }
 
   .status-dot {
-    display: inline-block;
+    display: none;
   }
 }
 </style>

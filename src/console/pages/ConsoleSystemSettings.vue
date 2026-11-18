@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { NIcon, NInputNumber, NSelect, NSwitch, useMessage } from 'naive-ui'
 import { ChevronUp16Regular, Settings24Regular } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
@@ -187,6 +187,18 @@ function saveDebounced(patch) {
   }, 400)
 }
 
+// 卸载后定时器仍会补发一次 PATCH，用户看不到却已改到服务端
+onBeforeUnmount(() => {
+  if (saveTimer) {
+    clearTimeout(saveTimer)
+    saveTimer = null
+  }
+  if (pendingSaveTimer) {
+    clearTimeout(pendingSaveTimer)
+    pendingSaveTimer = null
+  }
+})
+
 function onToggle(value) {
   form.value.enabled = value
   saveNow({ enabled: value })
@@ -227,7 +239,12 @@ onMounted(async () => {
       <div
         class="card-header"
         :class="{ 'card-header--collapsed': collapsed }"
+        role="button"
+        tabindex="0"
+        :aria-expanded="!collapsed"
         @click="toggleCollapsed('feishu')"
+        @keydown.enter.prevent="toggleCollapsed('feishu')"
+        @keydown.space.prevent="toggleCollapsed('feishu')"
       >
         <span class="section-title">
           <NIcon :component="Settings24Regular" size="18" class="section-icon" />
@@ -257,8 +274,8 @@ onMounted(async () => {
           </div>
           <div class="setting-row setting-row--limit">
             <div class="setting-info">
-              <span class="setting-title">告警上限</span>
-              <p class="setting-desc">所有飞书告警在每个周期内最多发送的条数</p>
+              <span class="setting-title">同类告警上限</span>
+              <p class="setting-desc">同一类告警在每个周期内最多发送的条数；相同内容不会重复占用额度</p>
             </div>
             <div class="setting-control setting-control--limit">
               <NSelect
@@ -303,7 +320,12 @@ onMounted(async () => {
       <div
         class="card-header"
         :class="{ 'card-header--collapsed': pendingCollapsed }"
+        role="button"
+        tabindex="0"
+        :aria-expanded="!pendingCollapsed"
         @click="toggleCollapsed('pending')"
+        @keydown.enter.prevent="toggleCollapsed('pending')"
+        @keydown.space.prevent="toggleCollapsed('pending')"
       >
         <span class="section-title">
           <NIcon :component="Settings24Regular" size="18" class="section-icon" />
@@ -393,6 +415,12 @@ onMounted(async () => {
 
 .card-header:hover {
   opacity: 0.85;
+}
+
+.card-header:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+  border-radius: var(--radius-lg);
 }
 
 .card-header--collapsed {

@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { isApiGenerationOutdated, isClientOutdated, markClientOutdated } from './useClientOutdated.js'
 import toolsSnapshot from '../data/tools.json'
 import parentMenusSnapshot from '../data/parentMenus.json'
 import noticesSnapshot from '../data/notices.json'
@@ -147,7 +148,7 @@ const RESOURCES = {
  * @param {object} data 接口返回的卡片载荷
  * @returns {boolean} true 表示这份载荷不可信
  */
-export function isCardsPayloadEmpty(data) {
+function isCardsPayloadEmpty(data) {
   const categories = Array.isArray(data?.categories) ? data.categories : []
   if (!categories.length) return true
   // 分类还在、卡片全没了同样是空站，按同一类故障处理
@@ -172,8 +173,18 @@ function applyCards(data) {
 let syncedVersions = null
 let pollTimer = null
 let inflight = null
+let syncController = null
 
-async function pullResource(key) {
+/**
+ * 接口代次淘汰：当前页面代码已被后端淘汰，停止轮询并提示更新。
+ * 仍然保留构建期快照，站点本身不回退成错误态。
+ */
+function retireClient(reason) {
+  stopSiteDataSync()
+  markClientOutdated(reason)
+}
+
+async function pullResource(key, signal) {
   const resource = RESOURCES[key]
   if (!resource) return
   // 资源接口带 max-age 与 stale-while-revalidate：不强制确认的话，拿到的新版本戳
@@ -181,32 +192,48 @@ async function pullResource(key) {
   const res = await fetch(resource.url, {
     headers: { Accept: 'application/json' },
     cache: 'no-cache',
+    signal,
   })
+  if (res.status === 410) {
+    retireClient('resource_retired')
+    throw new Error('endpoint_retired')
+  }
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   resource.apply(await res.json())
 }
 
 /** 首次没有可比对的版本，直接拉全量，省掉一次往返 */
-async function pullAll() {
-  await Promise.all(Object.keys(RESOURCES).map((key) => pullResource(key)))
+async function pullAll(signal) {
+  await Promise.all(Object.keys(RESOURCES).map((key) => pullResource(key, signal)))
 }
 
-async function pullVersions() {
+async function pullVersions(signal) {
   const res = await fetch(VERSIONS_URL, {
     headers: { Accept: 'application/json' },
     cache: 'no-cache',
+    signal,
   })
+  if (res.status === 410) {
+    retireClient('versions_retired')
+    throw new Error('endpoint_retired')
+  }
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const versions = await res.json()
 
+  // 代次比对是主动的淘汰信号，比 410 更早：后端提高 min_supported 后旧页面不应继续空转
+  if (isApiGenerationOutdated(versions?.api?.min_supported)) {
+    retireClient('min_supported')
+    return
+  }
+
   if (syncedVersions === null) {
-    await pullAll()
+    await pullAll(signal)
   } else {
     // 只有版本戳变了的资源才重拉：改一条公告不该顺带下载全部卡片
     const changed = Object.keys(RESOURCES).filter(
       (key) => String(versions?.[key]) !== String(syncedVersions?.[key]),
     )
-    await Promise.all(changed.map((key) => pullResource(key)))
+    await Promise.all(changed.map((key) => pullResource(key, signal)))
   }
   syncedVersions = versions
 }
@@ -219,13 +246,28 @@ async function pullVersions() {
  * 任何失败都静默：接口取不到就继续用构建期快照，站点必须保持完整可用。
  */
 export function startSiteDataSync() {
-  if (pollTimer) return
+  if (pollTimer || isClientOutdated()) return
+  syncController = new AbortController()
   const tick = () => {
-    if (inflight) return
-    inflight = pullVersions()
+    if (inflight || isClientOutdated()) return
+    const signal = syncController?.signal
+    if (!signal || signal.aborted) return
+    inflight = pullVersions(signal)
       .catch(() => {})
       .finally(() => (inflight = null))
   }
   tick()
   pollTimer = setInterval(tick, VERSION_POLL_MS)
 }
+
+/** 停止运行时同步并中止在途请求：页面卸载或接口代次淘汰后不再空转 */
+export function stopSiteDataSync() {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+  syncController?.abort()
+  syncController = null
+  inflight = null
+}
+

@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NDatePicker, NForm, NFormItem, NIcon, NInput, useMessage } from 'naive-ui'
@@ -35,14 +35,14 @@ const TABS = [
     label: '共建者',
     icon: PeopleCommunity24Regular,
     title: '共建者名单',
-    description: '首页「共建者」一栏，从上到下按这里的顺序展示，可拖动调整',
+    description: '首页「共建者」按这里的顺序展示',
   },
   {
     key: 'donations',
     label: '打赏记录',
     icon: Gift24Regular,
     title: '打赏记录',
-    description: '首页「打赏」一栏，按时间从新到旧自动排序；金额是自由文本，不做数字换算',
+    description: '首页「打赏」按时间从新到旧展示',
   },
 ]
 
@@ -100,10 +100,31 @@ function shortDate(text) {
   return match ? match[1] : text || ''
 }
 
-/** 库里存的是站点本地的墙上时间（2026-03-24 23:28），解析不了就回落到当前时间。 */
+/**
+ * 后端存的是站点本地的墙上时间（Asia/Shanghai 的 `YYYY-MM-DD HH:MM`），不带时区。
+ * 直接按浏览器时区解析会让非 UTC+8 的管理员每次编辑都产生整体偏移；这里把墙上时间
+ * 当作本地时间来读写，写回时再标上站点偏移，保证「看到几点就是几点」。
+ */
+const SITE_UTC_OFFSET = '+08:00'
+
 function parseStoredTime(text) {
-  const stamp = Date.parse((text || '').replace(' ', 'T'))
-  return Number.isNaN(stamp) ? Date.now() : stamp
+  const match = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(text || '')
+  if (!match) return Date.now()
+  const [, year, month, day, hour, minute] = match
+  return new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+  ).getTime()
+}
+
+/** 日期选择器给的是本地墙上时间，写回时保留同一组年月日时分并标注站点偏移。 */
+function toSiteTime(stamp) {
+  const date = new Date(stamp)
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00${SITE_UTC_OFFSET}`
 }
 
 function gotUnauthorized(e) {
@@ -276,7 +297,7 @@ async function save() {
           qq: contributorForm.value.qq.trim(),
         }
       : {
-          time: new Date(donationForm.value.dateAt).toISOString(),
+          time: toSiteTime(donationForm.value.dateAt),
           name: donationForm.value.name.trim(),
           amount: donationForm.value.amount.trim(),
           note: donationForm.value.note.trim(),
@@ -375,7 +396,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
+    <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
     <ConsolePanel
       :icon="activeTab.icon"
@@ -467,8 +488,8 @@ onBeforeUnmount(() => {
                 @click="openEdit(row)"
               />
               <AppButton
+                class="row-delete"
                 variant="outline"
-                tone="danger"
                 size="xs"
                 icon-only
                 label="删除"
@@ -547,7 +568,7 @@ onBeforeUnmount(() => {
           <NInput v-model:value="contributorForm.qq" maxlength="16" placeholder="可选，5-12 位数字" />
         </NFormItem>
         <p class="field-hint">
-          QQ 只用于服务端抓取头像与人工核对：公开接口与站点产物都不会带上它，列表里也只露前三位与后两位。
+          QQ 只用于头像抓取与人工核对，不会公开显示。
         </p>
       </NForm>
 
@@ -609,7 +630,7 @@ onBeforeUnmount(() => {
           />
         </NFormItem>
         <p class="field-hint">
-          列表按时间从新到旧自动排序，改时间会改变它出现的位置；金额不做数字解析，写什么就展示什么。
+          按时间从新到旧展示；改时间会改变它出现的位置。
         </p>
       </NForm>
     </AppModal>
@@ -770,7 +791,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 4px;
   color: var(--muted-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -820,6 +841,12 @@ a.person-sub:hover {
   gap: 6px;
 }
 
+/* 列表内删除只保留中性外观，危险色推迟到确认弹窗 */
+.row-delete:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--destructive) 45%, var(--border));
+  color: var(--destructive);
+}
+
 .avatar-field {
   width: 100%;
 }
@@ -845,7 +872,7 @@ a.person-sub:hover {
   font-size: 0.78rem;
 }
 
-/* 窄屏：工具条压成一行，页签与刷新只剩图标；打赏行折成两行，别让时间与金额互相挤 */
+/* 窄屏：工具条压成一行；页签保留图标 + 文字，缩字号与内边距；打赏行折成两行 */
 @media (width <= 720px) {
   .people-toolbar {
     flex-wrap: nowrap;
@@ -857,11 +884,9 @@ a.person-sub:hover {
   }
 
   .tab-btn {
-    padding: 0 10px;
-  }
-
-  .tab-label {
-    display: none;
+    gap: 4px;
+    padding: 0 8px;
+    font-size: 0.75rem;
   }
 
   .toolbar-actions {

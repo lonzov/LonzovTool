@@ -103,7 +103,7 @@ function clear() {
           @change="onPick"
         />
       </div>
-      <p class="image-upload__hint">PNG / JPG / WebP / ICO，不超过 2 MB；保存时上传并转为 WebP</p>
+      <p class="image-upload__hint">PNG / JPG / WebP / ICO，不超过 2 MB</p>
     </div>
   </div>
 </template>
@@ -164,7 +164,7 @@ function clear() {
 .image-upload__hint {
   margin: 0;
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.5;
 }
 </style>

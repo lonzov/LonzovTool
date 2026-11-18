@@ -161,6 +161,10 @@ export default {
       :interval="interval"
       :show-dots="items.length > 1"
       :show-arrow="items.length > 1"
+      :dot-color="'color-mix(in srgb, var(--on-solid) 38%, transparent)'"
+      :dot-color-focus="'color-mix(in srgb, var(--on-solid) 62%, transparent)'"
+      :dot-color-active="'var(--on-solid)'"
+      :arrow-color="'var(--on-solid)'"
       :keyboard="items.length > 1"
     >
       <!-- isActive 由 NCarouselItem 提供，即该滑片是否被标为 aria-hidden；
@@ -219,18 +223,8 @@ export default {
   height: 100%;
 }
 
-/* ===== Naive NCarousel 深浅色/尺寸适配 =====
-   覆盖默认亮色变量，跟随广告画面使用白色系指示点/箭头；cssVar 打在 .n-carousel 行内，
-   需 !important 才压得住行内值（与 main.css 适配范式一致） */
-.promo-carousel :deep(.n-carousel) {
-  --n-dot-color: rgba(255, 255, 255, 0.38) !important;
-  --n-dot-color-focus: rgba(255, 255, 255, 0.62) !important;
-  --n-dot-color-active: #ffffff !important;
-  --n-arrow-color: #ffffff !important;
-  --n-bezier: cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-/* 指示点与切换按钮保持 NCarousel 默认排布（底边左下 + 右下角，互不重叠），无需重排位置 */
+/* 指示点与切换按钮保持 NCarousel 默认排布（底边左下 + 右下角，互不重叠），
+   颜色由组件自带的 dot/arrow 属性传入，不覆盖 Naive 内部变量 */
 
 /* 滑片：图片撑满（非 3:1 素材拉伸变形，不裁切不留边）；
    有 link 时该层为 <a>，否则为 <div> */

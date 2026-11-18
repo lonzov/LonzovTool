@@ -428,13 +428,11 @@ export const routes = [
         component: ConsoleSystem,
         meta: {
           title: '系统设置 - 控制台 - 小舟工具箱',
-          permission: 'system.manage',
         },
+        // 系统设置是分组而非页面：子页各有权限点（system.manage / accounts.manage /
+        // logs.read），父级不再统一要求 system.manage，否则后两者账号会被拦在门外。
+        // 精确路径 /console/system 的落地由 ConsoleSystem 按第一个可访问子页决定。
         children: [
-          {
-            path: '',
-            redirect: { name: 'console-system-settings' },
-          },
           {
             path: 'settings',
             name: 'console-system-settings',
@@ -542,6 +540,29 @@ export const routes = [
 export { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES }
 export default routes
 
+/** 路径里出现控制字符说明不是正常路由，浏览器/终端可能按各自方式截断 */
+function hasControlCharacter(value) {
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i)
+    if (code < 0x20 || code === 0x7f) return true
+  }
+  return false
+}
+
+/**
+ * 登录成功后的回跳参数只允许站内绝对路径。
+ * 反斜杠会被部分浏览器当成斜杠，`//` 与带协议的值都会离开本站，一律回落到控制台概览。
+ * @param {unknown} value route.query.redirect
+ * @param {string} [fallback] 非法值时的回落路径
+ */
+function sanitizeConsoleRedirect(value, fallback = '/console') {
+  if (typeof value !== 'string') return fallback
+  const target = value.trim()
+  if (!target.startsWith('/') || target.startsWith('//')) return fallback
+  if (target.includes('\\') || hasControlCharacter(target)) return fallback
+  return target
+}
+
 /**
  * 为给定 router 实例附加导航守卫（顶部加载条 + SEO head）
  * ViteSSG 回调中调用此函数，客户端/SSR 共用
@@ -555,6 +576,15 @@ export function setupRouterGuards(router) {
 
     const { isAuthenticated } = useConsoleAuth()
     const isLoginRoute = to.path === '/console/login'
+
+    // 非法回跳参数在进入登录页前就地规范化，页面读取时不需要再判一次
+    if (isLoginRoute && to.query.redirect !== undefined) {
+      const redirect = sanitizeConsoleRedirect(to.query.redirect)
+      if (redirect !== to.query.redirect) {
+        next({ path: '/console/login', query: { ...to.query, redirect } })
+        return
+      }
+    }
 
     if (!isAuthenticated.value && !isLoginRoute) {
       next({ path: '/console/login', query: { redirect: to.fullPath } })

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { NIcon, useMessage } from 'naive-ui'
 import { Warning24Regular } from '@vicons/fluent'
@@ -7,7 +7,12 @@ import { useSidebarSectionProvider } from '../composables/useSidebarSection.js'
 import AppButton from '../components/ui/AppButton.vue'
 import ConsolePageHeader from './components/ConsolePageHeader.vue'
 import SensitiveActionModal from './components/SensitiveActionModal.vue'
-import { findConsoleNav, visibleConsoleNav } from './consoleNav.js'
+import {
+  SYSTEM_CONSOLE_GROUP,
+  findConsoleNav,
+  firstAccessibleConsoleChild,
+  visibleConsoleNav,
+} from './consoleNav.js'
 import { useConsoleAuth } from './consoleAuth.js'
 import { provideConsolePermissions } from './usePermissions.js'
 import { useSensitiveTrust } from './useSensitiveTrust.js'
@@ -20,6 +25,7 @@ const { can } = provideConsolePermissions()
 
 const {
   modalOpen: trustModalOpen,
+  modalDescription: trustModalDescription,
   refresh: refreshTrust,
   resolveVerification,
   cancelVerification,
@@ -79,6 +85,17 @@ onMounted(async () => {
   if (permissionsReady.value) refreshTrust()
 })
 
+// /console/system 是分组而不是页面。直接打开分组路径时落到该账号第一个有权限的子页；
+// 页面侧也会做同样的事，这里只兜底精确路径，避免没有 system.manage 的账号进到空壳。
+watch(
+  () => [permissionsReady.value, route.path],
+  () => {
+    if (!permissionsReady.value || route.path !== SYSTEM_CONSOLE_GROUP) return
+    router.replace(firstAccessibleConsoleChild(SYSTEM_CONSOLE_GROUP, can) || '/console')
+  },
+  { immediate: true },
+)
+
 /* 弹窗关闭时若还没验证通过，就让等待中的写操作直接放弃 */
 function onTrustModalShow(visible) {
   if (!visible) cancelVerification()
@@ -135,7 +152,7 @@ useSidebarSectionProvider('console', () => ({
 
     <SensitiveActionModal
       v-model:show="trustModalOpen"
-      description="为了账号的安全，请先确认是你本人"
+      :description="trustModalDescription"
       @verified="resolveVerification"
       @update:show="onTrustModalShow"
     />

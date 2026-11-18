@@ -17,6 +17,9 @@ import {
 import App from './App.vue'
 import { routes, setupRouterGuards } from './router'
 import { recordFirstOpen } from './composables/useLocalStats.js'
+import { setClientUpdateCheck } from './composables/useClientOutdated.js'
+import { startSiteDataSync, stopSiteDataSync } from './composables/useSiteData.js'
+import { checkForAppUpdate } from './composables/useSWUpdate.js'
 
 // 模块级变量：存储 vite-ssg 创建的 head 实例，供 App.vue 客户端侧绕过
 // inject(headSymbol) 直接调用 head.push()（避免 Vite Dev 模式下 @unhead/vue
@@ -64,6 +67,17 @@ export const createApp = ViteSSG(
 
     // ===== 浏览器专属代码 =====
     if (isClient) {
+      // 接口代次淘汰时复用已有的 SW 更新检查与弹窗链路，不在请求层自己刷新页面
+      setClientUpdateCheck(checkForAppUpdate)
+
+      // 站点数据轮询挂在根组件上：应用卸载（HMR/测试环境）与进入 bfcache 时停掉，
+      // 从 bfcache 恢复时再启动（startSiteDataSync 可重复调用）
+      app.onUnmount(stopSiteDataSync)
+      window.addEventListener('pagehide', stopSiteDataSync)
+      window.addEventListener('pageshow', (event) => {
+        if (event.persisted) startSiteDataSync()
+      })
+
       // 首次打开时间：只记一次，用于本地统计
       recordFirstOpen()
 

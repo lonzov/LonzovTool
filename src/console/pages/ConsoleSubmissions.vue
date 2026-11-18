@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NIcon, useMessage } from 'naive-ui'
@@ -71,6 +71,10 @@ const STATUS_LABEL = {
 }
 
 const emptyText = computed(() => (loading.value ? '读取中…' : '没有符合条件的提交'))
+
+function notifySent(item) {
+  return item?.notification_status === 'email'
+}
 
 async function load({ keepHighlight = true } = {}) {
   loading.value = true
@@ -210,6 +214,21 @@ async function sendNotify(payload) {
       router.replace({ path: '/console/login', query: { redirect: route.fullPath } })
       return
     }
+    if (e?.code === 'rate_limited') {
+      const retry = Number(e?.meta?.retry_after ?? e?.retryAfterSeconds ?? 0)
+      message.warning(
+        retry > 0
+          ? `发送过于频繁，请 ${Math.max(1, Math.ceil(retry / 60))} 分钟后重试`
+          : '发送过于频繁，请稍后重试',
+      )
+      return
+    }
+    if (e?.code === 'duplicate_notification') {
+      notify.value.show = false
+      message.warning('这条通知刚发过，60 秒内不能重复发送')
+      await load()
+      return
+    }
     if (e?.code === 'notification_failed') item.notification_status = 'failed'
     message.error(e?.message || '发送失败，请稍后重试')
   } finally {
@@ -304,10 +323,25 @@ onMounted(async () => {
       </div>
     </div>
 
-    <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
+    <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
     <ConsolePanel :icon="CheckmarkCircle24Regular" :title="`提交列表（${items.length}）`">
-      <p v-if="!items.length" class="inline-hint">{{ emptyText }}</p>
+      <div v-if="!items.length" class="empty-state">
+        <p>{{ emptyText }}</p>
+        <div class="empty-actions">
+          <AppButton
+            v-if="filter"
+            variant="outline"
+            size="sm"
+            @click="filter = ''"
+          >
+            查看全部状态
+          </AppButton>
+          <AppButton variant="outline" size="sm" :disabled="loading" @click="load()">
+            刷新
+          </AppButton>
+        </div>
+      </div>
       <div v-else class="submission-list">
         <article
           v-for="item in items"
@@ -372,14 +406,15 @@ onMounted(async () => {
               {{ item.notified_by }}
             </span>
             <AppButton
+              v-if="can('notifications.send')"
               variant="outline"
               size="sm"
               :icon="Mail24Regular"
-              :disabled="notifyLoadingId === item.id || pendingId === item.id"
+              :disabled="notifySent(item) || notifyLoadingId === item.id || pendingId === item.id"
               :loading="notifyLoadingId === item.id"
               @click="openNotify(item)"
             >
-              发送通知
+              {{ notifySent(item) ? '已发送' : '发送邮件' }}
             </AppButton>
           </div>
 
@@ -450,9 +485,8 @@ onMounted(async () => {
                 </AppButton>
               </template>
               <AppButton
-                class="action-btn"
-                variant="solid"
-                tone="danger"
+                class="row-delete"
+                variant="outline"
                 size="sm"
                 :icon="Delete24Regular"
                 :disabled="pendingId === item.id"
@@ -470,6 +504,7 @@ onMounted(async () => {
       v-model:show="detailModal.show"
       :title="detailModal.title"
       :max-width="560"
+      :auto-focus="false"
       :actions="[{ text: '关闭', variant: 'outline', onClick: () => (detailModal.show = false) }]"
       content-scrollable
     >
@@ -520,6 +555,31 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* 空态的留白只在第一次读取时给足，有筛选条件时用一行说明 + 两个入口把页面收回来 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--subtle-foreground);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
 
 .tab-group {
@@ -634,7 +694,7 @@ onMounted(async () => {
 .submission-time {
   flex-shrink: 0;
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
 }
 
 .submission-side {
@@ -648,7 +708,7 @@ onMounted(async () => {
 .submission-ip {
   color: var(--subtle-foreground);
   font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   overflow-wrap: anywhere;
 }
 
@@ -699,7 +759,7 @@ onMounted(async () => {
 .cell-more {
   margin-left: 6px;
   color: var(--ring);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   white-space: nowrap;
 }
 
@@ -709,7 +769,7 @@ onMounted(async () => {
 
 .published-hint {
   color: var(--success);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
 }
 
 .published-hint code {
@@ -729,7 +789,7 @@ onMounted(async () => {
   border-radius: var(--radius-full);
   corner-shape: round;
   color: var(--muted-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   line-height: 1.7;
 }
 
@@ -750,7 +810,7 @@ onMounted(async () => {
 
 .notify-by {
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
 }
 
 /* 滚动交给 AppModal 的 content-scrollable 统一处理，这里只负责排版 */
@@ -783,6 +843,12 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 
+/* 列表内删除只保留中性外观，危险色只出现在确认弹窗里 */
+.row-delete:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--destructive) 45%, var(--border));
+  color: var(--destructive);
+}
+
 .note-input {
   flex: 1;
   min-width: 140px;
@@ -809,7 +875,7 @@ onMounted(async () => {
   corner-shape: round;
   background: var(--accent);
   color: var(--muted-foreground);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 .tag-pill--warn {
@@ -836,7 +902,7 @@ onMounted(async () => {
   padding: 1px 8px;
   border-radius: var(--radius-full);
   corner-shape: round;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   transition: color 0.4s ease;
 }
 

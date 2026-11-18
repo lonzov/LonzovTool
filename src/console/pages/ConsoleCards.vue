@@ -173,9 +173,11 @@ const visibleCards = computed(() => {
 })
 
 const hiddenCount = computed(() => cards.value.filter((card) => card.hidden).length)
-const summaryText = computed(
-  () => `${visibleCards.value.length} 张 / 共 ${cards.value.length} 张，隐藏 ${hiddenCount.value} 张`,
-)
+const filtered = computed(() => Boolean(keyword.value.trim()) || Boolean(categoryFilter.value))
+const summaryText = computed(() => {
+  const total = `共 ${cards.value.length} 张 · 隐藏 ${hiddenCount.value} 张`
+  return filtered.value ? `筛选出 ${visibleCards.value.length} 张 · ${total}` : total
+})
 
 /* ===== 分类内拖动排序 =====
    两种视图都用 Sortable：列表是一个容器，模拟布局是每个分类一段网格。
@@ -512,6 +514,16 @@ async function save() {
 }
 
 async function toggleHidden(card) {
+  const hiding = !card.hidden
+  const confirmed = await confirmDialog({
+    title: hiding ? '隐藏卡片' : '恢复显示',
+    message: hiding
+      ? `隐藏后「${card.title}」不再出现在首页，访客也看不到这个入口。确定隐藏吗？`
+      : `恢复后「${card.title}」会重新出现在首页。确定恢复显示吗？`,
+    confirmText: hiding ? '隐藏' : '恢复显示',
+    danger: hiding,
+  })
+  if (!confirmed) return
   if (!(await ensureTrust())) return
   pendingSlug.value = card.slug
   try {
@@ -520,7 +532,7 @@ async function toggleHidden(card) {
       body: JSON.stringify({ hidden: !card.hidden }),
     })
     Object.assign(card, updated)
-    message.success(updated.hidden ? '已隐藏，公开接口不再返回' : '已恢复显示')
+    message.success(updated.hidden ? '已隐藏，首页不再展示' : '已恢复显示')
   } catch (e) {
     if (e?.code === 'unauthorized') {
       router.replace({ path: '/console/login', query: { redirect: route.fullPath } })
@@ -582,6 +594,8 @@ async function remove(card) {
             :class="{ 'view-switch__btn--on': viewMode === 'list' }"
             type="button"
             title="列表布局"
+            aria-label="列表布局"
+            :aria-pressed="viewMode === 'list'"
             @click="viewMode = 'list'"
           >
             <NIcon :component="List24Regular" :size="15" />
@@ -591,6 +605,8 @@ async function remove(card) {
             :class="{ 'view-switch__btn--on': viewMode === 'grid' }"
             type="button"
             title="模拟布局（与首页卡片一致）"
+            aria-label="模拟布局"
+            :aria-pressed="viewMode === 'grid'"
             @click="viewMode = 'grid'"
           >
             <NIcon :component="Grid24Regular" :size="15" />
@@ -611,7 +627,7 @@ async function remove(card) {
       </div>
     </div>
 
-    <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
+    <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
     <ConsolePanel :icon="Apps24Regular" title="卡片列表">
       <p v-if="!visibleCards.length" class="inline-hint">
@@ -634,7 +650,12 @@ async function remove(card) {
               class="card-grid__item"
               :class="{ 'card-grid__item--hidden': card.hidden }"
               :data-card-slug="card.slug"
+              role="button"
+              tabindex="0"
+              :aria-label="`编辑卡片 ${card.title}`"
               @click.capture.stop.prevent="onCardClick($event, card)"
+              @keydown.enter.prevent="openEdit(card)"
+              @keydown.space.prevent="openEdit(card)"
             >
               <span class="drag-handle card-grid__drag" title="拖动调整分类内顺序" aria-hidden="true">
                 <NIcon :component="ReOrderDotsVertical16Regular" :size="14" />
@@ -677,13 +698,16 @@ async function remove(card) {
               </span>
               <ToolLogo :logo="card.logo" :alt="card.title" :size="32" />
               <div class="cell-text">
-                <span class="cell-title">{{ card.title }}</span>
+                <span class="cell-title-line">
+                  <span class="cell-title">{{ card.title }}</span>
+                  <span class="cell-sep" aria-hidden="true">·</span>
+                  <span class="cell-slug">{{ card.slug }}</span>
+                </span>
                 <a class="cell-sub" :href="card.link" target="_blank" rel="noopener noreferrer">{{ card.link }}</a>
-                <span class="cell-slug">{{ card.slug }}</span>
               </div>
             </div>
             <span class="cell-meta">{{ card.category }}</span>
-            <span>
+            <span class="cell-state">
               <button
                 class="state-pill"
                 :class="card.hidden ? 'state-pill--hidden' : 'state-pill--visible'"
@@ -705,8 +729,8 @@ async function remove(card) {
                 @click="openEdit(card)"
               />
               <AppButton
+                class="row-delete"
                 variant="outline"
-                tone="danger"
                 size="xs"
                 icon-only
                 label="删除"
@@ -722,8 +746,10 @@ async function remove(card) {
 
     <AppModal
       v-model:show="editor.show"
+      class="card-editor-modal"
       :title="editor.editing ? '编辑卡片' : '新建卡片'"
-      :max-width="560"
+      :max-width="540"
+      :max-height-offset="140"
       :auto-focus="false"
       :actions="[
         { text: '取消', variant: 'outline', onClick: () => (editor.show = false) },
@@ -786,11 +812,9 @@ async function remove(card) {
                   v-model:value="form.logo"
                   maxlength="512"
                   size="small"
-                  placeholder="或直接填图片地址 / 图标名，如 ArrowTrending20Filled"
+                  placeholder="或直接填图片地址 / 图标名"
                 />
-                <span class="field-hint">
-                  上传会自动压成 WebP（高 128、宽等比），保存为 /uploads/logos/&lt;slug&gt;.webp
-                </span>
+                <span class="field-hint">建议使用方形图标，保存后自动压缩到统一尺寸</span>
               </div>
             </div>
           </NFormItem>
@@ -814,7 +838,7 @@ async function remove(card) {
             <div class="setting-row">
               <div class="setting-info">
                 <span class="setting-title">在公开列表中隐藏</span>
-                <span class="setting-desc">隐藏后首页与接口都不再返回，控制台仍可编辑</span>
+                <span class="setting-desc">隐藏后首页不再展示，控制台仍可编辑</span>
               </div>
               <NSwitch v-model:value="form.hidden" />
             </div>
@@ -827,9 +851,9 @@ async function remove(card) {
             </div>
           </div>
         </div>
-        <p v-if="editor.error" class="editor-error">{{ editor.error }}</p>
+        <p v-if="editor.error" class="editor-error" role="alert">{{ editor.error }}</p>
         <p v-if="editor.editing" class="editor-hint">
-          slug 建立后不可修改：站外嵌入 /embed/{{ editor.slug }} 依赖它。
+          标识建立后不可修改：站外嵌入 /embed/{{ editor.slug }} 依赖它。
         </p>
       </NForm>
     </AppModal>
@@ -883,7 +907,7 @@ async function remove(card) {
 
 .view-switch {
   display: inline-flex;
-  padding: 2px;
+  padding: 1px;
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
   corner-shape: round;
@@ -946,7 +970,7 @@ async function remove(card) {
   corner-shape: round;
   background: var(--accent);
   color: var(--subtle-foreground);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
 }
 
 .card-grid {
@@ -960,6 +984,12 @@ async function remove(card) {
   position: relative;
   min-width: 0;
   cursor: pointer;
+}
+
+.card-grid__item:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-lg);
 }
 
 /* 与首页一致：同一行的卡片拉齐到该行最高的一张 */
@@ -1016,7 +1046,7 @@ async function remove(card) {
   corner-shape: round;
   background: var(--card);
   color: var(--muted-foreground);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   box-shadow: var(--shadow-sm);
 }
 
@@ -1030,7 +1060,7 @@ async function remove(card) {
   grid-template-columns: minmax(0, 1fr) 130px 110px 88px;
   align-items: center;
   gap: 12px;
-  padding: 10px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--border);
 }
 
@@ -1040,7 +1070,7 @@ async function remove(card) {
 
 .card-row--head {
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   padding-bottom: 8px;
 }
 
@@ -1085,20 +1115,35 @@ async function remove(card) {
 .cell-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
 }
 
 .cell-title {
+  overflow: hidden;
+  min-width: 0;
   color: var(--foreground);
   font-size: 0.86rem;
   font-weight: 500;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 标题与标识同一行（链接本身已经很长，单独占一行），标题过长时截断，标识始终可见 */
+.cell-title-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
 }
 
 .cell-sub {
   overflow: hidden;
+  min-width: 0;
   color: var(--muted-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
   text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1108,10 +1153,20 @@ async function remove(card) {
   color: var(--foreground);
 }
 
+.cell-sep {
+  flex-shrink: 0;
+  color: var(--subtle-foreground);
+  font-size: 0.75rem;
+}
+
 .cell-slug {
+  flex: 0 0 auto;
+  overflow: hidden;
   color: var(--subtle-foreground);
   font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cell-meta {
@@ -1153,6 +1208,12 @@ async function remove(card) {
   align-items: center;
   gap: 6px;
   justify-content: flex-end;
+}
+
+/* 列表内删除只保留中性外观，危险色推迟到确认弹窗；悬停时才提示后果 */
+.row-delete:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--destructive) 45%, var(--border));
+  color: var(--destructive);
 }
 
 .inline-hint {
@@ -1246,7 +1307,7 @@ async function remove(card) {
 
 .field-hint {
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.5;
 }
 
@@ -1286,7 +1347,7 @@ async function remove(card) {
 
 .setting-desc {
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.5;
 }
 
@@ -1299,27 +1360,41 @@ async function remove(card) {
 .editor-hint {
   margin: 6px 0 0;
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 
 @media (width <= 720px) {
-  /* 表头在窄屏没有意义：每行自带状态与操作，两列排不下时标签会自己错行 */
+  /* 表头在窄屏没有意义：每行自带状态与操作 */
   .card-row--head {
     display: none;
   }
 
+  /* 主信息独占一行，分类、状态与操作压到第二行；分类不能省，它是移动端唯一能看到的归属信息 */
   .card-row {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'main main main'
+      'meta state actions';
+    grid-template-columns: minmax(0, 1fr) auto auto;
     row-gap: 6px;
   }
 
-  /* 卡片信息独占一行，状态与操作落到下一行，操作贴右 */
   .card-row > .cell-main {
-    grid-column: 1 / -1;
+    grid-area: main;
   }
 
   .card-row > .cell-meta {
-    display: none;
+    grid-area: meta;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .card-row > .cell-state {
+    grid-area: state;
+  }
+
+  .card-row > .col-actions {
+    grid-area: actions;
   }
 }
 
@@ -1367,5 +1442,12 @@ async function remove(card) {
   .toolbar-actions .app-btn {
     padding: 0 12px;
   }
+}
+
+/* Naive 关闭按钮默认 22px；Modal 内容渲染在 body 下，页面 scoped 样式够不到，
+   用本弹窗独有的类名把热区外扩到 32px，不影响其他模态框 */
+:global(.card-editor-modal .n-card-header__close) {
+  width: 32px;
+  height: 32px;
 }
 </style>

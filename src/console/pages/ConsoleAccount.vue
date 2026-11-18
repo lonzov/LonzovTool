@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NForm, NFormItem, NIcon, NInput, NSwitch, useMessage } from 'naive-ui'
@@ -664,7 +664,7 @@ async function runRevokeOthers() {
         <p class="section-desc">看到不认识的设备就直接下线它</p>
       </header>
 
-      <p v-if="sessionsError" class="inline-hint inline-hint--error">{{ sessionsError }}</p>
+      <p v-if="sessionsError" class="inline-hint inline-hint--error" role="alert">{{ sessionsError }}</p>
       <p v-else-if="!devices.length" class="inline-hint">
         {{ sessionsLoading ? '读取中…' : '没有有效会话' }}
       </p>
@@ -849,7 +849,6 @@ async function runRevokeOthers() {
             </div>
             <AppButton
               variant="text"
-              tone="danger"
               size="sm"
               :disabled="passkeyBusy"
               @click="askVerify('passkey-delete', passkey.id)"
@@ -991,7 +990,7 @@ async function runRevokeOthers() {
 
 .row-label {
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   transition: color 0.4s ease;
 }
 
@@ -1118,7 +1117,7 @@ async function runRevokeOthers() {
   corner-shape: round;
   background: color-mix(in srgb, var(--warning) 16%, transparent);
   color: var(--warning);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
 }
 
 .row-action {
@@ -1135,7 +1134,7 @@ async function runRevokeOthers() {
   corner-shape: round;
   color: var(--foreground);
   font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   transition: color 0.4s ease, border-color 0.4s ease;
 }
 
@@ -1204,14 +1203,14 @@ async function runRevokeOthers() {
   corner-shape: round;
   background: color-mix(in srgb, var(--success) 14%, transparent);
   color: var(--success);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
 }
 
 .device-ip {
   margin: 2px 0 0;
   color: var(--muted-foreground);
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   overflow-wrap: anywhere;
 }
 
@@ -1222,7 +1221,7 @@ async function runRevokeOthers() {
   gap: 4px 10px;
   margin-top: 6px;
   color: var(--muted-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
 }
 
 .meta-item {
@@ -1292,7 +1291,7 @@ async function runRevokeOthers() {
 .form-note {
   margin: 0 0 10px;
   color: var(--subtle-foreground);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   line-height: 1.6;
 }
 
@@ -1341,7 +1340,7 @@ async function runRevokeOthers() {
   }
 
   .device-meta {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
   }
 
   /* 时间改成 label/value 两列，行尾不再留孤零零的分隔点 */

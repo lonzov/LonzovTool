@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { NIcon } from 'naive-ui'
@@ -460,7 +460,7 @@ onBeforeUnmount(() => {
         </div>
       </ConsolePanel>
 
-      <ConsolePanel :icon="TopSpeed24Regular" title="Uptime">
+      <ConsolePanel :icon="TopSpeed24Regular" title="站点监控">
         <template #extra>
           <div class="uptime-extra">
             <span v-if="uptimeNote" class="panel-note">{{ uptimeNote }}</span>
@@ -471,13 +471,17 @@ onBeforeUnmount(() => {
               target="_blank"
               rel="noopener noreferrer"
               title="前往状态页"
+              aria-label="前往状态页"
             >
               <NIcon :component="Open24Regular" :size="14" />
             </a>
           </div>
         </template>
 
-        <p v-if="uptimeError" class="inline-empty">{{ uptimeError }}</p>
+        <div v-if="uptimeError" class="inline-empty inline-empty--action">
+          <p>监控数据暂不可用，不影响内容管理</p>
+          <AppButton variant="outline" size="sm" @click="loadUptime">重试</AppButton>
+        </div>
         <p v-else-if="!uptimeRows.length" class="inline-empty">
           {{ uptimeLoading ? '读取中…' : '暂无监控数据' }}
         </p>
@@ -509,12 +513,21 @@ onBeforeUnmount(() => {
       <template #extra>
         <div class="traffic-extra">
           <span class="panel-note">{{ statsNote }}</span>
+          <AppButton
+            v-if="!statsLoading && !lastUpdate"
+            variant="outline"
+            size="sm"
+            @click="fetchStats"
+          >
+            重试
+          </AppButton>
           <a
             class="icon-link"
             :href="STATS_SHARE_URL"
             target="_blank"
             rel="noopener noreferrer"
             title="打开访问统计"
+            aria-label="打开访问统计"
           >
             <NIcon :component="Open24Regular" :size="14" />
           </a>
@@ -579,7 +592,7 @@ onBeforeUnmount(() => {
       </template>
 
       <div ref="logBox" class="log-box" @scroll="onLogScroll">
-        <p v-if="logError" class="log-hint">{{ logError }}</p>
+        <p v-if="logError" class="log-hint" role="alert">{{ logError }}</p>
         <p v-else-if="!visibleRows.length" class="log-hint">暂无记录</p>
         <div v-for="row in visibleRows" :key="row.id" class="log-row">
           <span class="log-time">{{ formatLogTime(row.created_at) }}</span>
@@ -596,6 +609,7 @@ onBeforeUnmount(() => {
       v-model:show="logFilterOpen"
       title="筛选管理日志"
       :max-width="420"
+      :auto-focus="false"
       :actions="[{ text: '完成', variant: 'fill', onClick: () => (logFilterOpen = false) }]"
     >
       <div class="tab-group log-filter-options" role="tablist">
@@ -729,6 +743,7 @@ onBeforeUnmount(() => {
 .traffic-extra {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -778,7 +793,7 @@ onBeforeUnmount(() => {
   padding: 1px 7px;
   border-radius: var(--radius-full);
   corner-shape: round;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.6;
   white-space: nowrap;
@@ -857,7 +872,7 @@ onBeforeUnmount(() => {
 }
 
 .cell-sub {
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   color: var(--subtle-foreground);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -882,6 +897,18 @@ onBeforeUnmount(() => {
   transition: color 0.4s ease;
 }
 
+.inline-empty--action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.inline-empty--action p {
+  margin: 0;
+}
+
 /* 状态胶囊：底色由语义色按透明度派生 */
 .status-pill {
   display: inline-flex;
@@ -889,7 +916,7 @@ onBeforeUnmount(() => {
   padding: 2px 9px;
   border-radius: var(--radius-full);
   corner-shape: round;
-  font-size: 0.73rem;
+  font-size: 0.75rem;
   white-space: nowrap;
   border: 1px solid transparent;
   transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
@@ -942,8 +969,8 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--muted-foreground);
@@ -1161,7 +1188,7 @@ onBeforeUnmount(() => {
   background: transparent;
   color: var(--muted-foreground);
   font-family: inherit;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.6;
   cursor: pointer;
   transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
@@ -1195,7 +1222,7 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-lg);
   background: var(--muted);
   font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   line-height: 1.7;
   overflow: auto;
   transition: background-color 0.4s ease;
@@ -1324,7 +1351,7 @@ onBeforeUnmount(() => {
     grid-area: hint;
     overflow: hidden;
     margin-top: 2px;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -1350,7 +1377,7 @@ onBeforeUnmount(() => {
   }
 
   .console-overview :deep(.panel-desc) {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     line-height: 1.4;
   }
 

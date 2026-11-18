@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { switchRailStyle } from '../../utils/switchRailStyle.js'
 import { NIcon, useMessage, NSwitch } from 'naive-ui'
 import { CurrencyDollarEuro20Regular } from '@vicons/fluent'
 import { useMouseGlow, applyGlow } from '../../composables/useMouseGlow.js'
@@ -164,7 +163,6 @@ onBeforeUnmount(() => {
       <NSwitch
         :value="copyModeCodepoint"
         @update:value="toggleCopyMode"
-        :rail-style="switchRailStyle"
         size="small"
         :checked-value="true"
         :unchecked-value="false"
