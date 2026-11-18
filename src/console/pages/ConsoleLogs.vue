@@ -1,18 +1,22 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { NIcon, NInput, useMessage } from 'naive-ui'
+import { NIcon, NInput, NInputNumber, useMessage } from 'naive-ui'
 import {
   ArrowClockwise24Regular,
   ChevronDown24Regular,
   History24Regular,
   Search16Regular,
+  Settings24Regular,
 } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
+import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { consoleFetch } from '../consoleRequest.js'
+import { usePermissions } from '../usePermissions.js'
 
 const LOGS_URL = '/api/v1/console/logs'
+const RETENTION_URL = '/api/v1/console/logs/retention'
 const PAGE_SIZE = 100
 
 const LEVELS = [
@@ -25,6 +29,8 @@ const LEVELS = [
 const route = useRoute()
 const router = useRouter()
 const message = useMessage()
+const { can } = usePermissions()
+const canManageRetention = computed(() => can('system.manage'))
 
 const rows = ref([])
 const level = ref('all')
@@ -135,6 +141,66 @@ function levelOf(row) {
   return LEVEL_STYLE[row.level] || LEVEL_STYLE.info
 }
 
+const retentionVisible = ref(false)
+const retentionLoading = ref(false)
+const retentionSaving = ref(false)
+const retentionError = ref('')
+const retentionForm = ref({
+  retentionDays: 90,
+  warnRetentionDays: 365,
+  maxRows: 100000,
+})
+
+async function loadRetention() {
+  retentionLoading.value = true
+  retentionError.value = ''
+  try {
+    const payload = await consoleFetch(RETENTION_URL)
+    retentionForm.value = {
+      retentionDays: payload.retention_days,
+      warnRetentionDays: payload.warn_retention_days,
+      maxRows: payload.max_rows,
+    }
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    retentionError.value = e?.message || '读取留存设置失败'
+  } finally {
+    retentionLoading.value = false
+  }
+}
+
+function openRetention() {
+  retentionVisible.value = true
+  loadRetention()
+}
+
+async function saveRetention() {
+  if (retentionSaving.value) return
+  retentionSaving.value = true
+  try {
+    const payload = await consoleFetch(RETENTION_URL, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        retention_days: retentionForm.value.retentionDays,
+        warn_retention_days: retentionForm.value.warnRetentionDays,
+        max_rows: retentionForm.value.maxRows,
+      }),
+    })
+    retentionForm.value = {
+      retentionDays: payload.retention_days,
+      warnRetentionDays: payload.warn_retention_days,
+      maxRows: payload.max_rows,
+    }
+    retentionVisible.value = false
+    message.success('留存设置已保存')
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    message.error(e?.message || '保存失败，请稍后重试')
+  } finally {
+    retentionSaving.value = false
+  }
+}
+
 onMounted(load)
 </script>
 
@@ -170,15 +236,26 @@ onMounted(load)
         </template>
       </NInput>
 
-      <AppButton
-        variant="outline"
-        size="sm"
-        icon-only
-        label="刷新"
-        :icon="ArrowClockwise24Regular"
-        :disabled="loading"
-        @click="load"
-      />
+      <div class="logs-actions">
+        <AppButton
+          variant="outline"
+          size="sm"
+          icon-only
+          label="刷新"
+          :icon="ArrowClockwise24Regular"
+          :disabled="loading"
+          @click="load"
+        />
+        <AppButton
+          v-if="canManageRetention"
+          variant="outline"
+          size="sm"
+          icon-only
+          label="留存设置"
+          :icon="Settings24Regular"
+          @click="openRetention"
+        />
+      </div>
     </div>
 
     <p v-if="errorText" class="inline-hint inline-hint--error">{{ errorText }}</p>
@@ -231,6 +308,88 @@ onMounted(load)
         </div>
       </div>
     </ConsolePanel>
+
+    <AppModal
+      v-model:show="retentionVisible"
+      title="日志留存设置"
+      description="按日志级别分别设置保留天数，另有总行数兜底"
+      :max-width="520"
+      :z-index="2200"
+      :auto-focus="false"
+    >
+      <div class="retention-body">
+        <p v-if="retentionError" class="inline-hint inline-hint--error">
+          {{ retentionError }}
+        </p>
+        <div class="retention-row">
+          <div class="retention-label">
+            <span>普通日志保留</span>
+            <p>信息级日志的保留天数</p>
+          </div>
+          <div class="retention-control">
+            <NInputNumber
+              v-model:value="retentionForm.retentionDays"
+              :min="1"
+              :max="3650"
+              :disabled="retentionLoading || retentionSaving"
+            />
+            <span>天</span>
+          </div>
+        </div>
+        <div class="retention-row">
+          <div class="retention-label">
+            <span>警告/错误日志保留</span>
+            <p>低频高价值日志的保留天数</p>
+          </div>
+          <div class="retention-control">
+            <NInputNumber
+              v-model:value="retentionForm.warnRetentionDays"
+              :min="1"
+              :max="3650"
+              :disabled="retentionLoading || retentionSaving"
+            />
+            <span>天</span>
+          </div>
+        </div>
+        <div class="retention-row">
+          <div class="retention-label">
+            <span>最大日志条数</span>
+            <p>超过后从最旧记录开始清理</p>
+          </div>
+          <div class="retention-control">
+            <NInputNumber
+              v-model:value="retentionForm.maxRows"
+              :min="100"
+              :max="1000000"
+              :disabled="retentionLoading || retentionSaving"
+            />
+            <span>条</span>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="retention-actions">
+          <AppButton
+            variant="outline"
+            size="md"
+            :disabled="retentionSaving"
+            @click="retentionVisible = false"
+          >
+            取消
+          </AppButton>
+          <AppButton
+            variant="solid"
+            size="md"
+            :loading="retentionSaving"
+            :disabled="retentionLoading || retentionSaving"
+            @click="saveRetention"
+          >
+            保存
+          </AppButton>
+        </div>
+      </template>
+    </AppModal>
   </div>
 </template>
 
@@ -293,7 +452,10 @@ onMounted(load)
   border-radius: var(--radius-lg);
 }
 
-.logs-toolbar > .app-btn {
+.logs-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-left: auto;
 }
 
@@ -416,6 +578,56 @@ onMounted(load)
   font-size: 0.74rem;
 }
 
+.retention-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.retention-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.retention-label {
+  min-width: 0;
+}
+
+.retention-label > span {
+  display: block;
+  color: var(--foreground);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.retention-label > p {
+  margin: 3px 0 0;
+  color: var(--subtle-foreground);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.retention-control {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+}
+
+.retention-control :deep(.n-input-number) {
+  width: 150px;
+}
+
+.retention-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 @media (width <= 900px) {
   .log-row {
     grid-template-columns: 104px 52px minmax(0, 1fr);
@@ -433,6 +645,18 @@ onMounted(load)
   .logs-search {
     width: 100%;
     order: 3;
+  }
+}
+
+@media (max-width: 600px) {
+  .retention-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .retention-control {
+    justify-content: flex-end;
   }
 }
 </style>
