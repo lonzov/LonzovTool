@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -85,6 +85,7 @@ const items = ref([])
 const loading = ref(false)
 const errorText = ref('')
 const reordering = ref(false)
+const togglingId = ref('')
 const listEl = ref(null)
 let sortable = null
 
@@ -394,6 +395,48 @@ function openPreview() {
   previewShow.value = true
 }
 
+async function toggleHidden(item) {
+  const hiding = !item.hidden
+  const confirmed = await confirmDialog({
+    title: hiding ? '隐藏弹窗公告' : '恢复展示',
+    message: hiding
+      ? `隐藏后「${item.title}」不再出现在访客的弹窗里，已关闭的记录仍保留。确定隐藏吗？`
+      : `恢复后「${item.title}」会重新按展示条件出现在访客弹窗里。确定恢复展示吗？`,
+    confirmText: hiding ? '隐藏' : '恢复展示',
+    danger: hiding,
+  })
+  if (!confirmed) return
+  if (!(await ensureTrust())) return
+
+  togglingId.value = item.id
+  try {
+    const payload = {
+      id: item.id,
+      title: item.title,
+      content: item.content,
+      hidden: hiding,
+      delay_ms: Number(item.delay_ms) || 0,
+      starts_at: item.starts_at || null,
+      ends_at: item.ends_at || null,
+      conditions: item.conditions || [],
+      buttons: item.buttons || [],
+      close: item.close || {},
+    }
+    const updated = await consoleFetch(
+      `${ANNOUNCEMENTS_URL}/${encodeURIComponent(item.id)}`,
+      { method: 'PUT', body: JSON.stringify(payload) },
+    )
+    const index = items.value.findIndex((row) => row.id === item.id)
+    if (index >= 0) items.value[index] = updated
+    message.success(updated.hidden ? '已隐藏，访客不再看到' : '已恢复展示')
+  } catch (error) {
+    if (gotUnauthorized(error)) return
+    message.error(error?.message || '操作失败，请稍后重试')
+  } finally {
+    togglingId.value = ''
+  }
+}
+
 async function remove(item) {
   const confirmed = await confirmDialog({
     title: '删除弹窗公告',
@@ -470,12 +513,19 @@ onBeforeUnmount(() => {
               <span class="cell-sub">{{ item.content.replace(/[#*`>_-]/g, '').slice(0, 80) }}</span>
             </div>
             <div class="cell-meta">
-              <span
-                class="state-pill"
+              <button
+                type="button"
+                class="state-pill state-pill--action"
                 :class="item.hidden ? 'state-pill--hidden' : 'state-pill--visible'"
+                :disabled="togglingId === item.id"
+                :title="item.hidden ? '点击恢复展示' : '点击隐藏'"
+                :aria-label="
+                  item.hidden ? `恢复展示「${item.title}」` : `隐藏「${item.title}」`
+                "
+                @click="toggleHidden(item)"
               >
                 {{ item.hidden ? '已隐藏' : '展示中' }}
-              </span>
+              </button>
               <span class="cell-time">
                 {{ item.starts_at ? formatTime(item.starts_at) : '立即生效' }}
                 <span aria-hidden="true">·</span>
@@ -949,6 +999,28 @@ onBeforeUnmount(() => {
 .state-pill--hidden {
   background: var(--muted);
   color: var(--subtle-foreground);
+}
+
+.state-pill--action {
+  border: 0;
+  font-family: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+  transition: filter 0.2s ease, opacity 0.2s ease;
+}
+
+.state-pill--action:hover:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+.state-pill--action:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.state-pill--action:disabled {
+  cursor: progress;
+  opacity: 0.6;
 }
 
 .col-actions {

@@ -12,6 +12,7 @@ import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { submitOnEnter } from '../enterSubmit.js'
+import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
 import { preparePromoImage } from '../../utils/iconUpload.js'
@@ -44,6 +45,7 @@ const message = useMessage()
 const items = ref([])
 const loading = ref(false)
 const errorText = ref('')
+const togglingSlot = ref('')
 
 const editor = ref({ show: false, slot: '', error: '', uploading: false })
 const form = ref({ title: '', image: '', link: '', eventId: '', expiresAt: null, hidden: false })
@@ -209,6 +211,44 @@ async function save() {
     saving.value = false
   }
 }
+
+async function toggleHidden(item) {
+  const hiding = !item.hidden
+  const confirmed = await confirmDialog({
+    title: hiding ? '隐藏推广位' : '恢复展示',
+    message: hiding
+      ? `隐藏后「${item.label}」不再出现在首页，配置仍保留。确定隐藏吗？`
+      : `恢复后「${item.label}」会重新按到期时间展示。确定恢复展示吗？`,
+    confirmText: hiding ? '隐藏' : '恢复展示',
+    danger: hiding,
+  })
+  if (!confirmed) return
+  if (!(await ensureTrust())) return
+
+  togglingSlot.value = item.slot
+  try {
+    const updated = await consoleFetch(`${PROMO_URL}/${item.slot}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        title: item.title,
+        image: item.image,
+        link: item.link,
+        event_id: item.event_id,
+        expires_at: item.expires_at
+          ? new Date(item.expires_at * 1000).toISOString()
+          : null,
+        hidden: hiding,
+      }),
+    })
+    applyItem(updated)
+    message.success(updated.hidden ? '已隐藏，首页不再展示' : '已恢复展示')
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    message.error(e?.message || '操作失败，请稍后重试')
+  } finally {
+    togglingSlot.value = ''
+  }
+}
 </script>
 
 <template>
@@ -228,7 +268,23 @@ async function save() {
           <div class="promo-main">
             <div class="promo-title-line">
               <span class="promo-label">{{ item.label }}</span>
-              <span class="promo-status" :class="`promo-status--${statusOf(item).tone}`">
+              <button
+                v-if="!item.expired && item.image"
+                type="button"
+                class="promo-status promo-status--action"
+                :class="`promo-status--${statusOf(item).tone}`"
+                :disabled="togglingSlot === item.slot"
+                :title="item.hidden ? '点击恢复展示' : '点击隐藏'"
+                :aria-label="item.hidden ? `恢复展示「${item.label}」` : `隐藏「${item.label}」`"
+                @click="toggleHidden(item)"
+              >
+                {{ statusOf(item).text }}
+              </button>
+              <span
+                v-else
+                class="promo-status"
+                :class="`promo-status--${statusOf(item).tone}`"
+              >
                 {{ statusOf(item).text }}
               </span>
             </div>
@@ -445,6 +501,29 @@ async function save() {
 .promo-status--muted {
   color: var(--subtle-foreground);
   background: var(--muted);
+}
+
+.promo-status--action {
+  border: 0;
+  font-family: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  transition: filter 0.2s ease, opacity 0.2s ease;
+}
+
+.promo-status--action:hover:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+.promo-status--action:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.promo-status--action:disabled {
+  cursor: progress;
+  opacity: 0.6;
 }
 
 .promo-sub {

@@ -37,6 +37,7 @@ const pages = ref([])
 const loading = ref(false)
 const errorText = ref('')
 const pendingSlug = ref('')
+const togglingSlug = ref('')
 
 const editor = ref({ show: false, editing: false, slug: '' })
 const form = ref(emptyForm())
@@ -214,6 +215,37 @@ async function save() {
   }
 }
 
+async function toggleHidden(page) {
+  const hiding = !page.hidden
+  const confirmed = await confirmDialog({
+    title: hiding ? '隐藏下载页' : '恢复展示',
+    message: hiding
+      ? `隐藏后「${page.name}」不再出现在下载页入口，直接访问链接仍可打开。确定隐藏吗？`
+      : `恢复后「${page.name}」会重新出现在下载页入口。确定恢复展示吗？`,
+    confirmText: hiding ? '隐藏' : '恢复展示',
+    danger: hiding,
+  })
+  if (!confirmed) return
+  if (!(await ensureTrust())) return
+
+  togglingSlug.value = page.slug
+  try {
+    const updated = await consoleFetch(`${URL}/${encodeURIComponent(page.slug)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ hidden: hiding }),
+    })
+    pages.value = pages.value.map((row) =>
+      row.slug === updated.slug ? updated : row,
+    )
+    message.success(updated.hidden ? '已隐藏，下载页入口不再展示' : '已恢复展示')
+  } catch (e) {
+    if (gotUnauthorized(e)) return
+    message.error(e?.message || '操作失败，请稍后重试')
+  } finally {
+    togglingSlug.value = ''
+  }
+}
+
 async function remove(page) {
   const confirmed = await confirmDialog({
     title: '删除下载页',
@@ -291,7 +323,17 @@ onMounted(load)
           <div class="download-main">
             <div class="download-title-line">
               <span class="download-name">{{ page.name }}</span>
-              <span v-if="page.hidden" class="tag tag--muted">已隐藏</span>
+              <button
+                type="button"
+                class="tag tag--visibility"
+                :class="page.hidden ? 'tag--muted' : 'tag--live'"
+                :disabled="togglingSlug === page.slug"
+                :title="page.hidden ? '点击恢复展示' : '点击隐藏'"
+                :aria-label="page.hidden ? `恢复展示「${page.name}」` : `隐藏「${page.name}」`"
+                @click="toggleHidden(page)"
+              >
+                {{ page.hidden ? '已隐藏' : '展示中' }}
+              </button>
               <span class="download-version">{{ page.version || '未填版本' }}</span>
             </div>
             <p class="download-sub">{{ page.tagline || '未填写一句话介绍' }}</p>
@@ -635,6 +677,34 @@ onMounted(load)
 .tag--muted {
   background: var(--muted);
   color: var(--muted-foreground);
+}
+
+.tag--live {
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+  color: var(--success);
+}
+
+.tag--visibility {
+  border: 0;
+  font-family: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  transition: filter 0.2s ease, opacity 0.2s ease;
+}
+
+.tag--visibility:hover:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+.tag--visibility:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.tag--visibility:disabled {
+  cursor: progress;
+  opacity: 0.6;
 }
 
 .form-grid {
