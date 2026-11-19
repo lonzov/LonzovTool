@@ -1092,6 +1092,7 @@ async function remove(card) {
   justify-content: center;
   color: var(--subtle-foreground);
   cursor: grab;
+  touch-action: none;
 }
 
 .drag-handle:active {
