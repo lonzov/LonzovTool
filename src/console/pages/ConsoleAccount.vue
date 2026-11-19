@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NForm, NFormItem, NIcon, NInput, NSwitch, useMessage } from 'naive-ui'
@@ -363,6 +363,11 @@ const devices = computed(() =>
   sessions.value.map((session) => ({ ...session, device: describeDevice(session.user_agent) })),
 )
 
+/* 地点取最后来源地，旧会话回落到签发地；两者都没有时返回空串 */
+function sessionRegion(session) {
+  return session.last_region || session.created_region || ''
+}
+
 const roles = computed(() => account.value?.roles || [])
 const passwordLengthCheck = computed(() => checkPasswordLength(passwordForm.value.next))
 
@@ -684,6 +689,10 @@ async function runRevokeOthers() {
               {{ session.last_ip || session.created_ip || '未知地址' }}
             </p>
             <div class="device-meta">
+              <span v-if="sessionRegion(session)" class="meta-item">
+                <span class="meta-label">地点</span>
+                <span class="meta-value">{{ sessionRegion(session) }}</span>
+              </span>
               <span class="meta-item">
                 <span class="meta-label">最近活动</span>
                 <span class="meta-value">
