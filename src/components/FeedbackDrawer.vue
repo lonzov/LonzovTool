@@ -14,7 +14,6 @@ import {
 } from 'naive-ui'
 import {
   CheckmarkCircle24Regular,
-  ChevronDown24Regular,
   Delete24Regular,
   Image24Regular,
   Send24Regular,
@@ -43,42 +42,33 @@ const KIND_OPTIONS = [
   { value: 'reminder', label: '提醒' },
 ]
 
-/* 示例按类型分开：出问题的人需要说清"预期 vs 实际"，
-   想要新功能的人需要说清"做什么、什么时候用、大概怎么操作"——
-   只写"希望增加 XX 生成器"这种工具名，等于把最难的部分留给读的人去猜。
-   数组里 strong 的片段是重点词，渲染时加粗提亮，扫一眼就能抓住句式。 */
-const EXAMPLE_PARTS = {
-  bug: [
-    [{ text: '我以为', strong: true }, { text: '点「复制指令」会把整段指令复制下来，' }],
-    [{ text: '实际', strong: true }, { text: '只复制了第一行，贴到游戏里就少了几条。' }],
-    [{ text: '我是在「指令工具」页用的，用的手机。' }],
-    [{ text: '如果是我操作不对，也告诉我应该怎么点。' }],
-  ],
-  suggestion: [
-    [
-      { text: '我想做的', strong: true },
-      { text: '：把一段指令里的数字批量换成别的数字。' },
-    ],
-    [
-      { text: '用在哪', strong: true },
-      { text: '：调参数时要一条条改，十几条改起来很麻烦。' },
-    ],
-    [
-      { text: '大概长这样', strong: true },
-      { text: '：上面贴指令，下面填「把 10 换成 20」，点一下全改完。' },
-    ],
-    [{ text: '不一定要做成「批量替换生成器」，能这样用就行。' }],
-  ],
-  reminder: [
-    [{ text: '想提醒', strong: true }, { text: '：某条指令在新版本里已经不能用了。' }],
-    [{ text: '我遇到的情况', strong: true }, { text: '：照着站里的说明填，进游戏提示语法错误。' }],
-  ],
+/* 示例只保留一组正反例：普通用户不靠结构说明，看到完整句子和“别这样写”
+   就知道该说到什么程度；不用卡片，避免几条提示在视觉上变成一份表单。 */
+const EXAMPLE_COPY = {
+  bug: {
+    good: '我以为会复制整段指令，实际只复制了第一行；我是在手机上点「复制指令」的。',
+    bad: '复制坏了。',
+  },
+  suggestion: {
+    good: '想把指令里的 10 批量换成 20；调参数时要一条条改，十几条太麻烦。',
+    bad: '希望增加批量替换生成器。',
+  },
+  reminder: {
+    good: '这条指令在新版本里不能用了；照着站里的说明填，进游戏提示语法错误。',
+    bad: '指令过期了。',
+  },
 }
 
 const DETAIL_PLACEHOLDER = {
-  bug: '照平常说话写：你本来想做什么、它实际做了什么、你希望它怎么做',
-  suggestion: '写清想让它做什么、你什么时候会用到、大概怎么操作，不用起工具名',
-  reminder: '说清要提醒的是哪件事、你是怎么发现的',
+  bug: '哪里没按预期工作？',
+  suggestion: '想增加或改进什么？',
+  reminder: '想提醒什么？',
+}
+
+const TITLE_PLACEHOLDER = {
+  bug: '一句话说清哪里不对，比如「复制指令只复制了一部分」',
+  suggestion: '一句话说清想增加或改进什么',
+  reminder: '一句话说清想提醒什么',
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
@@ -121,11 +111,11 @@ watch(formError, (text) => {
 const imageError = ref('')
 const imageBusy = ref(false)
 const dragActive = ref(false)
-const exampleOpen = ref(false)
 
 // form 是 reactive，不是 ref：写成 form.value.kind 会在渲染时抛错，整个抽屉都打不开
-const exampleLines = computed(() => EXAMPLE_PARTS[form.kind] || EXAMPLE_PARTS.bug)
+const exampleCopy = computed(() => EXAMPLE_COPY[form.kind] || EXAMPLE_COPY.bug)
 const detailPlaceholder = computed(() => DETAIL_PLACEHOLDER[form.kind] || DETAIL_PLACEHOLDER.bug)
+const titlePlaceholder = computed(() => TITLE_PLACEHOLDER[form.kind] || TITLE_PLACEHOLDER.bug)
 
 /* 验证组件的生命周期状态：showCaptcha 在未 ready 时调用不会有任何反应，
    用户点提交看起来就会像"没响应"，所以必须自己跟踪并在按钮旁给出说明 */
@@ -547,7 +537,6 @@ function resetForm() {
     fax: '',
   })
   releaseImages()
-  exampleOpen.value = false
   formError.value = ''
   imageError.value = ''
   validateResult = null
@@ -670,7 +659,7 @@ onBeforeUnmount(() => {
             v-model:value="form.title"
             maxlength="100"
             show-count
-            placeholder="一句话说清哪里不对，比如「复制指令只复制了一部分」"
+            :placeholder="titlePlaceholder"
           />
         </NFormItem>
 
@@ -678,12 +667,12 @@ onBeforeUnmount(() => {
           <NInput v-model:value="form.contact" maxlength="120" placeholder="留个能联系到你的邮箱或 QQ" />
         </NFormItem>
 
-        <NFormItem label="发生问题的页面（选填）">
+        <NFormItem label="相关页面（选填）">
           <div class="fb-page-row">
             <NInput
               v-model:value="form.pagePath"
               maxlength="200"
-              placeholder="不确定就点下面的按钮自动填"
+              placeholder="不确定就点右侧的按钮自动填"
             />
             <button
               class="app-btn app-btn--outline app-btn--sm fb-page-btn"
@@ -706,24 +695,13 @@ onBeforeUnmount(() => {
               show-count
               :placeholder="detailPlaceholder"
             />
-            <button
-              class="fb-example-toggle"
-              type="button"
-              :aria-expanded="exampleOpen"
-              @click="exampleOpen = !exampleOpen"
-            >
-              <NIcon :component="ChevronDown24Regular" :size="12" :class="{ 'is-open': exampleOpen }" />
-              不知道怎么描述？照这个样子说就行
-            </button>
-            <div class="fb-example" :class="{ 'is-open': exampleOpen }">
-              <div class="fb-example-inner">
-                <p v-for="(line, index) in exampleLines" :key="index" class="fb-example-text">
-                  <template v-for="(part, partIndex) in line" :key="partIndex">
-                    <strong v-if="part.strong">{{ part.text }}</strong>
-                    <template v-else>{{ part.text }}</template>
-                  </template>
-                </p>
-              </div>
+            <div class="fb-example">
+              <p class="fb-example-line">
+                <strong>好例子：</strong>{{ exampleCopy.good }}
+              </p>
+              <p class="fb-example-line">
+                <strong>别这样写：</strong>{{ exampleCopy.bad }}
+              </p>
             </div>
           </div>
         </NFormItem>
@@ -859,69 +837,25 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 
-.fb-example-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  align-self: flex-start;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--muted-foreground);
-  font-family: inherit;
-  font-size: 0.74rem;
-  cursor: pointer;
-  transition: color 0.4s ease;
-}
-
-.fb-example-toggle:hover {
-  color: var(--foreground);
-}
-
-.fb-example-toggle :deep(.n-icon) {
-  transition: transform 0.25s ease;
-}
-
-.fb-example-toggle :deep(.n-icon.is-open) {
-  transform: rotate(180deg);
-}
-
-/* 用 grid 行高过渡代替测量高度：展开区的内容是定长文本，不需要 JS 参与 */
+/* 正反例用纯文本：卡片会把提示变成第二份表单；重点只靠加粗和层级 */
 .fb-example {
-  display: grid;
-  grid-template-rows: 0fr;
-  border-radius: var(--radius-lg);
-  transition: grid-template-rows 0.28s ease, margin-top 0.28s ease;
-}
-
-.fb-example.is-open {
-  grid-template-rows: 1fr;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   margin-top: 2px;
 }
 
-.fb-example-inner {
-  min-height: 0;
-  overflow: hidden;
+.fb-example-line {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.76rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
 }
 
-/* 示例里的重点词要跳出来：正文是次级灰，重点词用一级前景色 + 加粗 */
-.fb-example-text strong {
+.fb-example-line strong {
   color: var(--foreground);
   font-weight: 600;
-}
-
-.fb-example-text {
-  margin: 0 0 6px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--muted);
-  color: var(--muted-foreground);
-  font-size: 0.74rem;
-  line-height: 1.7;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
 }
 
 .fb-images {
