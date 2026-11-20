@@ -1,6 +1,6 @@
-<script setup>
+﻿<script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { NForm, NFormItem, NIcon, NInput, NRadio, NRadioGroup, NCascader, NSwitch, useMessage } from 'naive-ui'
+import { NForm, NFormItem, NIcon, NInput, NCascader, NSwitch, useMessage } from 'naive-ui'
 import { ArrowUpload24Regular, Send16Regular } from '@vicons/fluent'
 import ToolCard from '../components/ToolCard.vue'
 import TurnstileFallback from '../components/TurnstileFallback.vue'
@@ -48,7 +48,7 @@ const form = reactive({
   detail: '',
   contact: '',
   isCoreDeveloper: false,
-  iconMode: 'url',
+  iconMode: 'file',
   iconUrl: '',
   fax: '',
 })
@@ -125,6 +125,10 @@ const previewLogo = computed(() => {
   return form.iconUrl.trim() || DEFAULT_ICON
 })
 
+const hasIcon = computed(() =>
+  form.iconMode === 'file' ? !!iconFile.value : !!form.iconUrl.trim(),
+)
+
 const rules = {
   title: { required: true, message: '请填写标题', trigger: ['input', 'blur'] },
   link: {
@@ -137,8 +141,8 @@ const rules = {
   iconUrl: {
     validator(_rule, value) {
       if (form.iconMode !== 'url') return true
-      if (!value.trim()) return new Error('请填写图床链接，或改为上传文件')
-      if (!/^https?:\/\//i.test(value.trim())) return new Error('图床链接需以 http:// 或 https:// 开头')
+      if (!value.trim()) return new Error('请填写图片链接，或改为上传图片')
+      if (!/^https?:\/\//i.test(value.trim())) return new Error('图片链接需以 http:// 或 https:// 开头')
       return true
     },
     trigger: ['input', 'blur'],
@@ -284,7 +288,7 @@ function restoreDraft() {
         categoryLeaves.value.find((item) => item.label === form.category)?.value ?? null
     }
   }
-  if (form.iconMode !== 'file') form.iconMode = 'url'
+  if (!['url', 'file'].includes(form.iconMode)) form.iconMode = 'file'
 }
 
 // 运行时同步到带 id 的分类后，把按名称恢复的旧草稿重新归一到 id
@@ -298,7 +302,8 @@ watch(form, scheduleSave, { deep: true })
 
 /* ===== 提交 ===== */
 
-function onIconModeChange() {
+function toggleIconMode() {
+  form.iconMode = form.iconMode === 'file' ? 'url' : 'file'
   formRef.value?.restoreValidation()
 }
 
@@ -534,7 +539,7 @@ function clearFields() {
     detail: '',
     contact: '',
     isCoreDeveloper: false,
-    iconMode: 'url',
+    iconMode: 'file',
     iconUrl: '',
     fax: '',
   })
@@ -604,6 +609,7 @@ onBeforeUnmount(() => {
             ref="categoryItemRef"
             label="分类"
             path="category"
+            required
             :validation-status="categoryError ? 'error' : undefined"
             :feedback="categoryError || undefined"
           >
@@ -618,37 +624,28 @@ onBeforeUnmount(() => {
             />
           </NFormItem>
 
-          <NFormItem label="联系方式" path="contact">
-            <NInput
-              v-model:value="form.contact"
-              maxlength="120"
-              placeholder="建议留邮箱，用于审核通知"
-            />
-          </NFormItem>
-
-          <NFormItem class="field--wide" label="图标" path="iconUrl">
+          <NFormItem label="图标" path="iconUrl" required>
             <div class="icon-field">
-              <NRadioGroup v-model:value="form.iconMode" name="icon-mode" @update:value="onIconModeChange">
-                <NRadio value="url">图床链接</NRadio>
-                <NRadio value="file">上传文件</NRadio>
-              </NRadioGroup>
+              <div class="icon-row">
+                <span
+                  class="icon-preview"
+                  :class="{ 'is-default': !hasIcon }"
+                  aria-hidden="true"
+                >
+                  <img :src="previewLogo" alt="" />
+                </span>
 
-              <div class="icon-input-row">
-                <NInput
-                  v-if="form.iconMode === 'url'"
-                  v-model:value="form.iconUrl"
-                  maxlength="500"
-                  size="small"
-                  placeholder="https://cdn.example.com/icon.png"
-                />
-                <template v-else>
-                  <button class="app-btn app-btn--fill app-btn--sm file-btn" type="button" @click="pickFile">
+                <template v-if="form.iconMode === 'file'">
+                  <button
+                    class="app-btn app-btn--outline app-btn--sm file-btn"
+                    type="button"
+                    :disabled="iconCompressing"
+                    @click="pickFile"
+                  >
                     <NIcon :component="ArrowUpload24Regular" :size="14" />
-                    选择文件
+                    {{ iconCompressing ? '处理中…' : iconFile ? '更换图片' : '选择图片' }}
                   </button>
-                  <span class="file-name">
-                    {{ iconCompressing ? '压缩中…' : iconFile ? iconFile.name : '未选择文件' }}
-                  </span>
+                  <span v-if="iconFile" class="file-name">{{ iconFile.name }}</span>
                   <input
                     ref="fileInput"
                     class="file-input-hidden"
@@ -657,23 +654,42 @@ onBeforeUnmount(() => {
                     @change="onIconFileChange"
                   />
                 </template>
+                <NInput
+                  v-else
+                  v-model:value="form.iconUrl"
+                  class="icon-url"
+                  maxlength="500"
+                  size="small"
+                  placeholder="粘贴图片链接"
+                />
+
+                <button class="icon-mode-switch" type="button" @click="toggleIconMode">
+                  {{ form.iconMode === 'file' ? '改用图片链接' : '改用上传' }}
+                </button>
               </div>
               <span class="field-hint">
                 {{
-                  form.iconMode === 'url'
-                    ? '直链需允许外链访问（勿开防盗链），跨域放行后才能正常显示；不限大小与格式'
-                    : '1 MB 以内，支持 PNG / JPG / WebP / ICO；提交时会自动压成 WebP（高 128、宽等比）'
+                  form.iconMode === 'file'
+                    ? '没有现成图标，用任意清晰截图也行，会自动压缩。'
+                    : '链接打开后要能直接看到图片。'
                 }}
               </span>
             </div>
           </NFormItem>
 
-          <NFormItem class="field--wide">
+          <div class="form-divider" role="separator" aria-hidden="true"></div>
+
+          <NFormItem label="你的联系方式" path="contact">
+            <NInput
+              v-model:value="form.contact"
+              maxlength="120"
+              placeholder="建议留邮箱，用于审核通知"
+            />
+          </NFormItem>
+
+          <NFormItem label="我是核心开发者">
             <div class="switch-row">
-              <div class="switch-text">
-                <span class="switch-title">我是该项目的核心开发者</span>
-                <span class="switch-desc">如实填写，用于个别项目的身份确认；大多数情况不需要填。</span>
-              </div>
+              <span class="switch-desc">仅个别项目需要确认。</span>
               <NSwitch v-model:value="form.isCoreDeveloper" />
             </div>
           </NFormItem>
@@ -727,7 +743,7 @@ onBeforeUnmount(() => {
         <li>只收与 Minecraft 相关的工具或资源站，需可公开访问，不接受强制注册墙。</li>
         <li>社区论坛类必须先加本站友链后再申请，否则不会通过。</li>
         <li>一条提交只放一个网址；同为工具集的请分开投稿。</li>
-        <li>图标 1 MB 以内的 PNG / JPG / WebP / ICO，或直接填图床直链；SVG 请用链接。</li>
+        <li>图标支持 1 MB 以内的 PNG / JPG / WebP / ICO，或直接填图片链接；SVG 请用链接。</li>
         <li>审核为人工进行，不一定逐条回复；联系方式建议留邮箱。</li>
         <li>不接受侵权、破解、含推广返利或与站点定位无关的网址。</li>
       </ul>
@@ -795,23 +811,56 @@ onBeforeUnmount(() => {
   grid-column: 1 / -1;
 }
 
+/* 上半是卡片本身的信息，下半是人/联系方式；用虚线分隔，但不增加额外大段留白 */
+.form-divider {
+  grid-column: 1 / -1;
+  margin: 2px 0 12px;
+  border-top: 1px dashed var(--border-strong);
+}
+
 .icon-field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
 }
 
-/* 输入框与上传按钮同高：切换来源时布局不能跳动 */
-.icon-input-row {
+/* 图标是第一眼最容易显得麻烦的字段：预览、上传、切换来源压成一行，链接模式按需展开 */
+.icon-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   min-height: 34px;
 }
 
-.icon-input-row :deep(.n-input) {
-  height: 30px;
+.icon-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--muted);
+}
+
+.icon-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.icon-preview.is-default img {
+  opacity: 0.5;
+}
+
+.icon-url {
+  flex: 1 1 200px;
+  min-width: 150px;
 }
 
 .file-btn {
@@ -820,12 +869,32 @@ onBeforeUnmount(() => {
 }
 
 .file-name {
+  flex: 1;
   overflow: hidden;
+  min-width: 0;
   color: var(--muted-foreground);
   font-size: 0.74rem;
   text-overflow: ellipsis;
   white-space: nowrap;
   transition: color 0.4s ease;
+}
+
+/* 高级来源用弱化的文字入口，不占一整行单选 */
+.icon-mode-switch {
+  flex-shrink: 0;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 0.74rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.icon-mode-switch:hover {
+  color: var(--foreground);
 }
 
 .file-input-hidden {
@@ -838,37 +907,19 @@ onBeforeUnmount(() => {
   line-height: 1.5;
 }
 
-/* 单选项的指示器必须是正圆：主题的通用圆角会把 14px 的圆点压成圆角方块 */
-.icon-field :deep(.n-radio__dot) {
-  border-radius: 50%;
-  corner-shape: round;
-}
-
-/* 可选的声明类开关按设置行处理：左侧说明、右侧开关，独占一行不与输入项抢列宽 */
+/* 开关与说明同排：说明占输入框位置，开关靠右，行高与输入项一致 */
 .switch-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   width: 100%;
-}
-
-.switch-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.switch-title {
-  color: var(--foreground);
-  font-size: 0.84rem;
-  transition: color 0.4s ease;
+  min-height: 34px;
 }
 
 .switch-desc {
   color: var(--subtle-foreground);
-  font-size: 0.72rem;
+  font-size: 0.875rem;
   line-height: 1.5;
 }
 
