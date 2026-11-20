@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { NForm, NFormItem, NIcon, NInput, NCascader, NSwitch, useMessage } from 'naive-ui'
 import { ArrowUpload24Regular, Send16Regular } from '@vicons/fluent'
@@ -280,22 +280,25 @@ function restoreDraft() {
     }
   }
 
-  // 旧草稿存的是分类名，新草稿存 id；两种都归一到当前选项值
-  if (form.category != null) {
+  // 旧草稿存的是分类名，新草稿存 id；当前选项里没有时先保留原值，
+  // 等接口分类替换快照后再归一，避免在加载前把有效 id 清成 null。
+  if (form.category != null && categoryLeaves.value.length) {
     const selected = categoryLeaves.value.find((item) => item.value === form.category)
     if (!selected) {
-      form.category =
-        categoryLeaves.value.find((item) => item.label === form.category)?.value ?? null
+      const byLabel = categoryLeaves.value.find((item) => item.label === form.category)
+      if (byLabel) form.category = byLabel.value
     }
   }
   if (!['url', 'file'].includes(form.iconMode)) form.iconMode = 'file'
 }
 
-// 运行时同步到带 id 的分类后，把按名称恢复的旧草稿重新归一到 id
+// 运行时同步到带 id 的分类后，把按名称恢复的旧草稿重新归一到 id；
+// 暂时找不到也保留原值，等分类资源到齐后再匹配。
 watch(categoryLeaves, (leaves) => {
   if (form.category == null) return
   if (leaves.some((item) => item.value === form.category)) return
-  form.category = leaves.find((item) => item.label === form.category)?.value ?? null
+  const byLabel = leaves.find((item) => item.label === form.category)
+  if (byLabel) form.category = byLabel.value
 })
 
 watch(form, scheduleSave, { deep: true })
