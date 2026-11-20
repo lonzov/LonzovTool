@@ -1,5 +1,7 @@
 # 第三方组件与许可声明
 
+> 最后更新：2026-11-20
+
 本站的构建与运行使用了以下第三方组件与字体资源。除「是否修改」栏标注为「是」的项目外，所有组件均按其原始许可证原样使用，未作任何改动。完整依赖树（含间接依赖）可通过仓库根目录的 `pnpm-lock.yaml` 查看。
 
 ## 一、运行时依赖
@@ -15,6 +17,8 @@
 | [markdown-it](https://www.npmjs.com/package/markdown-it)                   | MIT                    | 否       |
 | [naive-ui](https://www.npmjs.com/package/naive-ui)                         | MIT                    | 否       |
 | [qrcode](https://www.npmjs.com/package/qrcode)                             | MIT                    | 否       |
+| [sortablejs](https://www.npmjs.com/package/sortablejs)                     | MIT                    | 否       |
+| [viewerjs](https://www.npmjs.com/package/viewerjs)                         | MIT                    | 否       |
 | [vite-ssg](https://www.npmjs.com/package/vite-ssg)                         | MIT                    | 否       |
 | [vue](https://www.npmjs.com/package/vue)                                   | MIT                    | 否       |
 | [vue-router](https://www.npmjs.com/package/vue-router)                     | MIT                    | 否       |
