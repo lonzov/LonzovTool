@@ -5,8 +5,9 @@ import { MegaphoneLoud24Filled, ChevronDown20Filled, Open20Filled } from '@vicon
 import { noticesData } from '../composables/useSiteData.js'
 import { reduceMotion } from '../composables/useMotion.js'
 
-// 已读标记：存"已读到的最新公告 id"，出现更大 id 的新公告时红点重新点亮
+// 已读标记：存最大公告 id 与公告内容签名；新公告 id 更大，或已有公告内容变化时红点重新点亮
 const READ_KEY = 'notice_last_read_id'
+const READ_SIGNATURE_KEY = 'notice_last_read_signature'
 
 const PAD_Y = 16 // 顶栏纵向 padding 合计，用于按内容反推容器高度
 const PANEL_DURATION = 300 // 展开/收起高度动画时长(ms)
@@ -30,6 +31,7 @@ export default {
       isVisible: true,
       isMeasuring: false,
       readMaxId: 0, // localStorage 已读记录
+      readSignature: '', // 已读时的公告内容签名
       triggerWidth: 38, // 触发器宽度 = 公告栏单行高度，mounted 后测量校准
     }
   },
@@ -43,9 +45,20 @@ export default {
     maxNoticeId() {
       return this.notices.reduce((max, n) => Math.max(max, n.id || 0), 0)
     },
-    // 存在比已读记录更新的公告时才显示未读圆点
+    // 只看内容字段，忽略排序：拖动公告顺序不算未读变化
+    noticesSignature() {
+      return JSON.stringify(
+        [...this.notices]
+          .sort((a, b) => (a.id || 0) - (b.id || 0))
+          .map((n) => [n.id || 0, n.content || '', n.link || '', n.date || '']),
+      )
+    },
+    // 有新公告，或已有公告的内容/链接/时间变化时才显示未读圆点
     showDot() {
-      return this.hasMore && this.maxNoticeId > this.readMaxId
+      return (
+        this.hasMore &&
+        (this.maxNoticeId > this.readMaxId || this.readSignature !== this.noticesSignature)
+      )
     },
     dateStr() {
       const n = this.currentNotice
@@ -64,9 +77,16 @@ export default {
     },
   },
   mounted() {
-    // 读取已读记录
+    // 读取已读记录；旧版本只存了最大 id，首次升级时按当前公告补齐签名，
+    // 避免所有老用户一起被点亮
     try {
       this.readMaxId = parseInt(localStorage.getItem(READ_KEY) || '0', 10) || 0
+      const storedSignature = localStorage.getItem(READ_SIGNATURE_KEY)
+      if (storedSignature !== null) {
+        this.readSignature = storedSignature
+      } else if (this.readMaxId >= this.maxNoticeId) {
+        this.readSignature = this.noticesSignature
+      }
     } catch {
       this.readMaxId = 0
     }
@@ -251,8 +271,10 @@ export default {
       if (!this.showDot) return
       const maxId = this.maxNoticeId
       this.readMaxId = maxId
+      this.readSignature = this.noticesSignature
       try {
         localStorage.setItem(READ_KEY, String(maxId))
+        localStorage.setItem(READ_SIGNATURE_KEY, this.readSignature)
       } catch {
         /* 隐私模式等场景忽略 */
       }
