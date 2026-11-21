@@ -1,6 +1,7 @@
 {
   "categories": [
     {
+      "id": 1,
       "name": "指令工具",
       "icon": "KeyCommand16Filled",
       "parentMenuId": "websites",
@@ -11,13 +12,6 @@
           "description": "查询基岩版所有ID",
           "logo": "/logos/idlist_projectxero_top.webp",
           "link": "https://idlist.projectxero.top/"
-        },
-        {
-          "id": "example-com",
-          "title": "示例文本",
-          "description": "",
-          "logo": "/uploads/logos/example-com-90f90535.webp",
-          "link": "https://example.com"
         },
         {
           "id": "chelper",
@@ -78,6 +72,7 @@
       ]
     },
     {
+      "id": 2,
       "name": "其他工具",
       "icon": "Toolbox24Regular",
       "parentMenuId": "websites",
@@ -162,6 +157,7 @@
       ]
     },
     {
+      "id": 3,
       "name": "FMBE专区",
       "icon": "Cube24Regular",
       "parentMenuId": "websites",
@@ -211,6 +207,7 @@
       ]
     },
     {
+      "id": 4,
       "name": "延伸推荐",
       "icon": "Link24Regular",
       "parentMenuId": "websites",
@@ -233,6 +230,7 @@
       ]
     },
     {
+      "id": 5,
       "name": "文档百科",
       "icon": "Book24Regular",
       "parentMenuId": "websites",
@@ -284,6 +282,7 @@
       ]
     },
     {
+      "id": 6,
       "name": "社区论坛",
       "icon": "People24Regular",
       "parentMenuId": "websites",
@@ -327,6 +326,7 @@
       ]
     },
     {
+      "id": 7,
       "name": "指令工具",
       "icon": "KeyCommand16Filled",
       "parentMenuId": "localtools",
@@ -376,6 +376,7 @@
       ]
     },
     {
+      "id": 8,
       "name": "其他工具",
       "icon": "DesktopToolbox20Regular",
       "parentMenuId": "localtools",
@@ -404,6 +405,7 @@
       ]
     },
     {
+      "id": 9,
       "name": "指令音乐",
       "icon": "MusicNote216Filled",
       "tools": [
@@ -431,6 +433,7 @@
       ]
     },
     {
+      "id": 10,
       "name": "资源素材",
       "icon": "Edit24Filled",
       "tools": [
@@ -487,6 +490,7 @@
       ]
     },
     {
+      "id": 11,
       "name": "百宝箱",
       "icon": "Box24Regular",
       "tools": [
