@@ -1663,10 +1663,9 @@ html[data-motion='reduced'] .collapse-leave-active {
   white-space: nowrap !important;
 }
 
-/* 与站内输入框统一：细边框、无聚焦阴影。直接作用在 Naive 渲染的边框层上，
-   不覆盖 --n-border / --n-box-shadow 这类内部变量 */
-.settings-select .n-base-selection__border,
-.settings-select .n-base-selection__state-border {
+/* 与站内输入框统一基础边框；交互态继续交给 Naive 的 state-border，
+   否则 hover / focus / active 的边框过渡会被一并覆盖掉。 */
+.settings-select .n-base-selection__border {
   border: 1px solid var(--border) !important;
   box-shadow: none !important;
 }
@@ -1674,10 +1673,6 @@ html[data-motion='reduced'] .collapse-leave-active {
 /* 仅加宽"主题写入 URL 参数"下拉的面板（触发器宽度不变） */
 .settings-select-menu-wide {
   min-width: 0 !important;
-}
-
-.settings-select-menu-wide .n-base-select-option {
-  padding: 0;
 }
 
 /* 小屏下保持下拉菜单宽度 */
