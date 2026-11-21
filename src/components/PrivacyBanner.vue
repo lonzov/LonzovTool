@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { NIcon, NCheckbox } from 'naive-ui'
 import { WarningShield20Regular, Checkmark24Filled, Settings24Regular, Dismiss24Filled } from '@vicons/fluent'
 import { usePrivacyModal } from '../composables/usePrivacyModal'
+import { getDiscreteMessage } from '../utils/discreteMessage'
 import AppModal from './ui/AppModal.vue'
 
 export default {
@@ -40,7 +41,7 @@ export default {
     const showBanner = ref(!hasConsent)
 
     // 隐私政策/偏好更新公告：已同意过的用户若未记录本版本，再提示一次
-    const NOTICE_VERSION = '260921'
+    const NOTICE_VERSION = '261121'
     const NOTICE_KEY = 'privacy_notice_version'
     const noticeVersion = typeof localStorage !== 'undefined' ? localStorage.getItem(NOTICE_KEY) : null
     const showUpdateBanner = ref(hasConsent && noticeVersion !== NOTICE_VERSION)
@@ -107,8 +108,29 @@ export default {
       document.head.appendChild(n)
     }
 
+    // 撤回授权时移除脚本节点
+    function removeAnalyticsScript() {
+      if (typeof document === 'undefined') return
+      document.querySelectorAll('script[src*="sdk.51.la"]').forEach((node) => node.remove())
+      try {
+        delete window.LA
+      } catch {
+        // 全局属性不可删除时只清脚本节点，不影响后续提示
+      }
+    }
+
+    function removeReplayScript() {
+      if (typeof document === 'undefined') return
+      document.getElementById('umami-replay')?.remove()
+    }
+
     // 保存设置并关闭横幅
     function applyConsent(analyticsEnabled, replayEnabled) {
+      // 调用方可能已经把 checkbox 改成新状态，撤回判断必须读写入前的存储值
+      const previous = parseConsent(localStorage.getItem(STORAGE_KEY))
+      const analyticsRevoked = previous?.[1] === 1 && !analyticsEnabled
+      const replayRevoked = previous?.[2] === 1 && !replayEnabled
+
       localStorage.setItem(STORAGE_KEY, `1,${analyticsEnabled ? 1 : 0},${replayEnabled ? 1 : 0}`)
       localStorage.setItem(NOTICE_KEY, NOTICE_VERSION)
       window.dispatchEvent(new CustomEvent('privacy-consent-changed'))
@@ -125,6 +147,15 @@ export default {
       if (replayEnabled) {
         console.log('[隐私控制] 注入Umami回放')
         injectReplay()
+      }
+
+      if (analyticsRevoked) removeAnalyticsScript()
+      if (replayRevoked) removeReplayScript()
+      if (analyticsRevoked || replayRevoked) {
+        getDiscreteMessage()?.warning(
+          '脚本已移除，产生的Cookie请在浏览器设置中自行清理',
+          { duration: 8000, closable: true },
+        )
       }
     }
 
@@ -188,9 +219,9 @@ export default {
       <div class="banner-content">
         <NIcon :component="WarningShield20Regular" :size="18" class="banner-icon" />
         <span class="banner-text">
-          在继续使用前，请先阅读并同意
+          在继续使用前，请先阅读
           <a href="/docs/privacy/" @click="handlePrivacyLink">隐私政策</a>
-          ，若不同意请停止使用本站
+          。您可以在“管理偏好”中选择是否开启可选统计，必要服务无法关闭
         </span>
       </div>
       <div class="banner-actions">
@@ -261,8 +292,9 @@ export default {
         <div class="cookie-detail">
           这些服务对于网站的基本功能是必需的，无法禁用。
           <ul class="cookie-list">
-            <li>Umami Analytics - 隐私友好的匿名统计，不使用Cookie</li>
-            <li>Cloudflare RUM - 性能监控</li>
+            <li>Umami Analytics - 无Cookie的匿名统计</li>
+            <li>Cloudflare Web Analytics - 匿名性能统计</li>
+            <li>Cloudflare 边缘安全防护</li>
           </ul>
         </div>
       </div>
@@ -274,7 +306,7 @@ export default {
           <span class="cookie-title">数据统计</span>
         </div>
         <div class="cookie-detail">
-          更详细的统计访问数据（如访客留存、SEO分析），辅助运营决策。
+          更详细的统计访问数据，辅助运营决策。
           <ul class="cookie-list">
             <li>51.la - 访问分析</li>
           </ul>
