@@ -36,6 +36,7 @@ src:
     ThemeToggle.vue: 主题切换按钮
     ToolCard.vue: 工具卡片组件，支持懒加载、骨架屏、边框光晕跟随鼠标
     ToolGrid.vue: 工具网格布局，管理分类展示与视线引导
+    ToolLogo.vue: 卡片图标的统一渲染（图标名/图片两种来源、加载骨架与失败回落），控制台卡片管理使用
     ToolLoading.vue: 异步组件加载动画（旋转圆圈 + 加载文字），复用文档页加载样式
     UpdateDialog.vue: SW 更新确认弹窗，照搬 Cookie 弹窗样式
     ShareModal.vue: 分享海报模态框，Canvas 渲染海报含标题/简介/Logo/二维码，支持复制链接与保存图片
@@ -76,8 +77,7 @@ src:
       selector:
         index.vue: 选择器参数编辑器入口，NConfigProvider 深色覆盖 + 组件组装
         constants.js: 参数种类定义(PARAM_KINDS)、游戏模式选项、权限选项等配置
-        sortable.js: 控制台拖拽实例（Sortable 封装），触屏/窄屏下补边缘自动滚动
-  composables:
+        composables:
           useState.js: 模块级共享状态（所有 ref 与内部变量）
           useParams.js: 参数 CRUD、编辑工作流（beginEdit/saveEdit/commitCurrentState）
           useOutput.js: 输出格式化、复制导出、加载示例、清空
@@ -107,7 +107,7 @@ src:
     usePermissions.js: 控制台权限判定（can/permissions/account），由壳层 provide 给子页面，口径与服务端一致
     deviceLabel.js: 把 User-Agent 压成「浏览器 · 系统」一句人话，供登录设备列表展示
     passwordStrength.js: 密码位数预检（下限与服务端一致），其余强度规则由服务端在提交时判定
-    useIsMobile.js: 窄屏断点判定（matchMedia，771px），抽屉与浮窗按它切铺满/定宽
+    sortable.js: 控制台列表的拖拽实例（Sortable 封装），触屏/窄屏下补边缘自动滚动
     components/SensitiveActionModal.vue: 敏感操作的身份确认模态框，按服务端给出的方式校验并换一次性凭证，支持密码、邮箱验证码、动态口令与通行密钥
     components/NotificationComposeModal.vue: 审核/反馈结果通知的撰写弹窗，可改收件人、主题、正文并标记人工通知
     components/NotificationSettingsDrawer.vue: 通知设置抽屉，维护结果通知邮件模板与飞书通知模式
@@ -146,7 +146,9 @@ src:
     usePageOutline.js: 页面章节大纲，采集页面内的章节标题（文档标题 / 设置分区等）发布给侧边栏并跟随滚动高亮
     useFeedbackDrawer.js: 建议反馈抽屉的开关状态共享，供侧边栏菜单与关于页 CTA 唤起
     useFuckHonorAdGuard.js: 荣耀浏览器注入的侧边悬浮广告拦截，隐藏广告容器并向 Umami 上报（按需加载）
+    useGeetestChallenge.js: 极验 gt4 的挂载与唤起（页面加载即初始化、bind 模式随提交唤起），控制台登录使用
     useHonorGuard.js: 荣耀浏览器 UA 判断入口，命中后才动态加载广告拦截与提示模块
+    useIsMobile.js: 窄屏断点判定（matchMedia，771px），抽屉与浮窗按它切铺满/定宽
     useLocalStats.js: 本地使用统计（首次打开时间、工具使用次数、导航次数）
     useMenuSwipe.js: 移动端抽屉的横向滑动手势（右滑开、左滑关），全屏起手 + 方向角度锁，自动避让横向滚动与 JS 手势区
     useMotion.js: 减少动态效果开关状态，落 data-motion 属性供全站按需削减动效
@@ -162,7 +164,7 @@ src:
     useSiteData.js: 站点动态数据的唯一入口，构建期快照 ref、卡片反查/域名白名单派生函数与运行时低频同步；同步可取消并识别 410 与 min_supported
     useSidebarSection.js: 侧边栏分类栏的动态内容注册表，页面模块挂载期接管分类栏，未接管时回落首页分类
     useSWUpdate.js: Service Worker 更新检测与版本比较组合式函数，并提供无组件上下文可用的手动检查更新入口
-    useStats.js: 访问统计状态管理组合式函数（模块级单例，数据经后端代理 Umami 下发，含内存/localsStorage双层缓存）
+    useStats.js: 访问统计状态管理组合式函数（模块级单例，数据经后端代理 Umami 下发，含内存/localStorage 双层缓存）
     useHeightTransition.js: 内容高度变化时的容器高度过渡（ResizeObserver 驱动，弹窗用）
     useTheme.js: 主题状态管理组合式函数
     useUrlTheme.js: 按设置将明暗主题以 theme / colorScheme 参数附加到打开的站外网址（off/always/explicit 三档，默认关闭）
@@ -173,6 +175,7 @@ src:
     discreteMessage.js: 全局共享的 Naive UI 独立 message 实例（供 NMessageProvider 之外的模块使用）
     loadingBar.js: 全局共享的 Naive UI 顶部加载条实例（供路由守卫等无组件上下文处使用）
     jsonError.js: JSON 解析前修复字符串内的原始换行 + 语法错误定位与友好化提示
+    modalHeight.js: 模态框内容高度过渡的测量工具，向上找滚动容器推导可用高度
     iconUpload.js: 上传图片的前端预检与本机压缩（图标 / 推广图 / 反馈截图），体积与格式判据在服务端
     headingSlug.js: Markdown 标题锚点 id 生成，同一文档内重名标题追加序号
     mcTranslate.js: 基岩版翻译键渲染内核（.lang/JSON 解析、占位符算法、selector/score 求值），纯函数无框架依赖
@@ -244,10 +247,11 @@ AGENTS.md: AI 协作规则（核心原则、开发规范、Git 规范、设计�
 LICENSES/: 被译入/内置的第三方代码的许可证全文，按 REUSE 规范以 SPDX 标识符命名；完整 vendored 的库（如 src/vendor/mcfc）许可证随代码放在各自目录内
 scripts:
   route-list.js: 共享模块：从路由配置自动提取所有公开页面路径
-  prerender.js: Puppeteer 预渲染脚本，并发爬取路由生成静态 HTML（SEO）
   generate-seo.js: SEO 文件生成脚本，输出 sitemap.xml 和 robots.txt
+  reorder-head.js: 构建后脚本：把 unhead 注入的 SEO/社媒 meta 搬到 </title> 之后，避免排在样式与脚本之后
   minify-sw.js: Service Worker 压缩脚本，构建流程中使用
   fetch-snapshot.js: 预构建脚本，从接口拉取站点动态数据覆盖 src/data/ 下的快照文件；接口不可达时沿用已有快照，始终不阻断构建
+  sync-logos.js: 预构建脚本：把后端 /uploads/logos 同步为 public/uploads/logos，接口不可达时沿用已有文件
   subset-hollow-font.js: 预构建脚本，从系统 HarmonyOS_Sans_SC_Bold.ttf 提取描边文字字形，子集化为 woff2 到 public/fonts/
   deploy.js: 部署脚本，SSH 上传构建产物到服务器并原子替换站点目录（pnpm deploy）
   build-glyph-sprites.cjs: 预构建脚本，从 Minecraft 风格字形 PNG 自动检测非空字符并打包为紧凑雪碧图+码点映射 JSON
