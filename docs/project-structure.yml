@@ -1,5 +1,5 @@
 src:
-  App.vue: 根组件，包含桌面/移动端双布局（移动端抽屉顶栏）、主题配置、NScrollbar 滚动容器
+  App.vue: 根组件，包含桌面/移动端双布局、主题配置、NScrollbar 滚动容器
   main.js: 应用入口，全局注册组件、@vueuse/head 插件注册、scrollRestoration 禁用、预渲染路由过滤（控制台不预渲染）
   assets:
     main.css: 全局基础样式、全站过渡动画、NProgress 与通用工具类

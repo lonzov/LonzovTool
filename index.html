@@ -28,7 +28,6 @@
     #loading-overlay {
       position: fixed;
       inset: 0;
-      /* 黑色启动屏是刻意设计，不随主题变化 */
       background-color: #000000;
       display: flex;
       flex-direction: column;
@@ -118,31 +117,23 @@
     }
   </style>
   <script>
-    // 首屏主题：必须在任何内容绘制前确定 data-theme，浅色偏好下不能先铺深色底
-    (function () {
-      var root = document.documentElement
-      // 默认跟随系统；localStorage 不可用（隐私模式）时也按系统偏好渲染
-      var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
-      var theme = prefersLight ? 'light' : 'dark'
-      try {
-        var params = new URLSearchParams(window.location.search)
-        var urlTheme = params.get('theme')
-        if (urlTheme === 'dark' || urlTheme === 'light') {
-          localStorage.setItem('theme_mode', urlTheme)
+    // 预渲染兼容：仅浏览器环境执行
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var urlTheme = params.get('theme');
+        if (urlTheme && ['dark', 'light'].includes(urlTheme)) {
+          localStorage.setItem('theme_mode', urlTheme);
         }
-        var mode = localStorage.getItem('theme_mode')
-        if (mode === 'dark' || mode === 'light') {
-          theme = mode
-        }
+        document.documentElement.setAttribute('data-theme', 'dark');
         // 减少动态效果：这一笔必须先于 CSS 生效，否则刷新瞬间会先跑一遍切页与入场动画
         if (localStorage.getItem('reduce_motion') === 'true') {
-          root.setAttribute('data-motion', 'reduced')
+          document.documentElement.setAttribute('data-motion', 'reduced');
         }
-      } catch (e) {
-        /* 存储被禁用：沿用系统偏好 */
-      }
-      root.setAttribute('data-theme', theme)
-    })()
+      })();
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
   </script>
   <script defer src="https://imamu.lonzov.top/script.js"
     data-website-id="32b32d08-4710-482c-974d-390290f93229"></script>

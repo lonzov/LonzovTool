@@ -173,6 +173,8 @@ export default {
       },
     })
 
+    const fakeTitleOpacity = ref(0)
+    const fakeTitleTransition = ref('opacity 0.15s ease')
     let pendingCategoryIndex = null // 待处理的分类索引
     const desktopScrollbar = ref(null) // 桌面端 NScrollbar 实例引用
     const sidebarScrollbar = ref(null) // 桌面侧边栏 NScrollbar 实例引用
@@ -255,9 +257,19 @@ export default {
     provide('triggerCategoryDimEffect', triggerCategoryDimEffect)
     provide('clearHomeSearch', clearHomeSearch)
 
-    // 监听侧边栏打开状态：打开时恢复侧边栏滚动位置
+    // 监听侧边栏打开状态，控制假标题透明度
     watch(mobileMenuOpen, (newVal) => {
-      if (newVal) scheduleSidebarRestore()
+      if (newVal) {
+        // 打开时：延迟 0.109s 后从 0 变为 1
+        fakeTitleOpacity.value = 0
+        setTimeout(() => {
+          fakeTitleOpacity.value = 1
+        }, 109)
+        scheduleSidebarRestore()
+      } else {
+        // 关闭时：立即从 1 变为 0
+        fakeTitleOpacity.value = 0
+      }
     })
 
     function handleResize() {
@@ -456,6 +468,8 @@ export default {
       showShareModal,
       mobileMenuOpen,
       isMobile,
+      fakeTitleOpacity,
+      fakeTitleTransition,
       desktopScrollbar,
       sidebarScrollbar,
       mobileSidebar,
@@ -665,8 +679,7 @@ export default {
         <div style="width: 53px; height: 40px; margin-right: 8px; flex-shrink: 0"></div>
         <button
           type="button"
-          class="app-title-home mobile-title-home"
-          :class="{ 'is-hidden': mobileMenuOpen }"
+          class="app-title-home"
           :style="{
             fontWeight: 'bold',
             fontSize: '18px',
@@ -755,11 +768,58 @@ export default {
               position: relative;
             "
           >
-            <!-- 抽屉顶栏：与移动端站点头同高同底色，给出抽屉自己的标题；
-                 底页标题在抽屉展开时隐藏（见 .mobile-title-home），避免末字从抽屉右缘露出 -->
-            <div class="drawer-head">
-              <span class="drawer-head-title">小舟工具箱</span>
+            <!-- 假标题（在下方，绝对定位） -->
+            <div
+              :style="{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '56px',
+                overflow: 'hidden',
+                zIndex: 0,
+                transform: 'translateX(-18px)',
+                opacity: fakeTitleOpacity,
+                transition: fakeTitleTransition,
+              }"
+            >
+              <div
+                :style="{
+                  width: '100vw',
+                  height: '56px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0 16px',
+                  boxSizing: 'border-box',
+                }"
+              >
+                <div style="width: 53px; height: 40px; margin-right: 8px; flex-shrink: 0"></div>
+                <span
+                  :style="{
+                    fontWeight: 'bold',
+                    fontSize: '18px',
+                    flex: 1,
+                    textAlign: 'center',
+                    color: 'var(--foreground)',
+                    whiteSpace: 'nowrap',
+                  }"
+                  >小舟工具箱</span
+                >
+              </div>
             </div>
+            <!-- 假标题栏（在上方，半透明+毛玻璃，HTML后出现所以在上层） -->
+            <div
+              :style="{
+                height: '56px',
+                flexShrink: 0,
+                position: 'relative',
+                zIndex: 1,
+                background: 'var(--glass-background)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                borderBottom: '1px solid var(--glass-border)',
+              }"
+            ></div>
             <AppMenu
               ref="mobileSidebar"
               v-model:value="activeKey"
@@ -864,38 +924,6 @@ export default {
   font: inherit;
   padding: 0;
   cursor: pointer;
-}
-
-/* 抽屉只覆盖左侧 220px，而顶栏标题在整屏居中，展开时末字会从抽屉右缘露出；
-   抽屉自己的标题补在顶栏里，底页标题先隐去 */
-.mobile-title-home {
-  transition: opacity 0.15s ease;
-}
-
-.mobile-title-home.is-hidden {
-  opacity: 0;
-}
-
-/* 抽屉顶栏：与移动端站点头同高同底色，替代原先空着的毛玻璃带 */
-.drawer-head {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  height: 56px;
-  position: relative;
-  z-index: 1;
-  background: var(--glass-background);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--glass-border);
-}
-
-.drawer-head-title {
-  color: var(--foreground);
-  font-size: 18px;
-  font-weight: bold;
-  transition: color 0.4s ease;
 }
 
 .mobile-menu-button {
