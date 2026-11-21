@@ -358,9 +358,27 @@ const sessionsError = ref('')
 const revokingId = ref(0)
 const revokingOthers = ref(false)
 
+/* 登录设备会出现在截图与录屏里：来源 IP 只保留首尾两段，中间两段一律打码 */
+function maskIp(ip) {
+  const text = (ip || '').trim()
+  if (!text) return ''
+  if (text.includes(':')) {
+    const groups = text.split(':')
+    if (groups.length < 4) return text
+    return `${groups[0]}:*:*:${groups[groups.length - 1]}`
+  }
+  const parts = text.split('.')
+  if (parts.length !== 4) return text
+  return `${parts[0]}.*.*.${parts[3]}`
+}
+
 /* 设备信息由 UA 推出来：服务端只存原始 UA，解释放在前端，排障时 title 里仍留着原文 */
 const devices = computed(() =>
-  sessions.value.map((session) => ({ ...session, device: describeDevice(session.user_agent) })),
+  sessions.value.map((session) => ({
+    ...session,
+    device: describeDevice(session.user_agent),
+    ip: maskIp(session.last_ip || session.created_ip),
+  })),
 )
 
 /* 地点取最后来源地，旧会话回落到签发地；两者都没有时返回空串 */
@@ -476,7 +494,7 @@ async function revoke(session) {
 
   const confirmed = await confirmDialog({
     title: '撤销会话',
-    message: `撤销后该设备需要重新登录。\n${session.device.label} · ${session.last_ip || session.created_ip || '未知地址'}`,
+    message: `撤销后该设备需要重新登录。\n${session.device.label} · ${session.ip || '未知地址'}`,
     confirmText: '撤销',
     danger: true,
   })
@@ -686,7 +704,7 @@ async function runRevokeOthers() {
               <span v-if="session.current" class="device-tag">当前设备</span>
             </p>
             <p class="device-ip">
-              {{ session.last_ip || session.created_ip || '未知地址' }}
+              {{ session.ip || '未知地址' }}
             </p>
             <div class="device-meta">
               <span v-if="sessionRegion(session)" class="meta-item">
