@@ -16,7 +16,7 @@
  * 让它们处理刷新后的数据，而不是上一轮的残留。
  */
 
-import { writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -46,12 +46,36 @@ async function fetchResource(resource) {
   return res.json()
 }
 
+// qq 是只在本机维护的私密字段，公开接口有意不输出。快照整文件覆盖时必须按
+// 昵称把旧值合回去，否则每次构建都会静默清空它。
+function mergePrivateContributorFields(data) {
+  const path = resolve(ROOT, SNAPSHOT_FILES.contributors.file)
+  if (!existsSync(path)) return data
+  let existing
+  try {
+    existing = JSON.parse(readFileSync(path, 'utf-8'))
+  } catch {
+    return data
+  }
+  const qqByName = new Map(
+    (Array.isArray(existing) ? existing : [])
+      .filter((item) => item && item.name && item.qq)
+      .map((item) => [item.name, item.qq]),
+  )
+  if (qqByName.size === 0) return data
+  return data.map((item) => {
+    const qq = item && qqByName.get(item.name)
+    return qq ? { ...item, qq } : item
+  })
+}
+
 async function main() {
   const written = []
 
   // 各资源独立拉取：某个接口挂了不影响其它资源的快照更新
   for (const [key, resource] of Object.entries(SNAPSHOT_FILES)) {
-    const data = await fetchResource(resource)
+    let data = await fetchResource(resource)
+    if (key === 'contributors') data = mergePrivateContributorFields(data)
     writeFileSync(resolve(ROOT, resource.file), JSON.stringify(data, null, 2) + '\n', 'utf-8')
     written.push(key)
   }
