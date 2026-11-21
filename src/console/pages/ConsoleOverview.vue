@@ -28,6 +28,7 @@ import {
   loadDonateRecords,
 } from '../../composables/useSiteData.js'
 import { useStats } from '../../composables/useStats.js'
+import { analyticsShareUrl, loadAnalyticsShare } from '../analyticsShare.js'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
@@ -227,9 +228,6 @@ function formatCount(value) {
   return value == null ? '—' : String(value).toLocaleString('zh-CN')
 }
 
-// Umami 的公开分享页：口径与接口下发的一致，点进去能看到图表与明细
-const STATS_SHARE_URL = 'https://imamu.lonzov.top/share/FmUyTde668rZaCXX'
-
 /* 环比标记按「红涨绿跌」上色：数据看板沿用看盘习惯，涨用红、跌用绿。
    持平不给箭头，只写 0%，免得读成一格涨跌。 */
 function deltaBadge(delta) {
@@ -391,6 +389,7 @@ onMounted(() => {
   fetchStats()
   loadOverview()
   loadUptime()
+  loadAnalyticsShare().catch(() => {})
   if (canReviewSubmissions.value) loadSubmissionPreview()
 
   // 日志读取需要 logs.read，没有权限时连轮询都不起来
@@ -522,8 +521,9 @@ onBeforeUnmount(() => {
             重试
           </AppButton>
           <a
+            v-if="analyticsShareUrl"
             class="icon-link"
-            :href="STATS_SHARE_URL"
+            :href="analyticsShareUrl"
             target="_blank"
             rel="noopener noreferrer"
             title="打开访问统计"

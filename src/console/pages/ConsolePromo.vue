@@ -14,6 +14,7 @@ import ConsolePanel from '../components/ConsolePanel.vue'
 import { submitOnEnter } from '../enterSubmit.js'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
+import { analyticsShareUrl, loadAnalyticsShare } from '../analyticsShare.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
 import { preparePromoImage } from '../../utils/iconUpload.js'
 
@@ -22,15 +23,25 @@ const { ensureTrust } = useSensitiveTrust()
 const PROMO_URL = '/api/v1/console/promo'
 
 // 埋点事件名形如 Promo+jzfk，查询参数交给 URLSearchParams 编码，避免标识里有特殊字符时拼错
-const ANALYTICS_BASE = 'https://imamu.lonzov.top/share/FmUyTde668rZaCXX/events'
-
 function analyticsUrl(item) {
-  const query = new URLSearchParams({
+  if (!analyticsShareUrl.value) return ''
+  let base
+  try {
+    base = new URL(analyticsShareUrl.value)
+  } catch {
+    return ''
+  }
+  // 分享链接允许带自己的查询参数；事件页是它下面的固定路径，查询只保留下面这三项
+  if (!base.pathname.replace(/\/+$/, '').endsWith('/events')) {
+    base.pathname = `${base.pathname.replace(/\/+$/, '')}/events`
+  }
+  base.search = new URLSearchParams({
     date: '30day',
     page: '1',
     event: `eq.Promo+${item.event_id}`,
-  })
-  return `${ANALYTICS_BASE}?${query.toString()}`
+  }).toString()
+  base.hash = ''
+  return base.toString()
 }
 
 const DATE_SHORTCUTS = {
@@ -167,6 +178,7 @@ function onPaste(event) {
 
 onMounted(() => {
   load()
+  loadAnalyticsShare().catch(() => {})
   document.addEventListener('paste', onPaste)
 })
 
@@ -298,7 +310,7 @@ async function toggleHidden(item) {
 
           <div class="promo-actions">
             <AppButton
-              v-if="item.event_id"
+              v-if="item.event_id && analyticsShareUrl"
               variant="outline"
               size="xs"
               icon-only
@@ -313,7 +325,7 @@ async function toggleHidden(item) {
               variant="outline"
               size="xs"
               icon-only
-              label="填写埋点标识后可查看数据"
+              :label="analyticsShareUrl ? '填写埋点标识后可查看数据' : '请先在系统设置配置 Umami 分享链接'"
               :icon="DataBarVertical24Regular"
               disabled
             />

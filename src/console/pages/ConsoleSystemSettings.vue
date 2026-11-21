@@ -1,12 +1,18 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { NIcon, NInputNumber, NSelect, NSwitch, useMessage } from 'naive-ui'
-import { ChevronUp16Regular, Settings24Regular } from '@vicons/fluent'
+import { NIcon, NInput, NInputNumber, NSelect, NSwitch, useMessage } from 'naive-ui'
+import {
+  ChevronUp16Regular,
+  DataBarVertical24Regular,
+  Settings24Regular,
+} from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import { consoleFetch } from '../consoleRequest.js'
+import { loadAnalyticsShare, setAnalyticsShareUrl } from '../analyticsShare.js'
 
 const SETTINGS_URL = '/api/v1/console/system/settings/feishu'
 const NOTIFICATIONS_URL = '/api/v1/console/system/settings/notifications'
+const ANALYTICS_URL = '/api/v1/console/system/settings/analytics'
 const PERIOD_OPTIONS = [
   { label: '每分钟', value: 60 },
   { label: '每 5 分钟', value: 300 },
@@ -26,6 +32,8 @@ const saving = ref(false)
 const testing = ref(false)
 const pendingLoading = ref(false)
 const pendingSaving = ref(false)
+const analyticsLoading = ref(false)
+const analyticsSaving = ref(false)
 
 const COLLAPSED_KEY = 'console-system-settings-collapsed'
 const savedCollapsed = (() => {
@@ -38,12 +46,15 @@ const savedCollapsed = (() => {
 })()
 const collapsed = ref(savedCollapsed?.feishu ?? false)
 const pendingCollapsed = ref(savedCollapsed?.pending ?? false)
+const analyticsCollapsed = ref(savedCollapsed?.analytics ?? false)
 
 function toggleCollapsed(key) {
   if (key === 'feishu') {
     collapsed.value = !collapsed.value
-  } else {
+  } else if (key === 'pending') {
     pendingCollapsed.value = !pendingCollapsed.value
+  } else {
+    analyticsCollapsed.value = !analyticsCollapsed.value
   }
   try {
     localStorage.setItem(
@@ -51,6 +62,7 @@ function toggleCollapsed(key) {
       JSON.stringify({
         feishu: collapsed.value,
         pending: pendingCollapsed.value,
+        analytics: analyticsCollapsed.value,
       }),
     )
   } catch {
@@ -67,11 +79,14 @@ const pendingForm = ref({
   mode: 'off',
   digestHours: 4,
 })
+const analyticsForm = ref({ shareUrl: '' })
 
 let saveTimer = null
 let saveVersion = 0
 let pendingSaveTimer = null
 let pendingSaveVersion = 0
+let analyticsSaveVersion = 0
+let savedAnalyticsUrl = ''
 
 function applyPayload(payload) {
   form.value = {
@@ -154,6 +169,49 @@ function onDigestHoursChange(value) {
   savePendingDebounced({ digest_hours: value })
 }
 
+function applyAnalytics(payload) {
+  savedAnalyticsUrl = payload?.share_url || ''
+  analyticsForm.value = { shareUrl: savedAnalyticsUrl }
+  setAnalyticsShareUrl(savedAnalyticsUrl)
+}
+
+async function loadAnalytics() {
+  analyticsLoading.value = true
+  try {
+    applyAnalytics(await loadAnalyticsShare({ force: true }))
+  } catch (e) {
+    message.error(e?.message || '读取 Umami 分享链接失败')
+  } finally {
+    analyticsLoading.value = false
+  }
+}
+
+async function persistAnalytics(value) {
+  if (value === savedAnalyticsUrl) return
+  const version = ++analyticsSaveVersion
+  analyticsSaving.value = true
+  try {
+    const payload = await consoleFetch(ANALYTICS_URL, {
+      method: 'PATCH',
+      body: JSON.stringify({ share_url: value }),
+    })
+    if (version === analyticsSaveVersion) applyAnalytics(payload)
+  } catch (e) {
+    message.error(e?.message || 'Umami 分享链接保存失败，已恢复原值')
+    await loadAnalytics()
+  } finally {
+    if (version === analyticsSaveVersion) analyticsSaving.value = false
+  }
+}
+
+function saveAnalyticsNow(value) {
+  persistAnalytics(value)
+}
+
+function onAnalyticsInput(value) {
+  analyticsForm.value.shareUrl = value
+}
+
 async function persist(patch) {
   const version = ++saveVersion
   saving.value = true
@@ -229,7 +287,7 @@ async function testSend() {
 }
 
 onMounted(async () => {
-  await Promise.all([load(), loadPending()])
+  await Promise.all([load(), loadPending(), loadAnalytics()])
 })
 </script>
 
@@ -373,6 +431,54 @@ onMounted(async () => {
                 @update:value="onDigestHoursChange"
               />
               <span class="limit-unit">小时</span>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </section>
+
+    <section class="settings-card">
+      <div
+        class="card-header"
+        :class="{ 'card-header--collapsed': analyticsCollapsed }"
+        role="button"
+        tabindex="0"
+        :aria-expanded="!analyticsCollapsed"
+        @click="toggleCollapsed('analytics')"
+        @keydown.enter.prevent="toggleCollapsed('analytics')"
+        @keydown.space.prevent="toggleCollapsed('analytics')"
+      >
+        <span class="section-title">
+          <NIcon :component="DataBarVertical24Regular" size="18" class="section-icon" />
+          访问统计
+        </span>
+        <NIcon
+          :component="ChevronUp16Regular"
+          size="16"
+          class="chevron-icon"
+          :class="{ 'chevron-icon--rotated': analyticsCollapsed }"
+        />
+      </div>
+      <Transition name="collapse">
+        <div v-show="!analyticsCollapsed" class="card-body">
+          <div class="setting-row setting-row--url">
+            <div class="setting-info">
+              <span class="setting-title">Umami 分享链接</span>
+              <p class="setting-desc">
+                概览页与推广位共用这个链接；留空则隐藏所有统计入口。
+                <template v-if="analyticsSaving">保存中…</template>
+              </p>
+            </div>
+            <div class="setting-control setting-control--url">
+              <NInput
+                :value="analyticsForm.shareUrl"
+                :disabled="analyticsLoading"
+                maxlength="512"
+                placeholder="https://imamu.lonzov.top/share/..."
+                @update:value="onAnalyticsInput"
+                @blur="saveAnalyticsNow(analyticsForm.shareUrl)"
+                @keydown.enter.prevent="saveAnalyticsNow(analyticsForm.shareUrl)"
+              />
             </div>
           </div>
         </div>
@@ -531,6 +637,14 @@ onMounted(async () => {
   width: 130px;
 }
 
+.setting-control--url {
+  width: min(420px, 50vw);
+}
+
+.setting-control--url :deep(.n-input) {
+  width: 100%;
+}
+
 .period-select {
   width: 148px;
 }
@@ -570,6 +684,15 @@ onMounted(async () => {
 
   .setting-control--limit {
     justify-content: flex-start;
+  }
+
+  .setting-row--url {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .setting-control--url {
+    width: 100%;
   }
 
   .period-select {

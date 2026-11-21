@@ -100,6 +100,7 @@ src:
     ConsoleLayout.vue: 控制台外壳，页面标题取自 consoleNav，并把控制台目录挂到侧边栏分类栏，右上角为账号与退出，按权限隐藏目录项并拦下无权限路由，系统设置分组默认落到第一个有权限的子页，临时密码时顶部常驻提示条
     consoleAuth.js: 控制台会话状态（账号邮箱、角色、权限清单与临时密码标记），登录、退出与会话校验，凭证为后端下发的 HttpOnly Cookie
     consoleRequest.js: 控制台请求与错误映射（服务端信封 → 状态码 → 网络/超时），写操作回填 CSRF 头，识别 410 代次淘汰并接出身份确认恢复钩子，不依赖 Vue
+    analyticsShare.js: Umami 分享链接的模块级缓存与系统设置读取入口，供概览与推广位共用
     webauthn.js: 通行密钥的 WebAuthn 选项解码与浏览器凭证 JSON 序列化
     enterSubmit.js: 控制台表单的 Enter 提交判定，跳过输入法组合、文本域及非文本控件
     consoleNav.js: 控制台目录配置，按业务分组并作为侧边栏分类栏与页面标题的唯一来源；分组可展开、按子权限过滤后空组隐藏，并提供分组默认落地子页的统一计算
@@ -123,7 +124,7 @@ src:
     components/TodoDrawer.vue: 待办抽屉，列出待审核提交与待处理反馈并跳转到对应页面
     pages/ConsoleAccount.vue: 我的账号页，账号信息、改密码、邮箱两步验证开关、通行密钥与登录设备列表（撤销会话）
     pages/ConsoleSystem.vue: 系统设置页，向全站侧边栏下半区注册设置目录与“返回控制台”入口
-    pages/ConsoleSystemSettings.vue: 系统设置页，飞书告警与待办通知配置
+    pages/ConsoleSystemSettings.vue: 系统设置页，飞书告警、待办通知与 Umami 分享链接配置
     pages/ConsoleSystemAssets.vue: 系统设置图片资产页，孤儿图片预览与手动清理
     pages/ConsoleSystemTasks.vue: 系统设置定时任务页，任务列表、启停与调度编辑、执行记录与手动触发
     pages/ConsoleAccounts.vue: 系统设置·账号管理页，账号列表与新建/编辑/重置密码，编辑角色与单点授权范围
