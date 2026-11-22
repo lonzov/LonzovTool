@@ -10,7 +10,8 @@
  * 而那正是「后端是增强不是依赖」要避免的事。
  * 缺席的键表示「保持快照值」，所以只写接口确实给出的键。
  *
- * Node 侧没有 origin，必须用绝对 base。默认指向本机后端，可用 SITE_API_BASE 覆盖。
+ * Node 侧没有 origin，必须用绝对 base。默认指向生产站点；本地联调可设置
+ * SITE_API_BASE=http://127.0.0.1:8010 覆盖。
  *
  * 排在构建链最前：它之后的预构建步骤（贡献者头像、字体子集等）都读这些数据文件，
  * 让它们处理刷新后的数据，而不是上一轮的残留。
@@ -23,7 +24,9 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
 
-const API_BASE = process.env.SITE_API_BASE || 'http://127.0.0.1:8010'
+const API_BASE = process.env.SITE_API_BASE || 'https://tool.lonzov.top'
+const USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 const TIMEOUT_MS = 15000
 
 // 资源键 → 接口路径 + 落地文件：与后端按资源拆分的接口一一对应
@@ -39,7 +42,7 @@ const SNAPSHOT_FILES = {
 
 async function fetchResource(resource) {
   const res = await fetch(`${API_BASE}${resource.url}`, {
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },
     signal: AbortSignal.timeout(TIMEOUT_MS),
   })
   if (!res.ok) throw new Error(`${resource.url} HTTP ${res.status}`)

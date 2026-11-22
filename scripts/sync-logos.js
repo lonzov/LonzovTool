@@ -17,7 +17,9 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFile
 import { dirname, resolve } from 'node:path'
 
 const ROOT = process.cwd()
-const API_BASE = process.env.SITE_API_BASE || 'http://127.0.0.1:8010'
+const API_BASE = process.env.SITE_API_BASE || 'https://tool.lonzov.top'
+const USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 const TIMEOUT_MS = 15000
 const LOCAL_PREFIX = '/uploads/logos/'
 const UPLOADS_DIR = resolve(ROOT, 'public', 'uploads', 'logos')
@@ -26,7 +28,7 @@ async function main() {
   let cards
   try {
     const response = await fetch(`${API_BASE}/api/v1/cards`, {
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
@@ -54,7 +56,10 @@ async function main() {
   for (const [path, title] of wanted) {
     const target = resolve(ROOT, 'public', path.replace(/^\//, ''))
     try {
-      const response = await fetch(`${API_BASE}${path}`, { signal: AbortSignal.timeout(TIMEOUT_MS) })
+      const response = await fetch(`${API_BASE}${path}`, {
+        headers: { 'User-Agent': USER_AGENT },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      })
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
       const body = Buffer.from(await response.arrayBuffer())
 
