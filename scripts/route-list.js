@@ -23,19 +23,153 @@ function extractMapKeys(content, mapName) {
   return keys
 }
 
-function extractStaticRoutes(content) {
-  const routesIdx = content.indexOf('const routes = [')
-  if (routesIdx === -1) return []
-  const afterRoutes = content.slice(routesIdx)
-  const pathRe = /path:\s*['"]([^'"]+)['"]/g
-  const paths = []
-  let m
-  while ((m = pathRe.exec(afterRoutes))) {
-    const p = m[1]
-    // 空 path 是嵌套路由的索引子路由，不是独立页面
-    if (p && !p.includes(':') && !p.includes('*')) {
-      paths.push(p)
+/** 跳过字符串字面量（含转义与模板字符串），返回闭合引号的下标 */
+function skipString(source, start) {
+  const quote = source[start]
+  let i = start + 1
+  while (i < source.length) {
+    if (source[i] === '\\') {
+      i += 2
+      continue
     }
+    if (source[i] === quote) return i
+    i += 1
+  }
+  return source.length - 1
+}
+
+function skipWhitespace(source, from) {
+  let i = from
+  while (i < source.length && /\s/.test(source[i])) i += 1
+  return i
+}
+
+/** 读取 `键: '字符串'` 的值，值不是引号字符串时返回 null */
+function readStringValue(source, from) {
+  let i = skipWhitespace(source, from)
+  if (source[i] !== ':') return null
+  i = skipWhitespace(source, i + 1)
+  if (source[i] !== "'" && source[i] !== '"') return null
+  const end = skipString(source, i)
+  return { value: source.slice(i + 1, end).replace(/\\(['"\\])/g, '$1'), end }
+}
+
+/** 是否位于 `键:` 的键位置（`paths`、`.path` 之类不算） */
+function isKeyAt(source, index, key) {
+  const before = source[index - 1] ?? ''
+  const after = source[index + key.length] ?? ''
+  return (
+    source.startsWith(key, index) &&
+    !/[\w$]/.test(before) &&
+    !/[\w$]/.test(after)
+  )
+}
+
+/**
+ * 扫描 routes 数组，按嵌套层级还原页面的完整路径。
+ * 子路由的 path 是相对父级的片段（如 `cards`），必须补上父级前缀；
+ * 直接按字面量取会得到没有前导斜杠的路径，拼进 sitemap 后就成了 `https://域名cards/`。
+ */
+function extractStaticRoutes(content) {
+  const routesAt = content.indexOf('const routes = [')
+  if (routesAt === -1) return []
+  const source = content.slice(content.indexOf('[', routesAt) + 1)
+
+  // 路由对象按出现顺序记录，父级先于子级，解析时可以直接取父级的 resolved
+  const nodes = []
+  const scopes = [{ kind: 'routes', owner: null }]
+  let i = 0
+
+  while (i < source.length) {
+    const ch = source[i]
+
+    // 注释和字符串里也会出现 path/children/括号，先整体跳过
+    if (ch === '/' && source[i + 1] === '/') {
+      const lineEnd = source.indexOf('\n', i)
+      if (lineEnd === -1) break
+      i = lineEnd + 1
+      continue
+    }
+    if (ch === '/' && source[i + 1] === '*') {
+      const commentEnd = source.indexOf('*/', i + 2)
+      if (commentEnd === -1) break
+      i = commentEnd + 2
+      continue
+    }
+    if (ch === "'" || ch === '"' || ch === '`') {
+      i = skipString(source, i) + 1
+      continue
+    }
+
+    const scope = scopes[scopes.length - 1]
+
+    if (ch === '{') {
+      let node = null
+      if (scope.kind === 'routes') node = { rawPath: null, parent: null }
+      else if (scope.kind === 'children') node = { rawPath: null, parent: scope.owner }
+      if (node) nodes.push(node)
+      scopes.push({ kind: 'object', node, hasChildren: false })
+      i += 1
+      continue
+    }
+
+    if (ch === '}') {
+      scopes.pop()
+      i += 1
+      continue
+    }
+
+    if (ch === '[') {
+      if (scope.kind === 'object' && scope.hasChildren) {
+        scope.hasChildren = false
+        scopes.push({ kind: 'children', owner: scope.node })
+      } else {
+        scopes.push({ kind: 'other' })
+      }
+      i += 1
+      continue
+    }
+
+    if (ch === ']') {
+      scopes.pop()
+      // routes 数组已闭合，后面的守卫代码里还有 path 字面量，不能继续扫
+      if (scopes.length === 0) break
+      i += 1
+      continue
+    }
+
+    if (isKeyAt(source, i, 'path')) {
+      const found = readStringValue(source, i + 4)
+      if (found) {
+        if (scope.kind === 'object' && scope.node) scope.node.rawPath = found.value
+        i = found.end + 1
+        continue
+      }
+    }
+
+    if (isKeyAt(source, i, 'children')) {
+      const colon = skipWhitespace(source, i + 8)
+      if (source[colon] === ':') {
+        const bracket = skipWhitespace(source, colon + 1)
+        if (source[bracket] === '[' && scope.kind === 'object' && scope.node) {
+          scope.hasChildren = true
+          i = bracket
+          continue
+        }
+      }
+    }
+
+    i += 1
+  }
+
+  const paths = []
+  for (const node of nodes) {
+    // 空 path 是嵌套路由的索引子路由，不是独立页面；动态路由不参与收录
+    if (!node.rawPath || node.rawPath.includes(':') || node.rawPath.includes('*')) continue
+    node.resolved = node.rawPath.startsWith('/')
+      ? node.rawPath
+      : `${(node.parent?.resolved ?? '').replace(/\/$/, '')}/${node.rawPath}`
+    paths.push(node.resolved)
   }
   return paths
 }

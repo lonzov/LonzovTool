@@ -84,10 +84,11 @@
 - 组件必须在 `onMounted` 中请求接口，**禁止在 `setup` 顶层发起**——
   顶层调用在 dev 正常，构建时 SSR 会真发请求，甚至挂住预渲染；
 - 构建期的快照脚本不能用相对路径（Node 侧无 origin），必须用带绝对 base 的 URL；
-- `scripts/generate-seo.js` 的 `DISALLOW_PATHS` 必须包含 `/api/` 与 `/console/`。
+- `scripts/generate-seo.js` 的 `DISALLOW_PATHS` 必须包含 `/api/` 与 `/console`（前缀匹配）。
   该列表同时决定 robots.txt 的 Disallow 与 sitemap 的排除项；
   公开站页面路径由 `scripts/route-list.js` 从路由配置自动扫出，不需要在此登记，
-  而控制台的路由同样会被扫到，因此必须靠这个列表把它们排除出 sitemap。
+  而控制台的嵌套路由同样会被扫到（子路由路径会补全父级前缀），
+  因此必须靠这个列表把它们排除出 sitemap。
 
 ## 六、开发环境矩阵
 
