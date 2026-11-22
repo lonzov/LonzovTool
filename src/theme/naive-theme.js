@@ -264,7 +264,7 @@ const baseOverrides = {
         borderRadius: 'var(--radius-sm)',
       },
       InternalSelectMenu: {
-        color: 'var(--popover)',
+        color: 'var(--popover-glass)',
         optionTextColor: 'var(--foreground)',
         optionTextColorActive: 'var(--foreground)',
         optionTextColorPressed: 'var(--foreground)',
@@ -283,7 +283,7 @@ const baseOverrides = {
   },
 
   Cascader: {
-    menuColor: 'var(--popover)',
+    menuColor: 'var(--popover-glass)',
     menuDividerColor: 'var(--border)',
     menuBorderRadius: 'var(--radius-md)',
     menuBoxShadow: 'var(--shadow-popover)',
@@ -313,7 +313,7 @@ const baseOverrides = {
         borderRadius: 'var(--radius-sm)',
       },
       InternalSelectMenu: {
-        color: 'var(--popover)',
+        color: 'var(--popover-glass)',
         optionTextColor: 'var(--foreground)',
         optionTextColorActive: 'var(--foreground)',
         optionTextColorPressed: 'var(--foreground)',
@@ -330,8 +330,10 @@ const baseOverrides = {
     },
   },
 
+  /* 下拉/选择/级联菜单走半透明底色，配合 main.css 里的 backdrop-filter 做毛玻璃；
+     Tooltip、Popover 与日期面板仍是实色 --popover，不受影响。 */
   Dropdown: {
-    color: 'var(--popover)',
+    color: 'var(--popover-glass)',
     optionTextColor: 'var(--foreground)',
     optionTextColorHover: 'var(--foreground)',
     optionTextColorActive: 'var(--foreground)',

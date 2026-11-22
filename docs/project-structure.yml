@@ -31,7 +31,7 @@ src:
     NoticeBar.vue: 公告通知栏，多公告自动轮播（悬停/离屏/展开时暂停）与高度自适应，右端方形按钮触发器展开查看全部列表（行点链接新开/无链接切换，未读红点按已读记录隐藏）
     PrivacyBanner.vue: 隐私横幅与隐私偏好弹窗，管理必要服务/数据统计/回放统计的同意选项
     ConfirmDialog.vue: 全局确认/提示模态框，由 useConfirm 以 Promise 形式唤起，附手写模糊遮罩层
-    SearchBar.vue: 搜索栏，支持多搜索引擎切换
+    SearchBar.vue: 搜索栏，多搜索引擎切换用级联菜单选择
     SearchGrid.vue: 搜索网格布局组件
     ThemeToggle.vue: 主题切换按钮
     ToolCard.vue: 工具卡片组件，支持懒加载、骨架屏、边框光晕跟随鼠标，右键/长按触发卡片菜单

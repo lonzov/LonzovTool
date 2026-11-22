@@ -622,7 +622,7 @@ onBeforeUnmount(() => {
               placement="bottom-start"
               placeholder="选择首页已有的分类"
               check-strategy="child"
-              :menu-props="{ class: 'card-category-menu' }"
+              :menu-props="{ class: 'compact-cascader-menu' }"
               @update:value="onCategoryChange"
             />
           </NFormItem>

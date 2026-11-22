@@ -105,6 +105,17 @@ html[data-motion='reduced'] .n-modal-mask {
   transition-duration: 0.05s !important;
 }
 
+/* 浮层模糊不是动画，但属于持续的 GPU 开销，减少动态效果时一并关掉；
+   关掉后回落到实色浮层，避免半透明底透出下面的内容影响阅读。 */
+html[data-motion='reduced'] .n-base-select-menu,
+html[data-motion='reduced'] .n-select-menu,
+html[data-motion='reduced'] .n-dropdown-menu,
+html[data-motion='reduced'] .n-cascader-menu {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-color: var(--popover) !important;
+}
+
 /* 模态框的毛玻璃层整个隐掉 */
 html[data-motion='reduced'] .app-modal-blur {
   display: none !important;
@@ -527,49 +538,67 @@ button {
   corner-shape: round;
 }
 
-/* ===== Naive 浮层的描边 =====
-   下拉类浮层（Select / Dropdown / Cascader 的菜单）加一道描边以与页面底拉开层次。
-   Naive 没有为菜单边框开放主题变量，只能覆盖内部类；集中在这里一份，
-   避免每个用到下拉的组件各写一遍。 */
+/* ===== Naive 浮层的毛玻璃 =====
+   下拉类浮层统一半透明底色 + 背景模糊，底色由主题映射到 --popover-glass。
+   模糊只能写在这里：菜单被 teleport 到 body，组件作用域够不到，Naive 也没有
+   为 backdrop-filter 开放主题变量。描边一并收口，避免每个用到下拉的组件各写一遍。
+
+   不要给浮层再做二级菜单：Naive 的下拉子菜单是父菜单的 DOM 子节点，父元素自身带
+   backdrop-filter 会形成 backdrop root，子菜单只能采样父元素、采不到页面，结果就是
+   子级"没糊"。站内搜索栏的搜索方式已改用级联 —— 它的多列在同一块面板里，没有这个问题。 */
 .n-select-menu,
+.n-base-select-menu,
 .n-dropdown-menu,
 .n-cascader-menu {
   border: 1px solid var(--border) !important;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
-/* ===== 分类级联菜单 =====
+/* 不支持背景模糊的环境回落到实色浮层：半透明底直接叠在页面上，文字会被下面的内容糊住 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .n-select-menu,
+  .n-base-select-menu,
+  .n-dropdown-menu,
+  .n-cascader-menu {
+    background-color: var(--popover) !important;
+  }
+}
+
+/* ===== 紧凑级联菜单 =====
+   卡片分类、搜索方式这类短文案的级联：列宽跟随最长文案，不吃 Naive 的默认最小宽度。
    菜单被 teleport 到 body，不能写在某个页面的 scoped 样式里，否则只有打开过那个页面才生效。
-   列宽跟随最长文案，父级选项的右侧箭头由 Naive 的 suffix 固定占位，不能被标签的省略号裁掉。 */
-.card-category-menu {
+   父级选项的右侧箭头由 Naive 的 suffix 固定占位，不能被标签的省略号裁掉。 */
+.compact-cascader-menu {
   width: max-content !important;
   max-width: calc(100vw - 32px);
   min-width: 0 !important;
 }
 
-.card-category-menu .n-cascader-menu {
+.compact-cascader-menu .n-cascader-menu {
   min-width: 0 !important;
 }
 
-.card-category-menu .n-cascader-submenu {
+.compact-cascader-menu .n-cascader-submenu {
   width: max-content !important;
   min-width: 0 !important;
   max-width: calc(100vw - 32px);
 }
 
-.card-category-menu .n-cascader-option {
+.compact-cascader-menu .n-cascader-option {
   min-width: 0 !important;
   overflow: visible;
   white-space: nowrap;
 }
 
-.card-category-menu .n-cascader-option__label {
+.compact-cascader-menu .n-cascader-option__label {
   flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.card-category-menu .n-cascader-option__suffix {
+.compact-cascader-menu .n-cascader-option__suffix {
   flex-shrink: 0;
 }
 

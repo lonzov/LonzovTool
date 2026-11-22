@@ -11,35 +11,25 @@
       border: '1px solid var(--border)',
     }"
   >
-    <!-- 搜索方式选择 -->
-    <n-dropdown
-      placement="bottom-start"
-      trigger="click"
-      size="medium"
-      :options="dropdownOptions"
-      @select="handleSelect"
-    >
-      <div
-        :style="{
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 12px',
-          height: '100%',
-          userSelect: 'none',
-          cursor: 'pointer',
-        }"
-      >
-        <span :style="{ fontSize: '13px', color: 'var(--foreground)' }">
-          {{ selectedEngine?.name || '搜索' }}
-        </span>
-        <n-icon
-          :component="ChevronDown20Filled"
-          :size="14"
-          color="var(--subtle-foreground)"
-          :style="{ marginLeft: '4px' }"
-        />
-      </div>
-    </n-dropdown>
+    <!-- 搜索方式选择：触发器保持纯文字，级联控件透明铺在上面，点击与弹层都交给级联 -->
+    <div class="search-engine-select">
+      <span class="search-engine-select__label">{{ selectedEngine?.name || '搜索' }}</span>
+      <n-icon
+        :component="ChevronDown20Filled"
+        :size="14"
+        color="var(--subtle-foreground)"
+        :style="{ marginLeft: '4px' }"
+      />
+      <n-cascader
+        class="search-engine-select__control"
+        :value="selectedEngine?.id ?? null"
+        :options="engineOptions"
+        check-strategy="child"
+        size="medium"
+        :menu-props="{ class: 'compact-cascader-menu' }"
+        @update:value="handleSelect"
+      />
+    </div>
 
     <!-- 竖向分界线 -->
     <div
@@ -113,15 +103,22 @@
 
 <script>
 import { ref, computed, watch } from 'vue'
-import { NIcon, NDropdown, NTooltip } from 'naive-ui'
+import { NIcon, NCascader, NTooltip } from 'naive-ui'
 import { Search12Regular, ChevronDown20Filled, Star12Regular } from '@vicons/fluent'
 import searchEngines from '../data/searchEngines.json'
+
+// 级联第一列的分类；顺序决定菜单里分组的先后
+const ENGINE_GROUPS = [
+  { value: 'engine', label: '搜索引擎', type: 'engine' },
+  { value: 'wiki', label: '文档百科', type: 'wiki' },
+  { value: 'community', label: '玩家社区', type: 'community' },
+]
 
 export default {
   name: 'SearchBar',
   components: {
     NIcon,
-    NDropdown,
+    NCascader,
     NTooltip,
   },
   props: {
@@ -242,67 +239,19 @@ export default {
       emit('toggleFavorites', favoriteActive.value)
     }
 
-    const dropdownOptions = computed(() => {
-      const result = []
-
-      // 站内搜索
+    const engineOptions = computed(() => {
+      const options = []
       const internal = searchEngines.find((e) => e.type === 'internal')
-      if (internal) {
-        result.push({
-          label: internal.name,
-          key: internal.id,
-        })
-      }
-
-      // 分隔线
-      result.push({ type: 'divider', key: 'divider-engine' })
-
-      // 搜索引擎分组（带子菜单）
-      const engines = searchEngines.filter((e) => e.type === 'engine')
-      if (engines.length > 0) {
-        result.push({
-          label: '搜索引擎',
-          key: 'group-engine',
-          children: engines.map((e) => ({
-            label: e.name,
-            key: e.id,
-          })),
-        })
-      }
-
-      // 分隔线
-      result.push({ type: 'divider', key: 'divider-wiki' })
-
-      // 文档百科分组（带子菜单）
-      const wikis = searchEngines.filter((e) => e.type === 'wiki')
-      if (wikis.length > 0) {
-        result.push({
-          label: '文档百科',
-          key: 'group-wiki',
-          children: wikis.map((e) => ({
-            label: e.name,
-            key: e.id,
-          })),
-        })
-      }
-
-      // 分隔线
-      result.push({ type: 'divider', key: 'divider-community' })
-
-      // 玩家社区分组（带子菜单）
-      const communities = searchEngines.filter((e) => e.type === 'community')
-      if (communities.length > 0) {
-        result.push({
-          label: '玩家社区',
-          key: 'group-community',
-          children: communities.map((e) => ({
-            label: e.name,
-            key: e.id,
-          })),
-        })
-      }
-
-      return result
+      if (internal) options.push({ label: internal.name, value: internal.id })
+      ENGINE_GROUPS.forEach((group) => {
+        const children = searchEngines
+          .filter((e) => e.type === group.type)
+          .map((e) => ({ label: e.name, value: e.id }))
+        if (children.length > 0) {
+          options.push({ label: group.label, value: group.value, children })
+        }
+      })
+      return options
     })
 
     const placeholder = computed(() => {
@@ -312,7 +261,7 @@ export default {
     return {
       selectedEngine,
       searchQuery,
-      dropdownOptions,
+      engineOptions,
       placeholder,
       Search12Regular,
       ChevronDown20Filled,
@@ -329,14 +278,32 @@ export default {
 </script>
 
 <style>
-/* 禁止搜索方式选择菜单内文字被选中 */
-.n-dropdown-option-body,
-.n-dropdown-option-body__content,
-.n-dropdown-group-header {
-  user-select: none !important;
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
+/* ===== 搜索方式选择 =====
+   触发器保持原来的纯文字样式；级联控件透明铺满它，点击、弹层与选中都交给级联，
+   可见的只有下面这层文字 + 箭头。 */
+.search-engine-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  height: 100%;
+  cursor: pointer;
+  user-select: none;
 }
 
+.search-engine-select__label {
+  font-size: 13px;
+  color: var(--foreground);
+}
+
+.search-engine-select__control {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.search-engine-select__control .n-base-selection {
+  width: 100%;
+  height: 100%;
+}
 </style>

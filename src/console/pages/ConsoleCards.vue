@@ -584,7 +584,7 @@ async function remove(card) {
           placeholder="全部分类"
           class="category-select"
           check-strategy="child"
-          :menu-props="{ class: 'card-category-menu' }"
+          :menu-props="{ class: 'compact-cascader-menu' }"
         />
         <span class="summary-text">{{ summaryText }}</span>
       </div>
@@ -832,7 +832,7 @@ async function remove(card) {
               placement="bottom-start"
               placeholder="选择分类"
               check-strategy="child"
-              :menu-props="{ class: 'card-category-menu' }"
+              :menu-props="{ class: 'compact-cascader-menu' }"
               @update:value="categoryError = ''"
             />
           </NFormItem>
