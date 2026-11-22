@@ -4,6 +4,7 @@ import { NIcon } from 'naive-ui'
 import { getCategoryIcon } from '../config/categoryIcons'
 import ToolCard from './ToolCard.vue'
 import { cardsData } from '../composables/useSiteData.js'
+import { useFavorites } from '../composables/useFavorites.js'
 
 export default {
   components: {
@@ -20,6 +21,7 @@ export default {
     },
   },
   setup() {
+    const { favorites } = useFavorites()
     const activeCategoryIndex = ref(null)
     const isAnimating = ref(false)
     const dimmedCategoryIndex = ref(null) // 当前需要高亮的分类索引（其他分类变暗）
@@ -131,6 +133,7 @@ export default {
       dimmedCategoryIndex,
       dimmedTransition,
       triggerDimEffect,
+      favorites,
     }
   },
   render() {
@@ -143,15 +146,8 @@ export default {
       const hasSearch = !!searchQuery
       const hasFavFilter = this.showFavorites
 
-      // 读取收藏列表
-      let favs = null
-      if (hasFavFilter) {
-        try {
-          favs = JSON.parse(localStorage.getItem('favorite_cards') || '[]')
-        } catch {
-          favs = []
-        }
-      }
+      // 收藏列表与卡片角标共用同一份响应式状态，取消收藏后筛选结果立即更新
+      const favs = hasFavFilter ? this.favorites : null
 
       if (!hasSearch && !hasFavFilter) return cardsData.value.categories
 
@@ -257,6 +253,7 @@ export default {
                 toolId: tool.id || '',
                 openInNewTab: tool.openInNewTab === true,
                 searchPatterns: searchPatterns,
+                contextMenu: true,
               }),
             ),
           ),

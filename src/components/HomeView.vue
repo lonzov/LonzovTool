@@ -5,13 +5,14 @@ import NoticeBar from './NoticeBar.vue'
 import PromoCarousel from './PromoCarousel.vue'
 import SearchBar from './SearchBar.vue'
 import ToolGrid from './ToolGrid.vue'
+import CardContextMenu from './CardContextMenu.vue'
 import SearchGrid from './SearchGrid.vue'
 import AppFooter from './Footer.vue'
 import searchEngines from '../data/searchEngines.json'
 
 export default {
   name: 'HomeView',
-  components: { NoticeBar, PromoCarousel, SearchBar, ToolGrid, SearchGrid, AppFooter },
+  components: { NoticeBar, PromoCarousel, SearchBar, ToolGrid, CardContextMenu, SearchGrid, AppFooter },
   setup() {
     const registerHomeView = inject('registerHomeView')
     const route = useRoute()
@@ -111,6 +112,7 @@ export default {
     </div>
     <SearchGrid :searchQuery="searchQuery" />
     <ToolGrid ref="toolGrid" :searchQuery="searchQuery" :showFavorites="showFavorites" />
+    <CardContextMenu />
     <AppFooter />
   </div>
 </template>

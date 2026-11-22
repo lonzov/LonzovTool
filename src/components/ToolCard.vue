@@ -1,7 +1,7 @@
 <script>
 import { h, ref, onMounted, onUnmounted, Transition } from 'vue'
 import { useRouter } from 'vue-router'
-import { NHighlight, NIcon, useMessage } from 'naive-ui'
+import { NHighlight, NIcon } from 'naive-ui'
 import { Star24Filled } from '@vicons/fluent'
 import { getToolIcon } from '../config/categoryIcons'
 import { useWorkspace, externalTabPath } from '../composables/useWorkspace.js'
@@ -9,9 +9,15 @@ import { useWorkspaceSettings } from '../composables/useWorkspaceSettings.js'
 import { attachThemeParams } from '../composables/useUrlTheme.js'
 import { useMouseGlow, applyGlow } from '../composables/useMouseGlow.js'
 import { useLocalStats } from '../composables/useLocalStats.js'
+import { favoriteKeyOf, useFavorites } from '../composables/useFavorites.js'
+import { openCardContextMenu } from '../composables/useCardContextMenu.js'
 
 // 站外嵌入开关（模块级共享 ref，render 的 onClick 闭包可直接读取）
 const { embedEnabled } = useWorkspaceSettings()
+
+const LONG_PRESS_MS = 500
+// 手指轻微抖动不算滑动，超过这个距离才取消长按
+const LONG_PRESS_CANCEL_DISTANCE = 8
 
 export default {
   components: {
@@ -47,13 +53,18 @@ export default {
       type: Array,
       default: () => [],
     },
+    // 仅首页网格开启；其它页面复用本组件时保留浏览器原生右键行为
+    contextMenu: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup() {
     const router = useRouter()
     const { openTab } = useWorkspace()
     const { subscribe: subGlow, unsubscribe: unsubGlow } = useMouseGlow()
-    const message = useMessage()
     const { countNavClick } = useLocalStats()
+    const { isFavorite } = useFavorites()
 
     const imageError = ref(false)
     const imageLoaded = ref(false)
@@ -106,7 +117,7 @@ export default {
       router,
       subGlow,
       unsubGlow,
-      message,
+      isFavorite,
       countNavClick,
     }
   },
@@ -114,21 +125,19 @@ export default {
     return {
       containerId: `logo-${Math.random().toString(36).substr(2, 9)}`,
       observer: null,
-      isFavorite: false,
       longPressTimer: null,
       longPressed: false,
-      touchFired: false,
-      toggleLock: false,
+      longPressStart: null,
+      lastTouchAt: 0,
     }
   },
-  created() {
-    // 在首次渲染前初始化收藏状态，避免三角标闪烁
-    try {
-      const favs = JSON.parse(localStorage.getItem('favorite_cards') || '[]')
-      this.isFavorite = favs.includes(this.toolId || this.link || this.title)
-    } catch {
-      this.isFavorite = false
-    }
+  computed: {
+    favoriteKey() {
+      return favoriteKeyOf({ toolId: this.toolId, link: this.link, title: this.title })
+    },
+    favoriteActive() {
+      return this.isFavorite(this.favoriteKey)
+    },
   },
   mounted() {
     this.initIntersectionObserver()
@@ -213,65 +222,69 @@ export default {
     handleGlow(mouseX, mouseY) {
       applyGlow(this.$el, mouseX, mouseY)
     },
-    checkFavoriteStatus() {
-      try {
-        const favs = JSON.parse(localStorage.getItem('favorite_cards') || '[]')
-        this.isFavorite = favs.includes(this.toolId || this.link || this.title)
-      } catch {
-        this.isFavorite = false
-      }
+    openMenu(x, y) {
+      const rect = this.$el.getBoundingClientRect()
+      // 键盘唤起菜单（菜单键）时 event 坐标是 0，落到卡片左上角附近
+      openCardContextMenu({
+        x: x || rect.left + 12,
+        y: y || rect.top + 12,
+        card: {
+          toolId: this.toolId,
+          title: this.title,
+          link: this.link,
+          openInNewTab: this.openInNewTab,
+        },
+      })
     },
-    toggleFavorite(e) {
-      if (e) e.preventDefault()
-      // 防止长按同时触发 touch 计时器和 contextmenu 导致双击
-      if (this.toggleLock) return
-      this.toggleLock = true
-      setTimeout(() => { this.toggleLock = false }, 400)
-
-      const key = this.toolId || this.link || this.title
-      try {
-        const favs = JSON.parse(localStorage.getItem('favorite_cards') || '[]')
-        const idx = favs.indexOf(key)
-        if (idx > -1) {
-          favs.splice(idx, 1)
-          this.isFavorite = false
-          localStorage.setItem('favorite_cards', JSON.stringify(favs))
-          this.message.info('已取消收藏', { duration: 1500 })
-        } else {
-          favs.push(key)
-          this.isFavorite = true
-          localStorage.setItem('favorite_cards', JSON.stringify(favs))
-          this.message.info('已收藏', { duration: 1500 })
-        }
-      } catch {
-        /* ignore quota / parse errors */
+    clearLongPress() {
+      if (this.longPressTimer) {
+        clearTimeout(this.longPressTimer)
+        this.longPressTimer = null
       }
     },
     handleContextMenu(e) {
+      if (!this.contextMenu) return
+      // 按住修饰键时交回浏览器，保留"图片另存为"这类原生菜单项
+      if (e.shiftKey || e.ctrlKey || e.altKey) return
       e.preventDefault()
-      this.toggleFavorite()
-    },
-    handleTouchStart() {
-      if (this.touchFired) return
-      this.longPressed = false
-      this.longPressTimer = setTimeout(() => {
-        this.toggleFavorite()
+      // 触屏长按也可能原生抛出 contextmenu：停掉自己的定时器，避免重复弹出
+      if (Date.now() - this.lastTouchAt < 1500) {
+        this.clearLongPress()
         this.longPressed = true
-        this.touchFired = true
-        this.longPressTimer = null
-      }, 500)
+      }
+      this.openMenu(e.clientX, e.clientY)
     },
-    handleTouchEnd() {
-      this.touchFired = false
-      if (this.longPressTimer) {
-        clearTimeout(this.longPressTimer)
+    handleTouchStart(e) {
+      if (!this.contextMenu) return
+      const touch = e.touches[0]
+      if (!touch) return
+      this.lastTouchAt = Date.now()
+      this.longPressStart = { x: touch.clientX, y: touch.clientY }
+      this.longPressed = false
+      this.clearLongPress()
+      this.longPressTimer = setTimeout(() => {
         this.longPressTimer = null
+        this.longPressed = true
+        this.openMenu(this.longPressStart.x, this.longPressStart.y)
+      }, LONG_PRESS_MS)
+    },
+    handleTouchMove(e) {
+      if (!this.longPressTimer) return
+      const touch = e.touches[0]
+      if (!touch) return
+      const dx = touch.clientX - this.longPressStart.x
+      const dy = touch.clientY - this.longPressStart.y
+      if (dx * dx + dy * dy > LONG_PRESS_CANCEL_DISTANCE * LONG_PRESS_CANCEL_DISTANCE) {
+        this.clearLongPress()
       }
     },
-    handleTouchMove() {
-      if (this.longPressTimer) {
-        clearTimeout(this.longPressTimer)
-        this.longPressTimer = null
+    handleTouchEnd() {
+      this.clearLongPress()
+      if (this.longPressed) {
+        // 长按松手后浏览器会补一次 click，click 紧跟 touchend 触发，延后再清标记避免误吞
+        setTimeout(() => {
+          this.longPressed = false
+        }, 350)
       }
     },
     getIconComponent(name) {
@@ -279,14 +292,6 @@ export default {
     },
   },
   watch: {
-    toolId() {
-      try {
-        const favs = JSON.parse(localStorage.getItem('favorite_cards') || '[]')
-        this.isFavorite = favs.includes(this.toolId || this.link || this.title)
-      } catch {
-        this.isFavorite = false
-      }
-    },
     logo() {
       // logo 变化时重置状态
       this.imageError = false
@@ -331,16 +336,16 @@ export default {
         class: 'tool-card glow-border',
         style: cardStyle,
         onContextmenu: (e) => this.handleContextMenu(e),
-        onTouchstart: this.handleTouchStart,
+        onTouchstart: (e) => this.handleTouchStart(e),
         onTouchend: () => this.handleTouchEnd(),
-        onTouchmove: () => this.handleTouchMove(),
+        onTouchmove: (e) => this.handleTouchMove(e),
         ...(this.link ? {
           href: isInternal ? this.link : attachThemeParams(this.link),
           target: alwaysNewTab || !isInternal ? '_blank' : '',
           rel: alwaysNewTab || !isInternal ? 'noopener' : '',
           referrerpolicy: alwaysNewTab || !isInternal ? 'origin' : '',
           onClick: (e) => {
-            // 长按收藏后阻止导航
+            // 长按打开菜单后阻止导航
             if (this.longPressed) {
               e.preventDefault()
               this.longPressed = false
@@ -554,7 +559,7 @@ export default {
           { name: 'fav' },
           {
             default: () =>
-              this.isFavorite
+              this.favoriteActive
                 ? h('div', { class: 'favorite-tag' }, [
                     h('div', { class: 'favorite-triangle' }),
                     h('div', { class: 'favorite-star' }, [
