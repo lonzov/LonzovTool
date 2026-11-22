@@ -206,7 +206,7 @@ async function runRemote(ssh, config) {
   const dn = config.distName
   const ts = timestamp()
   const archiveName = `${dn}-${ts}.7z`
-  const archiveDir = `${sp}/archives`
+  const archiveDir = config.archivePath || `${sp}/archives`
 
   console.log('  🔧 远端部署中...')
 

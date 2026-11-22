@@ -5,6 +5,7 @@
   "privateKey": "C:/Users/xxx/.ssh/xxx",
   "sitePath": "/www/wwwroot/your-site",
   "distName": "dist1",
+  "archivePath": "/data/archives",
   "owner": "www:www",
   "afterCmd": "",
   "keepArchives": 4,
