@@ -91,7 +91,7 @@
 - **目的**：每个路由页面在预渲染时输出正确的 `<title>`、`<meta name="description">`、`<meta name="keywords">`、canonical、Open Graph、Twitter Card 标签，提升搜索引擎收录和社交分享效果。
 - **实现**：基于 `@unhead/vue`，在 `App.vue` 组件 `setup` 中通过 `watch` + `useHead()` 在 Vue 组件上下文内动态更新 head 标签（SSR 安全）。
 - **静态路由 meta**：直接在路由配置中声明 `meta.title / description / keywords`（首页、文档页、提交页、下载页）。
-- **动态工具页映射**：`/c/:path` 路径通过 `TOOL_META_MAP` 按 path slug 匹配对应 SEO 信息，下载页通过 `DOWNLOAD_NAMES` 自动生成。
+- **动态工具页映射**：`/c/:path` 路径通过 `TOOL_META_MAP` 按 path slug 匹配对应 SEO 信息，下载页按快照中的名称与一句话介绍生成。
 
 ### 工作区标签系统
 

@@ -25,7 +25,7 @@ import { useMenuSwipe } from './composables/useMenuSwipe.js'
 import { markSidebarPageMounted } from './composables/useSidebarSection.js'
 import { scrollToTop, cancelScrollToTop } from './utils/scrollToTop.js'
 import { scrollToElement } from './utils/scrollToElement.js'
-import { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES } from './router'
+import { resolveToolMeta, resolveDocsMeta, resolveDownloadMeta } from './router'
 
 /* 懒加载：UpdateDialog → markdown-it、ShareModal → html2canvas 体积大且极少打开，
    不静态 import，避免拖入入口 JS。ShareModal 需常驻挂载以响应 show 变化触发海报生成，
@@ -64,13 +64,14 @@ export default {
           }
         }
 
-        // 动态解析下载页 meta
+        // 动态解析下载页 meta：快照里没有的 slug（构建后新增）在此兜底
         if (!title && !description && !keywords && route.path.startsWith('/down/')) {
-          const slug = (route.params.path || '').replace(/\/+$/, '')
-          const name = DOWNLOAD_NAMES[slug] || slug
-          title = `${name} - 文件下载 - 小舟工具箱`
-          description = `小舟工具箱提供的${name}下载页面，支持快捷直链解析和手动网盘下载。`
-          keywords = `Minecraft,资源下载,${name},MC工具下载,小舟工具箱`
+          const downloadMeta = resolveDownloadMeta((route.params.path || '').replace(/\/+$/, ''))
+          if (downloadMeta) {
+            title = downloadMeta.title
+            description = downloadMeta.description
+            keywords = downloadMeta.keywords
+          }
         }
 
         // 动态解析站外嵌入页 meta（标题/简介取自 tools.json 对应的站外卡片）

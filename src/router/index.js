@@ -7,11 +7,29 @@ import { getDiscreteMessage } from '../utils/discreteMessage'
 import { startLoading, finishLoading } from '../utils/loadingBar'
 import { useConsoleAuth } from '../console/consoleAuth.js'
 
-// 下载页快照：slug → name 映射用于 SEO 与静态路由
+// 下载页快照：slug → 快照条目，用于 SEO 与静态路由
 import downloadsSnapshot from '../data/downloads.json'
-const DOWNLOAD_NAMES = Object.fromEntries(
-  (downloadsSnapshot || []).map((item) => [item.slug, item.name || item.slug]),
+const DOWNLOAD_PAGES = Object.fromEntries(
+  (downloadsSnapshot || []).map((item) => [item.slug, item]),
 )
+
+/**
+ * 下载页 SEO meta：标题用页面名称，简介用页面自己的一句话介绍。
+ * 构建后才新增、快照里没有条目的 slug 退回 slug 与通用文案。
+ * @param {string} slug - 下载页标识
+ * @returns {object|null} 对应的 meta 对象，slug 为空返回 null
+ */
+function resolveDownloadMeta(slug) {
+  const page = DOWNLOAD_PAGES[slug]
+  const name = page?.name || slug
+  if (!name) return null
+  const tagline = (page?.tagline || '').trim()
+  return {
+    title: `${name} - 文件下载 - 小舟工具箱`,
+    description: tagline || `小舟工具箱提供的${name}下载页面，支持快捷直链解析和手动网盘下载。`,
+    keywords: `Minecraft,资源下载,${name},MC工具下载,小舟工具箱`,
+  }
+}
 
 // ===== 路由导航超时机制 =====
 const PING_DELAY = 8000
@@ -183,17 +201,10 @@ const KNOWN_DOCS = [
 ]
 
 // 已知的下载页面路径（具体静态路由，用于 SSG 预渲染）
-const KNOWN_DOWNLOADS = Object.keys(DOWNLOAD_NAMES).map((slug) => {
-  const name = DOWNLOAD_NAMES[slug]
-  return {
-    slug,
-    meta: {
-      title: `${name} - 文件下载 - 小舟工具箱`,
-      description: `小舟工具箱提供的${name}下载页面，支持快捷直链解析和手动网盘下载。`,
-      keywords: `Minecraft,资源下载,${name},MC工具下载,小舟工具箱`,
-    },
-  }
-})
+const KNOWN_DOWNLOADS = Object.keys(DOWNLOAD_PAGES).map((slug) => ({
+  slug,
+  meta: resolveDownloadMeta(slug),
+}))
 
 // 已知的工具页面路径（具体静态路由，用于 SSG 预渲染）
 const KNOWN_TOOLS = [
@@ -537,7 +548,7 @@ export const routes = [
   },
 ]
 
-export { resolveToolMeta, resolveDocsMeta, DOWNLOAD_NAMES }
+export { resolveToolMeta, resolveDocsMeta, resolveDownloadMeta }
 export default routes
 
 /** 路径里出现控制字符说明不是正常路由，浏览器/终端可能按各自方式截断 */
