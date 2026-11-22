@@ -64,7 +64,7 @@
         },
         {
           "id": "execute",
-          "title": "语法转换",
+          "title": "execute升级",
           "description": "execute指令语法升级",
           "logo": "ArrowTrending20Filled",
           "link": "/c/execute/"
@@ -89,7 +89,8 @@
           "title": "符号大全",
           "description": "特殊符号大全",
           "logo": "/logos/teshuzifu_cn.webp",
-          "link": "https://teshuzifu.cn/"
+          "link": "https://cn.piliapp.com/symbol/",
+          "openInNewTab": true
         },
         {
           "id": "n-sensitive-words",
@@ -110,21 +111,24 @@
           "title": "网易版存档解密",
           "description": "网易版加密存档解密工具",
           "logo": "/logos/HAIMING.webp",
-          "link": "https://mc.hm0.top/"
+          "link": "https://mc.hm0.top/",
+          "openInNewTab": true
         },
         {
           "id": "minecraftsearch",
           "title": "种子地图",
           "description": "类似ChunkBase，支持多语言、更多功能",
           "logo": "/logos/minecraftsearch.webp",
-          "link": "https://minecraftsearch.com/zh-CN/%E5%B7%A5%E5%85%B7/%E7%A7%8D%E5%AD%90%E5%9C%B0%E5%9B%BE"
+          "link": "https://minecraftsearch.com/zh-CN/%E5%B7%A5%E5%85%B7/%E7%A7%8D%E5%AD%90%E5%9C%B0%E5%9B%BE",
+          "openInNewTab": true
         },
         {
           "id": "chunkbase",
           "title": "ChunkBase",
           "description": "通过种子号定位群系、结构、史莱姆区块等",
           "logo": "/logos/www_chunkbase_com.webp",
-          "link": "https://www.chunkbase.com/apps/seed-map#seed=%E7%A7%8D%E5%AD%90%E5%8F%B7&platform=bedrock_1_21_50&dimension=overworld&x=0&z=0&zoom=0.5"
+          "link": "https://www.chunkbase.com/apps/seed-map#seed=%E7%A7%8D%E5%AD%90%E5%8F%B7&platform=bedrock_1_21_50&dimension=overworld&x=0&z=0&zoom=0.5",
+          "openInNewTab": true
         },
         {
           "id": "mcseedmap",
@@ -145,7 +149,8 @@
           "title": "Minecraft 艺术",
           "description": "在线制作像素画、地图画、雕塑和红石音乐",
           "logo": "/logos/mcpixelart_com.webp",
-          "link": "https://mcpixelart.com/"
+          "link": "https://mcpixelart.com/",
+          "openInNewTab": true
         },
         {
           "id": "mcblock",
@@ -213,19 +218,12 @@
       "parentMenuId": "websites",
       "tools": [
         {
-          "id": "mcnav",
-          "title": "MCNav",
-          "description": "MC综合导航站",
-          "logo": "/logos/www_mcnav_net.webp",
-          "link": "https://www.mcnav.net/",
-          "openInNewTab": true
-        },
-        {
           "id": "bluesky-studio",
           "title": "蓝天工作室",
           "description": "代表作 CRoB命令查询机器人 等",
           "logo": "/logos/bsc_meteormc_cn.webp",
-          "link": "https://bsc.meteormc.cn/"
+          "link": "https://bsc.meteormc.cn/",
+          "openInNewTab": true
         }
       ]
     },
@@ -270,7 +268,8 @@
           "title": "基岩版开发wiki",
           "description": "专门面向开发者和技术性的内容的wiki",
           "logo": "/logos/wiki_mcbe-dev_net.webp",
-          "link": "https://wiki.mcbe-dev.net/"
+          "link": "https://wiki.mcbe-dev.net/",
+          "openInNewTab": true
         },
         {
           "id": "bedrock-dev",
@@ -293,20 +292,6 @@
           "description": "在线指令库，专注于命令存储、分享等",
           "logo": "/logos/commandlab.webp",
           "link": "https://abyssous.site/app"
-        },
-        {
-          "id": "cbergit",
-          "title": "CBerGit",
-          "description": "国内首个 MC 指令托管和研发交流平台",
-          "logo": "/logos/cbergit_com.png",
-          "link": "https://cbergit.com/"
-        },
-        {
-          "id": "paul-community",
-          "title": "Paul 指令社区",
-          "description": "针对网易版指令创作者的交易与答疑平台",
-          "logo": "/logos/center_beelzebul_top.webp",
-          "link": "https://center.beelzebul.top/"
         },
         {
           "id": "klpbbs",

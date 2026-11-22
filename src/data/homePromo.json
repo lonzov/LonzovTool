@@ -1,13 +1,6 @@
 {
   "first": null,
-  "paid": [
-    {
-      "id": 1,
-      "image": "/uploads/promo/paid-195ab0ec.webp",
-      "link": "https://sam.moe5200.com/",
-      "eventId": "sampixel"
-    }
-  ],
+  "paid": [],
   "free": {
     "id": 2,
     "image": "/uploads/promo/free-9133d902.webp",
