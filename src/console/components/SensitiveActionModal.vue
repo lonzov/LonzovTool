@@ -201,6 +201,7 @@ const actions = computed(() => [
     :max-width="420"
     :auto-focus="false"
     animated
+    content-scrollable
     :actions="actions"
     @update:show="emit('update:show', $event)"
   >

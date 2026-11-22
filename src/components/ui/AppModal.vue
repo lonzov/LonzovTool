@@ -40,6 +40,8 @@ const props = defineProps({
   /**
    * 内容高度变化时给模态框做高度过渡（增删条目、展开折叠、报错信息出现等）。
    * 内部会自行包一层 overflow:hidden 的动画容器，调用方不用再手写 wrap/inner 两层 DOM。
+   * 动画目标按卡片可用高度收口，内容超出时不会顶出卡片；内容可能超过一屏的话
+   * 必须同时开 contentScrollable，否则超出部分会被裁掉且无法滚动。
    */
   animated: { type: Boolean, default: false },
   /**
@@ -225,6 +227,9 @@ const modalStyle = computed(() => ({
    半径走 token，平滑曲率下自动放大，不需要各处再写 @supports */
 .app-modal {
   border-radius: var(--radius-2xl);
+  /* 内容滚动区的高度上限；动画弹窗会由 useHeightTransition 实测后以内联变量覆盖，
+     这里是非动画弹窗的兜底值 */
+  --app-modal-content-max-height: calc(100vh - 208px);
 }
 
 /* 自己管理滚动，避免 NModal/NCard 的 content-scrollable 在组件边界传 VNode 插槽时反复告警 */
@@ -239,7 +244,7 @@ const modalStyle = computed(() => ({
 
 .app-modal-scroll {
   width: 100%;
-  max-height: calc(100vh - 208px);
+  max-height: var(--app-modal-content-max-height);
 }
 
 .app-modal-scroll .n-scrollbar {
@@ -248,8 +253,8 @@ const modalStyle = computed(() => ({
 
 @media (width <= 640px) {
   /* 紧凑模态框本身会多留 120px 上下边距，内容高度要同步让出头/尾空间 */
-  .app-modal-scroll {
-    max-height: calc(100vh - 280px);
+  .app-modal {
+    --app-modal-content-max-height: calc(100vh - 280px);
   }
 }
 

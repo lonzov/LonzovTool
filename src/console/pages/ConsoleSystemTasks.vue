@@ -460,6 +460,7 @@ onMounted(load)
       :z-index="2200"
       :auto-focus="false"
       animated
+      content-scrollable
     >
       <div class="edit-body">
         <div class="meta-row">
