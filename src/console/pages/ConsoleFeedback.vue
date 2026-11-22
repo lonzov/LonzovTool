@@ -21,6 +21,7 @@ import {
   ShieldProhibited24Regular,
 } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
+import SheetHandle from '../../components/ui/SheetHandle.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import FeedbackFilterModal from '../components/FeedbackFilterModal.vue'
 import IpBanDrawer from '../components/IpBanDrawer.vue'
@@ -32,6 +33,7 @@ import { consoleFetch } from '../consoleRequest.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
 import { openImageLightbox } from '../useImageLightbox.js'
 import { useIsMobile } from '../../composables/useIsMobile.js'
+import { useMobileSheet } from '../../composables/useMobileSheet.js'
 import { usePermissions } from '../usePermissions.js'
 
 /* 访客反馈的处理队列。
@@ -75,6 +77,15 @@ const route = useRoute()
 const router = useRouter()
 const message = useMessage()
 const { isMobile } = useIsMobile()
+const { mobile, sheetPlacement, sheetWidth, sheetHeight, sheetHeaderStyle, sheetStyle } =
+  useMobileSheet(isMobile, {
+    width: 640,
+    desktopStyle: {
+      background: 'var(--background)',
+      borderLeft: '1px solid var(--border)',
+      boxShadow: 'var(--shadow-drawer)',
+    },
+  })
 
 const items = ref([])
 const status = ref('pending')
@@ -123,13 +134,6 @@ const emptyText = computed(() => (loading.value ? '读取中…' : '没有符合
 function notifySent(item) {
   return item?.notification_status === 'email'
 }
-
-const drawerStyle = computed(() => ({
-  background: 'var(--background)',
-  borderLeft: '1px solid var(--border)',
-  boxShadow: 'var(--shadow-drawer)',
-  ...(isMobile.value ? { borderTopLeftRadius: '0', borderBottomLeftRadius: '0' } : {}),
-}))
 
 function gotUnauthorized(e) {
   if (e?.code !== 'unauthorized') return false
@@ -469,6 +473,15 @@ watch(search, () => {
   window.clearTimeout(searchTimer)
   searchTimer = window.setTimeout(() => load(), 300)
 })
+
+/* 抽屉是页面级浮层：换页后收起，免得它继续盖在新页面上 */
+watch(
+  () => route.fullPath,
+  () => {
+    if (detail.value.show) detail.value.show = false
+  },
+)
+
 onBeforeUnmount(() => window.clearTimeout(searchTimer))
 onMounted(async () => {
   await load()
@@ -609,18 +622,25 @@ onMounted(async () => {
 
     <NDrawer
       v-model:show="detail.show"
-      placement="right"
-      :width="isMobile ? '100%' : 640"
+      :placement="sheetPlacement"
+      :width="sheetWidth"
+      :height="sheetHeight"
       :z-index="2100"
-      :style="drawerStyle"
+      :style="sheetStyle"
       @update:show="detail.show = $event"
     >
+      <SheetHandle
+        v-if="mobile"
+        :show="detail.show"
+        @close="detail.show = false"
+      />
       <NDrawerContent
         v-if="detail.item"
         :title="`反馈详情 #${detail.item.id}`"
         closable
         :body-content-style="{ padding: '0' }"
         :footer-style="{ padding: '0' }"
+        :header-style="sheetHeaderStyle"
       >
         <div class="detail">
           <div class="detail-tags">

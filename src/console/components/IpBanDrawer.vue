@@ -1,6 +1,6 @@
 ﻿<script setup>
 import { ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   NDrawer,
   NDrawerContent,
@@ -10,8 +10,10 @@ import {
 } from 'naive-ui'
 import { Delete24Regular, ShieldProhibited24Regular } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
+import SheetHandle from '../../components/ui/SheetHandle.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { useIsMobile } from '../../composables/useIsMobile.js'
+import { useMobileSheet } from '../../composables/useMobileSheet.js'
 import { consoleFetch } from '../consoleRequest.js'
 
 const URL = '/api/v1/console/ip-bans'
@@ -22,8 +24,19 @@ const props = defineProps({
 const emit = defineEmits(['update:show'])
 
 const router = useRouter()
+const route = useRoute()
 const message = useMessage()
 const { isMobile } = useIsMobile()
+const { mobile, sheetPlacement, sheetWidth, sheetHeight, sheetHeaderStyle, sheetStyle } =
+  useMobileSheet(isMobile, { width: 560 })
+
+/* 抽屉是页面级浮层：换页后收起，免得它继续盖在新页面上 */
+watch(
+  () => route.fullPath,
+  () => {
+    if (props.show) emit('update:show', false)
+  },
+)
 
 const items = ref([])
 const loading = ref(false)
@@ -125,13 +138,21 @@ watch(
 <template>
   <NDrawer
     :show="show"
-    placement="right"
-    :width="isMobile ? '100%' : 560"
+    :placement="sheetPlacement"
+    :width="sheetWidth"
+    :height="sheetHeight"
+    :style="sheetStyle"
     :z-index="2100"
     :auto-focus="false"
     @update:show="emit('update:show', $event)"
   >
-    <NDrawerContent title="IP 封禁" closable :body-content-style="{ padding: '0' }">
+    <SheetHandle v-if="mobile" :show="show" @close="emit('update:show', false)" />
+    <NDrawerContent
+      title="IP 封禁"
+      closable
+      :body-content-style="{ padding: '0' }"
+      :header-style="sheetHeaderStyle"
+    >
       <div class="ban-body">
         <section class="ban-create">
           <div class="ban-create-head">

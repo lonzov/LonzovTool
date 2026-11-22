@@ -1,5 +1,5 @@
 ﻿<script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   NDrawer,
@@ -13,9 +13,11 @@ import {
 import { ArrowClockwise24Regular, Clock24Regular } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
+import SheetHandle from '../../components/ui/SheetHandle.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { useIsMobile } from '../../composables/useIsMobile.js'
+import { useMobileSheet } from '../../composables/useMobileSheet.js'
 import { consoleFetch } from '../consoleRequest.js'
 
 const TASKS_URL = '/api/v1/console/system/tasks'
@@ -46,6 +48,8 @@ const route = useRoute()
 const router = useRouter()
 const message = useMessage()
 const { isMobile } = useIsMobile()
+const { mobile, sheetPlacement, sheetWidth, sheetHeight, sheetHeaderStyle, sheetStyle } =
+  useMobileSheet(isMobile, { width: 560 })
 
 const tasks = ref([])
 const loading = ref(false)
@@ -254,6 +258,14 @@ function formatDuration(run) {
   return `${Math.max(1, Math.round(end - start))}s`
 }
 
+/* 抽屉是页面级浮层：换页后收起，免得它继续盖在新页面上 */
+watch(
+  () => route.fullPath,
+  () => {
+    if (drawerVisible.value) drawerVisible.value = false
+  },
+)
+
 onMounted(load)
 </script>
 
@@ -350,11 +362,23 @@ onMounted(load)
 
     <NDrawer
       v-model:show="drawerVisible"
-      placement="right"
-      :width="isMobile ? '100%' : 560"
+      :placement="sheetPlacement"
+      :width="sheetWidth"
+      :height="sheetHeight"
+      :style="sheetStyle"
       :auto-focus="false"
     >
-      <NDrawerContent :title="drawerTitle" closable :body-content-style="{ padding: '0' }">
+      <SheetHandle
+        v-if="mobile"
+        :show="drawerVisible"
+        @close="drawerVisible = false"
+      />
+      <NDrawerContent
+        :title="drawerTitle"
+        closable
+        :body-content-style="{ padding: '0' }"
+        :header-style="sheetHeaderStyle"
+      >
         <div v-if="detailTask" class="drawer-body">
           <section class="drawer-section">
             <p class="drawer-desc">{{ detailTask.description }}</p>

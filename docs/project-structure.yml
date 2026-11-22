@@ -13,6 +13,7 @@ src:
       AppButton.vue: 通用按钮组件，variant/tone/size/shape/icon/loading/disabled/countdown-progress 统一由主题 token 驱动，支持 icon-only 与 RouterLink
       AppModal.vue: 全站统一的模态框外壳（宽度/紧凑高度/毛玻璃遮罩/页脚按钮），事件一律透传
       InputOtp.vue: 分格验证码输入（单隐藏输入 + 装饰槽位），对齐 shadcn 的 InputOTP 观感
+      SheetHandle.vue: 底部抽屉顶部抓手，按住向下拖可收起抽屉，只在移动端渲染
     PromoCarousel.vue: 首页推广位轮播组件，滑片数据取自 promoData（接口下发，快照兜底），滑片支持站内外链接
     AppMenu.vue: 侧边栏导航菜单，分固定栏与分类栏两段，分类栏内容由页面模块接管（未接管时回落首页工具分类）、换源时交叉淡入淡出，分类栏分组随当前页自动展开并高亮，含 PWA 安装入口
     DonateCard.vue: 打赏收款码卡片，含三平台切换 + 爱发电按钮
@@ -154,6 +155,7 @@ src:
     useIsMobile.js: 窄屏断点判定（matchMedia，771px），抽屉与浮窗按它切铺满/定宽
     useLocalStats.js: 本地使用统计（首次打开时间、工具使用次数、导航次数）
     useMenuSwipe.js: 移动端抽屉的横向滑动手势（右滑开、左滑关），全屏起手 + 方向角度锁，自动避让横向滚动与 JS 手势区
+    useMobileSheet.js: 抽屉的移动端/桌面端布局绑定，移动端统一从底部升起，桌面端沿用各抽屉原方向与宽度
     useMotion.js: 减少动态效果开关状态，落 data-motion 属性供全站按需削减动效
     useMouseGlow.js: 卡片边框高光平滑跟随鼠标效果（lerp 插值）
     useOfficialDomainCheck.js: 非官方站点检测，URL 域名非 tool.lonzov.top（排除本地开发环境）时返回 true，用于注入红色警告横幅

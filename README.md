@@ -86,6 +86,14 @@
 - **触发时机**：`router.afterEach` 中 `nextTick` 触发，等新页面 DOM 更新完再滚，避免"旧页面一边滚动一边被换掉"。
 - **浏览器 scrollRestoration 禁用**：在 `main.js` 中设置 `history.scrollRestoration = 'manual'`。该 API 只管 window 滚动，对上述两个容器均无影响，返回键位置同样由 `handleRouteChange` 处理。
 
+### 移动端抽屉形态
+
+- **统一底部抽屉**：内容类抽屉（反馈、控制台各详情与设置抽屉）在移动端一律从底部升起，顶部固定留 64px 露出页面；桌面端仍按各自原方向（多为右侧）与宽度停靠。方向、宽高与面板外观由 `useMobileSheet` 统一给出，`SheetHandle` 提供顶部抓手与下拉收起。
+- **导航侧边栏例外**：移动端导航是侧边栏而非内容抽屉，保持左侧滑出与 220px 宽度，不套用这套底部抽屉形态。
+- **抓手手势**：只在抓手上接管指针事件，抽屉内容的滚动不受影响；拖拽写的是 `.n-drawer` 的行内 transform，下次打开前复位，避免压过抽屉自身的进出场过渡。
+- **关闭路径**：下拉抓手（超过 80px）、点上方遮罩、点关闭按钮。
+- **抽屉不跨页**：路由变化后抽屉立即收起，避免系统返回等换页操作后浮层盖在新页面上。
+
 ### SEO Head 管理
 
 - **目的**：每个路由页面在预渲染时输出正确的 `<title>`、`<meta name="description">`、`<meta name="keywords">`、canonical、Open Graph、Twitter Card 标签，提升搜索引擎收录和社交分享效果。

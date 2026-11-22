@@ -19,7 +19,9 @@ import {
   Send24Regular,
 } from '@vicons/fluent'
 import { useFeedbackDrawer } from '../composables/useFeedbackDrawer.js'
+import { useMobileSheet } from '../composables/useMobileSheet.js'
 import AppButton from './ui/AppButton.vue'
+import SheetHandle from './ui/SheetHandle.vue'
 import { confirmDialog } from '../composables/useConfirm.js'
 import { GEETEST_CAPTCHA_ID, GEETEST_SCRIPT_URL } from '../constants/geetest.js'
 import TurnstileFallback from './TurnstileFallback.vue'
@@ -132,13 +134,15 @@ let draftRestored = false
 let captchaSetupStarted = false
 let imageSeq = 0
 
-const drawerStyle = computed(() => ({
-  background: 'var(--background)',
-  borderLeft: '1px solid var(--border)',
-  boxShadow: 'var(--shadow-drawer)',
-  // 移动端铺满整屏，去掉左圆角，免得屏边露出下层页面
-  ...(props.isMobile ? { borderTopLeftRadius: '0', borderBottomLeftRadius: '0' } : {}),
-}))
+const { mobile, sheetPlacement, sheetWidth, sheetHeight, sheetHeaderStyle, sheetStyle } =
+  useMobileSheet(() => props.isMobile, {
+    width: 640,
+    desktopStyle: {
+      background: 'var(--background)',
+      borderLeft: '1px solid var(--border)',
+      boxShadow: 'var(--shadow-drawer)',
+    },
+  })
 
 const rules = {
   title: { required: true, message: '请用一句话说清哪里不对', trigger: ['input', 'blur'] },
@@ -591,6 +595,15 @@ watch(showFeedbackDrawer, (show) => {
   }
 })
 
+/* 抽屉是盖在页面上的浮层，页面在它背后换掉（系统返回、外部跳转）就必须收起：
+   否则会盖着新页面，还带着上一页的填写上下文 */
+watch(
+  () => route.fullPath,
+  () => {
+    if (showFeedbackDrawer.value) showFeedbackDrawer.value = false
+  },
+)
+
 onMounted(() => {
   document.addEventListener('paste', onPaste)
 })
@@ -608,16 +621,19 @@ onBeforeUnmount(() => {
 <template>
   <NDrawer
     :show="showFeedbackDrawer"
-    placement="right"
-    :width="isMobile ? '100%' : 640"
+    :placement="sheetPlacement"
+    :width="sheetWidth"
+    :height="sheetHeight"
     :z-index="2100"
-    :style="drawerStyle"
+    :style="sheetStyle"
     @update:show="showFeedbackDrawer = $event"
   >
+    <SheetHandle v-if="mobile" :show="showFeedbackDrawer" @close="showFeedbackDrawer = false" />
     <NDrawerContent
       title="建议反馈"
       closable
       :body-content-style="{ padding: '0' }"
+      :header-style="sheetHeaderStyle"
     >
       <div class="fb-body">
       <div v-if="mode === 'success'" class="fb-done">

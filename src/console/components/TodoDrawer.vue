@@ -1,6 +1,6 @@
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { NDrawer, NDrawerContent, NIcon } from 'naive-ui'
 import {
   Bug24Regular,
@@ -10,6 +10,8 @@ import {
   Send24Regular,
 } from '@vicons/fluent'
 import { useIsMobile } from '../../composables/useIsMobile.js'
+import { useMobileSheet } from '../../composables/useMobileSheet.js'
+import SheetHandle from '../../components/ui/SheetHandle.vue'
 
 /* 待办抽屉：概览上的卡片只留总数，要点开才知道具体是哪几件事。
    数据由概览页一次取回（后端已合并排序），这里只负责呈现与跳转。 */
@@ -25,7 +27,25 @@ const props = defineProps({
 const emit = defineEmits(['update:show'])
 
 const router = useRouter()
+const route = useRoute()
 const { isMobile } = useIsMobile()
+const { mobile, sheetPlacement, sheetWidth, sheetHeight, sheetHeaderStyle, sheetStyle } =
+  useMobileSheet(isMobile, {
+    width: 640,
+    desktopStyle: {
+      background: 'var(--background)',
+      borderLeft: '1px solid var(--border)',
+      boxShadow: 'var(--shadow-drawer)',
+    },
+  })
+
+/* 抽屉是页面级浮层：换页后收起，免得它继续盖在新页面上 */
+watch(
+  () => route.fullPath,
+  () => {
+    if (props.show) emit('update:show', false)
+  },
+)
 
 const KIND_LABELS = { bug: 'BUG', suggestion: '建议', reminder: '提醒' }
 const KIND_ICONS = {
@@ -35,13 +55,6 @@ const KIND_ICONS = {
 }
 const KIND_TONES = { bug: 'danger', suggestion: 'info', reminder: 'warn' }
 const PRIORITY_LABELS = { urgent: '紧急', attention: '注意', duplicate: '重复' }
-
-const drawerStyle = computed(() => ({
-  background: 'var(--background)',
-  borderLeft: '1px solid var(--border)',
-  boxShadow: 'var(--shadow-drawer)',
-  ...(isMobile.value ? { borderTopLeftRadius: '0', borderBottomLeftRadius: '0' } : {}),
-}))
 
 const total = computed(() =>
   Object.values(props.counts).reduce((sum, value) => sum + (Number(value) || 0), 0),
@@ -101,13 +114,20 @@ function open(item) {
 <template>
   <NDrawer
     :show="show"
-    placement="right"
-    :width="isMobile ? '100%' : 640"
+    :placement="sheetPlacement"
+    :width="sheetWidth"
+    :height="sheetHeight"
+    :style="sheetStyle"
     :z-index="2100"
-    :style="drawerStyle"
     @update:show="emit('update:show', $event)"
   >
-    <NDrawerContent title="待办事项" closable :body-content-style="{ padding: '0' }">
+    <SheetHandle v-if="mobile" :show="show" @close="emit('update:show', false)" />
+    <NDrawerContent
+      title="待办事项"
+      closable
+      :body-content-style="{ padding: '0' }"
+      :header-style="sheetHeaderStyle"
+    >
       <div class="todo-body">
         <div class="todo-summary">
           <span class="todo-total">{{ total }}</span>
