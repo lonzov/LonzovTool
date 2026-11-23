@@ -41,6 +41,8 @@ const lightTokens = {
   'glass-border': alpha(neutral[200], 0.5),
   // 浮层毛玻璃：下拉/选择/级联菜单。比头部更通透，让底下元素隐约可见
   'popover-glass': alpha(neutral[0], 0.7),
+  // 毛玻璃浮层的描边：底色半透明，边框必须自身实色，否则会直接透出背后的内容
+  'popover-glass-border': neutral[200],
 
   // 反色块
   primary: neutral[850],
@@ -94,6 +96,7 @@ const darkTokens = {
   'glass-background': alpha(neutral[850], 0.75),
   'glass-border': alpha(neutral[700], 0.5),
   'popover-glass': alpha(neutral[825], 0.72),
+  'popover-glass-border': neutral[700],
 
   primary: neutral[175],
   'primary-foreground': neutral[850],

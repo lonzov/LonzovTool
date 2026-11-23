@@ -554,7 +554,7 @@ button {
 .n-base-select-menu,
 .n-dropdown-menu,
 .n-cascader-menu {
-  border: 1px solid var(--border) !important;
+  border: 1px solid var(--popover-glass-border) !important;
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
 }
@@ -592,7 +592,7 @@ button {
   position: absolute;
   inset: -1px;
   z-index: -1;
-  border: 1px solid var(--border);
+  border: 1px solid var(--popover-glass-border);
   border-radius: inherit;
   background-color: var(--n-color);
   -webkit-backdrop-filter: blur(20px);

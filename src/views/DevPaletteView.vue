@@ -87,7 +87,7 @@ const TOKEN_GROUPS = [
   { title: '边框与分割线', keys: ['border', 'border-strong', 'input'] },
   { title: '叠层', keys: ['accent', 'ripple', 'ring'] },
   { title: '滚动条', keys: ['scrollbar', 'scrollbar-hover'] },
-  { title: '毛玻璃（浮层与移动端头部）', keys: ['glass-background', 'glass-border', 'popover-glass'] },
+  { title: '毛玻璃（浮层与移动端头部）', keys: ['glass-background', 'glass-border', 'popover-glass', 'popover-glass-border'] },
   { title: '反色块', keys: ['primary', 'primary-foreground'] },
   {
     title: '强调色',

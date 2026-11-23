@@ -35,7 +35,7 @@ token 生成的 CSS 由 `vite.config.js` 的 `injectThemeTokens` 插件以 `head
 
 **不要**在组件里另调一个灰阶。底色（`--background` / `--card` / `--popover` / `--muted`）、反色块（`--primary`）、强调色（`--highlight` 高亮 / `--destructive` 危险 / `--warning` 警告 / `--success` 成功）用实色 —— 它们一旦半透明，叠层之间会互相透视，层级会失控。
 
-毛玻璃是唯一受控的例外：`--glass-background`（移动端头部与抽屉标题栏）与 `--popover-glass`（下拉/选择/级联菜单）本身就是半透明底色，由 `main.css` 的 `backdrop-filter` 配合使用。需要新的玻璃面时改这两个 token，不要在组件里写 alpha；不支持背景模糊的环境会在 `@supports` 与减少动态效果分支里回落到实色 `--popover`。
+毛玻璃是唯一受控的例外：`--glass-background`（移动端头部与抽屉标题栏）与 `--popover-glass`（下拉/选择/级联菜单）本身就是半透明底色，由 `main.css` 的 `backdrop-filter` 配合使用。浮层的描边用实色 `--popover-glass-border` —— 毛玻璃上的边框若带透明度，会直接透出背后的内容。需要新的玻璃面时改这几个 token，不要在组件里写 alpha；不支持背景模糊的环境会在 `@supports` 与减少动态效果分支里回落到实色 `--popover`。
 
 强调色共四类，每类都有配套的 `-foreground`：项目没有主题色，彩色只用于传达状态，不做装饰。
 
