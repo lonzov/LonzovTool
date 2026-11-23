@@ -6,6 +6,7 @@
         trigger="click"
         size="small"
         :options="kindDropdownOptions"
+        :menu-props="nestedMenuProps"
         @select="handleKindSelect"
       >
         <div class="kind-trigger">
@@ -177,6 +178,9 @@ import {
   newPermMovement,
 } from '../composables/useState.js'
 import { confirmAdd, cancelAdd, openHasitemAddModal, openHaspermissionAddModal, openCoordCalcModal, commitCurrentState } from '../composables/useParams.js'
+
+// 参数类型菜单带二级分类，父级与子菜单共用一组毛玻璃样式（见 main.css）
+const nestedMenuProps = () => ({ class: 'nested-glass-menu' })
 
 const addingKindEditor = computed(() => {
   if (newKind.value === 'custom') return 'text'

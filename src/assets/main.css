@@ -116,6 +116,12 @@ html[data-motion='reduced'] .n-cascader-menu {
   background-color: var(--popover) !important;
 }
 
+html[data-motion='reduced'] .nested-glass-menu::before {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-color: transparent !important;
+}
+
 /* 模态框的毛玻璃层整个隐掉 */
 html[data-motion='reduced'] .app-modal-blur {
   display: none !important;
@@ -543,9 +549,7 @@ button {
    模糊只能写在这里：菜单被 teleport 到 body，组件作用域够不到，Naive 也没有
    为 backdrop-filter 开放主题变量。描边一并收口，避免每个用到下拉的组件各写一遍。
 
-   不要给浮层再做二级菜单：Naive 的下拉子菜单是父菜单的 DOM 子节点，父元素自身带
-   backdrop-filter 会形成 backdrop root，子菜单只能采样父元素、采不到页面，结果就是
-   子级"没糊"。站内搜索栏的搜索方式已改用级联 —— 它的多列在同一块面板里，没有这个问题。 */
+   带二级菜单的父级不能直接用元素自身的 backdrop-filter，见下方「二级下拉的父级菜单」。 */
 .n-select-menu,
 .n-base-select-menu,
 .n-dropdown-menu,
@@ -563,6 +567,44 @@ button {
   .n-cascader-menu {
     background-color: var(--popover) !important;
   }
+
+  .nested-glass-menu::before {
+    background-color: var(--popover) !important;
+  }
+}
+
+/* ===== 二级下拉的父级菜单 =====
+   Naive 把子菜单渲染成父菜单的 DOM 子节点：父级自身带 backdrop-filter 会形成 backdrop root，
+   子菜单只能采样父元素、采不到页面，于是子级看起来"没糊"。把这类菜单的底色与模糊挪到
+   不参与后代链的伪元素上，每一级就都能各自对页面取景。
+   描边一并挪到伪元素：底色只铺到内边距盒，边框若留在元素上会直接压在页面内容上、
+   看起来像透明线；放到同层后与其它浮层一样有底色垫着。
+   目前只有选择器参数编辑器的参数类型菜单带二级。 */
+.nested-glass-menu {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.nested-glass-menu::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border: 1px solid var(--border);
+  border-radius: inherit;
+  background-color: var(--n-color);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  pointer-events: none;
+}
+
+/* 进出场动画期间菜单自身带 opacity，同样会切断伪元素的取样，这段时间改由元素自身模糊；
+   减少动态效果时不启用。 */
+html:not([data-motion='reduced']) .nested-glass-menu[class*='transition-'] {
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 /* ===== 紧凑级联菜单 =====
