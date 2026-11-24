@@ -15,13 +15,14 @@ function onShowChange(visible) {
     title="导入指令"
     :max-width="520"
     content-scrollable
+    animated
     :actions="[
       { text: '取消', variant: 'outline', onClick: closeImport },
       { text: '解析', variant: 'fill', onClick: parseImport },
     ]"
     @update:show="onShowChange"
   >
-    <p class="import-hint">粘贴 tellraw 或 titleraw 指令（开头可加 / 或不加），自动解析 JSON 部分</p>
+
     <textarea
       v-model="importText"
       class="import-textarea"
@@ -34,11 +35,7 @@ function onShowChange(visible) {
 </template>
 
 <style scoped>
-.import-hint {
-  font-size: 12px; color: var(--muted-foreground);
-  margin-bottom: 10px; line-height: 1.5;
-  transition: color 0.4s ease;
-}
+
 .import-textarea {
   width: 100%; min-height: 160px;
   padding: 8px 12px;
@@ -55,7 +52,7 @@ function onShowChange(visible) {
 .import-error {
   margin-top: 10px; padding: 8px 12px;
   background: var(--muted); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); font-size: 12px; color: var(--muted-foreground);
+  border-radius: var(--radius-sm); font-size: 12px; color: var(--destructive);
   /* JSON 报错是「诊断 + 位置」两行，靠换行断句 */
   white-space: pre-line; word-break: break-all;
   transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;

@@ -24,7 +24,7 @@ import { jsonFormatted, formatJson, minifyJson } from '../../composables/useRawJ
   padding: 4px 8px;
   border: none; background: transparent;
   color: var(--muted-foreground);
-  font-size: 11px; font-weight: 500;
+  font-size: 12px; font-weight: 500;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-family: inherit;

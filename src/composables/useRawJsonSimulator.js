@@ -37,6 +37,14 @@ export const simulatorSummary = computed(() => {
   return `${sim.player} · 缺失 ${sim.missing} · ${sim.scores.length} 条记分板`
 })
 
+/** 预览参数偏离默认值：入口上标个点，避免用户忘了预览用的不是默认身份 */
+export const simCustomized = computed(() => (
+  simulator.value.player !== 'Steve'
+  || simulator.value.missing !== '0'
+  || simTagsText.value.trim() !== ''
+  || simScores.value.length > 0
+))
+
 // ========== 持久化 ==========
 
 let saveTimer = null

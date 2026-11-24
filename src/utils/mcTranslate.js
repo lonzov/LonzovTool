@@ -64,12 +64,15 @@ export function parseLangText(text) {
   const lines = String(text).replace(/^﻿/, '').split(/\r?\n/)
   for (const line of lines) {
     const s = line.trim()
-    if (!s || s.startsWith('#')) continue
+    if (!s || s.startsWith('#') || s.startsWith('//')) continue
     const eq = line.indexOf('=')
     if (eq < 0) { skipped++; continue }
     const key = line.slice(0, eq).trim()
     if (!key) { skipped++; continue }
-    entries[key] = line.slice(eq + 1)
+    // 值终止符：资源包用「制表符 + #」把行内注释接在值后面，注释不属于词条
+    const raw = line.slice(eq + 1)
+    const cut = raw.search(/\t#/)
+    entries[key] = cut < 0 ? raw : raw.slice(0, cut)
     count++
   }
   return { entries, count, skipped, format: 'lang' }
@@ -286,8 +289,10 @@ export function resolveSelector(selector, sim) {
  * @returns {{ value: string, missing: boolean }}
  */
 export function resolveScore(scoreEl, sim) {
-  const name = String(scoreEl?.name ?? '*')
-  const objective = String(scoreEl?.objective ?? '')
+  // 调用方有的直接传元素（{ score: {...} }），有的只传 score 对象，两种都接受
+  const target = scoreEl?.score ?? scoreEl
+  const name = String(target?.name ?? '*')
+  const objective = String(target?.objective ?? '')
   const missingValue = String(sim?.missing ?? '0')
   // '*' = 该文本的阅读者自身，在模拟器里就是被模拟的玩家
   const entityName = name === '*' ? (sim?.player || '')

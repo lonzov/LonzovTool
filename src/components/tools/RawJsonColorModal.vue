@@ -1,9 +1,21 @@
 <script setup>
+import { useMessage } from 'naive-ui'
 import AppModal from '../ui/AppModal.vue'
 import {
   showColorModal, colorsStandard, colorsMaterial,
   closeColorTable, copyColorCode,
 } from '../../composables/useRawJsonEditor.js'
+
+const message = useMessage()
+
+async function onCopyColor(code, container) {
+  const copied = await copyColorCode(code, container)
+  if (copied) {
+    message.success(`已复制 §${code}`, { duration: 1200 })
+    return
+  }
+  message.error('复制失败，请手动选择颜色代码')
+}
 </script>
 
 <template>
@@ -22,7 +34,7 @@ import {
       <div class="color-grid">
         <div
           v-for="c in colorsStandard" :key="c.code"
-          class="color-item" @click="copyColorCode(c.code)"
+          class="color-item" @click="onCopyColor(c.code, $event.currentTarget)"
         >
           <div class="color-box" :style="{ backgroundColor: c.color }" />
           <div class="color-info">
@@ -40,7 +52,7 @@ import {
       <div class="color-grid">
         <div
           v-for="c in colorsMaterial" :key="c.code"
-          class="color-item" @click="copyColorCode(c.code)"
+          class="color-item" @click="onCopyColor(c.code, $event.currentTarget)"
         >
           <div class="color-box" :style="{ backgroundColor: c.color }" />
           <div class="color-info">
@@ -53,7 +65,6 @@ import {
 
     <template #footer>
       <div class="modal-actions">
-        <span class="color-footer-hint">点击颜色项可复制 § 代码</span>
         <button class="app-btn app-btn--fill" @click="closeColorTable">关闭</button>
       </div>
     </template>
@@ -61,18 +72,18 @@ import {
 </template>
 
 <style scoped>
-.color-section { margin-bottom: 16px; }
+
+.color-section { margin-bottom: 22px; }
 .color-section:last-child { margin-bottom: 0; }
 .color-section-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 8px;
 }
 .color-section-title {
-  font-size: 11px; font-weight: 600; color: var(--subtle-foreground);
-  text-transform: uppercase; letter-spacing: 0.5px;
+  font-size: 13px; font-weight: 500; color: var(--foreground);
   transition: color 0.4s ease;
 }
-.color-section-hint { font-size: 10px; color: var(--subtle-foreground); transition: color 0.4s ease; }
+.color-section-hint { font-size: 12px; color: var(--muted-foreground); transition: color 0.4s ease; }
 .color-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 @media (min-width: 480px) { .color-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 640px) { .color-grid { grid-template-columns: repeat(4, 1fr); } }
@@ -96,11 +107,11 @@ import {
 .color-info { flex: 1; min-width: 0; }
 .color-code {
   font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
-  font-size: 12px; font-weight: 600; color: var(--foreground);
+  font-size: 12px; font-weight: 500; color: var(--foreground);
   transition: color 0.4s ease;
 }
-.color-name { font-size: 10px; color: var(--subtle-foreground); display: block; transition: color 0.4s ease; }
-.color-footer-hint { font-size: 11px; color: var(--subtle-foreground); transition: color 0.4s ease; }
+.color-name { font-size: 11px; color: var(--muted-foreground); display: block; transition: color 0.4s ease; }
+.color-footer-hint { font-size: 12px; color: var(--muted-foreground); transition: color 0.4s ease; }
 
 /* 页脚操作按钮 (与 UpdateDialog 一致) */
 .modal-actions {

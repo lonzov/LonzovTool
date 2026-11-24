@@ -75,6 +75,37 @@ export const tempWith = ref([])
 export const deleteConfirmIdx = ref(null)
 let deleteConfirmTimer = null
 
+// ========== 桌面端就地编辑 ==========
+// 移动端仍走编辑弹窗；桌面端点击元素条就地展开编辑，字段直接写回元素对象。
+// 同一时刻只有一条处于编辑态，下标即元素在 data 中的位置。
+export const inlineIdx = ref(null)
+/** 进入就地编辑时的快照：真正发生改动才压入撤销栈，只点开看一眼不占撤销位 */
+let inlineSnapshot = null
+
+/**
+ * 最近一次新增的元素对象，列表据此播放插入动画。
+ * 不能让列表用长度差反推：撤销/导入会整体换掉元素对象，长度不变时反推会错认成首条。
+ */
+export const lastAddedEl = ref(null)
+
+/**
+ * 列表行的稳定标识。就地编辑要求 DOM 节点跟着元素对象走（切换编辑行不能重建节点），
+ * 上下交换的过渡动画也依赖节点在原地被移动，所以 v-for 的 key 必须绑定到对象本身。
+ * 用 WeakMap 而非给数据加字段：元素会整份序列化成 rawtext，不能夹带私有字段。
+ */
+const elementKeys = new WeakMap()
+let elementKeySeq = 0
+
+export function getElementKey(el) {
+  if (!el || typeof el !== 'object') return 'invalid'
+  let key = elementKeys.get(el)
+  if (key === undefined) {
+    key = ++elementKeySeq
+    elementKeys.set(el, key)
+  }
+  return key
+}
+
 // 弹窗内删除确认状态
 export const withParamConfirmIdx = ref(null)
 export const withElConfirmIdx = ref(null)
@@ -121,6 +152,7 @@ export const jsonFormatted = ref(true)
 
 // message 实例（由 useRawJsonEditor() 初始化）
 let _msg = null
+
 
 // ========== localStorage ==========
 const STORAGE_KEY = 'lonzovtool-rawjson-jzfk'
@@ -219,6 +251,7 @@ function snapshot() {
 function restoreState(json) {
   const s = JSON.parse(json)
   data.value = s.data
+  lastAddedEl.value = null
   cmdType.value = s.cmdType
   titlePos.value = s.titlePos
   targetSel.value = s.targetSel
@@ -231,10 +264,17 @@ export function pushUndo() {
   redoStack.value = []
 }
 
+/** 撤销/重做整体替换 data，就地编辑的行会失去跟踪，统一收起 */
+function exitInlineEdit() {
+  inlineIdx.value = null
+  inlineSnapshot = null
+}
+
 export function undo() {
   if (undoStack.value.length === 0) return
   redoStack.value.push(snapshot())
   restoreState(undoStack.value.pop())
+  exitInlineEdit()
   triggerSave()
 }
 
@@ -242,6 +282,7 @@ export function redo() {
   if (redoStack.value.length === 0) return
   undoStack.value.push(snapshot())
   restoreState(redoStack.value.pop())
+  exitInlineEdit()
   triggerSave()
 }
 
@@ -259,55 +300,65 @@ export const modeLabel = computed(() =>
 )
 
 // ========== 验证 ==========
-export function validate() {
+/**
+ * 单个元素的校验。每条错误带 field：界面据此把问题标到对应字段上，
+ * msg 只写规则本身，序号与位置由调用方拼（同一行里再写一遍 #N 是噪音）。
+ */
+export function validateElement(el) {
   const errors = []
-  const warnings = []
 
-  data.value.forEach((el, idx) => {
-    const num = idx + 1
+  if (!el || typeof el !== 'object' || Array.isArray(el)) {
+    return [{ field: 'element', msg: '元素必须是对象' }]
+  }
 
-    if (!el || typeof el !== 'object' || Array.isArray(el)) {
-      errors.push({ idx, msg: `#${num} 元素必须是对象` })
-      return
-    }
-
-    // 与游戏一致的元素优先级：translate > text > score > selector
-    if (el.translate !== undefined) {
-      if (typeof el.translate !== 'string') errors.push({ idx, msg: `#${num} translate 必须是字符串` })
-      else if (el.translate === '') errors.push({ idx, msg: `#${num} translate 为空` })
-      if (el.with !== undefined) {
-        if (Array.isArray(el.with)) {
-          for (let wi = 0; wi < el.with.length; wi++) {
-            if (typeof el.with[wi] !== 'string') {
-              errors.push({ idx, msg: `#${num} with[${wi}] 必须是字符串` })
-            }
+  // 与游戏一致的元素优先级：translate > text > score > selector
+  if (el.translate !== undefined) {
+    if (typeof el.translate !== 'string') errors.push({ field: 'translate', msg: '键名必须是字符串' })
+    else if (el.translate === '') errors.push({ field: 'translate', msg: '键名不能为空' })
+    if (el.with !== undefined) {
+      if (Array.isArray(el.with)) {
+        for (let wi = 0; wi < el.with.length; wi++) {
+          if (typeof el.with[wi] !== 'string') {
+            errors.push({ field: 'with', msg: `参数 ${wi + 1} 必须是字符串` })
           }
-        } else if (!el.with.rawtext || !Array.isArray(el.with.rawtext)) {
-          errors.push({ idx, msg: `#${num} with.rawtext 必须是数组` })
         }
+      } else if (!el.with.rawtext || !Array.isArray(el.with.rawtext)) {
+        errors.push({ field: 'with', msg: 'with 必须是参数数组或 rawtext 对象' })
       }
-    } else if (el.text !== undefined) {
-      if (typeof el.text !== 'string') errors.push({ idx, msg: `#${num} text 必须是字符串` })
-      else if (el.text === '') errors.push({ idx, msg: `#${num} text 为空` })
-    } else if (el.selector !== undefined) {
-      if (typeof el.selector !== 'string') errors.push({ idx, msg: `#${num} selector 必须是字符串` })
-      else if (!el.selector.match(/^@[sarpaer](\[.*\])?$/)) errors.push({ idx, msg: `#${num} selector 格式错误 (${el.selector})` })
-    } else if (el.score !== undefined) {
-      if (!el.score || typeof el.score !== 'object') {
-        errors.push({ idx, msg: `#${num} score 必须是对象` })
-      } else {
-        if (!el.score.name) errors.push({ idx, msg: `#${num} score 缺少 name 字段` })
-        if (!el.score.objective) errors.push({ idx, msg: `#${num} score 缺少 objective 字段` })
-      }
-    } else {
-      errors.push({ idx, msg: `#${num} 未知的元素类型` })
     }
-  })
+  } else if (el.text !== undefined) {
+    if (typeof el.text !== 'string') errors.push({ field: 'text', msg: '文本必须是字符串' })
+    else if (el.text === '') errors.push({ field: 'text', msg: '文本不能为空' })
+  } else if (el.selector !== undefined) {
+    if (typeof el.selector !== 'string') errors.push({ field: 'selector', msg: '选择器必须是字符串' })
+    else if (!el.selector.match(/^@[sarpaer](\[.*\])?$/)) errors.push({ field: 'selector', msg: '选择器需形如 @p 或 @a[...]' })
+  } else if (el.score !== undefined) {
+    if (!el.score || typeof el.score !== 'object') {
+      errors.push({ field: 'score', msg: '记分板必须是对象' })
+    } else {
+      if (!el.score.name) errors.push({ field: 'score.name', msg: '记分项缺少 name' })
+      if (!el.score.objective) errors.push({ field: 'score.objective', msg: '记分项缺少 objective' })
+    }
+  } else {
+    errors.push({ field: 'type', msg: '未知的元素类型' })
+  }
 
-  return { errors, warnings }
+  return errors
 }
 
+export function validate() {
+  const errors = []
+  data.value.forEach((el, idx) => {
+    for (const issue of validateElement(el)) errors.push({ idx, ...issue })
+  })
+  return { errors }
+}
+
+/** 全部校验错误。列表在展示时自己排除正在编辑的那条，编辑区按字段标红 */
 export const validationResult = computed(() => validate())
+
+/** 待修正的错误条数：顶部状态与命令卡提示共用 */
+export const errorCount = computed(() => validationResult.value.errors.length)
 
 /** 逆处理：将已处理过的文本编码回转义序列形态，用于回填编辑框 */
 export function encodeEscapes(str) {
@@ -415,6 +466,10 @@ export function getElTypeClass(el) {
   return map[getElType(el)] || 'type-err'
 }
 
+function isElement(value) {
+  return !!value && value.nodeType === 1
+}
+
 // ========== 元素操作 ==========
 export function addElement(idx = null, type = 'text') {
   insertIdx.value = idx
@@ -422,6 +477,71 @@ export function addElement(idx = null, type = 'text') {
   resetEditForm()
   editType.value = type
   showEditModal.value = true
+}
+
+/** 各类型的默认值：新增元素与就地切换类型共用 */
+export function createElement(type = 'text') {
+  switch (type) {
+    case 'selector': return { selector: '@p' }
+    case 'score': return { score: { name: '@s', objective: '' } }
+    case 'translate': return { translate: '' }
+    default: return { text: '' }
+  }
+}
+
+export function startInlineEdit(idx) {
+  if (inlineIdx.value === idx) return
+  inlineSnapshot = snapshot()
+  inlineIdx.value = idx
+}
+
+export function stopInlineEdit() {
+  if (inlineIdx.value === null) return
+  inlineIdx.value = null
+  inlineSnapshot = null
+  triggerSave()
+}
+
+export function toggleInlineEdit(idx) {
+  if (inlineIdx.value === idx) stopInlineEdit()
+  else startInlineEdit(idx)
+}
+
+/** 字段改动后调用：首次改动把进入时的快照压入撤销栈，并触发防抖持久化 */
+export function touchInline() {
+  if (inlineSnapshot) {
+    undoStack.value.push(inlineSnapshot)
+    if (undoStack.value.length > 50) undoStack.value.shift()
+    redoStack.value = []
+    inlineSnapshot = null
+  }
+  triggerSave()
+}
+
+/**
+ * 就地切换类型：保留对象身份（DOM 节点不重建，展开状态不抖），内容按新类型重置。
+ * 清空键而不是整体替换 —— 对象被替换后列表的稳定 key 会变，行会被整个重建。
+ */
+export function resetElementType(el, type) {
+  if (getElType(el) === type) return
+  touchInline()
+  for (const key of Object.keys(el)) delete el[key]
+  Object.assign(el, createElement(type))
+}
+
+/** 新增元素并直接进入就地编辑；idx 为插入位置，null 表示追加到末尾 */
+export function addInlineElement(idx = null, type = 'text') {
+  pushUndo()
+  const at = idx === null ? data.value.length : Math.min(Math.max(idx, 0), data.value.length)
+  const el = createElement(type)
+  data.value.splice(at, 0, el)
+  lastAddedEl.value = el
+  // 插入点之后的元素整体后移，正在编辑的那条跟着挪一位
+  if (inlineIdx.value !== null && inlineIdx.value >= at) inlineIdx.value++
+  inlineIdx.value = at
+  inlineSnapshot = null
+  triggerSave()
+  return at
 }
 
 export function editElement(idx) {
@@ -462,6 +582,8 @@ export function deleteElement(idx) {
     deleteConfirmIdx.value = null
     pushUndo()
     data.value.splice(idx, 1)
+    if (inlineIdx.value === idx) exitInlineEdit()
+    else if (inlineIdx.value !== null && inlineIdx.value > idx) inlineIdx.value--
     triggerSave()
   } else {
     // 第一次点击：进入确认状态
@@ -477,20 +599,21 @@ export function copyElement(idx) {
   pushUndo()
   const cloned = JSON.parse(JSON.stringify(data.value[idx]))
   data.value.splice(idx + 1, 0, cloned)
+  lastAddedEl.value = cloned
+  if (inlineIdx.value !== null && inlineIdx.value > idx) inlineIdx.value++
   triggerSave()
 }
 
 export function moveElement(idx, dir) {
+  const target = dir === 'up' ? idx - 1 : idx + 1
+  if (target < 0 || target >= data.value.length) return
   pushUndo()
-  if (dir === 'up' && idx > 0) {
-    const temp = data.value[idx]
-    data.value[idx] = data.value[idx - 1]
-    data.value[idx - 1] = temp
-  } else if (dir === 'down' && idx < data.value.length - 1) {
-    const temp = data.value[idx]
-    data.value[idx] = data.value[idx + 1]
-    data.value[idx + 1] = temp
-  }
+  const temp = data.value[idx]
+  data.value[idx] = data.value[target]
+  data.value[target] = temp
+  // 就地编辑跟着元素走：交换后两条的下标互换
+  if (inlineIdx.value === idx) inlineIdx.value = target
+  else if (inlineIdx.value === target) inlineIdx.value = idx
   triggerSave()
 }
 
@@ -537,34 +660,41 @@ export function closeEditModal() {
   clearModalConfirmStates()
 }
 
-export function saveElement() {
-  pushUndo()
-  let el
-  const type = editType.value
-  switch (type) {
-    case 'text': el = { text: processEscapes(formText.value) }; break
-    case 'selector': el = { selector: formSelector.value }; break
+/** 按当前表单值拼出元素对象：保存与弹窗内即时校验共用同一份构造规则 */
+export function buildEditElement() {
+  switch (editType.value) {
+    case 'text': return { text: processEscapes(formText.value) }
+    case 'selector': return { selector: formSelector.value }
     case 'score':
-      el = { score: { name: formScoreName.value || '@s', objective: formScoreObj.value } }
-      break
+      return { score: { name: formScoreName.value || '@s', objective: formScoreObj.value } }
     case 'translate': {
-      el = { translate: formTranslateKey.value }
+      const el = { translate: formTranslateKey.value }
       if (withMode.value === 'array') {
         // 保序且保留空串：空参数仍占一个槽位，%1/%2/%3 的对应关系才与游戏一致；
         // 首尾空格在 MC 文本里是有意义的排版，同样不做 trim
         const arr = tempWith.value.map(s => String(s ?? ''))
         if (arr.length) el.with = arr
-      } else {
-        if (withRawtext.value.length) el.with = { rawtext: withRawtext.value.map(e => ({ ...e })) }
+      } else if (withRawtext.value.length) {
+        el.with = { rawtext: withRawtext.value.map(e => ({ ...e })) }
       }
-      break
+      return el
     }
-    default: el = { text: '' }
+    default: return { text: '' }
   }
+}
+
+export function saveElement() {
+  pushUndo()
+  const el = buildEditElement()
 
   if (editIdx.value !== null) data.value[editIdx.value] = el
-  else if (insertIdx.value !== null) data.value.splice(insertIdx.value, 0, el)
-  else data.value.push(el)
+  else if (insertIdx.value !== null) {
+    data.value.splice(insertIdx.value, 0, el)
+    lastAddedEl.value = el
+  } else {
+    data.value.push(el)
+    lastAddedEl.value = el
+  }
 
   closeEditModal()
   triggerSave()
@@ -588,7 +718,7 @@ export function removeWithParam(i) {
 function buildNestedElement() {
   const type = nestedType.value
   switch (type) {
-    case 'text': return { text: nestedText.value }
+    case 'text': return { text: processEscapes(nestedText.value) }
     case 'selector': return { selector: nestedSelector.value }
     case 'score': return { score: { name: nestedScoreName.value || '@s', objective: nestedScoreObj.value } }
     case 'translate': {
@@ -606,7 +736,7 @@ function populateNestedForm(el) {
   const type = getElType(el)
   nestedType.value = type
   switch (type) {
-    case 'text': nestedText.value = el.text || ''; break
+    case 'text': nestedText.value = encodeEscapes(el.text || ''); break
     case 'selector': nestedSelector.value = el.selector || '@p'; break
     case 'score':
       nestedScoreObj.value = el.score?.objective || ''
@@ -779,6 +909,8 @@ export async function parseImport() {
     }
     pushUndo()
     data.value = valid
+    lastAddedEl.value = null
+    exitInlineEdit()
     cmdType.value = itype
     if (itype === 'titleraw' && ['actionbar', 'title', 'subtitle'].includes(pos)) titlePos.value = pos
     const presets = ['@s', '@a', '@r', '@p', '@e']
@@ -794,22 +926,18 @@ export async function parseImport() {
 export function openColorTable() { showColorModal.value = true }
 export function closeColorTable() { showColorModal.value = false }
 
-export async function copyColorCode(code) {
-  const copied = await copyText('§' + code)
-  if (!_msg) return
-  if (copied) _msg.success(`已复制 §${code}`, { duration: 1200 })
-  else _msg.error('复制失败，请手动选择', { duration: 1800 })
+/** 复制 § 颜色代码；成败交给调用方就地反馈 */
+export async function copyColorCode(code, container) {
+  return copyText('§' + code, { container: isElement(container) ? container : undefined })
 }
 
 // ========== 工具操作 ==========
 export function formatJson() { jsonFormatted.value = true }
 export function minifyJson() { jsonFormatted.value = false }
 
-export async function copyCommand() {
-  const copied = await copyText(commandOutput.value)
-  if (!_msg) return
-  if (copied) _msg.success('命令已复制', { duration: 1800 })
-  else _msg.error('复制失败，请手动选择', { duration: 1800 })
+/** 复制命令；成败交给调用方就地反馈 */
+export async function copyCommand(container) {
+  return copyText(commandOutput.value, { container: isElement(container) ? container : undefined })
 }
 
 export async function clearAll() {
@@ -821,7 +949,7 @@ export async function clearAll() {
     danger: true,
   })
   if (!confirmed) return
-  pushUndo(); data.value = []; triggerSave()
+  pushUndo(); data.value = []; lastAddedEl.value = null; exitInlineEdit(); triggerSave()
 }
 
 export function loadExample() {
@@ -830,24 +958,30 @@ export function loadExample() {
     { text: '§e欢迎, ' }, { selector: '@p' },
     { text: ' §7| 金币: ' }, { score: { name: '*', objective: 'coin' } },
   ]
-  cmdType.value = 'titleraw'; titlePos.value = 'actionbar'; triggerSave()
+  lastAddedEl.value = null
+  cmdType.value = 'titleraw'; titlePos.value = 'actionbar'; exitInlineEdit(); triggerSave()
 }
 
 export function onTargetSelChange() { triggerSave() }
 
 // ========== 组合式函数入口 ==========
 export function useRawJsonEditor() {
-  // 捕获 message 实例（必须在 setup 期间调用）
+  // 捕获 message / notification 实例（必须在 setup 期间调用）
   _msg = useMessage()
 
   onMounted(() => { loadFromStorage() })
-  onBeforeUnmount(() => { persistNow(); clearTimeout(saveTimer) })
+  onBeforeUnmount(() => {
+    persistNow()
+    clearTimeout(saveTimer)
+    // 就地编辑属于视图态，模块级状态不随组件卸载清空，重新进入时必须收起
+    exitInlineEdit()
+  })
 
   return {
     // 状态
     data, cmdType, titlePos, targetSel, targetCustom,
     undoStack, redoStack,
-    editIdx, insertIdx, tempWith, deleteConfirmIdx,
+    editIdx, insertIdx, tempWith, deleteConfirmIdx, inlineIdx,
     withParamConfirmIdx, withElConfirmIdx, nestedWithParamConfirmIdx,
     showEditModal, showImportModal, showColorModal,
     editType, formText, formSelector, formScoreObj, formScoreName, formTranslateKey,
@@ -857,14 +991,17 @@ export function useRawJsonEditor() {
     importText, importError,
     jsonFormatted,
     // 计算属性
-    isTitle, targetValue, elementCount, validationResult,
+    isTitle, targetValue, elementCount, validationResult, errorCount,
     previewHtml, jsonOutput, commandOutput, cmdLength, modeLabel,
     // 函数
     pushUndo, undo, redo, triggerSave,
     validate,
-    getElType, getElTypeLabel, getElPreviewText, getElTypeClass,
+    getElType, getElTypeLabel, getElPreviewText, getElTypeClass, getElementKey,
     addElement, editElement, deleteElement, copyElement, moveElement,
+    createElement, startInlineEdit, stopInlineEdit, toggleInlineEdit,
+    touchInline, resetElementType, addInlineElement,
     resetEditForm, closeEditModal, saveElement, addWithParam, removeWithParam,
+    validateElement, buildEditElement,
     startNestedEdit, saveNestedEdit, cancelNestedEdit, deleteWithEl, moveWithEl,
     addNestedWithParam, removeNestedWithParam, addNestedWithRawtextEl,
     startNestedWithEdit, saveNestedWithEdit, deleteNestedWithEl,

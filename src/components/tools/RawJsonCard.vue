@@ -27,10 +27,7 @@ defineProps({
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   padding: 16px;
-  transition:
-    background-color 0.4s ease,
-    border-color 0.4s ease,
-    padding 0.28s cubic-bezier(0.2, 0, 0, 1);
+  transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
 /* 减少动态效果：折叠时内边距直接到位。只摘掉 padding，
@@ -47,8 +44,7 @@ html[data-motion='reduced'] .output-card {
   margin-bottom: 10px;
 }
 .output-card-title {
-  font-size: 11px; font-weight: 700; color: var(--foreground);
-  text-transform: uppercase; letter-spacing: 0.5px;
+  font-size: 13px; font-weight: 500; color: var(--foreground);
   transition: color 0.4s ease;
 }
 </style>

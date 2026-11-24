@@ -12,6 +12,7 @@ src:
     ui:
       AppButton.vue: 通用按钮组件，variant/tone/size/shape/icon/loading/disabled/countdown-progress 统一由主题 token 驱动，支持 icon-only 与 RouterLink
       AppModal.vue: 全站统一的模态框外壳（宽度/紧凑高度/毛玻璃遮罩/页脚按钮），事件一律透传
+      AppScrollbar.vue: 浮层滚动条
       InputOtp.vue: 分格验证码输入（单隐藏输入 + 装饰槽位），对齐 shadcn 的 InputOTP 观感
       SheetHandle.vue: 底部抽屉顶部抓手，按住向下拖可收起抽屉，只在移动端渲染
     PromoCarousel.vue: 首页推广位轮播组件，滑片数据取自 promoData（接口下发，快照兜底），滑片支持站内外链接
@@ -53,19 +54,23 @@ src:
       TrAnimationTool.vue: T显动画编辑器工具页
       ExecuteTool.vue: 语法转换工具页
       FuhaoTool.vue: 特殊符号工具页
-      RawJsonTool.vue: T显可视化编辑器（主组件），按自身可用宽度在桌面双栏与紧凑单栏间切换
-      RawJsonConfigBar.vue: T显编辑器桌面布局左栏：配置 + 工具栏 + 元素列表
+      RawJsonTool.vue: T显可视化编辑器（主组件）
+      RawJsonToolBar.vue: T显编辑器桌面端顶栏：标题、指令摘要、撤销重做、导入与设置
       RawJsonConfigCard.vue: T显编辑器：指令类型/显示位置/目标配置卡
-      RawJsonListCard.vue: T显编辑器：元素列表卡片外壳，紧凑布局下添加入口移到列表末尾
+      RawJsonListCard.vue: T显编辑器：元素列表卡片外壳
+      RawJsonQuickAdd.vue: T显编辑器：元素面板顶部的四类快捷添加入口
       RawJsonElementList.vue: T显编辑器：元素节点列表
-      RawJsonPreviewCard.vue: T显编辑器：预览卡，紧凑布局下底部附编辑快捷栏，JSON 模式改渲染 JSON 文本
-      RawJsonPreviewBox.vue: T显编辑器：游戏渲染舞台（深底 + § 颜色代码渲染）
+      RawJsonInlineEditor.vue: T显编辑器：桌面端就地编辑器
+      RawJsonSplitHandle.vue: T显编辑器：分栏分隔条
+      RawJsonPreviewCard.vue: T显编辑器：预览卡
+      RawJsonPreviewBox.vue: T显编辑器：游戏渲染舞台
       RawJsonFormatToggle.vue: T显编辑器：JSON 格式化/压缩二选一按钮组
       RawJsonCard.vue: T显编辑器：卡片外壳（底色/描边/标题行），预览与输出三类卡共用
       RawJsonOutputCard.vue: T显编辑器：JSON 输出卡，JSON 模式下换成游戏渲染
-      RawJsonCommandCard.vue: T显编辑器：命令输出卡 + 复制命令
+      RawJsonCommandCard.vue: T显编辑器：命令输出卡（字符数 + 复制命令）
+      RawJsonSettingsDrawer.vue: T显编辑器桌面端：右侧设置抽屉（指令配置/工具/来源说明）
       RawJsonSettingsSheet.vue: T显编辑器紧凑布局：底部设置面板（配置/导入/语言包/清空/输出）
-      RawJsonEditModal.vue: T显编辑器：编辑/添加元素弹窗
+      RawJsonEditModal.vue: T显编辑器移动端：编辑/添加元素弹窗
       RawJsonImportModal.vue: T显编辑器：导入指令弹窗
       RawJsonColorModal.vue: T显编辑器：颜色参考表弹窗
       RawJsonLangModal.vue: T显编辑器：语言包管理弹窗（导入/切换/重命名/删除）
@@ -162,6 +167,7 @@ src:
     usePrivacyModal.js: 隐私弹窗状态共享组合式函数
     usePWAInstall.js: PWA 安装状态管理与安装触发，处理不同系统/浏览器的安装逻辑
     useRawJsonEditor.js: T显编辑器核心状态与逻辑（模块级单例）
+    useRawJsonLayout.js: T显编辑器桌面端分栏尺寸：宽度按像素、上下分栏按比例，含越界收口与 localStorage 持久化（模块级单例）
     useRawJsonLang.js: T显编辑器语言包状态与 localforage(IndexedDB) 持久化（模块级单例）
     useRawJsonSimulator.js: T显编辑器预览模拟器状态与 localStorage 持久化（模块级单例）
     useRawJsonRenderMode.js: T显编辑器渲染模式（游戏 / JSON）状态与 localStorage 持久化（模块级单例）
@@ -186,6 +192,9 @@ src:
     mcTranslate.js: 基岩版翻译键渲染内核（.lang/JSON 解析、占位符算法、selector/score 求值），纯函数无框架依赖
     mcTextRender.js: rawtext 元素与 § 格式化文本到 HTML 的渲染内核，语言包与模拟器由调用方传入，无框架依赖但经 mcfc 渲染器依赖 DOM
     scrollToTop.js: 回顶的物理缓动
+    listMotion.js: 列表行的增删与上下交换过渡（高度收放、FLIP 位移、层次淡化），元素条与翻译键内部列表共用
+    zip.js: 最小 ZIP 只读解析（中央目录 + store/deflate），供资源包导入读取内部文件
+    langPackFile.js: 语言包文件读取
     scrollToElement.js: 元素滚动定位到顶部对齐位置（带顶部留白与移动端 Chrome 重复滚动失效的规避）
     clipboard.js: 写剪贴板，非安全上下文下退回 execCommand，全站复制入口共用
     toolLogo.js: 工具卡片 logo 渲染，图标名与图片两种来源，标签栏下拉菜单与侧边栏共用

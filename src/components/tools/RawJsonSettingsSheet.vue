@@ -232,9 +232,8 @@ html[data-motion='reduced'] .rj-settings-drawer .n-drawer {
 }
 .sheet-label {
   display: block;
-  font-size: 11px; font-weight: 600;
-  color: var(--subtle-foreground);
-  text-transform: uppercase; letter-spacing: 0.5px;
+  font-size: 12px; font-weight: 400;
+  color: var(--muted-foreground);
   margin-bottom: 6px;
   transition: color 0.4s ease;
 }

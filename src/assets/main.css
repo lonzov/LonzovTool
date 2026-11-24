@@ -534,6 +534,27 @@ button {
   opacity: 1 !important;
 }
 
+/* ===== 元素类型标记 =====
+   元素条行首那枚类型色：底色取语义色低比例混入，文字取语义色与前景色混合，
+   深浅色下都能读。元素列表、就地编辑器的嵌套行、移动端编辑弹窗共用这一套。 */
+.type-text {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+.type-sel,
+.type-scr,
+.type-trn {
+  background: color-mix(in srgb, var(--type-color) 18%, transparent);
+  color: color-mix(in srgb, var(--type-color) 62%, var(--foreground));
+}
+.type-sel { --type-color: var(--highlight); }
+.type-scr { --type-color: var(--success); }
+.type-trn { --type-color: var(--warning); }
+.type-err {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
 /* ===== Naive 内部元素的胶囊圆角 =====
    开关的轨道/滑块与轮播指示点，半径是 50% 或 9999px，恰好落在
    「2 × radius == 短边」的临界点上 —— 不加回退，平滑曲率会把形状挤垮。

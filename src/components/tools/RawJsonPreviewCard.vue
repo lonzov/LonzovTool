@@ -2,15 +2,15 @@
 import { computed } from 'vue'
 import { NIcon } from 'naive-ui'
 import {
-  Person24Regular, Color24Regular, BookOpen48Regular,
+  Person24Regular, Color24Regular, BookOpen48Regular, LocalLanguage24Regular,
   ArrowUndo24Regular, ArrowRedo24Regular,
 } from '@vicons/fluent'
+import AppButton from '../ui/AppButton.vue'
 import {
-  modeLabel, cmdLength, jsonOutput, undoStack, redoStack,
-  undo, redo, openColorTable, loadExample,
+  jsonOutput, undoStack, redoStack, undo, redo, openColorTable, loadExample,
 } from '../../composables/useRawJsonEditor.js'
-import { openSimModal } from '../../composables/useRawJsonSimulator.js'
-import { activePackName } from '../../composables/useRawJsonLang.js'
+import { openSimModal, simCustomized } from '../../composables/useRawJsonSimulator.js'
+import { openLangModal, activePackName } from '../../composables/useRawJsonLang.js'
 import { renderMode } from '../../composables/useRawJsonRenderMode.js'
 import RawJsonCard from './RawJsonCard.vue'
 import RawJsonPreviewBox from './RawJsonPreviewBox.vue'
@@ -22,47 +22,55 @@ const props = defineProps({
    * 并去掉脚注那行状态文本。
    */
   compact: { type: Boolean, default: false },
-  /**
-   * 全屏编辑态：外层容器高度收到 0。卡片同步撤掉内边距与快捷栏，收缩过程才不会
-   * 被快捷栏的最小高度顶住、露出它而不是预览内容。
-   */
-  collapsed: { type: Boolean, default: false },
+
 })
 
 /** JSON 模式下大区域改渲染 JSON 文本，游戏渲染退到设置面板里的输出卡 */
 const showJson = computed(() => props.compact && renderMode.value === 'json')
-/** 紧凑布局的游戏渲染没有标题行，高度全留给内容 */
-const cardTitle = computed(() => (props.compact ? (showJson.value ? 'JSON' : '') : '预览'))
+/** 紧凑布局的游戏渲染没有标题行，高度全留给内容；桌面端始终标出这是游戏渲染 */
+const cardTitle = computed(() => (props.compact ? (showJson.value ? 'JSON' : '') : '游戏渲染'))
 </script>
 
 <template>
   <RawJsonCard
     :title="cardTitle"
-    :stretch="compact"
-    :class="{ 'output-card--collapsed': collapsed }"
+    stretch
+
   >
     <template #actions>
       <div v-if="!compact" class="preview-header-actions">
-        <span class="output-card-badge">{{ modeLabel }}</span>
-        <button class="preview-icon-btn" title="预览模拟器（玩家名 / 记分板）" @click="openSimModal">
-          <NIcon :component="Person24Regular" :size="14" />
-        </button>
+        <AppButton
+          variant="text"
+          size="xs"
+          :icon="LocalLanguage24Regular"
+          @click="openLangModal"
+        >
+          {{ activePackName || '语言包' }}
+          <span v-if="activePackName" class="preview-lang-dot" aria-hidden="true" />
+        </AppButton>
+        <span class="preview-sim-wrap">
+          <AppButton
+            variant="solid"
+            size="xs"
+            icon-only
+            :icon="Person24Regular"
+            label="预览模拟器"
+            @click="openSimModal"
+          />
+          <span v-if="simCustomized" class="sim-dot" aria-hidden="true" />
+        </span>
       </div>
       <RawJsonFormatToggle v-else />
     </template>
 
-    <textarea v-if="showJson" class="json-stage" readonly :value="jsonOutput" spellcheck="false" />
-    <RawJsonPreviewBox v-else :fill="compact" />
-
-    <div v-if="!compact" class="preview-footer">
-      <span class="preview-footer-left">
-        <span>支持 § 颜色代码 + \n 换行</span>
-        <span class="preview-lang" :class="{ 'preview-lang--off': !activePackName }">
-          {{ activePackName ? `语言包：${activePackName}` : '语言包：未加载' }}
-        </span>
-      </span>
-      <span>{{ cmdLength }} 字符</span>
-    </div>
+    <textarea
+      v-if="showJson"
+      class="json-stage"
+      readonly
+      :value="jsonOutput"
+      spellcheck="false"
+    />
+    <RawJsonPreviewBox v-else fill />
 
     <div v-if="compact" class="quick-bar">
       <button
@@ -71,6 +79,7 @@ const cardTitle = computed(() => (props.compact ? (showJson.value ? 'JSON' : '')
         @click="openSimModal"
       >
         <NIcon :component="Person24Regular" :size="14" />
+        <span v-if="simCustomized" class="sim-dot sim-dot--tight" aria-hidden="true" />
       </button>
       <button class="qb-btn" @click="openColorTable">
         <NIcon :component="Color24Regular" :size="14" />
@@ -93,34 +102,37 @@ const cardTitle = computed(() => (props.compact ? (showJson.value ? 'JSON' : '')
 </template>
 
 <style scoped>
-/* 全屏编辑态：外壳只剩一条细条，内边距与快捷栏一起收掉，高度全给预览内容 */
-.output-card--collapsed { padding: 0; }
-.output-card--collapsed .quick-bar {
-  max-height: 0;
-  margin-top: 0;
-  opacity: 0;
+
+
+.preview-header-actions { display: flex; align-items: center; gap: 4px; }
+/* 预览参数偏离默认值时，入口右上角标点（与语言包加载后的绿点同一套语义） */
+.preview-sim-wrap { position: relative; display: inline-flex; }
+.sim-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--success);
+  box-shadow: 0 0 0 1.5px var(--card);
   pointer-events: none;
 }
-
-.output-card-badge {
-  font-size: 10px; color: var(--subtle-foreground);
-  font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
-  background: var(--muted);
-  padding: 2px 8px; border-radius: var(--radius-xs);
-  transition: color 0.4s ease, background-color 0.4s ease;
+.sim-dot--tight { top: 2px; right: 2px; }
+/* 已加载语言包的绿点：语言包是否生效会直接改变预览结果，需要一眼可见 */
+.preview-lang-dot {
+  width: 5px;
+  height: 5px;
+  margin-left: 2px;
+  border-radius: 50%;
+  corner-shape: round;
+  background: var(--success);
 }
-.preview-header-actions { display: flex; align-items: center; gap: 6px; }
-.preview-icon-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 24px; height: 24px; padding: 0;
-  border: none; border-radius: var(--radius-sm); background: transparent;
-  color: var(--subtle-foreground); cursor: pointer;
-  transition: color 0.15s ease, background-color 0.15s ease;
-}
-.preview-icon-btn:hover { background: var(--muted); color: var(--foreground); }
 
 .json-stage {
-  flex: 1; min-height: 0;
+  flex: 1;
+  min-height: 0;
   width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--border);
@@ -132,20 +144,6 @@ const cardTitle = computed(() => (props.compact ? (showJson.value ? 'JSON' : '')
   resize: none; outline: none;
   transition: border-color 0.4s ease, background-color 0.4s ease, color 0.4s ease;
 }
-
-.preview-footer {
-  display: flex; justify-content: space-between; gap: 8px;
-  margin-top: 6px; font-size: 10px; color: var(--subtle-foreground);
-  font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
-  transition: color 0.4s ease;
-}
-.preview-footer-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.preview-lang {
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  transition: color 0.4s ease;
-}
-.preview-lang::before { content: '· '; }
-.preview-lang--off { color: var(--subtle-foreground); opacity: 0.75; }
 
 /* 紧凑布局的预览快捷栏 */
 .quick-bar {
@@ -175,7 +173,7 @@ html[data-motion='reduced'] .quick-bar {
   height: var(--qb-h); padding: 0 2px;
   border: none; background: var(--muted);
   color: var(--muted-foreground);
-  font-size: 11px; font-weight: 500;
+  font-size: 12px; font-weight: 500;
   font-family: inherit;
   border-radius: var(--radius-sm);
   white-space: nowrap;
@@ -192,6 +190,7 @@ html[data-motion='reduced'] .quick-bar {
 .qb-btn:disabled:hover { background: var(--muted); color: var(--muted-foreground); }
 /* 预览模拟器入口：与「添加元素」同为反色块，取快捷栏高度做等边方形 */
 .qb-btn--primary {
+  position: relative;
   flex: 0 0 auto;
   width: var(--qb-h);
   padding: 0;

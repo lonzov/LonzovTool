@@ -76,10 +76,12 @@ export function renderRawtext(elements, options = {}) {
     html += result.html
     state = result.finalState
   }
-  // 非文本元素：继承当前的非颜色样式（§l/§M/§N/§o），使用自身固定颜色，且不推进样式状态
+  // 占位内容同样继承当前颜色与样式：§ 状态在所有元素间线性流动，占位不额外染色，
+  // 只在还没有任何颜色状态时（首个元素就求不出值）用占位灰兜底
   const pushPlaceholder = (content, title) => {
     const inheritStyles = state ? state.currentStyles : ''
-    html += `<span style="${inheritStyles}color:${PLACEHOLDER_GRAY}" title="${escapeHtml(title)}">${content}</span>`
+    const color = state?.currentHex || PLACEHOLDER_GRAY
+    html += `<span style="${inheritStyles}color:${color}" title="${escapeHtml(title)}">${content}</span>`
   }
 
   for (const el of Array.isArray(elements) ? elements : []) {

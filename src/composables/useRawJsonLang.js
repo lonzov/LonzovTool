@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { parseLangAuto, buildLookup } from '../utils/mcTranslate.js'
+import { parseLangPackFile } from '../utils/langPackFile.js'
 
 /**
  * T显编辑器 · 语言包（模块级单例）
@@ -36,9 +37,11 @@ export const langImportOpen = ref(false)
 export const langImportName = ref('')
 /** 粘贴进来的文本 */
 export const langImportText = ref('')
-/** 选中的文件：文本单独存，不塞进 textarea（一份 .lang 有 13k 行，塞进去渲染会卡） */
-export const langImportFileName = ref('')
-export const langImportFileText = ref('')
+/**
+ * 选中的文件解析结果：{ fileName, text, source, name, description, version, iconUrl, langPath }
+ * 文本单独存，不塞进 textarea（一份 .lang 有 13k 行，塞进去渲染会卡）
+ */
+export const langImportDraft = ref(null)
 export const langImportError = ref('')
 export const langImporting = ref(false)
 export const langDeleteConfirmId = ref(null)
@@ -137,7 +140,11 @@ export async function initLangStore() {
     langPackList.value = (await loadMetas(store)).sort((a, b) => b.importedAt - a.importedAt)
     const state = await store.getItem(KEY_STATE)
     const want = state?.activePackId ?? langPackList.value[0]?.id ?? null
-    if (want) await activatePack(want, { persist: false })
+    const activated = want ? await activatePack(want, { persist: false }) : false
+    // 记录指向已删除或读不出的包时清掉，否则每次启动都在尝试激活一个不存在的包
+    if (!activated && state?.activePackId) {
+      try { await store.setItem(KEY_STATE, { version: 1, activePackId: null }) } catch { /* ignore */ }
+    }
   } catch { /* 初始化失败时预览退化为「显示键名」 */ }
 }
 
@@ -177,11 +184,17 @@ export async function activatePack(id, { persist = true } = {}) {
 }
 
 /**
- * 导入一份语言包并立即设为生效
- * @param {{ text: string, name?: string, source?: 'lang' | 'json' | 'paste' }} payload
+ * 导入一份语言包并立即设为生效。
+ * 资源包导入时会带上 manifest 里的名称、版本与图标；任一步失败都回滚已写入的数据，
+ * 不留下半份包，也不动当前生效的语言包。
+ * @param {{ text: string, name?: string, source?: 'lang' | 'json' | 'paste' | 'pack',
+ *   iconUrl?: string, description?: string, version?: string }} payload
  */
-export async function importLangPack({ text, name, source = 'paste' }) {
+export async function importLangPack({
+  text, name, source = 'paste', iconUrl = '', description = '', version = '',
+}) {
   const parsed = parseLangAuto(text)
+  if (!parsed.count) throw new Error('未解析到任何词条，请确认文件内容')
   const store = await getStore()
   if (!store) throw new Error('当前环境不支持本地存储，无法保存语言包')
   const id = newId()
@@ -193,16 +206,24 @@ export async function importLangPack({ text, name, source = 'paste' }) {
     bytes: utf8Bytes(text),
     importedAt: Date.now(),
   }
+  if (iconUrl) meta.iconUrl = iconUrl
+  if (description) meta.description = description
+  if (version) meta.version = version
   try {
-    await store.setItem(PREFIX_META + id, meta)
+    // 先写数据再写 meta：meta 出现在列表里就代表数据一定可读
     await store.setItem(PREFIX_DATA + id, { entries: parsed.entries })
+    await store.setItem(PREFIX_META + id, meta)
   } catch (e) {
-    // 写 meta 成功但写 data 失败时留一条孤儿 meta，清掉
-    try { await store.removeItem(PREFIX_META + id) } catch { /* ignore */ }
+    try {
+      await store.removeItem(PREFIX_DATA + id)
+      await store.removeItem(PREFIX_META + id)
+    } catch { /* ignore */ }
     throw new Error(describeStorageError(e), { cause: e })
   }
   langPackList.value = [meta, ...langPackList.value]
-  await activatePack(id)
+  if (!await activatePack(id)) {
+    throw new Error(`「${meta.name}」已保存，但启用失败，请在列表中重新设为当前`)
+  }
   return meta
 }
 
@@ -265,24 +286,27 @@ export function openLangModal() {
   langImportError.value = ''
   langImportName.value = ''
   langImportText.value = ''
-  langImportFileName.value = ''
-  langImportFileText.value = ''
+  langImportDraft.value = null
   // 一份语言包都没有时默认展开导入区，否则收起
   langImportOpen.value = langPackList.value.length === 0
   showLangModal.value = true
 }
 
-/** 置入选中的文件（文本单独存，不进 textarea） */
-export function setImportFile(name, text) {
-  langImportFileName.value = name
-  langImportFileText.value = text
+/** 读取用户选择的文件：文本直接收下，压缩包解析出词表与资源包信息 */
+export async function setImportFile(file) {
   langImportError.value = ''
-  if (!langImportName.value.trim()) langImportName.value = name.replace(/\.[^.]+$/, '')
+  try {
+    const parsed = await parseLangPackFile(file)
+    langImportDraft.value = { fileName: file.name, ...parsed }
+    if (!langImportName.value.trim()) langImportName.value = parsed.name || ''
+  } catch (e) {
+    langImportDraft.value = null
+    langImportError.value = e?.message || '读取文件失败'
+  }
 }
 
 export function clearImportFile() {
-  langImportFileName.value = ''
-  langImportFileText.value = ''
+  langImportDraft.value = null
 }
 export function closeLangModal() {
   showLangModal.value = false

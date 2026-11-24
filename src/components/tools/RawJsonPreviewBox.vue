@@ -1,8 +1,9 @@
 <script setup>
-import { ref, onBeforeUnmount } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { NIcon } from 'naive-ui'
 import { ZoomIn24Regular, ZoomOut24Regular } from '@vicons/fluent'
 import { previewHtml } from '../../composables/useRawJsonEditor.js'
+import AppScrollbar from '../ui/AppScrollbar.vue'
 import '../../vendor/mcfc/mcfc.css'
 
 defineProps({
@@ -76,7 +77,8 @@ let panStart = null
 
 function onPanStart(e) {
   if (e.pointerType !== 'mouse' || e.button !== 0) return
-  if (e.target.closest('.preview-zoom')) return
+  // 缩放按钮与浮层拇指自己接管指针，不参与平移
+  if (e.target.closest('.preview-zoom, .asb')) return
   const box = boxRef.value
   if (!box) return
   e.preventDefault()
@@ -102,6 +104,77 @@ function onPanEnd() {
 }
 
 onBeforeUnmount(onPanEnd)
+
+// ===== 缩放与滚动条同步 =====
+// 缩放是 CSS transform，滚动尺寸随之变化，但既不会触发 resize 也不会触发 DOM 变更，
+// 滚动条只能靠这里主动同步：过渡期间逐帧测一次，拇指长度与「该不该出现」都跟得上。
+const scrollbarRef = ref(null)
+let liveRaf = 0
+let liveUntil = 0
+
+function keepScrollbarInSync(ms = 320) {
+  liveUntil = Math.max(liveUntil, performance.now() + ms)
+  if (liveRaf) return
+  const tick = () => {
+    syncTail()
+    scrollbarRef.value?.sync()
+    liveRaf = performance.now() < liveUntil ? requestAnimationFrame(tick) : 0
+  }
+  liveRaf = requestAnimationFrame(tick)
+}
+
+// 内容靠 auto 外边距居中、再按左上锚点放大：放大后的外框只朝右下溢出，
+// 滚到尽头时下缘/右缘会贴死容器边缘，而上缘/左缘还留着居中留白。
+// 垫片把滚动区向右下补出同等留白，两端滚到尽头看到的空隙才一致
+const contentRef = ref(null)
+const tailRef = ref(null)
+
+function syncTail() {
+  const box = boxRef.value
+  const content = contentRef.value
+  const tail = tailRef.value
+  if (!box || !content || !tail) return
+  const boxRect = box.getBoundingClientRect()
+  const contentRect = content.getBoundingClientRect()
+  const boxStyle = getComputedStyle(box)
+  const contentLeft = contentRect.left - boxRect.left - box.clientLeft + box.scrollLeft
+  const contentTop = contentRect.top - boxRect.top - box.clientTop + box.scrollTop
+  const contentRight = contentRect.right - boxRect.left - box.clientLeft + box.scrollLeft
+  const contentBottom = contentRect.bottom - boxRect.top - box.clientTop + box.scrollTop
+  const gapX = Math.max(contentLeft, Number.parseFloat(boxStyle.paddingLeft) || 0)
+  const gapY = Math.max(contentTop, Number.parseFloat(boxStyle.paddingTop) || 0)
+  // 向下取整：内容居中时垫片恰好等于可视尺寸，多出 1px 会让滚动条凭空出现
+  tail.style.width = `${Math.max(0, Math.floor(contentRight + gapX))}px`
+  tail.style.height = `${Math.max(0, Math.floor(contentBottom + gapY))}px`
+}
+
+let tailObserver = null
+
+onMounted(() => {
+  nextTick(() => {
+    syncTail()
+    scrollbarRef.value?.sync()
+  })
+  if (typeof ResizeObserver !== 'undefined') {
+    tailObserver = new ResizeObserver(() => {
+      syncTail()
+      scrollbarRef.value?.sync()
+    })
+    if (boxRef.value) tailObserver.observe(boxRef.value)
+    if (contentRef.value) tailObserver.observe(contentRef.value)
+  }
+})
+
+watch(zoom, () => {
+  keepScrollbarInSync()
+  scrollbarRef.value?.wake()
+})
+
+onBeforeUnmount(() => {
+  if (liveRaf) cancelAnimationFrame(liveRaf)
+  tailObserver?.disconnect()
+  tailObserver = null
+})
 </script>
 
 <template>
@@ -117,12 +190,15 @@ onBeforeUnmount(onPanEnd)
   >
     <div ref="boxRef" class="preview-box" :class="{ 'preview-box--panning': panning }">
       <div
+        ref="contentRef"
         class="preview-content mcfc"
         :class="{ 'preview-content--instant': pinching }"
         :style="{ transform: `scale(${zoom})` }"
         v-html="previewHtml"
       />
+      <span ref="tailRef" class="preview-tail" aria-hidden="true" />
     </div>
+    <AppScrollbar ref="scrollbarRef" :target="boxRef" horizontal :inset="3" :edge="8" />
 
     <div class="preview-zoom">
       <button
@@ -164,8 +240,14 @@ onBeforeUnmount(onPanEnd)
 /* stylelint-disable declaration-property-value-disallowed-list --
    预览舞台固定深色：它模拟的是游戏内聊天框，预览内容由 vendor/mcfc 按 Minecraft
    原色渲染、假定深底。改成 --card 会让浅色主题下预览变白底，MC 颜色失去对比。
-   缩放按钮压在这个固定深底上，同理只能用固定浅色。 */
+   缩放按钮与浮层拇指压在这个固定深底上，同理只能用固定浅色。 */
+.preview-stage {
+  /* 浮层拇指压在深底上：通过组件变量传浅色，不动主题 token */
+  --asb-thumb: #ffffff3d;
+  --asb-thumb-hover: #ffffff80;
+}
 .preview-box {
+  position: relative;
   height: 100%;
   background: #1a1a1a; border-radius: var(--radius-md); border: 1px solid #333;
   padding: 12px 16px; min-height: 60px;
@@ -174,6 +256,16 @@ onBeforeUnmount(onPanEnd)
   display: flex;
   overflow: auto;
   cursor: grab;
+  scrollbar-width: none;
+}
+/* 右下留白垫片：尺寸由脚本按内容实际外框补出，本身不可见也不吃事件 */
+.preview-tail {
+  position: absolute;
+  top: 0; left: 0;
+  pointer-events: none;
+}
+.preview-box::-webkit-scrollbar {
+  display: none;
 }
 [data-theme="dark"] .preview-box {
   background: #111;

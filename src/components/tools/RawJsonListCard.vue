@@ -1,28 +1,23 @@
 <script setup>
-import { NIcon } from 'naive-ui'
-import { Add16Filled, Delete24Regular } from '@vicons/fluent'
-import AppButton from '../ui/AppButton.vue'
-import { addElement, clearAll } from '../../composables/useRawJsonEditor.js'
+import { ref } from 'vue'
+import AppScrollbar from '../ui/AppScrollbar.vue'
 
 defineProps({
-  /** 紧凑布局：卡片头部整条让位，添加与清空分别由追加栏和设置面板接管 */
-  compact: { type: Boolean, default: false },
+  /** 桌面端：卡片自己吃满整列高度，列表区内部滚动 */
+  inline: { type: Boolean, default: false },
 })
+
+const scroller = ref(null)
 </script>
 
 <template>
-  <div class="list-card">
-    <div v-if="!compact" class="list-header">
-      <button class="add-btn" @click="addElement(null)">
-        <NIcon :component="Add16Filled" :size="14" />
-        <span>添加元素</span>
-      </button>
-      <AppButton variant="text" size="xs" :icon="Delete24Regular" @click="clearAll">
-        清空
-      </AppButton>
+  <div class="list-card" :class="{ 'list-card--inline': inline }">
+    <div class="list-body">
+      <div ref="scroller" class="list-view">
+        <slot />
+      </div>
+      <AppScrollbar v-if="inline" :target="scroller" />
     </div>
-
-    <slot />
   </div>
 </template>
 
@@ -34,26 +29,29 @@ defineProps({
   padding: 16px;
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
-.list-header {
+/* 桌面端右侧不留内边距：这段留白属于滚动区，浮层拇指画在里面，不会压到行 */
+.list-card--inline {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 12px 0 0 12px;
 }
-
-/* 自定义添加按钮 */
-.add-btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-  padding: 4px 12px;
-  border: none;
-  background: var(--primary);
-  color: var(--primary-foreground);
-  font-size: 12px; font-weight: 500;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-family: inherit;
-  transition: background-color 0.4s ease, opacity 0.15s ease, transform 0.1s ease;
+.list-card--inline .list-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
 }
-.add-btn:hover { opacity: 0.85; }
-.add-btn:active { transform: scale(0.97); }
+.list-card--inline .list-view {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* 行右侧留 12px，浮层拇指落在这段留白里 */
+  padding: 0 12px 12px 0;
+  scrollbar-width: none;
+}
+.list-card--inline .list-view::-webkit-scrollbar {
+  display: none;
+}
 </style>

@@ -7,11 +7,10 @@
  *    promise 的 catch 兜不住，所以要整体 try 住再退回下一层。
  * 2. 隐藏 textarea + `execCommand('copy')`：老浏览器与 http 下唯一可用的路径。
  *
- * 第二层有两个坑，都在下面处理了：
- * - 焦点被对话框/抽屉锁住时（NModal、NDrawer 都会锁），挂到 body 上的 textarea 会被
- *   立刻夺回焦点，选中区随之失效，而 `execCommand` 仍返回 true——于是"提示复制成功、
- *   剪贴板里什么都没有"。所以允许调用方传入容器元素，把 textarea 挂进当前焦点子树。
- * - 即使如此也可能选不中，因此复制前核对选中长度，对不上就如实返回失败。
+ * 第二层有个坑：焦点被对话框/抽屉锁住时（NModal、NDrawer 都会锁），挂到 body 上的
+ * textarea 会被立刻夺回焦点，选中区随之失效，而 `execCommand` 仍返回 true——于是
+ * 「提示复制成功、剪贴板里什么都没有」。所以先确定挂载点：调用方指定的容器 >
+ * 当前焦点所在的弹层 > body；并且复制前核对选中长度，对不上就如实返回失败。
  */
 export async function copyText(text, options = {}) {
   const value = typeof text === 'string' ? text : ''
@@ -29,13 +28,22 @@ export async function copyText(text, options = {}) {
   return copyViaSelection(value, options.container)
 }
 
+/** 挂载点优先落在弹层里，弹层锁焦点时选中区才不会被抢走 */
+function resolveHost(container) {
+  if (container && container.isConnected) return container
+  const focused = typeof document !== 'undefined' ? document.activeElement : null
+  const dialog = focused?.closest?.('.n-modal, .n-drawer')
+  if (dialog) return dialog
+  return document.body
+}
+
 function copyViaSelection(value, container) {
-  const host = container?.isConnected ? container : document.body
+  const host = resolveHost(container)
   const textarea = document.createElement('textarea')
   textarea.value = value
-  // 只读 + 移出视口，避免复制瞬间页面跳动或弹出输入法
+  // 只读 + 视口内的 1px 透明块：不弹输入法、不闪页面；iOS 还要求元素在视口内才选得中
   textarea.setAttribute('readonly', '')
-  textarea.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0'
+  textarea.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;opacity:0'
   host.appendChild(textarea)
 
   try {

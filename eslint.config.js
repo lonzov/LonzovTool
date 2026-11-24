@@ -49,4 +49,14 @@ export default defineConfig([
       sourceType: 'commonjs',
     },
   },
+
+  {
+    name: 'app/rawjson-inline-editor',
+    files: ['src/components/tools/RawJsonInlineEditor.vue'],
+    rules: {
+      // 就地编辑器有意直接写回父级传入的元素对象：没有保存步骤，每次输入都要立刻
+      // 刷新预览与命令输出。只保留对整体替换 prop 的检查。
+      'vue/no-mutating-props': ['error', { shallowOnly: true }],
+    },
+  },
 ])
