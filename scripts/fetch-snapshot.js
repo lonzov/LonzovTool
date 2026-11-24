@@ -45,7 +45,11 @@ async function fetchResource(resource) {
     headers: { Accept: 'application/json', 'User-Agent': USER_AGENT },
     signal: AbortSignal.timeout(TIMEOUT_MS),
   })
-  if (!res.ok) throw new Error(`${resource.url} HTTP ${res.status}`)
+  if (!res.ok) {
+    const challenged =
+      res.status === 403 && /text\/html/i.test(res.headers.get('content-type') || '')
+    throw new Error(`${resource.url} HTTP ${res.status}${challenged ? '（疑似 Cloudflare 挑战页）' : ''}`)
+  }
   return res.json()
 }
 
@@ -73,17 +77,26 @@ function mergePrivateContributorFields(data) {
 }
 
 async function main() {
-  const written = []
+  const updated = []
+  const failed = []
 
-  // 各资源独立拉取：某个接口挂了不影响其它资源的快照更新
+  // 各资源独立成败：某个接口挂了只该影响它自己。若让异常冒出去终止循环，
+  // 排在它后面的资源会永远停在旧快照上，而构建仍以 0 退出，没人会发现。
   for (const [key, resource] of Object.entries(SNAPSHOT_FILES)) {
-    let data = await fetchResource(resource)
-    if (key === 'contributors') data = mergePrivateContributorFields(data)
-    writeFileSync(resolve(ROOT, resource.file), JSON.stringify(data, null, 2) + '\n', 'utf-8')
-    written.push(key)
+    try {
+      let data = await fetchResource(resource)
+      if (key === 'contributors') data = mergePrivateContributorFields(data)
+      writeFileSync(resolve(ROOT, resource.file), JSON.stringify(data, null, 2) + '\n', 'utf-8')
+      updated.push(key)
+    } catch (err) {
+      failed.push(`${key}: ${err.message}`)
+      console.warn(`[snapshot] ${key} 更新失败（${err.message}），保留已有快照`)
+    }
   }
 
-  console.log(`[snapshot] 已更新 ${written.length}/${Object.keys(SNAPSHOT_FILES).length}: ${written.join(', ')}`)
+  const total = Object.keys(SNAPSHOT_FILES).length
+  console.log(`[snapshot] 已更新 ${updated.length}/${total}: ${updated.join(', ') || '无'}`)
+  if (failed.length) console.warn(`[snapshot] 未更新 ${failed.length}/${total}:\n  ${failed.join('\n  ')}`)
 }
 
 main().catch((err) => {
