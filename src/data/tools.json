@@ -64,7 +64,7 @@
         },
         {
           "id": "execute",
-          "title": "execute升级",
+          "title": "语法转换",
           "description": "execute指令语法升级",
           "logo": "ArrowTrending20Filled",
           "link": "/c/execute/"
