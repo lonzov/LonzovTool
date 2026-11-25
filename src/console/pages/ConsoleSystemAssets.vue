@@ -1,13 +1,14 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useMessage } from 'naive-ui'
-import { Image24Regular } from '@vicons/fluent'
+import { NIcon, useMessage } from 'naive-ui'
+import { Image24Regular, ImageOff24Regular, LockClosed24Regular } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
 import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
+import { openImageLightbox } from '../useImageLightbox.js'
 
 const ORPHANS_URL = '/api/v1/console/system/assets/orphans'
 const PRUNE_URL = '/api/v1/console/system/assets/orphans/prune'
@@ -34,6 +35,35 @@ const items = computed(() => overview.value?.items || [])
 const ready = computed(() => Number(overview.value?.ready) || 0)
 const total = computed(() => Number(overview.value?.total) || 0)
 const graceHours = computed(() => Number(overview.value?.grace_hours) || 24)
+
+/* 私有资产（反馈截图）不在公开媒体目录下，浏览器拿不到地址，只能展示类型与元信息 */
+const brokenAssets = ref(new Set())
+
+function kindLabel(item) {
+  return KIND_LABELS[item.kind] || item.kind
+}
+
+function assetUrl(item) {
+  return item.visibility === 'public' ? `/uploads/${item.key}` : ''
+}
+
+function canPreview(item) {
+  return Boolean(assetUrl(item)) && !brokenAssets.value.has(item.id)
+}
+
+function markBroken(id) {
+  brokenAssets.value.add(id)
+}
+
+function openAsset(item) {
+  const previewable = items.value.filter((entry) => canPreview(entry))
+  const index = previewable.findIndex((entry) => entry.id === item.id)
+  if (index < 0) return
+  openImageLightbox(
+    previewable.map((entry) => assetUrl(entry)),
+    index,
+  )
+}
 
 function gotUnauthorized(e) {
   if (e?.code !== 'unauthorized') return false
@@ -164,40 +194,68 @@ onMounted(load)
         </div>
       </div>
 
-      <div v-if="loading && !items.length" class="orphan-list" aria-hidden="true">
-        <div class="orphan-list-head">
-          <span>文件</span>
-          <span>类型</span>
-          <span>大小</span>
-          <span>转为孤儿时间</span>
-        </div>
-        <div v-for="index in 5" :key="index" class="orphan-row">
-          <ConsoleSkeleton :width="index % 2 ? '72%' : '58%'" height="1.1em" />
-          <ConsoleSkeleton width="58%" height="1.1em" />
-          <ConsoleSkeleton width="42%" height="1.1em" />
-          <ConsoleSkeleton width="76%" height="1.1em" />
+      <div v-if="loading && !items.length" class="asset-gallery" aria-hidden="true">
+        <div v-for="index in 8" :key="index" class="asset-tile asset-tile--skeleton">
+          <ConsoleSkeleton
+            width="100%"
+            :height="index % 3 === 0 ? 132 : index % 2 ? 88 : 112"
+            radius="var(--radius-sm)"
+          />
+          <div class="asset-tile__meta">
+            <ConsoleSkeleton width="44%" height="1.1em" />
+            <ConsoleSkeleton width="26%" height="1.1em" />
+          </div>
         </div>
       </div>
       <p v-else-if="!items.length" class="orphan-empty">
         当前没有可清理的孤儿文件。
       </p>
-      <div v-else class="orphan-list">
-        <div class="orphan-list-head">
-          <span>文件</span>
-          <span>类型</span>
-          <span>大小</span>
-          <span>转为孤儿时间</span>
-        </div>
-        <div v-for="item in items" :key="item.id" class="orphan-row">
-          <span class="orphan-key" :title="item.key">{{ item.key }}</span>
-          <span>{{ KIND_LABELS[item.kind] || item.kind }}</span>
-          <span>{{ formatBytes(item.bytes) }}</span>
-          <span>{{ formatTime(item.orphaned_at) }}</span>
-        </div>
-        <p v-if="overview?.has_more" class="orphan-more">
-          仅展示前 {{ items.length }} 项，实际待清理 {{ overview.ready }} 项。
-        </p>
+      <div v-else class="asset-gallery">
+        <button
+          v-for="item in items"
+          :key="item.id"
+          type="button"
+          class="asset-tile"
+          :class="{ 'asset-tile--private': !assetUrl(item) }"
+          :disabled="!canPreview(item)"
+          :title="item.key"
+          :aria-label="
+            canPreview(item)
+              ? `查看${kindLabel(item)}原图`
+              : assetUrl(item)
+                ? `${kindLabel(item)}（图片不可用）`
+                : `${kindLabel(item)}（私有，不可预览）`
+          "
+          @click="openAsset(item)"
+        >
+          <span class="asset-tile__thumb">
+            <img
+              v-if="canPreview(item)"
+              class="asset-tile__image"
+              :src="assetUrl(item)"
+              :alt="kindLabel(item)"
+              loading="lazy"
+              @error="markBroken(item.id)"
+            />
+            <span v-else class="asset-tile__fallback">
+              <NIcon
+                :component="assetUrl(item) ? ImageOff24Regular : LockClosed24Regular"
+                :size="20"
+              />
+              <span>{{ assetUrl(item) ? '图片不可用' : '私有图片' }}</span>
+            </span>
+          </span>
+          <span class="asset-tile__meta">
+            <span class="asset-tile__kind">{{ kindLabel(item) }}</span>
+            <span class="asset-tile__facts">
+              {{ formatBytes(item.bytes) }} · {{ formatTime(item.orphaned_at) }}
+            </span>
+          </span>
+        </button>
       </div>
+      <p v-if="!loading && items.length && overview?.has_more" class="gallery-more">
+        仅展示前 {{ items.length }} 项，实际待清理 {{ overview.ready }} 项。
+      </p>
     </ConsolePanel>
   </div>
 </template>
@@ -258,44 +316,105 @@ onMounted(load)
   font-size: 0.8rem;
 }
 
-.orphan-list {
+/* 瀑布流：按图片原始比例分列，列高自然错落 */
+.asset-gallery {
   margin-top: 14px;
+  column-width: 200px;
+  column-gap: 12px;
+}
+
+.asset-tile {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  margin: 0 0 12px;
+  padding: 0;
   overflow: hidden;
+  break-inside: avoid;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: zoom-in;
+  transition: border-color 0.2s ease, transform 0.2s ease, background-color 0.4s ease;
 }
 
-.orphan-list-head,
-.orphan-row {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) 0.8fr 0.7fr 0.9fr;
-  gap: 10px;
-  align-items: center;
-  padding: 8px 12px;
-  font-size: 0.76rem;
+.asset-tile:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
 }
 
-.orphan-list-head {
-  color: var(--subtle-foreground);
-  background: var(--accent);
+.asset-tile:disabled {
+  cursor: default;
 }
 
-.orphan-row {
-  border-top: 1px solid var(--border);
-  color: var(--muted-foreground);
+.asset-tile--skeleton {
+  gap: 8px;
+  padding: 8px;
+  cursor: default;
 }
 
-.orphan-key {
+.asset-tile--skeleton .asset-tile__meta {
+  padding: 0;
+  border-top: none;
+}
+
+.asset-tile__thumb {
+  display: block;
   overflow: hidden;
-  color: var(--foreground);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  background: var(--muted);
+  transition: background-color 0.4s ease;
 }
 
-.orphan-more {
-  margin: 0;
-  padding: 8px 12px;
+.asset-tile__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 320px;
+  object-fit: contain;
+}
+
+.asset-tile__fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  aspect-ratio: 4 / 3;
+  color: var(--subtle-foreground);
+  font-size: 0.75rem;
+}
+
+.asset-tile__meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px 10px;
   border-top: 1px solid var(--border);
+  transition: border-color 0.4s ease;
+}
+
+.asset-tile__kind {
+  flex-shrink: 0;
+  color: var(--foreground);
+  font-size: 0.76rem;
+  font-weight: 500;
+  transition: color 0.4s ease;
+}
+
+.asset-tile__facts {
+  color: var(--subtle-foreground);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  transition: color 0.4s ease;
+}
+
+.gallery-more {
+  margin: 4px 0 0;
   color: var(--subtle-foreground);
   font-size: 0.75rem;
 }
@@ -305,20 +424,13 @@ onMounted(load)
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .orphan-list-head {
-    display: none;
+  .asset-gallery {
+    column-width: 150px;
+    column-gap: 8px;
   }
 
-  .orphan-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 3px 10px;
-    padding: 10px 12px;
-  }
-
-  .orphan-key {
-    grid-column: 1 / -1;
-    white-space: normal;
-    word-break: break-all;
+  .asset-tile {
+    margin-bottom: 8px;
   }
 }
 </style>
