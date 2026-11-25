@@ -10,7 +10,7 @@ import { reduceMotion } from '../composables/useMotion.js'
 import { contributorsData, loadContributors } from '../composables/useSiteData.js'
 import { usePageOutline } from '../composables/usePageOutline.js'
 
-const { stats, fetchStats } = useAboutStats()
+const { stats, fetchStats, startInertia, stopInertia } = useAboutStats()
 const router = useRouter()
 const { openFeedbackDrawer } = useFeedbackDrawer()
 
@@ -56,6 +56,7 @@ const marqueeRows = computed(() => {
 /* ===== 触发统计数据加载 ===== */
 onMounted(() => {
   fetchStats()
+  startInertia()
   requestAnimationFrame(setupCountUp)
   window.addEventListener('resize', onResizeFit)
 })
@@ -140,95 +141,171 @@ onMounted(async () => {
   }
 })
 
-/* ===== count-up：进入视口即慢速爬升，数据到达后加速冲到目标 ===== */
+/* ===== 数字滚轮 =====
+   数值变化时按字符竖向滚动：旧字符移出、新字符补上，其余字符不动，容器本身不位移也不改透明度。
+   初始进入视口仍是从 0 爬到目标值，这一阶段的逐帧变化直接换字符，不做滚动。 */
 const countEls = new Set()
+let countIO = null
+
+const ROLL_MS = 320
+
+function countFormatter(n) {
+  return n.toLocaleString()
+}
+
+function charNode(ch) {
+  const node = document.createElement('span')
+  node.className = 'od-char'
+  node.textContent = ch
+  return node
+}
+
+function setCellChar(cell, ch) {
+  const strip = cell.firstElementChild
+  if (strip.getAnimations) strip.getAnimations().forEach((anim) => anim.cancel())
+  strip.replaceChildren(charNode(ch))
+  strip.style.transform = ''
+}
+
+function rebuildCells(el, chars) {
+  el.replaceChildren()
+  el._cells = chars.map((ch) => {
+    const cell = document.createElement('span')
+    cell.className = ch === ',' ? 'od-cell od-cell--sep' : 'od-cell'
+    const strip = document.createElement('span')
+    strip.className = 'od-strip'
+    strip.appendChild(charNode(ch))
+    cell.appendChild(strip)
+    el.appendChild(cell)
+    return cell
+  })
+  el._chars = chars
+}
+
+function renderPlain(el, text) {
+  const chars = Array.from(text)
+  if (chars.length !== el._chars.length) {
+    rebuildCells(el, chars)
+    return
+  }
+  for (let i = 0; i < chars.length; i++) {
+    if (chars[i] === el._chars[i]) continue
+    setCellChar(el._cells[i], chars[i])
+    el._chars[i] = chars[i]
+  }
+}
+
+/* 单字符滚动：upward 时旧字符向上移出、新字符从下方补上，否则方向相反 */
+function rollCell(cell, from, to, upward) {
+  const strip = cell.firstElementChild
+  const token = (cell._rollToken = (cell._rollToken || 0) + 1)
+  if (strip.getAnimations) strip.getAnimations().forEach((anim) => anim.cancel())
+  const step = cell.offsetHeight
+  const chars = upward ? [from, to] : [to, from]
+  strip.replaceChildren(...chars.map(charNode))
+  strip.style.transform = `translateY(${upward ? 0 : -step}px)`
+  const anim = strip.animate(
+    [
+      { transform: `translateY(${upward ? 0 : -step}px)` },
+      { transform: `translateY(${upward ? -step : 0}px)` },
+    ],
+    { duration: ROLL_MS, easing: 'cubic-bezier(.22, .61, .36, 1)' }
+  )
+  anim.finished
+    .then(() => {
+      if (cell._rollToken !== token || !cell.isConnected) return
+      strip.replaceChildren(charNode(to))
+      strip.style.transform = ''
+    })
+    .catch(() => {})
+}
+
+function renderRoll(el, text, upward) {
+  const chars = Array.from(text)
+  if (chars.length !== el._chars.length) {
+    rebuildCells(el, chars)
+    fitNumber(el)
+    return
+  }
+  for (let i = 0; i < chars.length; i++) {
+    if (chars[i] === el._chars[i]) continue
+    rollCell(el._cells[i], el._chars[i], chars[i], upward)
+    el._chars[i] = chars[i]
+  }
+}
+
 function setCountRef(el, getter, formatter) {
   if (!el) return
   /* 每次都更新 getter，确保响应式数据最新 */
   el._getter = getter
   /* 首次初始化才设状态，避免 Vue 函数 ref 重复调用导致状态被重置 */
   if (!el._countInited) {
-    el._formatter = formatter || ((n) => n.toLocaleString().replace(/,/g, '<span class="num-sep">,</span>'))
-    el._current = 0
-    el._state = 'idle' /* idle | crawling | rushing | done */
+    el._formatter = formatter || countFormatter
+    el._chars = []
+    el._cells = []
+    el._value = 0
+    el._target = null
+    el._started = false
+    el._mode = 'idle' /* idle | crawl | ramp | live */
+    el._raf = null
+    el._crawlRaf = null
     el._countInited = true
     el.style.whiteSpace = 'nowrap'
-    el.style.display = 'inline-block'
     el.style.transformOrigin = 'left bottom'
     countEls.add(el)
   }
 }
-let countIO = null
 
-/* 慢速爬升：每秒约 +100 */
-function startCrawl(el) {
-  el._state = 'crawling'
-  el._current = 0
-  const speed = 100
-  let lastT = performance.now()
-  const tick = (t) => {
-    if (el._state !== 'crawling') return
-    const dt = (t - lastT) / 1000
-    lastT = t
-    el._current += speed * dt
-    el.innerHTML = el._formatter(Math.floor(el._current))
-    requestAnimationFrame(tick)
-  }
-  requestAnimationFrame(tick)
-}
-
-/* 加速冲到目标值。数字滚动属于"持续运动才有意义"的一类，减少动态效果下照常滚动 */
-function rushToTarget(el, target) {
-  el._state = 'rushing'
-
-  /* 预先用目标值（最大宽度）测量并设置缩放，避免动画中每帧强制重排 */
-  preScale(el, target)
-
-  const start = el._current
-  const diff = target - start
-  if (diff <= 0) {
-    el._current = target
-    el.innerHTML = el._formatter(target)
-    el._state = 'done'
-    return
-  }
-  const dur = 1200, t0 = performance.now()
-  const tick = (t) => {
-    if (el._state !== 'rushing') return
-    const p = Math.min(1, (t - t0) / dur)
-    const e = 1 - Math.pow(1 - p, 3)
-    el._current = start + diff * e
-    el.innerHTML = el._formatter(Math.round(el._current))
-    if (p < 1) requestAnimationFrame(tick)
-    else {
-      el._current = target
-      el.innerHTML = el._formatter(target)
-      el._state = 'done'
+/* 无数据时先空转爬升，数据到达后切到缓动爬升 */
+function crawl(el) {
+  if (el._crawlRaf != null) return
+  el._mode = 'crawl'
+  let last = performance.now()
+  const step = (now) => {
+    el._crawlRaf = null
+    if (!countEls.has(el) || el._mode !== 'crawl') return
+    if (el._target != null) {
+      el._mode = 'ramp'
+      animate(el)
+      return
     }
+    const dt = Math.min(0.12, Math.max(0, (now - last) / 1000))
+    last = now
+    el._value += 100 * dt
+    renderPlain(el, el._formatter(Math.floor(el._value)))
+    el._crawlRaf = requestAnimationFrame(step)
   }
-  requestAnimationFrame(tick)
+  el._crawlRaf = requestAnimationFrame(step)
 }
 
-/* 预先测量：用目标值替换 → 测量 → 设缩放 → 还原，整个过程在同一帧同步完成无闪烁 */
-/* 注意：parentWidth 必须在替换内容之后测量，因为部分父元素（如视频 flex 项）宽度随内容变化 */
-function preScale(el, target) {
-  if (!el || !el.parentElement) return
-  el.style.transform = ''
-  const prev = el.innerHTML
-  el.innerHTML = el._formatter(target)
-  const parentWidth = el.parentElement.getBoundingClientRect().width
-  const elWidth = el.getBoundingClientRect().width
-  el.innerHTML = prev
-  if (parentWidth <= 0) return
-  if (elWidth > parentWidth) {
-    el.style.transform = `scale(${parentWidth / elWidth})`
+/* 从当前数值缓动到目标值，这一阶段逐帧直接换字符 */
+function animate(el) {
+  if (el._raf != null) return
+  el._mode = 'ramp'
+  let last = performance.now()
+  const step = (now) => {
+    el._raf = null
+    if (!countEls.has(el) || el._mode !== 'ramp' || el._target == null) return
+    const dt = Math.min(0.12, Math.max(0.001, (now - last) / 1000))
+    last = now
+    const diff = el._target - el._value
+    if (Math.abs(diff) < 0.5) {
+      el._value = el._target
+      renderPlain(el, el._formatter(Math.round(el._value)))
+      el._mode = 'live'
+      fitNumber(el)
+      return
+    }
+    el._value += diff * (1 - Math.exp(-dt / 0.22))
+    renderPlain(el, el._formatter(Math.round(el._value)))
+    el._raf = requestAnimationFrame(step)
   }
+  el._raf = requestAnimationFrame(step)
 }
 
-/* 动态缩放：数字溢出容器时等比缩小到刚好不溢出（用于无目标值时当前渲染状态的测量） */
+/* 动态缩放：数字溢出容器时等比缩小到刚好不溢出 */
 function fitNumber(el) {
   if (!el || !el.parentElement) return
-  /* 先重置缩放，获取原始尺寸 */
   el.style.transform = ''
   const parentWidth = el.parentElement.getBoundingClientRect().width
   if (parentWidth <= 0) return
@@ -249,14 +326,17 @@ function onResizeFit() {
   })
 }
 
-/* 进入视口：有数据就 rush，没数据就 crawl */
+/* 进入视口才开始动：有数据直接从 0 缓动到目标，没数据先空转 */
 function startCountUp(el) {
+  if (el._started) return
+  el._started = true
   const raw = el._getter()
-  const target = raw == null ? null : +raw
+  const target = raw == null ? null : Number(raw)
   if (target != null && Number.isFinite(target)) {
-    rushToTarget(el, target)
+    el._target = target
+    animate(el)
   } else {
-    startCrawl(el)
+    crawl(el)
   }
 }
 
@@ -276,49 +356,60 @@ function setupCountUp() {
     }, { threshold: 0.4 })
   }
   countEls.forEach((el) => {
-    if (el._state === 'idle') countIO.observe(el)
+    if (!el._started) countIO.observe(el)
   })
 }
 
-/* 数据到达后：把正在爬升的元素加速冲到目标；已完成动画的元素若值有变化则重新冲刺 */
-function onDataReady() {
+/* 目标值同步：已就位的元素变化时滚一格，爬升中的交给缓动循环 */
+function syncCounters() {
   countEls.forEach((el) => {
     const raw = el._getter()
-    const target = raw == null ? null : +raw
-    if (target == null || !Number.isFinite(target)) return
-    if (el._state === 'crawling') {
-      rushToTarget(el, target)
-    } else if (el._state === 'done' && Math.round(el._current) !== target) {
-      console.log(`[访问统计] 数据有更新，重新激活数字增长动画：${Math.round(el._current)} → ${target}`)
-      rushToTarget(el, target)
+    const target = raw == null ? null : Number(raw)
+    if (target == null || !Number.isFinite(target) || el._target === target) return
+    if (!el._started) {
+      el._target = target
+      return
     }
+    if (el._mode === 'live') {
+      const upward = target > el._target
+      el._target = target
+      el._value = target
+      renderRoll(el, el._formatter(target), upward)
+      return
+    }
+    el._target = target
   })
 }
 
-/* 视频统计到达后：加速冲到目标 */
-watch(videoStats, (v) => {
-  if (v.view !== null) {
-    requestAnimationFrame(() => {
-      setupCountUp()
-      onDataReady()
-    })
-  }
+watch(videoStats, () => {
+  requestAnimationFrame(() => {
+    setupCountUp()
+    syncCounters()
+  })
 }, { flush: 'post' })
 
-/* 统计数据到达后：加速冲到目标 */
-watch(() => stats.value.yearPV, (v) => {
-  if (v !== null) {
+/* 模拟值每秒都可能变化，这里跟随所有会变的展示值 */
+watch(
+  () => [stats.value.yearPV, stats.value.todayPV, stats.value.todayUV, stats.value.monthUV, stats.value.yesterdayUV],
+  () => {
     requestAnimationFrame(() => {
       setupCountUp()
-      onDataReady()
+      syncCounters()
     })
-  }
-}, { flush: 'post' })
+  },
+  { flush: 'post' }
+)
 
 onBeforeUnmount(() => {
+  stopInertia()
   if (countIO) countIO.disconnect()
   window.removeEventListener('resize', onResizeFit)
-  countEls.forEach((el) => { el._state = 'done' })
+  countEls.forEach((el) => {
+    if (el._raf != null) cancelAnimationFrame(el._raf)
+    if (el._crawlRaf != null) cancelAnimationFrame(el._crawlRaf)
+    el._raf = null
+    el._crawlRaf = null
+  })
   countEls.clear()
 })
 
@@ -359,14 +450,11 @@ function formatCount(n) {
   if (n === null || n === undefined) return '—'
   const num = +n
   if (!Number.isFinite(num)) return '—'
-  let str
   if (num >= 10000) {
     const w = num / 10000
-    str = (Math.round(w * 10) / 10).toString() + 'w'
-  } else {
-    str = num.toLocaleString()
+    return (Math.round(w * 10) / 10).toString() + 'w'
   }
-  return str.replace(/,/g, '<span class="num-sep">,</span>')
+  return num.toLocaleString()
 }
 
 /* ===== 数据 ===== */
@@ -475,7 +563,7 @@ onMounted(() => {
         <div class="stat-hero" v-reveal>
           <div class="k">本年浏览</div>
           <div class="v">
-            <span :ref="(el) => setCountRef(el, () => statMain)">0</span>
+            <span class="odometer" :ref="(el) => setCountRef(el, () => statMain)">0</span>
           </div>
           <div class="bar"></div>
         </div>
@@ -488,7 +576,7 @@ onMounted(() => {
           >
             <div class="k">{{ s.label }}</div>
             <div class="v">
-              <span :ref="(el) => setCountRef(el, () => s.v)">0</span>
+              <span class="odometer" :ref="(el) => setCountRef(el, () => s.v)">0</span>
             </div>
           </div>
         </div>
@@ -513,13 +601,13 @@ onMounted(() => {
           <span class="vt" aria-hidden="true">WATCH</span>
           <ul>
             <li><span class="k">播放量</span><span class="v">
-              <span :ref="(el) => setCountRef(el, () => videoStats.view, formatCount)">0</span>
+              <span class="odometer" :ref="(el) => setCountRef(el, () => videoStats.view, formatCount)">0</span>
             </span></li>
             <li><span class="k">点赞</span><span class="v">
-              <span :ref="(el) => setCountRef(el, () => videoStats.like, formatCount)">0</span>
+              <span class="odometer" :ref="(el) => setCountRef(el, () => videoStats.like, formatCount)">0</span>
             </span></li>
             <li><span class="k">收藏</span><span class="v">
-              <span :ref="(el) => setCountRef(el, () => videoStats.favorite, formatCount)">0</span>
+              <span class="odometer" :ref="(el) => setCountRef(el, () => videoStats.favorite, formatCount)">0</span>
             </span></li>
           </ul>
           <p>60 秒看懂为什么值得选择小舟工具箱</p>
@@ -1008,6 +1096,8 @@ html[data-motion='reduced'] .hero-cta {
 }
 
 .stat-hero .v {
+  /* 与既有行高对齐，滚轮窗口取 .85em，避免数字区整体变高 */
+  --od-h: .85em;
   font-family: var(--mono);
   font-weight: 800;
   line-height: .85;
@@ -1015,8 +1105,33 @@ html[data-motion='reduced'] .hero-cta {
   font-size: clamp(4.5rem, 15vw, 11rem);
 }
 
-:deep(.num-sep) {
-  margin: 0 -.15em;
+:deep(.odometer) {
+  display: inline-flex;
+  align-items: flex-end;
+  line-height: 1;
+}
+
+:deep(.od-cell) {
+  display: block;
+  height: var(--od-h, 1em);
+  line-height: var(--od-h, 1em);
+  overflow: hidden;
+}
+
+/* 分隔符不参与滚动，放开裁切避免逗号下缘被切 */
+:deep(.od-cell--sep) {
+  overflow: visible;
+  margin: 0 -.12em;
+}
+
+:deep(.od-strip) {
+  display: block;
+}
+
+:deep(.od-char) {
+  display: block;
+  height: var(--od-h, 1em);
+  line-height: var(--od-h, 1em);
 }
 
 .stat-hero .bar {
