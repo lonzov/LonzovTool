@@ -160,6 +160,11 @@ const staticTokens = {
   'button-radius': 'var(--radius-full)',
   'button-icon-radius': 'var(--radius-sm)',
 
+  // 按钮字间距档位：中文按钮字面较满，按需加一点空气，页面只选档位
+  'button-tracking-wide': '0.04em',
+  'button-tracking-wider': '0.08em',
+  'button-tracking-widest': '0.12em',
+
   // 抽屉与弹窗遮罩：两套主题下都应为黑，不随主题变化。
   // mask-blur 是叠在 NModal 自带遮罩之上的毛玻璃层，比 mask 浅。
   mask: alpha(BLACK, 0.4),

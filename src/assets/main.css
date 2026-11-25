@@ -269,6 +269,19 @@ button {
   align-items: center;
 }
 
+/* 字间距档位：中文按钮字面较满，按需加一点空气。各页面只选档位，不再自写 letter-spacing */
+.app-btn--tracking-wide {
+  letter-spacing: var(--button-tracking-wide);
+}
+
+.app-btn--tracking-wider {
+  letter-spacing: var(--button-tracking-wider);
+}
+
+.app-btn--tracking-widest {
+  letter-spacing: var(--button-tracking-widest);
+}
+
 .app-btn__countdown {
   display: inline-flex;
   overflow: hidden;

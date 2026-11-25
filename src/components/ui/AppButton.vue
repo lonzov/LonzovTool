@@ -26,6 +26,12 @@ const props = defineProps({
     default: 'theme',
     validator: (value) => ['theme', 'pill', 'rect', 'circle'].includes(value),
   },
+  /** 按钮文字的字间距档位，normal 沿用继承的排版，不额外添加 */
+  letterSpacing: {
+    type: String,
+    default: 'normal',
+    validator: (value) => ['normal', 'wide', 'wider', 'widest'].includes(value),
+  },
   icon: {
     type: [Object, Function],
     default: null,
@@ -155,6 +161,7 @@ const classes = computed(() => [
   resolvedShape.value === 'rect' ? 'app-btn--rect' : '',
   resolvedShape.value === 'circle' ? 'app-btn--circle' : '',
   props.iconPosition === 'end' ? 'app-btn--icon-end' : '',
+  props.letterSpacing !== 'normal' ? `app-btn--tracking-${props.letterSpacing}` : '',
 ])
 
 const accessibleLabel = computed(() => props.label || attrs['aria-label'] || undefined)
