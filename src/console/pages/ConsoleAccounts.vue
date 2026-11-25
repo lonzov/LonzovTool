@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { onMounted, ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -21,6 +21,7 @@ import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import { submitOnEnter } from '../enterSubmit.js'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
 import { consoleFetch } from '../consoleRequest.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
 import { useConsoleAuth } from '../consoleAuth.js'
@@ -363,7 +364,10 @@ async function runReset() {
 <template>
   <div class="console-accounts">
     <div class="accounts-toolbar">
-      <span class="summary-text">{{ loading ? '读取中…' : `共 ${accounts.length} 个账号` }}</span>
+      <span class="summary-text">
+        <ConsoleSkeleton v-if="loading && !accounts.length" width="7.5em" height="1.2em" />
+        <template v-else>共 {{ accounts.length }} 个账号</template>
+      </span>
       <div class="toolbar-actions">
         <AppButton
           variant="outline"
@@ -393,9 +397,40 @@ async function runReset() {
       title="账号列表"
       description="角色决定账号可访问的功能，单点授权在角色之外单独追加"
     >
-      <p v-if="!accounts.length" class="inline-hint">
-        {{ loading ? '读取中…' : '还没有可管理的账号' }}
-      </p>
+      <div v-if="loading && !accounts.length" class="account-table" aria-hidden="true">
+        <div class="account-row account-row--head">
+          <span>邮箱</span>
+          <span>显示名</span>
+          <span>角色 / 授权</span>
+          <span>状态</span>
+          <span>最后登录</span>
+          <span class="col-actions">操作</span>
+        </div>
+        <div v-for="index in 5" :key="index" class="account-row">
+          <span class="cell-email">
+            <ConsoleSkeleton :width="index % 2 ? '82%' : '66%'" height="1.5em" />
+          </span>
+          <span class="cell-name">
+            <ConsoleSkeleton width="72%" height="1.4em" />
+          </span>
+          <span class="cell-tags">
+            <ConsoleSkeleton :width="index % 2 ? 52 : 44" :height="18" radius="var(--radius-full)" />
+            <ConsoleSkeleton :width="index % 2 ? 60 : 48" :height="18" radius="var(--radius-full)" />
+          </span>
+          <span class="cell-status">
+            <ConsoleSkeleton width="54" :height="20" radius="var(--radius-full)" />
+          </span>
+          <span class="cell-time">
+            <ConsoleSkeleton width="82%" height="1.2em" />
+          </span>
+          <span class="col-actions">
+            <ConsoleSkeleton :width="24" :height="24" radius="var(--radius-sm)" />
+            <ConsoleSkeleton :width="24" :height="24" radius="var(--radius-sm)" />
+          </span>
+        </div>
+      </div>
+
+      <p v-else-if="!accounts.length" class="inline-hint">还没有可管理的账号</p>
 
       <div v-else class="account-table">
         <div class="account-row account-row--head">

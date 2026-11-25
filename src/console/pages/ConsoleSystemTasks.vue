@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -15,6 +15,8 @@ import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import SheetHandle from '../../components/ui/SheetHandle.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
+import ConsoleSpin from '../components/ConsoleSpin.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { useIsMobile } from '../../composables/useIsMobile.js'
 import { useMobileSheet } from '../../composables/useMobileSheet.js'
@@ -286,7 +288,48 @@ onMounted(load)
         />
       </template>
 
-      <p v-if="loading" class="task-empty">正在读取…</p>
+      <div v-if="loading && !tasks.length" class="task-table" aria-hidden="true">
+        <div class="task-table-head">
+          <span>任务</span>
+          <span>状态</span>
+          <span>执行周期</span>
+          <span>下次执行</span>
+          <span>上次执行</span>
+          <span class="task-table-actions-head">操作</span>
+        </div>
+        <article v-for="index in 4" :key="index" class="task-row">
+          <div class="task-cell task-cell--name">
+            <ConsoleSkeleton :width="index % 2 ? '46%' : '36%'" height="1.5em" />
+            <ConsoleSkeleton :width="index % 2 ? '82%' : '68%'" height="1.1em" />
+          </div>
+          <div class="task-cell task-cell--status">
+            <span class="task-label">状态</span>
+            <ConsoleSkeleton width="52" :height="20" radius="var(--radius-full)" />
+          </div>
+          <div class="task-cell">
+            <span class="task-label">执行周期</span>
+            <ConsoleSkeleton width="70%" height="1.2em" />
+          </div>
+          <div class="task-cell">
+            <span class="task-label">下次执行</span>
+            <ConsoleSkeleton width="82%" height="1.2em" />
+          </div>
+          <div class="task-cell">
+            <span class="task-label">上次执行</span>
+            <ConsoleSkeleton width="82%" height="1.2em" />
+            <ConsoleSkeleton width="44" :height="18" radius="var(--radius-full)" />
+          </div>
+          <div class="task-mobile-status">
+            <span class="task-label">状态</span>
+            <div class="task-status-cluster">
+              <ConsoleSkeleton width="52" :height="20" radius="var(--radius-full)" />
+            </div>
+          </div>
+          <div class="task-actions">
+            <ConsoleSkeleton width="52" :height="24" radius="var(--radius-sm)" />
+          </div>
+        </article>
+      </div>
       <p v-else-if="!tasks.length" class="task-empty">还没有注册定时任务。</p>
       <div v-else class="task-table">
         <div class="task-table-head">
@@ -453,7 +496,7 @@ onMounted(load)
                 @click="loadRuns(detailTask)"
               />
             </div>
-            <p v-if="detailLoading" class="drawer-empty">读取中…</p>
+            <ConsoleSpin v-if="detailLoading" :min-height="140" />
             <p v-else-if="!detailRuns.length" class="drawer-empty">还没有执行记录。</p>
             <div v-else class="run-list">
               <div v-for="run in detailRuns" :key="run.id" class="run-row">

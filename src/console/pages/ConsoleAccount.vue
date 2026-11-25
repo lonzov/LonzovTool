@@ -13,6 +13,8 @@ import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import InputOtp from '../../components/ui/InputOtp.vue'
 import SensitiveActionModal from '../components/SensitiveActionModal.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
+import ConsoleSpin from '../components/ConsoleSpin.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { submitOnEnter } from '../enterSubmit.js'
 import { consoleFetch } from '../consoleRequest.js'
@@ -688,8 +690,28 @@ async function runRevokeOthers() {
       </header>
 
       <p v-if="sessionsError" class="inline-hint inline-hint--error" role="alert">{{ sessionsError }}</p>
+      <div v-else-if="sessionsLoading && !devices.length" class="device-list" aria-hidden="true">
+        <article v-for="n in 3" :key="n" class="device-card">
+          <ConsoleSkeleton :width="38" :height="38" :radius="'var(--radius-md)'" />
+
+          <div class="device-main">
+            <p class="device-line">
+              <ConsoleSkeleton width="34%" height="1.5em" />
+            </p>
+            <p class="device-ip">
+              <ConsoleSkeleton width="120px" height="1.1em" />
+            </p>
+            <div class="device-meta">
+              <ConsoleSkeleton width="86px" height="1.1em" />
+              <ConsoleSkeleton width="104px" height="1.1em" />
+            </div>
+          </div>
+
+          <ConsoleSkeleton :width="60" :height="30" />
+        </article>
+      </div>
       <p v-else-if="!devices.length" class="inline-hint">
-        {{ sessionsLoading ? '读取中…' : '没有有效会话' }}
+        没有有效会话
       </p>
 
       <div v-else class="device-list">
@@ -846,7 +868,8 @@ async function runRevokeOthers() {
       <div class="passkey-manage">
         <div class="passkey-manage-head">
           <p class="passkey-manage-hint">
-            已添加 {{ passkeys.length }} 枚通行密钥
+            <ConsoleSkeleton v-if="passkeysLoading" width="8em" height="1.2em" />
+            <template v-else>已添加 {{ passkeys.length }} 枚通行密钥</template>
           </p>
           <AppButton
             variant="solid"
@@ -859,7 +882,7 @@ async function runRevokeOthers() {
           </AppButton>
         </div>
 
-        <p v-if="passkeysLoading" class="passkey-empty">读取中…</p>
+        <ConsoleSpin v-if="passkeysLoading" :min-height="160" />
         <p v-else-if="!passkeys.length" class="passkey-empty">
           还没有添加通行密钥。添加后，登录时可使用此设备的指纹、面容或 PIN 完成验证。
         </p>

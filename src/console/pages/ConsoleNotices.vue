@@ -11,10 +11,11 @@ import {
   Open24Regular,
   ReOrderDotsVertical16Regular,
 } from '@vicons/fluent'
-import { createConsoleSortable } from '../sortable.js'
+import { createDragSortable } from '../../utils/sortable.js'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
 import { submitOnEnter } from '../enterSubmit.js'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
@@ -46,7 +47,7 @@ const editor = ref({ show: false, editing: false, noticeId: 0 })
 const form = ref({ content: '', link: '', dateAt: null })
 const editorSaving = ref(false)
 
-const emptyText = computed(() => (loading.value ? '读取中…' : '还没有公告，新建一条试试'))
+const emptyText = computed(() => '还没有公告，新建一条试试')
 
 /* 库里存的是带偏移的字符串（如 2026-05-24T21:32+08:00），解析不了也不能让整页垮掉 */
 function parseTime(text) {
@@ -94,7 +95,7 @@ function setupSortable() {
   sortable?.destroy()
   sortable = null
   if (!listEl.value) return
-  sortable = createConsoleSortable(listEl.value, {
+  sortable = createDragSortable(listEl.value, {
     handle: '.drag-handle',
     animation: 150,
     ghostClass: 'notice-row--ghost',
@@ -259,7 +260,30 @@ onBeforeUnmount(() => {
       title="公告列表"
       description="按列表顺序显示在站内公告栏"
     >
-      <p v-if="!notices.length" class="inline-hint">{{ emptyText }}</p>
+      <div v-if="loading && !notices.length" class="notice-table" aria-hidden="true">
+        <div class="notice-row notice-row--head">
+          <span aria-hidden="true"></span>
+          <span>内容</span>
+          <span>时间</span>
+          <span class="col-actions">操作</span>
+        </div>
+        <div class="notice-rows">
+          <div v-for="index in 5" :key="index" class="notice-row">
+            <span></span>
+            <div class="cell-text">
+              <ConsoleSkeleton :width="index % 2 ? '76%' : '58%'" height="1.5em" />
+              <ConsoleSkeleton :width="index % 2 ? '48%' : '34%'" height="1.1em" />
+            </div>
+            <ConsoleSkeleton width="88%" height="1.1em" />
+            <span class="col-actions">
+              <ConsoleSkeleton :width="24" :height="24" radius="var(--radius-sm)" />
+              <ConsoleSkeleton :width="24" :height="24" radius="var(--radius-sm)" />
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <p v-else-if="!notices.length" class="inline-hint">{{ emptyText }}</p>
 
       <div v-else class="notice-table" :class="{ 'notice-table--busy': reordering }">
         <div class="notice-row notice-row--head">

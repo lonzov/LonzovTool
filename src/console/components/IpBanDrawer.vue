@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -11,6 +11,7 @@ import {
 import { Delete24Regular, ShieldProhibited24Regular } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import SheetHandle from '../../components/ui/SheetHandle.vue'
+import ConsoleSpin from './ConsoleSpin.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { useIsMobile } from '../../composables/useIsMobile.js'
 import { useMobileSheet } from '../../composables/useMobileSheet.js'
@@ -178,7 +179,7 @@ watch(
         </section>
 
         <p v-if="errorText" class="ban-error" role="alert">{{ errorText }}</p>
-        <p v-else-if="loading" class="ban-empty">读取中…</p>
+        <ConsoleSpin v-else-if="loading" :min-height="160" />
         <p v-else-if="!items.length" class="ban-empty">还没有封禁规则</p>
         <ul v-else class="ban-list">
           <li v-for="item in items" :key="item.id" class="ban-row">

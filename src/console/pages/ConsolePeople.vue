@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NDatePicker, NForm, NFormItem, NIcon, NInput, useMessage } from 'naive-ui'
@@ -12,12 +12,13 @@ import {
   PeopleCommunity24Regular,
   ReOrderDotsVertical16Regular,
 } from '@vicons/fluent'
-import { createConsoleSortable } from '../sortable.js'
+import { createDragSortable } from '../../utils/sortable.js'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ImageUploadField from '../components/ImageUploadField.vue'
 import { uploadMediaImage } from '../mediaUpload.js'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { submitOnEnter } from '../enterSubmit.js'
 import { consoleFetch } from '../consoleRequest.js'
@@ -74,10 +75,9 @@ const rows = computed(() =>
   tab.value === 'contributors' ? contributors.value : donations.value,
 )
 const isContributor = computed(() => tab.value === 'contributors')
-const emptyText = computed(() => {
-  if (loading.value) return '读取中…'
-  return isContributor.value ? '还没有共建者，新增一位试试' : '还没有打赏记录'
-})
+const emptyText = computed(() =>
+  isContributor.value ? '还没有共建者，新增一位试试' : '还没有打赏记录',
+)
 const countText = computed(() =>
   isContributor.value ? `共 ${contributors.value.length} 位` : `共 ${donations.value.length} 笔`,
 )
@@ -158,7 +158,7 @@ function setupSortable() {
   sortable?.destroy()
   sortable = null
   if (!listEl.value || !isContributor.value) return
-  sortable = createConsoleSortable(listEl.value, {
+  sortable = createDragSortable(listEl.value, {
     handle: '.drag-handle',
     animation: 150,
     ghostClass: 'person-row--ghost',
@@ -404,10 +404,54 @@ onBeforeUnmount(() => {
       :description="activeTab.description"
     >
       <template #extra>
-        <span class="count-tag">{{ countText }}</span>
+        <span v-if="loading && !rows.length" class="count-tag">
+          <ConsoleSkeleton width="5.5em" height="1.2em" />
+        </span>
+        <span v-else class="count-tag">{{ countText }}</span>
       </template>
 
-      <p v-if="!rows.length" class="inline-hint">{{ emptyText }}</p>
+      <div v-if="loading && !rows.length" class="person-list" aria-hidden="true">
+        <div class="person-rows">
+          <div
+            v-for="index in 5"
+            :key="index"
+            class="person-row"
+            :class="isContributor ? 'person-row--contributor' : 'person-row--donation'"
+          >
+            <template v-if="isContributor">
+              <span></span>
+              <ConsoleSkeleton circle :width="34" :height="34" />
+              <div class="person-main">
+                <ConsoleSkeleton :width="index % 2 ? '38%' : '28%'" height="1.5em" />
+                <ConsoleSkeleton :width="index % 2 ? '56%' : '44%'" height="1.1em" />
+              </div>
+              <span class="person-qq">
+                <ConsoleSkeleton width="76%" height="1.1em" />
+              </span>
+            </template>
+
+            <template v-else>
+              <span class="person-time">
+                <ConsoleSkeleton :width="62" height="1.1em" />
+              </span>
+              <div class="person-main">
+                <ConsoleSkeleton :width="index % 2 ? '34%' : '26%'" height="1.5em" />
+                <ConsoleSkeleton :width="index % 2 ? '52%' : '40%'" height="1.1em" />
+              </div>
+              <span class="person-amount">
+                <ConsoleSkeleton width="68%" height="1.1em" />
+              </span>
+            </template>
+
+            <span class="col-actions">
+              <ConsoleSkeleton :width="24" :height="24" radius="var(--radius-sm)" />
+              <ConsoleSkeleton :width="24" :height="24" radius="var(--radius-sm)" />
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <p v-else-if="!rows.length" class="inline-hint">{{ emptyText }}</p>
 
       <div
         v-else

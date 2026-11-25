@@ -14,6 +14,7 @@ import {
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
 import ImageUploadField from '../components/ImageUploadField.vue'
 import { submitOnEnter } from '../enterSubmit.js'
 import { uploadMediaImage } from '../mediaUpload.js'
@@ -307,10 +308,36 @@ onMounted(load)
       title="下载页列表"
     >
       <template #extra>
-        <span class="count-tag">共 {{ pages.length }} 页 · {{ formatCount(totalDownloads) }} 次下载</span>
+        <span v-if="loading && !pages.length" class="count-tag">
+          <ConsoleSkeleton width="9em" height="1.2em" />
+        </span>
+        <span v-else class="count-tag">共 {{ pages.length }} 页 · {{ formatCount(totalDownloads) }} 次下载</span>
       </template>
 
-      <p v-if="loading" class="inline-hint">读取中…</p>
+      <div v-if="loading && !pages.length" class="download-rows" aria-hidden="true">
+        <div v-for="index in 4" :key="index" class="download-row">
+          <span class="download-icon">
+            <ConsoleSkeleton :width="40" :height="40" radius="var(--radius-lg)" />
+          </span>
+          <div class="download-main">
+            <div class="download-title-line">
+              <ConsoleSkeleton :width="index % 2 ? '38%' : '28%'" height="1.5em" />
+              <ConsoleSkeleton :width="44" :height="18" radius="var(--radius-full)" />
+              <ConsoleSkeleton :width="34" height="1.1em" />
+            </div>
+            <ConsoleSkeleton :width="index % 2 ? '54%' : '42%'" height="1.1em" />
+          </div>
+          <div class="download-meta">
+            <ConsoleSkeleton :width="index % 2 ? '88%' : '66%'" height="1.1em" />
+            <ConsoleSkeleton :width="index % 2 ? '52%' : '40%'" height="1.1em" />
+          </div>
+          <span class="download-actions">
+            <ConsoleSkeleton :width="24" :height="24" radius="var(--radius-sm)" />
+            <ConsoleSkeleton :width="24" :height="24" radius="var(--radius-sm)" />
+          </span>
+        </div>
+      </div>
+
       <p v-else-if="!pages.length" class="inline-hint">还没有下载页，新增一个试试</p>
 
       <div v-else class="download-rows">

@@ -15,13 +15,14 @@ import {
   List24Regular,
   ReOrderDotsVertical16Regular,
 } from '@vicons/fluent'
-import { createConsoleSortable } from '../sortable.js'
+import { createDragSortable } from '../../utils/sortable.js'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import { submitOnEnter } from '../enterSubmit.js'
 import ToolCard from '../../components/ToolCard.vue'
 import ToolLogo from '../../components/ToolLogo.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
 import { getCategoryIcon } from '../../config/categoryIcons.js'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
@@ -203,7 +204,7 @@ function setupSortables() {
     if (viewMode.value === 'list') {
       if (!listEl.value) return
       sortables.push(
-        createConsoleSortable(listEl.value, {
+        createDragSortable(listEl.value, {
           handle: '.drag-handle',
           animation: 150,
           ghostClass: 'card-row--ghost',
@@ -216,7 +217,7 @@ function setupSortables() {
     for (const [categoryId, el] of gridEls) {
       if (!el) continue
       sortables.push(
-        createConsoleSortable(el, {
+        createDragSortable(el, {
           handle: '.drag-handle',
           animation: 150,
           ghostClass: 'card-grid__item--ghost',
@@ -586,7 +587,10 @@ async function remove(card) {
           check-strategy="child"
           :menu-props="{ class: 'compact-cascader-menu' }"
         />
-        <span class="summary-text">{{ summaryText }}</span>
+        <span class="summary-text">
+          <ConsoleSkeleton v-if="loading && !cards.length" width="9em" height="1.2em" />
+          <template v-else>{{ summaryText }}</template>
+        </span>
       </div>
       <div class="toolbar-actions">
         <div class="view-switch">
@@ -631,9 +635,28 @@ async function remove(card) {
     <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
     <ConsolePanel :icon="Apps24Regular" title="卡片列表">
-      <p v-if="!visibleCards.length" class="inline-hint">
-        {{ loading ? '读取中…' : '没有匹配的卡片' }}
-      </p>
+      <p v-if="!loading && !visibleCards.length" class="inline-hint">没有匹配的卡片</p>
+
+      <div v-else-if="loading && !visibleCards.length && viewMode === 'grid'" class="card-groups" aria-hidden="true">
+        <section class="card-group">
+          <div class="card-group__head">
+            <ConsoleSkeleton :width="18" :height="18" circle />
+            <ConsoleSkeleton width="96px" height="1.1em" />
+            <ConsoleSkeleton :width="26" :height="18" :radius="'var(--radius-full)'" />
+          </div>
+          <div class="card-grid">
+            <div v-for="n in 8" :key="n" class="card-grid__item">
+              <div class="card-skeleton">
+                <ConsoleSkeleton :width="40" :height="40" :radius="'var(--radius-md)'" />
+                <div class="card-skeleton__text">
+                  <ConsoleSkeleton width="58%" height="1.5em" />
+                  <ConsoleSkeleton width="88%" height="1.1em" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
 
       <!-- 模拟布局：完全照首页卡片区——按分类分段，每段一个标题 + 网格；
            点击进编辑而不是跳转，隐藏卡整体降透明度并带角标 -->
@@ -685,7 +708,31 @@ async function remove(card) {
           <span>状态</span>
           <span class="col-actions">操作</span>
         </div>
-        <div ref="listEl" class="card-table-body">
+        <div v-if="loading && !visibleCards.length" class="card-table-body" aria-hidden="true">
+          <div v-for="n in 6" :key="n" class="card-row">
+            <div class="cell-main">
+              <span class="drag-handle">
+                <ConsoleSkeleton :width="14" :height="14" />
+              </span>
+              <ConsoleSkeleton :width="32" :height="32" />
+              <div class="cell-text">
+                <ConsoleSkeleton width="42%" height="1.5em" />
+                <ConsoleSkeleton width="66%" height="1.1em" />
+              </div>
+            </div>
+            <span class="cell-meta">
+              <ConsoleSkeleton width="62%" height="1.1em" />
+            </span>
+            <span class="cell-state">
+              <ConsoleSkeleton :width="64" :height="22" :radius="'var(--radius-full)'" />
+            </span>
+            <span class="col-actions">
+              <ConsoleSkeleton :width="24" :height="24" />
+              <ConsoleSkeleton :width="24" :height="24" />
+            </span>
+          </div>
+        </div>
+        <div v-else ref="listEl" class="card-table-body">
           <div
             v-for="card in visibleCards"
             :key="card.slug"
@@ -1034,6 +1081,26 @@ async function remove(card) {
 
 .card-grid__item--hidden {
   opacity: 0.55;
+}
+
+.card-skeleton {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-height: 86px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.card-skeleton__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
 }
 
 .card-grid__badge {

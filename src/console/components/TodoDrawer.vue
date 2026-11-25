@@ -12,6 +12,7 @@ import {
 import { useIsMobile } from '../../composables/useIsMobile.js'
 import { useMobileSheet } from '../../composables/useMobileSheet.js'
 import SheetHandle from '../../components/ui/SheetHandle.vue'
+import ConsoleSkeleton from './ConsoleSkeleton.vue'
 
 /* 待办抽屉：概览上的卡片只留总数，要点开才知道具体是哪几件事。
    数据由概览页一次取回（后端已合并排序），这里只负责呈现与跳转。 */
@@ -72,7 +73,6 @@ const breakdown = computed(() => {
 })
 
 const emptyText = computed(() => {
-  if (props.loading) return '读取中…'
   if (props.error) return props.error
   return '暂无待处理事项'
 })
@@ -130,14 +130,36 @@ function open(item) {
     >
       <div class="todo-body">
         <div class="todo-summary">
-          <span class="todo-total">{{ total }}</span>
+          <span class="todo-total">
+            <ConsoleSkeleton v-if="loading" width="2.2em" height="1.2em" />
+            <template v-else>{{ total }}</template>
+          </span>
           <span class="todo-summary-text">
             <span class="todo-summary-label">待处理</span>
             <span v-if="breakdown" class="todo-summary-breakdown">{{ breakdown }}</span>
           </span>
         </div>
 
-        <p v-if="!items.length" class="todo-empty">{{ emptyText }}</p>
+        <ul v-if="loading && !items.length" class="todo-list" aria-hidden="true">
+          <li v-for="n in 4" :key="n">
+            <div class="todo-row todo-row--skeleton">
+              <span class="todo-icon">
+                <ConsoleSkeleton :width="16" :height="16" circle />
+              </span>
+
+              <span class="todo-main">
+                <span class="todo-title-line">
+                  <ConsoleSkeleton width="46%" height="1.5em" />
+                </span>
+                <ConsoleSkeleton width="64%" height="1.1em" />
+              </span>
+
+              <ConsoleSkeleton :width="48" :height="14" />
+            </div>
+          </li>
+        </ul>
+
+        <p v-else-if="!items.length" class="todo-empty">{{ emptyText }}</p>
 
         <ul v-else class="todo-list">
           <li v-for="item in items" :key="`${item.type}-${item.id}`">
@@ -252,6 +274,14 @@ function open(item) {
 
 .todo-row:hover {
   background: var(--accent);
+}
+
+.todo-row--skeleton {
+  cursor: default;
+}
+
+.todo-row--skeleton:hover {
+  background: transparent;
 }
 
 .todo-icon {

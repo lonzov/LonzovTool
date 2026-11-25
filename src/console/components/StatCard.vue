@@ -1,5 +1,6 @@
 <script setup>
 import { NIcon } from 'naive-ui'
+import ConsoleSkeleton from './ConsoleSkeleton.vue'
 
 defineProps({
   label: {
@@ -18,6 +19,10 @@ defineProps({
     type: String,
     default: '',
   },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
 })
 </script>
 
@@ -27,8 +32,14 @@ defineProps({
       <NIcon v-if="icon" :component="icon" :size="16" class="stat-icon" />
       <span class="stat-label">{{ label }}</span>
     </div>
-    <div class="stat-value">{{ value }}</div>
-    <div v-if="hint" class="stat-hint">{{ hint }}</div>
+    <div class="stat-value">
+      <ConsoleSkeleton v-if="loading" width="52%" height="1.25em" />
+      <template v-else>{{ value }}</template>
+    </div>
+    <div v-if="hint || loading" class="stat-hint">
+      <ConsoleSkeleton v-if="loading" width="70%" height="1.45em" />
+      <template v-else>{{ hint }}</template>
+    </div>
   </div>
 </template>
 

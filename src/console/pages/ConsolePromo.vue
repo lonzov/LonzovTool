@@ -11,6 +11,7 @@ import {
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
 import { submitOnEnter } from '../enterSubmit.js'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
@@ -75,7 +76,7 @@ function setPendingImage(file) {
 const imageInput = ref(null)
 const dragging = ref(false)
 
-const emptyText = computed(() => (loading.value ? '读取中…' : '没有推广位数据'))
+const emptyText = computed(() => '没有推广位数据')
 
 function gotUnauthorized(e) {
   if (e?.code !== 'unauthorized') return false
@@ -268,7 +269,27 @@ async function toggleHidden(item) {
     <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
     <ConsolePanel :icon="AppsListDetail24Regular" title="槽位明细">
-      <p v-if="!items.length" class="inline-hint">{{ emptyText }}</p>
+      <div v-if="loading && !items.length" class="promo-list" aria-hidden="true">
+        <div v-for="index in 4" :key="index" class="promo-row">
+          <div class="promo-thumb">
+            <ConsoleSkeleton width="100%" height="100%" radius="var(--radius-md)" />
+          </div>
+          <div class="promo-main">
+            <div class="promo-title-line">
+              <ConsoleSkeleton :width="index % 2 ? '26%' : '20%'" height="1.5em" />
+              <ConsoleSkeleton width="54" :height="18" radius="var(--radius-full)" />
+            </div>
+            <ConsoleSkeleton :width="index % 2 ? '48%' : '38%'" height="1.1em" />
+            <ConsoleSkeleton :width="index % 2 ? '62%' : '50%'" height="1.1em" />
+          </div>
+          <div class="promo-actions">
+            <ConsoleSkeleton :width="24" :height="24" radius="var(--radius-sm)" />
+            <ConsoleSkeleton :width="24" :height="24" radius="var(--radius-sm)" />
+          </div>
+        </div>
+      </div>
+
+      <p v-else-if="!items.length" class="inline-hint">{{ emptyText }}</p>
 
       <div v-else class="promo-list">
         <div v-for="item in items" :key="item.slot" class="promo-row">

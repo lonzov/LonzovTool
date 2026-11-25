@@ -19,6 +19,7 @@ import {
 } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import SheetHandle from '../../components/ui/SheetHandle.vue'
+import ConsoleSpin from './ConsoleSpin.vue'
 import { useIsMobile } from '../../composables/useIsMobile.js'
 import { useMobileSheet } from '../../composables/useMobileSheet.js'
 import { consoleFetch } from '../consoleRequest.js'
@@ -239,6 +240,12 @@ watch(
       :header-style="sheetHeaderStyle"
     >
       <div class="settings-drawer" :class="{ 'settings-drawer--mobile': isMobile }">
+        <ConsoleSpin
+          v-if="loading && !items.length"
+          class="settings-spin"
+          :min-height="320"
+        />
+        <template v-else>
         <div v-if="isMobile" class="mobile-switcher">
           <NDropdown
             trigger="click"
@@ -378,6 +385,7 @@ watch(
 
           <p v-else class="empty-hint">{{ loading ? '读取中…' : '没有可编辑的通知模板' }}</p>
         </section>
+        </template>
       </div>
     </NDrawerContent>
   </NDrawer>
@@ -388,6 +396,10 @@ watch(
   display: flex;
   height: calc(100dvh - 57px);
   min-height: 0;
+}
+
+.settings-spin {
+  flex: 1;
 }
 
 .settings-nav {

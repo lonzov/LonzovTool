@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NIcon, useMessage } from 'naive-ui'
@@ -19,6 +19,7 @@ import IpBanDrawer from '../components/IpBanDrawer.vue'
 import NotificationComposeModal from '../components/NotificationComposeModal.vue'
 import NotificationSettingsDrawer from '../components/NotificationSettingsDrawer.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
 import { useSensitiveTrust } from '../useSensitiveTrust.js'
@@ -70,7 +71,7 @@ const STATUS_LABEL = {
   rejected: { text: '已拒绝', tone: 'destructive' },
 }
 
-const emptyText = computed(() => (loading.value ? '读取中…' : '没有符合条件的提交'))
+const emptyText = computed(() => '没有符合条件的提交')
 
 function notifySent(item) {
   return item?.notification_status === 'email'
@@ -325,8 +326,59 @@ onMounted(async () => {
 
     <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
-    <ConsolePanel :icon="CheckmarkCircle24Regular" :title="`提交列表（${items.length}）`">
-      <div v-if="!items.length" class="empty-state">
+    <ConsolePanel
+      :icon="CheckmarkCircle24Regular"
+      :title="loading && !items.length ? '提交列表' : `提交列表（${items.length}）`"
+    >
+      <div v-if="loading && !items.length" class="submission-list" aria-hidden="true">
+        <article v-for="n in 3" :key="n" class="submission-card submission-card--skeleton">
+          <div class="submission-head">
+            <ConsoleSkeleton
+              class="submission-icon-skeleton"
+              :width="40"
+              :height="40"
+              :radius="'var(--radius-sm)'"
+            />
+            <div class="submission-title-block">
+              <div class="submission-title-line">
+                <ConsoleSkeleton :width="n % 2 ? '30%' : '38%'" height="1.6em" />
+                <ConsoleSkeleton :width="48" :height="18" :radius="'var(--radius-full)'" />
+              </div>
+              <ConsoleSkeleton :width="n % 2 ? '46%' : '58%'" height="1.2em" />
+            </div>
+            <div class="submission-side">
+              <ConsoleSkeleton width="98" height="1.2em" />
+              <ConsoleSkeleton width="64" height="1.2em" />
+            </div>
+          </div>
+          <dl class="submission-meta">
+            <div>
+              <dt><ConsoleSkeleton width="2em" height="1.2em" /></dt>
+              <dd><ConsoleSkeleton width="120" height="1.2em" /></dd>
+            </div>
+            <div>
+              <dt><ConsoleSkeleton width="2em" height="1.2em" /></dt>
+              <dd><ConsoleSkeleton width="86%" height="1.2em" /></dd>
+            </div>
+            <div>
+              <dt><ConsoleSkeleton width="3.2em" height="1.2em" /></dt>
+              <dd><ConsoleSkeleton width="70%" height="1.2em" /></dd>
+            </div>
+            <div class="meta-wide">
+              <dt><ConsoleSkeleton width="2em" height="1.2em" /></dt>
+              <dd><ConsoleSkeleton width="64%" height="1.2em" /></dd>
+            </div>
+          </dl>
+          <div class="submission-actions">
+            <ConsoleSkeleton class="note-skeleton" height="30" :radius="'var(--radius-full)'" />
+            <div class="action-buttons">
+              <ConsoleSkeleton :width="72" :height="30" :radius="'var(--radius-sm)'" />
+              <ConsoleSkeleton :width="72" :height="30" :radius="'var(--radius-sm)'" />
+            </div>
+          </div>
+        </article>
+      </div>
+      <div v-else-if="!items.length" class="empty-state">
         <p>{{ emptyText }}</p>
         <div class="empty-actions">
           <AppButton
@@ -652,6 +704,10 @@ onMounted(async () => {
   background: var(--card);
 }
 
+.submission-icon-skeleton {
+  flex-shrink: 0;
+}
+
 .submission-title-block {
   display: flex;
   flex-direction: column;
@@ -736,6 +792,15 @@ onMounted(async () => {
   min-width: 0;
   color: var(--muted-foreground);
   overflow-wrap: anywhere;
+}
+
+.submission-card--skeleton .submission-meta dd {
+  flex: 1;
+}
+
+.submission-card--skeleton .note-skeleton {
+  flex: 1;
+  min-width: 140px;
 }
 
 /* 长文本只留两行摘要，点开模态框看全文 */
@@ -945,6 +1010,10 @@ onMounted(async () => {
     grid-row: 1 / span 2;
   }
 
+  .submission-icon-skeleton {
+    grid-row: 1 / span 2;
+  }
+
   .submission-title-block {
     grid-column: 2;
   }
@@ -972,6 +1041,12 @@ onMounted(async () => {
   }
 
   .note-input {
+    width: 100%;
+    min-width: 0;
+    flex: 0 0 30px;
+  }
+
+  .submission-card--skeleton .note-skeleton {
     width: 100%;
     min-width: 0;
     flex: 0 0 30px;

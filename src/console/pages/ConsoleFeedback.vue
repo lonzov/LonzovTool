@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NDrawer, NDrawerContent, NIcon, NInput, NSelect, useMessage } from 'naive-ui'
@@ -23,6 +23,7 @@ import {
 import AppButton from '../../components/ui/AppButton.vue'
 import SheetHandle from '../../components/ui/SheetHandle.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
 import FeedbackFilterModal from '../components/FeedbackFilterModal.vue'
 import IpBanDrawer from '../components/IpBanDrawer.vue'
 import NotificationComposeModal from '../components/NotificationComposeModal.vue'
@@ -129,7 +130,7 @@ const NOTIFICATION_LABEL = {
   failed: '无法通知',
 }
 
-const emptyText = computed(() => (loading.value ? '读取中…' : '没有符合条件的反馈'))
+const emptyText = computed(() => '没有符合条件的反馈')
 
 function notifySent(item) {
   return item?.notification_status === 'email'
@@ -563,8 +564,34 @@ onMounted(async () => {
 
     <p v-if="errorText" class="inline-hint inline-hint--error" role="alert">{{ errorText }}</p>
 
-    <ConsolePanel :icon="ChatHelp24Regular" :title="`反馈列表（${items.length}）`">
-      <div v-if="!items.length" class="empty-state">
+    <ConsolePanel
+      :icon="ChatHelp24Regular"
+      :title="loading && !items.length ? '反馈列表' : `反馈列表（${items.length}）`"
+    >
+      <ul v-if="loading && !items.length" class="issue-list" aria-hidden="true">
+        <li v-for="n in 5" :key="n">
+          <div class="issue-row issue-row--skeleton">
+            <span class="issue-kind">
+              <ConsoleSkeleton :width="36" :height="36" />
+            </span>
+
+            <span class="issue-main">
+              <span class="issue-title-line">
+                <ConsoleSkeleton width="42%" height="1.5em" />
+                <ConsoleSkeleton :width="44" :height="20" :radius="'var(--radius-full)'" />
+              </span>
+              <ConsoleSkeleton width="70%" height="1.1em" />
+              <ConsoleSkeleton width="34%" height="1.1em" />
+            </span>
+
+            <span class="issue-shots">
+              <ConsoleSkeleton :width="30" :height="16" />
+            </span>
+          </div>
+        </li>
+      </ul>
+
+      <div v-else-if="!items.length" class="empty-state">
         <p>{{ emptyText }}</p>
         <div class="empty-actions">
           <AppButton v-if="status" variant="outline" size="sm" @click="status = ''">
@@ -1000,6 +1027,14 @@ onMounted(async () => {
 
 .issue-row:hover {
   background: var(--accent);
+}
+
+.issue-row--skeleton {
+  cursor: default;
+}
+
+.issue-row--skeleton:hover {
+  background: transparent;
 }
 
 .issue-kind {

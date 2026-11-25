@@ -22,11 +22,12 @@ import {
   MegaphoneLoud24Regular,
   ReOrderDotsVertical16Regular,
 } from '@vicons/fluent'
-import { createConsoleSortable } from '../sortable.js'
+import { createDragSortable } from '../../utils/sortable.js'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import AnnouncementModal from '../../components/AnnouncementModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
 import { submitOnEnter } from '../enterSubmit.js'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
@@ -161,7 +162,7 @@ function setupSortable() {
   sortable?.destroy()
   sortable = null
   if (!listEl.value) return
-  sortable = createConsoleSortable(listEl.value, {
+  sortable = createDragSortable(listEl.value, {
     handle: '.drag-handle',
     animation: 150,
     onEnd: handleDragEnd,
@@ -487,9 +488,33 @@ onBeforeUnmount(() => {
       title="弹窗公告列表"
       description="按优先级从高到低展示；新公告默认排在末尾"
     >
-      <p v-if="!items.length" class="inline-hint">
-        {{ loading ? '读取中…' : '还没有弹窗公告，新建一条试试' }}
-      </p>
+      <div v-if="loading && !items.length" class="announcement-table" aria-hidden="true">
+        <div class="announcement-row announcement-row--head">
+          <span aria-hidden="true"></span>
+          <span>标题</span>
+          <span>状态 / 生效时间</span>
+          <span class="col-actions">操作</span>
+        </div>
+        <div class="announcement-rows">
+          <div v-for="index in 5" :key="index" class="announcement-row">
+            <span></span>
+            <div class="cell-text">
+              <ConsoleSkeleton :width="index % 2 ? '62%' : '44%'" height="1.5em" />
+              <ConsoleSkeleton :width="index % 2 ? '86%' : '68%'" height="1.1em" />
+            </div>
+            <div class="cell-meta">
+              <ConsoleSkeleton width="54" height="18" radius="var(--radius-full)" />
+              <ConsoleSkeleton width="88%" height="1.1em" />
+            </div>
+            <span class="col-actions">
+              <ConsoleSkeleton :width="24" :height="24" radius="var(--radius-sm)" />
+              <ConsoleSkeleton :width="24" :height="24" radius="var(--radius-sm)" />
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <p v-else-if="!items.length" class="inline-hint">还没有弹窗公告，新建一条试试</p>
 
       <div v-else class="announcement-table" :class="{ 'announcement-table--busy': reordering }">
         <div class="announcement-row announcement-row--head">

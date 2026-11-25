@@ -5,6 +5,7 @@ import { useMessage } from 'naive-ui'
 import { Image24Regular } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
 import { confirmDialog } from '../../composables/useConfirm.js'
 import { consoleFetch } from '../consoleRequest.js'
 
@@ -139,22 +140,44 @@ onMounted(load)
       <div class="orphan-stats">
         <div class="orphan-stat">
           <span class="orphan-stat-label">待清理</span>
-          <strong class="orphan-stat-value">{{ ready }}</strong>
+          <strong class="orphan-stat-value">
+            <ConsoleSkeleton v-if="loading" width="3em" height="1.4em" />
+            <template v-else>{{ ready }}</template>
+          </strong>
           <span class="orphan-stat-note">转为孤儿超过 {{ graceHours }} 小时</span>
         </div>
         <div class="orphan-stat">
           <span class="orphan-stat-label">全部孤儿</span>
-          <strong class="orphan-stat-value">{{ total }}</strong>
+          <strong class="orphan-stat-value">
+            <ConsoleSkeleton v-if="loading" width="3em" height="1.4em" />
+            <template v-else>{{ total }}</template>
+          </strong>
           <span class="orphan-stat-note">含仍在宽限期内的资产</span>
         </div>
         <div class="orphan-stat">
           <span class="orphan-stat-label">可释放空间</span>
-          <strong class="orphan-stat-value">{{ formatBytes(overview?.ready_bytes) }}</strong>
+          <strong class="orphan-stat-value">
+            <ConsoleSkeleton v-if="loading" width="3em" height="1.4em" />
+            <template v-else>{{ formatBytes(overview?.ready_bytes) }}</template>
+          </strong>
           <span class="orphan-stat-note">仅统计待清理项</span>
         </div>
       </div>
 
-      <p v-if="loading" class="orphan-empty">正在读取…</p>
+      <div v-if="loading && !items.length" class="orphan-list" aria-hidden="true">
+        <div class="orphan-list-head">
+          <span>文件</span>
+          <span>类型</span>
+          <span>大小</span>
+          <span>转为孤儿时间</span>
+        </div>
+        <div v-for="index in 5" :key="index" class="orphan-row">
+          <ConsoleSkeleton :width="index % 2 ? '72%' : '58%'" height="1.1em" />
+          <ConsoleSkeleton width="58%" height="1.1em" />
+          <ConsoleSkeleton width="42%" height="1.1em" />
+          <ConsoleSkeleton width="76%" height="1.1em" />
+        </div>
+      </div>
       <p v-else-if="!items.length" class="orphan-empty">
         当前没有可清理的孤儿文件。
       </p>

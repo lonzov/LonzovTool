@@ -5,6 +5,7 @@ import { ArrowClockwise24Regular } from '@vicons/fluent'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import InputOtp from '../../components/ui/InputOtp.vue'
+import ConsoleSpin from './ConsoleSpin.vue'
 import { consoleFetch } from '../../console/consoleRequest.js'
 import { submitOnEnter } from '../enterSubmit.js'
 import { useResendCountdown } from '../../console/useResendCountdown.js'
@@ -42,6 +43,7 @@ const METHOD_LABEL = {
 
 const methods = ref([])
 const method = ref('')
+const optionsLoading = ref(true)
 const maskedEmail = ref('')
 const password = ref('')
 const code = ref('')
@@ -65,6 +67,7 @@ const canSubmit = computed(() => {
 function reset() {
   methods.value = []
   method.value = ''
+  optionsLoading.value = true
   maskedEmail.value = ''
   password.value = ''
   code.value = ''
@@ -99,6 +102,8 @@ async function loadOptions() {
     }
   } catch (e) {
     message.error(e?.message || '读取验证方式失败，请稍后重试')
+  } finally {
+    optionsLoading.value = false
   }
 }
 
@@ -206,6 +211,8 @@ const actions = computed(() => [
     @update:show="emit('update:show', $event)"
   >
     <div class="verify-body" @keydown.enter="submitOnEnter($event, submit)">
+    <ConsoleSpin v-if="optionsLoading" :min-height="132" />
+    <template v-else>
     <!-- 只有一种方式时不显示切换器，避免"只有一个选项还要点一下" -->
     <div v-if="!onlyOne" class="method-tabs" role="tablist">
       <button
@@ -282,6 +289,7 @@ const actions = computed(() => [
     </div>
 
     <p v-if="check.message" class="field-error">{{ check.message }}</p>
+    </template>
     </div>
   </AppModal>
 </template>

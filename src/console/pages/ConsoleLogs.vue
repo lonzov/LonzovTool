@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { NIcon, NInput, NInputNumber, useMessage } from 'naive-ui'
@@ -12,6 +12,7 @@ import {
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
 import { consoleFetch } from '../consoleRequest.js'
 import { usePermissions } from '../usePermissions.js'
 
@@ -288,12 +289,39 @@ onMounted(load)
 
     <ConsolePanel :icon="History24Regular" title="日志记录">
       <template #extra>
-        <span class="count-tag">
+        <span v-if="loading && !rows.length" class="count-tag">
+          <ConsoleSkeleton width="10em" height="1.2em" />
+        </span>
+        <span v-else class="count-tag">
           {{ hasFilter ? '筛选结果' : '最近记录' }} · 已载入 {{ rows.length }} 条
         </span>
       </template>
 
-      <p v-if="loading && !rows.length" class="inline-hint">读取中…</p>
+      <div v-if="loading && !rows.length" class="log-rows" aria-hidden="true">
+        <div class="log-row log-row--head">
+          <span>时间</span>
+          <span>级别</span>
+          <span>动作</span>
+          <span>操作者与对象</span>
+          <span>来源 IP</span>
+        </div>
+        <div v-for="index in 8" :key="index" class="log-row">
+          <span class="log-time">
+            <ConsoleSkeleton width="86%" height="1.2em" />
+          </span>
+          <span>
+            <ConsoleSkeleton width="44" :height="18" radius="var(--radius-full)" />
+          </span>
+          <ConsoleSkeleton :width="index % 2 ? '72%' : '58%'" height="1.2em" />
+          <div class="log-content">
+            <ConsoleSkeleton width="64%" height="1.2em" />
+            <ConsoleSkeleton :width="index % 2 ? '48%' : '36%'" height="1.1em" />
+          </div>
+          <span class="log-ip">
+            <ConsoleSkeleton width="76%" height="1.2em" />
+          </span>
+        </div>
+      </div>
       <div v-else-if="!rows.length && !errorText" class="empty-state">
         <p>{{ hasFilter ? '没有匹配的记录' : '还没有日志' }}</p>
         <div class="empty-actions">

@@ -114,7 +114,6 @@ src:
     usePermissions.js: 控制台权限判定（can/permissions/account），由壳层 provide 给子页面，口径与服务端一致
     deviceLabel.js: 把 User-Agent 压成「浏览器 · 系统」一句人话，供登录设备列表展示
     passwordStrength.js: 密码位数预检（下限与服务端一致），其余强度规则由服务端在提交时判定
-    sortable.js: 控制台列表的拖拽实例（Sortable 封装），触屏/窄屏下补边缘自动滚动
     components/SensitiveActionModal.vue: 敏感操作的身份确认模态框，按服务端给出的方式校验并换一次性凭证，支持密码、邮箱验证码、动态口令与通行密钥
     components/NotificationComposeModal.vue: 审核/反馈结果通知的撰写弹窗，可改收件人、主题、正文并标记人工通知
     components/NotificationSettingsDrawer.vue: 通知设置抽屉，维护结果通知邮件模板与飞书通知模式
@@ -127,6 +126,8 @@ src:
     components/ImageUploadField.vue: 图片选择与本地预览，选中后只留在本地，由调用方在保存时上传
     mediaUpload.js: 控制台通用图片上传（按用途落公开媒体目录），在保存流程里调用
     components/ConsolePanel.vue: 控制台面板卡外壳（图标 + 标题 + 说明 + 内容区）
+    components/ConsoleSkeleton.vue: 控制台骨架屏基础块（宽高/圆角/圆形，主题 token 微光动画）
+    components/ConsoleSpin.vue: 控制台浮层加载占位（居中 Spin 并撑住内容高度）
     components/StatCard.vue: 控制台指标卡（图标 + 标签 + 数值 + 说明）
     components/TodoDrawer.vue: 待办抽屉，列出待审核提交与待处理反馈并跳转到对应页面
     pages/ConsoleAccount.vue: 我的账号页，账号信息、改密码、邮箱两步验证开关、通行密钥与登录设备列表（撤销会话）
@@ -198,6 +199,7 @@ src:
     scrollToElement.js: 元素滚动定位到顶部对齐位置（带顶部留白与移动端 Chrome 重复滚动失效的规避）
     clipboard.js: 写剪贴板，非安全上下文下退回 execCommand，全站复制入口共用
     toolLogo.js: 工具卡片 logo 渲染，图标名与图片两种来源，标签栏下拉菜单与侧边栏共用
+    sortable.js: 列表拖拽实例（Sortable 封装），触屏/窄屏下补边缘自动滚动
   config:
     categoryIcons.js: 分类图标配置 + 工具卡片 logo 图标映射（getCategoryIcon / getToolIcon，tools.json 中非路径 logo 按图标名映射）
   constants:

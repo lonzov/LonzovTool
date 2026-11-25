@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { NIcon } from 'naive-ui'
@@ -32,6 +32,7 @@ import { analyticsShareUrl, loadAnalyticsShare } from '../analyticsShare.js'
 import AppButton from '../../components/ui/AppButton.vue'
 import AppModal from '../../components/ui/AppModal.vue'
 import ConsolePanel from '../components/ConsolePanel.vue'
+import ConsoleSkeleton from '../components/ConsoleSkeleton.vue'
 import StatCard from '../components/StatCard.vue'
 import TodoDrawer from '../components/TodoDrawer.vue'
 import { consoleFetch } from '../consoleRequest.js'
@@ -105,6 +106,7 @@ const stats = computed(() => [
     value: donateRecords.value ? donateRecords.value.length : '—',
     icon: Heart24Regular,
     hint: '打赏流水',
+    loading: donateRecords.value === null,
   },
 ])
 
@@ -272,10 +274,13 @@ const statsNote = computed(() => {
   return `更新于 ${lastUpdate.value}${isMocked.value ? '（估算）' : ''}`
 })
 
+const trafficLoading = computed(() => statsLoading.value && !lastUpdate.value)
+
 /* ===== 网址提交预览 =====
    这里只读最新 5 条待审核（接口按 id 倒序，即时间从新到旧）；
    真正的审核动作在独立页面，查看按钮带 id 跳过去定位。 */
 const submissionPreview = ref([])
+const submissionLoading = ref(false)
 
 function formatSubmissionTime(timestamp) {
   const date = new Date(timestamp * 1000)
@@ -288,6 +293,7 @@ function openSubmission(id) {
 }
 
 async function loadSubmissionPreview() {
+  submissionLoading.value = true
   try {
     const payload = await consoleFetch('/api/v1/console/submissions?status=pending&limit=5')
     submissionPreview.value = payload?.items || []
@@ -295,6 +301,8 @@ async function loadSubmissionPreview() {
     if (e?.code === 'unauthorized') {
       router.replace({ path: '/console/login', query: { redirect: '/console' } })
     }
+  } finally {
+    submissionLoading.value = false
   }
 }
 
@@ -316,6 +324,7 @@ const LOG_MAX_ROWS = 300
 const logRows = ref([])
 const logLevel = ref('all')
 const logError = ref('')
+const logLoading = ref(true)
 const logFilterOpen = ref(false)
 const autoScroll = ref(true)
 const fullscreen = ref(false)
@@ -366,6 +375,8 @@ async function fetchLogs({ initial = false } = {}) {
       return
     }
     logError.value = e?.message || '日志读取失败，请稍后重试'
+  } finally {
+    if (initial) logLoading.value = false
   }
 }
 
@@ -410,7 +421,7 @@ onBeforeUnmount(() => {
   <div class="console-overview">
     <div class="metric-row">
       <button
-        v-if="hasTodoQueue"
+        v-if="hasTodoQueue || overviewLoading"
         class="todo-card"
         type="button"
         title="查看待处理的具体条目"
@@ -420,8 +431,14 @@ onBeforeUnmount(() => {
           <NIcon :component="Alert24Regular" :size="15" class="todo-card-icon" />
           <span class="todo-card-label">待办事项</span>
         </span>
-        <span class="todo-card-value">{{ todoValue }}</span>
-        <span class="todo-card-hint">{{ todoHint }}</span>
+        <span class="todo-card-value">
+          <ConsoleSkeleton v-if="overviewLoading" width="2.4em" height="1.25em" />
+          <template v-else>{{ todoValue }}</template>
+        </span>
+        <span class="todo-card-hint">
+          <ConsoleSkeleton v-if="overviewLoading" width="9em" height="1.45em" />
+          <template v-else>{{ todoHint }}</template>
+        </span>
         <NIcon class="todo-card-arrow" :component="ChevronRight24Regular" :size="14" />
       </button>
 
@@ -440,7 +457,23 @@ onBeforeUnmount(() => {
             <span>状态</span>
             <span>操作</span>
           </div>
-          <p v-if="!submissionPreview.length" class="inline-empty">暂无待审核提交</p>
+          <template v-if="submissionLoading && !submissionPreview.length">
+            <div
+              v-for="index in 5"
+              :key="`submission-skeleton-${index}`"
+              class="data-row"
+              aria-hidden="true"
+            >
+              <span class="cell-main">
+                <ConsoleSkeleton :width="index % 2 ? '58%' : '42%'" height="1.5em" />
+                <ConsoleSkeleton :width="index % 3 ? '82%' : '64%'" height="1.1em" />
+              </span>
+              <ConsoleSkeleton width="112" height="1.2em" />
+              <ConsoleSkeleton width="48" height="20" radius="var(--radius-full)" />
+              <ConsoleSkeleton width="44" height="20" radius="var(--radius-full)" />
+            </div>
+          </template>
+          <p v-else-if="!submissionPreview.length" class="inline-empty">暂无待审核提交</p>
           <div v-for="item in submissionPreview" :key="item.id" class="data-row">
             <span class="cell-main">
               <span class="cell-title">{{ item.title }}</span>
@@ -481,9 +514,19 @@ onBeforeUnmount(() => {
           <p>监控数据暂不可用，不影响内容管理</p>
           <AppButton variant="outline" size="sm" @click="loadUptime">重试</AppButton>
         </div>
-        <p v-else-if="!uptimeRows.length" class="inline-empty">
-          {{ uptimeLoading ? '读取中…' : '暂无监控数据' }}
-        </p>
+        <ul v-else-if="uptimeLoading && !uptimeRows.length" class="uptime-list" aria-hidden="true">
+          <li v-for="index in UPTIME_LIMIT" :key="`uptime-skeleton-${index}`" class="uptime-row">
+            <span class="uptime-name">
+              <ConsoleSkeleton width="6" height="6" circle />
+              <ConsoleSkeleton :width="index % 2 ? '38%' : '52%'" height="1.5em" />
+            </span>
+            <span class="uptime-beats">
+              <ConsoleSkeleton width="104" height="14" radius="var(--radius-full)" />
+            </span>
+            <ConsoleSkeleton width="44" height="1.2em" />
+          </li>
+        </ul>
+        <p v-else-if="!uptimeRows.length" class="inline-empty">暂无监控数据</p>
         <ul v-else class="uptime-list">
           <li v-for="row in uptimeRows" :key="row.id" class="uptime-row" :title="row.tip">
             <span class="uptime-name">
@@ -537,15 +580,18 @@ onBeforeUnmount(() => {
         <div v-for="row in trafficRows" :key="row.label" class="traffic-cell">
           <span class="traffic-label">{{ row.label }}</span>
           <span class="traffic-cell-value">
-            {{ row.value }}
-            <span
-              v-if="row.delta"
-              class="traffic-delta"
-              :class="`traffic-delta--${row.delta.tone}`"
-            >
-              <NIcon v-if="row.delta.icon" :component="row.delta.icon" :size="12" />
-              {{ row.delta.text }}
-            </span>
+            <ConsoleSkeleton v-if="trafficLoading" width="4.5em" height="1.3em" />
+            <template v-else>
+              {{ row.value }}
+              <span
+                v-if="row.delta"
+                class="traffic-delta"
+                :class="`traffic-delta--${row.delta.tone}`"
+              >
+                <NIcon v-if="row.delta.icon" :component="row.delta.icon" :size="12" />
+                {{ row.delta.text }}
+              </span>
+            </template>
           </span>
         </div>
       </div>
@@ -593,6 +639,19 @@ onBeforeUnmount(() => {
 
       <div ref="logBox" class="log-box" @scroll="onLogScroll">
         <p v-if="logError" class="log-hint" role="alert">{{ logError }}</p>
+        <div
+          v-else-if="logLoading && !visibleRows.length"
+          class="log-skeleton"
+          aria-hidden="true"
+        >
+          <div v-for="index in 8" :key="`log-skeleton-${index}`" class="log-row log-row--skeleton">
+            <ConsoleSkeleton width="56" height="1em" />
+            <ConsoleSkeleton width="38" height="1em" />
+            <ConsoleSkeleton width="72" height="1em" />
+            <ConsoleSkeleton :width="index % 2 ? '84' : '56'" height="1em" />
+            <ConsoleSkeleton :width="index % 3 ? '22%' : '15%'" height="1em" />
+          </div>
+        </div>
         <p v-else-if="!visibleRows.length" class="log-hint">暂无记录</p>
         <div v-for="row in visibleRows" :key="row.id" class="log-row">
           <span class="log-time">{{ formatLogTime(row.created_at) }}</span>
@@ -1239,6 +1298,18 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
+.log-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* 骨架行与真实日志行同高，避免加载完成后日志区突然长高 */
+.log-row--skeleton {
+  align-items: center;
+  min-height: 1.7em;
+}
+
 .log-time,
 .log-actor {
   flex-shrink: 0;
@@ -1409,6 +1480,10 @@ onBeforeUnmount(() => {
   .log-row {
     flex-wrap: wrap;
     row-gap: 0;
+  }
+
+  .log-row--skeleton {
+    flex-wrap: nowrap;
   }
 
   /* 窄屏不再为对齐留 88px，IP 按自身长度占位，把宽度让给右侧 */

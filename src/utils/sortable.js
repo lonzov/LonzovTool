@@ -1,7 +1,7 @@
 import Sortable from 'sortablejs'
 
 /**
- * 控制台列表的拖拽实例：在 Sortable 之上补一套自己的边缘自动滚动。
+ * 列表拖拽实例：在 Sortable 之上补一套自己的边缘自动滚动。
  *
  * 站点外壳在桌面端用 NScrollbar 内部容器滚动，Sortable 能自己找到它；移动端没有
  * NScrollbar，滚动落在 body / 文档上，而 Sortable 的原生自动滚动只处理 window，
@@ -142,7 +142,7 @@ function createAutoScroll() {
  * 创建带边缘自动滚动的 Sortable 实例。
  * 触屏/窄屏时关掉 Sortable 自带的滚动，避免两套逻辑同时滚；桌面端保持原样。
  */
-export function createConsoleSortable(el, options = {}) {
+export function createDragSortable(el, options = {}) {
   const { onStart, onMove, onEnd, ...rest } = options
   const autoScroll = createAutoScroll()
   const disableNativeScroll = isTouchish()
