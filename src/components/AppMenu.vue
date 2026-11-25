@@ -2,16 +2,18 @@
 import { h, markRaw, toRaw, computed, Transition } from 'vue'
 import { useRouter } from 'vue-router'
 import { NMenu, NIcon, useMessage } from 'naive-ui'
-import { Home48Regular, Person24Regular, AddSquare24Regular, HeartCircle24Regular, PersonFeedback24Regular, CalendarWorkWeek24Regular, DrawerArrowDownload24Regular, Settings24Regular, MoreVertical24Regular, NumberSymbol24Filled } from '@vicons/fluent'
+import { NumberSymbol24Filled } from '@vicons/fluent'
 import { getCategoryIcon } from '../config/categoryIcons'
+import { SIDEBAR_FIXED_ITEM_MAP, SIDEBAR_MORE_ITEM, SIDEBAR_MORE_KEY } from '../config/sidebarFixedItems.js'
 import { makeLogoIcon } from '../utils/toolLogo.js'
 import { usePWAInstall } from '../composables/usePWAInstall'
 import { cardsData, parentMenusData } from '../composables/useSiteData.js'
 import { useSidebarSection } from '../composables/useSidebarSection.js'
+import { sidebarMenuLayout } from '../composables/useSidebarMenuLayout.js'
 
 // 父级菜单展开状态持久化（桌面端侧边栏与移动端抽屉共用同一份）
 const EXPANDED_KEYS_KEY = 'sidebar_expanded_keys'
-const MORE_KEY = 'more'
+const MORE_KEY = SIDEBAR_MORE_KEY
 const MORE_SEEDED_KEY = 'sidebar_more_seeded'
 
 // 分类栏的层级缩进步长
@@ -189,10 +191,11 @@ export default {
     this.ensureSectionExpanded()
     this.observeTheme()
 
-    // 选项是挂载时构建的副本，而接口刷新会整体替换快照、页面模块也可能中途接管分类栏，需要跟着重建。
+    // 选项是挂载时构建的副本，而接口刷新会整体替换快照、页面模块可能中途接管分类栏、
+    // 侧边栏布局也允许随时调整，这些都需要跟着重建。
     // 展开状态保持不动：那是用户当下的操作结果，不该被数据刷新覆盖。
     this.$watch(
-      () => [cardsData.value, parentMenusData.value, this.activeSection],
+      () => [cardsData.value, parentMenusData.value, this.activeSection, sidebarMenuLayout.value],
       () => {
         this.initMenuOptions()
         this.ensureSectionExpanded()
@@ -244,63 +247,38 @@ export default {
         ? this.buildSectionOptions(this.activeSection)
         : this.buildCategoryOptions()
     },
+    buildFixedItemOption(item) {
+      return {
+        label: item.label,
+        key: item.key,
+        icon: this.renderIcon(markRaw(item.icon)),
+      }
+    },
+    // 安装本站只在还没装成 PWA 时出现，其余入口始终展示
+    isFixedItemVisible(key) {
+      return key !== 'pwa-install' || !this.isInstalled
+    },
     buildFixedOptions() {
-      // 固定菜单项
-      const fixedOptions = [
-        {
-          label: '首页',
-          key: 'home',
-          icon: this.renderIcon(markRaw(Home48Regular)),
-        },
-        {
-          label: '工作站',
-          key: 'workspace',
-          icon: this.renderIcon(markRaw(CalendarWorkWeek24Regular)),
-        },
-        {
-          label: '关于本站',
-          key: 'about',
-          icon: this.renderIcon(markRaw(Person24Regular)),
-        },
-        {
-          label: '设置',
-          key: 'settings',
-          icon: this.renderIcon(markRaw(Settings24Regular)),
-        },
-      ]
+      const { level1, more } = sidebarMenuLayout.value
+      const buildList = (keys) =>
+        keys
+          .map((key) => SIDEBAR_FIXED_ITEM_MAP.get(key))
+          .filter((item) => item && this.isFixedItemVisible(item.key))
+          .map((item) => this.buildFixedItemOption(item))
 
-      // 低频入口收进「更多」，展开状态与其他父级菜单共用持久化
-      const moreChildren = [
-        {
-          label: '建议反馈',
-          key: 'feedback',
-          icon: this.renderIcon(markRaw(PersonFeedback24Regular)),
-        },
-        {
-          label: '打赏支持',
-          key: 'donate',
-          icon: this.renderIcon(markRaw(HeartCircle24Regular)),
-        },
-        {
-          label: '网址提交',
-          key: 'submit',
-          icon: this.renderIcon(markRaw(AddSquare24Regular)),
-        },
-      ]
-      // PWA 安装入口（仅已安装为 PWA 时隐藏，其余情况始终展示）
-      if (!this.isInstalled) {
-        moreChildren.push({
-          label: '安装本站',
-          key: 'pwa-install',
-          icon: this.renderIcon(markRaw(DrawerArrowDownload24Regular)),
+      const fixedOptions = buildList(level1)
+
+      // 低频入口收进「更多」，展开状态与其他父级菜单共用持久化。
+      // 二级菜单被清空时整组隐藏，免得留一个点开没有内容的入口
+      const moreChildren = buildList(more)
+      if (moreChildren.length > 0) {
+        fixedOptions.push({
+          label: SIDEBAR_MORE_ITEM.label,
+          key: MORE_KEY,
+          icon: this.renderIcon(markRaw(SIDEBAR_MORE_ITEM.icon)),
+          children: moreChildren,
         })
       }
-      fixedOptions.push({
-        label: '更多',
-        key: MORE_KEY,
-        icon: this.renderIcon(markRaw(MoreVertical24Regular)),
-        children: moreChildren,
-      })
 
       fixedOptions.push({
         type: 'divider',

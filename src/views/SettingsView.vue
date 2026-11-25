@@ -9,6 +9,7 @@ import {
 } from '@vicons/fluent'
 import AppButton from '../components/ui/AppButton.vue'
 import AppModal from '../components/ui/AppModal.vue'
+import SidebarMenuLayoutDrawer from '../components/SidebarMenuLayoutDrawer.vue'
 import { useTheme } from '../composables/useTheme'
 import { confirmDialog } from '../composables/useConfirm'
 import { usePrivacyModal } from '../composables/usePrivacyModal'
@@ -64,6 +65,9 @@ function onReduceMotionToggle(val) {
     setGlowEnabled(false)
   }
 }
+
+/* ========== 侧边栏菜单布局（调整集中在抽屉里）========== */
+const sidebarLayoutDrawer = ref(false)
 
 /* ========== 站外嵌入工作站（模块级共享状态）========== */
 const { embedEnabled, setEmbedEnabled, iframeMaskMode, setIframeMaskMode, urlThemeMode, setUrlThemeMode } = useWorkspaceSettings()
@@ -313,6 +317,7 @@ const CONFIG_SCOPES = {
       'url_theme_param',
       'reduce_motion',
       'mouse_glow_enabled',
+      'sidebar_fixed_layout',
     ],
   },
   all: {
@@ -798,6 +803,15 @@ const embedCloseActions = [
                 />
               </div>
             </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-title">侧边栏菜单排序</span>
+                <p class="setting-desc">调整各入口的先后顺序，以及哪些折叠进「更多」</p>
+              </div>
+              <div class="setting-control">
+                <button class="cache-btn" @click="sidebarLayoutDrawer = true">调整</button>
+              </div>
+            </div>
           </div>
         </Transition>
       </div>
@@ -1030,6 +1044,9 @@ const embedCloseActions = [
         <NIcon :component="ChevronUp16Regular" size="16" class="settings-bar-arrow" />
       </div>
     </div>
+
+    <!-- 侧边栏菜单布局调整抽屉 -->
+    <SidebarMenuLayoutDrawer v-model:show="sidebarLayoutDrawer" />
 
     <!-- 导入确认模态框 -->
     <AppModal

@@ -45,6 +45,7 @@ src:
     ShareModal.vue: 分享海报模态框，Canvas 渲染海报含标题/简介/Logo/二维码，支持复制链接与保存图片
     WorkspaceView.vue: 工作站视图容器，管理多标签页，含站外 iframe 标签（/embed/ 目录，域名白名单校验），标签页同步为侧边栏分类栏
     StatsInfoBar.vue: 访问统计信息栏，显示统计起始日、更新时间与数据来源
+    SidebarMenuLayoutDrawer.vue: 侧边栏菜单布局调整抽屉，两段列表互拖切换一级菜单与「更多」的归属
     tools:
       ArtTextTool.vue: 艺术字转换工具页
       DownloadDisclaimer.vue: 下载免责声明模态框，带冷却倒计时的确认后继续
@@ -175,6 +176,7 @@ src:
     useClientOutdated.js: 接口代次淘汰的识别与处置，提示当前页面过期并触发一次更新检查（不强制刷新）
     useSiteData.js: 站点动态数据的唯一入口，构建期快照 ref、卡片反查/域名白名单派生函数与运行时低频同步；同步可取消并识别 410 与 min_supported
     useSidebarSection.js: 侧边栏分类栏的动态内容注册表，页面模块挂载期接管分类栏，未接管时回落首页分类
+    useSidebarMenuLayout.js: 常驻侧边栏的布局偏好，入口顺序与折叠进「更多」的归属，localStorage 持久化
     useSWUpdate.js: Service Worker 更新检测与版本比较组合式函数，并提供无组件上下文可用的手动检查更新入口
     useStats.js: 访问统计状态管理组合式函数（模块级单例，数据经后端代理 Umami 下发，含内存/localStorage 双层缓存）
     useHeightTransition.js: 内容高度变化时的容器高度过渡（ResizeObserver 驱动，弹窗用）
@@ -199,9 +201,10 @@ src:
     scrollToElement.js: 元素滚动定位到顶部对齐位置（带顶部留白与移动端 Chrome 重复滚动失效的规避）
     clipboard.js: 写剪贴板，非安全上下文下退回 execCommand，全站复制入口共用
     toolLogo.js: 工具卡片 logo 渲染，图标名与图片两种来源，标签栏下拉菜单与侧边栏共用
-    sortable.js: 列表拖拽实例（Sortable 封装），触屏/窄屏下补边缘自动滚动
+    sortable.js: 列表拖拽实例（Sortable 封装），触屏/窄屏下补边缘自动滚动，控制台列表与侧边栏布局抽屉共用
   config:
     categoryIcons.js: 分类图标配置 + 工具卡片 logo 图标映射（getCategoryIcon / getToolIcon，tools.json 中非路径 logo 按图标名映射）
+    sidebarFixedItems.js: 常驻侧边栏固定栏的入口定义（key / 文案 / 图标），菜单渲染与布局调整抽屉共用
   constants:
     geetest.js: 极验 gt4 的公开配置（captcha_id 与脚本地址），captcha_key 只在服务端，绝不进前端
     turnstile.js: Cloudflare Turnstile 的公开配置（site key 与显式渲染脚本地址），secret 只在服务端
