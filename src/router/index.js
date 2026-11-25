@@ -37,6 +37,15 @@ const REFRESH_AT = 15000
 const FALLBACK_TIMEOUT = 30000
 const SESSION_KEY = 'nav_refreshed'
 
+// ===== 懒加载 chunk 加载失败自愈 =====
+// 部署后旧页面的带 hash 资源已被新构建替换，SW 只缓存访问过的懒加载资源，
+// 旧页面点新路由时动态导入必然 404；不切到新构建的话，所有未打开过的路由都不可用
+const CHUNK_RECOVER_KEY = 'sw_chunk_recover'
+// 一次性参数：绕过 SW 对导航请求的缓存命中，否则旧 shell 会被再次返回
+const CHUNK_RECOVER_QUERY = '__sw_refresh'
+// 恢复刷新后仍失败说明新构建自身也加载不了（服务端/网络异常），不再自动刷新，避免死循环
+const CHUNK_RECOVER_WINDOW = 20000
+
 let fallbackTimer = null
 let pingTimer = null
 let refreshTimer = null
@@ -78,6 +87,58 @@ async function pingServer(signal) {
   } catch {
     return false
   }
+}
+
+/** 是否为懒加载 chunk 拉取失败的典型报错（部署换 hash 后必现） */
+function isChunkLoadError(error) {
+  const message = error?.message || ''
+  return (
+    message.includes('Failed to fetch dynamically imported module') ||
+    message.includes('Importing a module script failed') ||
+    message.includes('error loading dynamically imported module') ||
+    message.includes('Failed to load module script')
+  )
+}
+
+/**
+ * 切到最新构建：带一次性参数请求目标路由，强制走网络拿新 shell。
+ * 不带参数直接刷新时，SW 的导航缓存会再次返回旧 shell，刷新完还是旧资源。
+ * @param {import('vue-router').RouteLocationNormalized | undefined} to 加载失败时目标路由
+ */
+function recoverFromChunkError(to) {
+  let lastAttempt = 0
+  try { lastAttempt = Number(sessionStorage.getItem(CHUNK_RECOVER_KEY)) || 0 } catch { /* noop */ }
+
+  if (Date.now() - lastAttempt < CHUNK_RECOVER_WINDOW) {
+    getMessage()?.error('页面资源加载异常，请手动刷新页面重试', { duration: 8000 })
+    return
+  }
+  try { sessionStorage.setItem(CHUNK_RECOVER_KEY, String(Date.now())) } catch { /* noop */ }
+
+  const current = `${window.location.pathname}${window.location.search}${window.location.hash}`
+  const url = new URL(to?.fullPath || current, window.location.origin)
+  url.searchParams.set(CHUNK_RECOVER_QUERY, Date.now().toString(36))
+  const target = `${url.pathname}${url.search}${url.hash}`
+  console.warn('[Router] 资源加载失败，切换到最新构建:', target)
+  window.location.replace(target)
+}
+
+/** 先 ping 排除离线，再决定是跳离线诊断页还是切到最新构建 */
+async function recoverAfterCheck(to) {
+  const ok = await pingServer()
+  if (!ok) {
+    goOffline('资源加载失败且服务器不可达')
+    return
+  }
+  recoverFromChunkError(to)
+}
+
+/** 清掉自愈刷新带的一次性参数，避免留在地址栏与分享链接里 */
+function stripRecoveryQuery() {
+  const url = new URL(window.location.href)
+  if (!url.searchParams.has(CHUNK_RECOVER_QUERY)) return
+  url.searchParams.delete(CHUNK_RECOVER_QUERY)
+  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
 }
 
 // 内置工具页的 SEO meta 映射（path slug -> meta）
@@ -666,26 +727,22 @@ export function setupRouterGuards(router) {
     next()
   })
 
-  // 路由错误处理：chunk 加载失败时清定时器 + 立即 ping 判断是否离线
-  router.onError((error) => {
-    if (
-      error?.message?.includes('Failed to fetch dynamically imported module') ||
-      error?.message?.includes('Importing a module script failed') ||
-      error?.message?.includes('error loading dynamically imported module')
-    ) {
-      clearAllTimers()
-      finishLoading()
-        ; (async () => {
-          const ok = await pingServer()
-          if (!ok) window.location.href = '/offline'
-        })()
-    }
+  // 路由错误处理：懒加载 chunk 失败说明页面跑的是旧构建，切到最新构建；先 ping 排除离线
+  router.onError((error, to) => {
+    if (!isChunkLoadError(error)) return
+    clearAllTimers()
+    finishLoading()
+    recoverAfterCheck(to)
   })
 
   // 路由后置守卫：导航成功 → 清除所有定时器 + 清除刷新标记
   router.afterEach((to) => {
     clearAllTimers()
-    try { sessionStorage.removeItem(SESSION_KEY) } catch { /* noop */ }
+    try {
+      sessionStorage.removeItem(SESSION_KEY)
+      // 导航成功说明当前构建可用，下次再遇到 chunk 失败可以重新触发一次自愈
+      sessionStorage.removeItem(CHUNK_RECOVER_KEY)
+    } catch { /* noop */ }
     console.log(`[Router] 导航完成: ${to.path}`)
 
     setTimeout(finishLoading, 100)
@@ -699,6 +756,8 @@ export function setupRouterGuards(router) {
  * @returns {import('vue-router').Router}
  */
 export function createRouterInstance() {
+  // 必须在 createWebHistory 读取 location 之前清掉自愈参数，路由初始化后才是干净 URL
+  stripRecoveryQuery()
   const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes,
