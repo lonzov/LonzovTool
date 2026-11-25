@@ -719,10 +719,15 @@ const embedCloseActions = [
         </div>
         <div class="header-actions">
           <p class="settings-subtitle">自定义你的使用体验</p>
-          <button class="reset-btn" @click="handleReset">
-            <NIcon :component="ArrowCounterclockwise24Filled" size="14" />
+          <AppButton
+            variant="outline"
+            size="md"
+            letter-spacing="wider"
+            :icon="ArrowCounterclockwise24Filled"
+            @click="handleReset"
+          >
             重置
-          </button>
+          </AppButton>
         </div>
       </div>
 
@@ -809,7 +814,14 @@ const embedCloseActions = [
                 <p class="setting-desc">调整各入口的先后顺序，以及哪些折叠进「更多」</p>
               </div>
               <div class="setting-control">
-                <button class="cache-btn" @click="sidebarLayoutDrawer = true">调整</button>
+                <AppButton
+                  variant="outline"
+                  size="md"
+                  letter-spacing="wider"
+                  @click="sidebarLayoutDrawer = true"
+                >
+                  调整
+                </AppButton>
               </div>
             </div>
           </div>
@@ -913,7 +925,14 @@ const embedCloseActions = [
                 <span class="setting-title">检查更新</span>
               </div>
               <div class="setting-control">
-                <button class="cache-btn" @click="handleCheckUpdate">检查</button>
+                <AppButton
+                  variant="outline"
+                  size="md"
+                  letter-spacing="wider"
+                  @click="handleCheckUpdate"
+                >
+                  检查
+                </AppButton>
               </div>
             </div>
             <a
@@ -935,7 +954,15 @@ const embedCloseActions = [
                 <p class="setting-desc">无法更新时可尝试重置</p>
               </div>
               <div class="setting-control">
-                <button class="cache-btn cache-btn--danger" @click="handleResetVersionCache">重置</button>
+                <AppButton
+                  variant="outline"
+                  tone="danger"
+                  size="md"
+                  letter-spacing="wider"
+                  @click="handleResetVersionCache"
+                >
+                  重置
+                </AppButton>
               </div>
             </div>
             <div class="setting-row">
@@ -944,7 +971,15 @@ const embedCloseActions = [
                 <p class="setting-desc">清理所有资源缓存释放空间，下次加载会变慢</p>
               </div>
               <div class="setting-control">
-                <button class="cache-btn cache-btn--danger" @click="handleClearResourceCache">清理</button>
+                <AppButton
+                  variant="outline"
+                  tone="danger"
+                  size="md"
+                  letter-spacing="wider"
+                  @click="handleClearResourceCache"
+                >
+                  清理
+                </AppButton>
               </div>
             </div>
           </div>
@@ -981,14 +1016,23 @@ const embedCloseActions = [
                 <p class="setting-desc">{{ scope.desc }}</p>
               </div>
               <div class="setting-control">
-                <div class="config-pill">
-                  <button class="config-pill-btn" title="导入" @click="handleImport(key)">
-                    <NIcon :component="ArrowDownload16Regular" size="16" />
-                  </button>
-                  <span class="config-pill-divider"></span>
-                  <button class="config-pill-btn" title="导出" @click="handleExport(key)">
-                    <NIcon :component="ArrowExportUp24Filled" size="16" />
-                  </button>
+                <div class="config-actions">
+                  <AppButton
+                    variant="outline"
+                    size="md"
+                    icon-only
+                    label="导入"
+                    :icon="ArrowDownload16Regular"
+                    @click="handleImport(key)"
+                  />
+                  <AppButton
+                    variant="outline"
+                    size="md"
+                    icon-only
+                    label="导出"
+                    :icon="ArrowExportUp24Filled"
+                    @click="handleExport(key)"
+                  />
                 </div>
               </div>
             </div>
@@ -1189,28 +1233,6 @@ const embedCloseActions = [
   color: var(--muted-foreground);
   line-height: 1.5;
   margin: 0;
-}
-
-.reset-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted-foreground);
-  font-size: 0.825rem;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background-color 0.2s, color 0.2s, border-color 0.4s;
-}
-
-.reset-btn:hover {
-  background: var(--accent);
-  color: var(--foreground);
 }
 
 /* ========== 卡片容器 ========== */
@@ -1465,76 +1487,12 @@ html[data-motion='reduced'] .collapse-leave-active {
   transition: color 0.4s ease;
 }
 
-/* ========== 配置管理胶囊按钮 ========== */
+/* ========== 配置管理操作组 ========== */
 
-.config-pill {
+.config-actions {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  overflow: hidden;
-  transition: border-color 0.4s ease;
-}
-
-.config-pill-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 34px;
-  border: none;
-  background: transparent;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.config-pill-btn:hover {
-  background: var(--accent);
-  color: var(--foreground);
-}
-
-.config-pill-divider {
-  width: 1px;
-  height: 18px;
-  background: var(--border);
-  flex-shrink: 0;
-  transition: background-color 0.4s ease;
-}
-
-/* ========== 缓存管理按钮 ========== */
-.cache-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 30px;
-  padding: 0 16px;
-  border-radius: var(--radius-full);
-  corner-shape: round;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted-foreground);
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background-color 0.2s, color 0.2s, border-color 0.4s;
-}
-
-.cache-btn:hover {
-  background: var(--accent);
-  color: var(--foreground);
-}
-
-.cache-btn--danger {
-  color: var(--destructive);
-  border-color: color-mix(in srgb, var(--destructive) 35%, transparent);
-}
-
-.cache-btn--danger:hover {
-  background: color-mix(in srgb, var(--destructive) 10%, transparent);
-  color: var(--destructive);
+  gap: 4px;
 }
 
 /* ========== 导入模态框 ========== */
@@ -1651,11 +1609,12 @@ html[data-motion='reduced'] .collapse-leave-active {
   }
 }
 
-/* 小屏控件缩放 */
+/* 小屏控件缩放：页面内的按钮与下拉触发器同步收一档。
+   抽屉与模态框传送到 body，不在 .settings-container 内，因此不参与缩放 */
 @media (max-width: 400px) {
-  .config-pill,
   .settings-select,
-  .drag-delay-input-wrap {
+  .drag-delay-input-wrap,
+  .settings-container .app-btn {
     transform: scale(0.9);
     transform-origin: right center;
   }

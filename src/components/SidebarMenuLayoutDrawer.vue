@@ -166,10 +166,22 @@ onBeforeUnmount(destroySortable)
 
       <template #footer>
         <div class="layout-actions">
-          <AppButton variant="outline" size="lg" block @click="resetSidebarMenuLayout">
+          <AppButton
+            variant="outline"
+            size="lg"
+            letter-spacing="wide"
+            block
+            @click="resetSidebarMenuLayout"
+          >
             恢复默认
           </AppButton>
-          <AppButton variant="solid" size="lg" block @click="emit('update:show', false)">
+          <AppButton
+            variant="solid"
+            size="lg"
+            letter-spacing="wider"
+            block
+            @click="emit('update:show', false)"
+          >
             完成
           </AppButton>
         </div>
